@@ -10,7 +10,8 @@ def typhoon_directory():
 
 
 def dags_directory():
-    return os.path.join(
-        typhoon_directory(),
-        'dags'
-    )
+    return os.path.join(typhoon_directory(), 'dags')
+
+
+def out_directory():
+    return os.path.join(typhoon_directory(), 'out')
