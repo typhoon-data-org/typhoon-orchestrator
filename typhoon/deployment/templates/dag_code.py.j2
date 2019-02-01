@@ -1,0 +1,38 @@
+# DAG name: {{ name }}
+# Schedule interval = {{ schedule_interval }}
+
+from zappa.async import task
+
+def {{ name }}_main(event, context):
+    {%- for source in get_sources(structure) %}
+    data = {{ source }}_node()
+    {{ source }}_branch(data)
+    {% endfor %}
+
+# Branches
+{%- for node_name, node in nodes.items() %}
+@task
+def {{ node_name }}_branch({% if node_name not in get_sources(structure)%}data{% endif %}):
+    data_generator = {{ node_name }}_node({% if node_name not in get_sources(structure)%}data{% endif %})
+    for data in data_generator:
+        {%- for out_node in structure[node_name] %}
+        {%- for transformation in get_transformations(edges, node_name, out_node) %}
+        data = {{ transformation }}(data)
+        {%- endfor %}
+
+        {{ out_node }}_branch(data)
+        {% else %}
+        pass        # Necessary for the generator to be exhausted since it probably has side effects
+        {%- endfor %}
+{% endfor %}
+
+# Nodes
+{%- for node_name, node in nodes.items() %}
+def {{ node_name }}_node({% if node_name not in get_sources(structure)%}data{% endif %}):
+    yield from {{ node['function'] }}(
+        {% if node_name not in get_sources(structure) %}data=data,{% endif %}
+        {%- for param, value in node['config'].items() %}
+        param='{{ value }}',
+        {%- endfor %}
+    )
+{% endfor %}
