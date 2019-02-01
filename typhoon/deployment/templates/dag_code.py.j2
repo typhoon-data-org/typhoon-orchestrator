@@ -1,7 +1,14 @@
 # DAG name: {{ name }}
 # Schedule interval = {{ schedule_interval }}
-
 from zappa.async import task
+
+{% for functions_module in get_functions_modules(nodes) -%}
+from functions import {{ functions_module }}
+{%- endfor %}
+{%- for transformation_module in get_transformations_modules(edges) %}
+from transformations import {{ transformation_module }}
+{%- endfor %}
+
 
 def {{ name }}_main(event, context):
     {%- for source in get_sources(structure) %}
@@ -32,7 +39,8 @@ def {{ node_name }}_node({% if node_name not in get_sources(structure)%}data{% e
     yield from {{ node['function'] }}(
         {% if node_name not in get_sources(structure) %}data=data,{% endif %}
         {%- for param, value in node['config'].items() %}
-        param='{{ value }}',
+        {{ param }}='{{ value }}',
         {%- endfor %}
     )
-{% endfor %}
+
+{% endfor -%}

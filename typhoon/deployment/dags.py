@@ -68,6 +68,23 @@ def get_destinations(structure) -> Iterable[str]:
             yield edge
 
 
+def get_transformations_modules(edges: dict)  -> Iterable[str]:
+    modules = set()
+    for _, edge in edges.items():
+        for transformation in edge['transformations']:
+            modules.add('.'.join(transformation.split('.')[:-1]))
+
+    return list(modules)
+
+
+def get_functions_modules(nodes: dict) -> Iterable[str]:
+    modules = set()
+    for _, node in nodes.items():
+        modules.add('.'.join(node['function'].split('.')[:-1]))
+
+    return list(modules)
+
+
 SEARCH_PATH = os.path.join(
     os.path.dirname(__file__),
     'templates')
@@ -78,6 +95,8 @@ templateEnv.globals.update(get_sources=get_sources)
 templateEnv.globals.update(get_sinks=get_sinks)
 templateEnv.globals.update(get_destinations=get_destinations)
 templateEnv.globals.update(get_transformations=get_transformations)
+templateEnv.globals.update(get_transformations_modules=get_transformations_modules)
+templateEnv.globals.update(get_functions_modules=get_functions_modules)
 templateEnv.globals.update(get_edge=get_edge)
 templateEnv.globals.update(get_edges_for_source=get_edges_for_source)
 
