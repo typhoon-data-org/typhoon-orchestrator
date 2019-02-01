@@ -15,3 +15,11 @@ def dags_directory():
 
 def out_directory():
     return os.path.join(typhoon_directory(), 'out')
+
+
+def functions_directory():
+    return os.path.join(typhoon_directory(), 'functions')
+
+
+def transformations_directory():
+    return os.path.join(typhoon_directory(), 'transformations')

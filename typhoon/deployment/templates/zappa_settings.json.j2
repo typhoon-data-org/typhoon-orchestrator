@@ -1,0 +1,18 @@
+{
+  "dev": {
+    "profile_name": "{{ aws_profile }}",
+    "project_name": "{{ project_name }}",
+    "runtime": "python3.6",
+    "s3_bucket": "{{ s3_bucket or 'typhoon-orchestrator'}}",
+    "events": [
+      {% for dag_function, cron_expression in dags %}
+      {
+        "function": "{{ dag_function }}", // The function to execute
+        "expression": "{{ cron_expression }}" // When to execute it (in cron or rate format)
+      }{% if not loop.last %}, {% endif %}
+      {% endfor %}
+    ],
+    "apigateway_enabled": false,
+    "keep_warm": false
+  }
+}
