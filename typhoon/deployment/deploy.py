@@ -16,7 +16,7 @@ def write_to_out(filename: str, data: Union[bytes, str]):
 
 
 def clean_out():
-    rmtree(out_directory())
+    rmtree(out_directory(), ignore_errors=True)
 
 
 def build_dag_code(dag: dict):
