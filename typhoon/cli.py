@@ -37,8 +37,8 @@ def handle():
     subparsers = parser.add_subparsers(help='sub-command help')
 
     build_dags_parser = subparsers.add_parser('build-dags', help='Build code for dags in $TYPHOON_HOME/out/')
-    build_dags_parser.add_argument('--profile', type=str, help='AWS profile used to deploy')
-    build_dags_parser.add_argument('--project-name', type=str)
+    build_dags_parser.add_argument('--profile', type=str, help='AWS profile used to deploy', required=True)
+    build_dags_parser.add_argument('--project-name', type=str, required=True)
     build_dags_parser.add_argument('--s3-bucket', type=str, required=False)
     build_dags_parser.set_defaults(func=build_dags)
 
@@ -46,7 +46,7 @@ def handle():
     clean_parser.set_defaults(func=clean)
 
     deploy_parser = subparsers.add_parser('deploy', help='Deploy Typhoon scheduler')
-    deploy_parser.add_argument('--target', type=str, help='Target environment')
+    deploy_parser.add_argument('--target', type=str, help='Target environment', required=True)
     deploy_parser.set_defaults(func=deploy)
 
     args = parser.parse_args()
