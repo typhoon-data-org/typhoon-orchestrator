@@ -2,9 +2,9 @@ import os
 from shutil import rmtree, copytree
 from typing import Union, Sequence, Optional
 
-from deployment.dags import generate_dag_code
-from deployment.settings import out_directory, functions_directory, transformations_directory
-from deployment.zappa import generate_zappa_settings
+from typhoon.deployment.dags import generate_dag_code
+from typhoon.deployment.settings import out_directory, functions_directory, transformations_directory
+from typhoon.deployment.zappa import generate_zappa_settings
 
 
 def write_to_out(filename: str, data: Union[bytes, str]):

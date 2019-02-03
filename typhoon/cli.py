@@ -3,8 +3,8 @@ import os
 
 from zappa.cli import ZappaCLI
 
-from deployment.deploy import copy_user_defined_code, build_zappa_settings
-from deployment.settings import out_directory
+from typhoon.deployment.deploy import copy_user_defined_code, build_zappa_settings
+from typhoon.deployment.settings import out_directory
 from typhoon.deployment.dags import load_dags
 from typhoon.deployment.deploy import build_dag_code, clean_out
 
@@ -32,7 +32,7 @@ def deploy(args=None):
     zappa_cli.handle(['deploy', args.target])
 
 
-if __name__ == '__main__':
+def handle():
     parser = argparse.ArgumentParser(description='Typhoon CLI')
     subparsers = parser.add_subparsers(help='sub-command help')
 
@@ -46,8 +46,15 @@ if __name__ == '__main__':
     clean_parser.set_defaults(func=clean)
 
     deploy_parser = subparsers.add_parser('deploy', help='Deploy Typhoon scheduler')
-    build_dags_parser.add_argument('--target', type=str, help='Target environment')
+    deploy_parser.add_argument('--target', type=str, help='Target environment')
     deploy_parser.set_defaults(func=deploy)
 
-    _args = parser.parse_args()
-    _args.func(_args)
+    args = parser.parse_args()
+    try:
+        args.func(args)
+    except AttributeError:
+        parser.print_help()
+
+
+if __name__ == '__main__':
+    handle()
