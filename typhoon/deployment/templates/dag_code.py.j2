@@ -18,7 +18,9 @@ def {{ name }}_main(event, context):
 
 # Branches
 {% for node_name, node in nodes.items() %}
+{% if get_sources(structure)|length > 1 or node_name not in get_sources(structure) %}
 @task
+{% endif %}
 def {{ node_name }}_branch({% if node_name not in get_sources(structure)%}data{% endif %}):
     data_generator = {{ node_name }}_node({% if node_name not in get_sources(structure)%}data{% endif %})
     for data in data_generator:
