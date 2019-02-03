@@ -91,6 +91,10 @@ SEARCH_PATH = os.path.join(
 templateLoader = jinja2.FileSystemLoader(searchpath=SEARCH_PATH)
 templateEnv = jinja2.Environment(loader=templateLoader)
 
+templateEnv.trim_blocks = True
+templateEnv.lstrip_blocks = True
+templateEnv.keep_trailing_newline = True
+
 templateEnv.globals.update(get_sources=get_sources)
 templateEnv.globals.update(get_sinks=get_sinks)
 templateEnv.globals.update(get_destinations=get_destinations)

@@ -2,47 +2,51 @@
 # Schedule interval = {{ schedule_interval }}
 from zappa.async import task
 
-{% for functions_module in get_functions_modules(nodes) -%}
+{% for functions_module in get_functions_modules(nodes) %}
 from functions import {{ functions_module }}
 {% endfor %}
-{%- for transformation_module in get_transformations_modules(edges) %}
+{% for transformation_module in get_transformations_modules(edges) %}
 from transformations import {{ transformation_module }}
 {% endfor %}
 
 
 def {{ name }}_main(event, context):
-    {%- for source in get_sources(structure) %}
+    {% for source in get_sources(structure) %}
     {{ source }}_branch()
     {% endfor %}
 
+
 # Branches
-{%- for node_name, node in nodes.items() %}
+{% for node_name, node in nodes.items() %}
 @task
 def {{ node_name }}_branch({% if node_name not in get_sources(structure)%}data{% endif %}):
     data_generator = {{ node_name }}_node({% if node_name not in get_sources(structure)%}data{% endif %})
     for data in data_generator:
-        {%- for out_node in structure[node_name] %}
-        {%- for transformation in get_transformations(edges, node_name, out_node) %}
+        {% for out_node in structure[node_name] %}
+        {% for transformation in get_transformations(edges, node_name, out_node) %}
         data = {{ transformation }}(data)
-        {%- endfor %}
+        {% endfor %}
 
         {{ out_node }}_branch(data)
         {% else %}
         pass        # Necessary for the generator to be exhausted since it probably has side effects
-        {%- endfor %}
-{% endfor %}
+        {% endfor %}
 
+
+{% endfor %}
 # Nodes
-{%- for node_name, node in nodes.items() %}
+{% for node_name, node in nodes.items() %}
 def {{ node_name }}_node({% if node_name not in get_sources(structure)%}data{% endif %}):
     yield from {{ node['function'] }}(
-        {% if node_name not in get_sources(structure) %}payload=data,{% endif %}
-        {%- for param, value in node.get('config', {}).items() %}
+        {% if node_name not in get_sources(structure) %}
+        payload=data,
+        {% endif %}
+        {% for param, value in node.get('config', {}).items() %}
         {{ param }}='{{ value }}',
-        {%- endfor %}
+        {% endfor %}
     )
 
-{% endfor -%}
 
+{% endfor %}
 if __name__ == '__main__':
     {{ name }}_main(None, None)
