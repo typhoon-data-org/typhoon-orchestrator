@@ -5,8 +5,8 @@ from zappa.async import task
 {% for functions_module in get_functions_modules(nodes) %}
 from functions import {{ functions_module }}
 {% endfor %}
-{% for transformation_module in get_transformations_modules(edges) %}
-from transformations import {{ transformation_module }}
+{% for adapter_module in get_adapters_modules(adapters) %}
+from adapters import {{ adapter_module }}
 {% endfor %}
 
 
@@ -25,10 +25,7 @@ def {{ node_name }}_branch({% if node_name not in get_sources(structure)%}data{%
     data_generator = {{ node_name }}_node({% if node_name not in get_sources(structure)%}data{% endif %})
     for data in data_generator:
         {% for out_node in structure[node_name] %}
-        {% for transformation in get_transformations(edges, node_name, out_node) %}
-        data = {{ transformation }}(data)
-        {% endfor %}
-
+        data = {{ get_edge(edges, node_name, out_node)[1]['adapter'] }}_adapter(data)
         {{ out_node }}_branch(data)
         {% else %}
         pass        # Necessary for the generator to be exhausted since it probably has side effects
@@ -36,16 +33,28 @@ def {{ node_name }}_branch({% if node_name not in get_sources(structure)%}data{%
 
 
 {% endfor %}
+# Adapters
+{% for adapter_name, adapter in adapters.items() %}
+def {{ adapter_name }}_adapter(data):
+    return {{ adapter['function'] }}(
+        data=data,
+        {% for param, value in adapter.get('config', {}).items() %}
+        {{ param }}='{{ value }}',
+        {% endfor %}
+    )
+
+
+{% endfor %}
 # Nodes
 {% for node_name, node in nodes.items() %}
 def {{ node_name }}_node({% if node_name not in get_sources(structure)%}data{% endif %}):
     yield from {{ node['function'] }}(
-        {% if node_name not in get_sources(structure) %}
-        payload=data,
-        {% endif %}
         {% for param, value in node.get('config', {}).items() %}
         {{ param }}='{{ value }}',
         {% endfor %}
+        {% if node_name not in get_sources(structure) %}
+        **data,
+        {% endif %}
     )
 
 

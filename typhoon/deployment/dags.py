@@ -68,11 +68,10 @@ def get_destinations(structure) -> Iterable[str]:
             yield edge
 
 
-def get_transformations_modules(edges: dict)  -> Iterable[str]:
+def get_adapters_modules(adapters: dict)  -> Iterable[str]:
     modules = set()
-    for _, edge in edges.items():
-        for transformation in edge['transformations']:
-            modules.add('.'.join(transformation.split('.')[:-1]))
+    for _, adapter in adapters.items():
+        modules.add('.'.join(adapter['function'].split('.')[:-1]))
 
     return list(modules)
 
@@ -99,7 +98,7 @@ templateEnv.globals.update(get_sources=get_sources)
 templateEnv.globals.update(get_sinks=get_sinks)
 templateEnv.globals.update(get_destinations=get_destinations)
 templateEnv.globals.update(get_transformations=get_transformations)
-templateEnv.globals.update(get_transformations_modules=get_transformations_modules)
+templateEnv.globals.update(get_adapters_modules=get_adapters_modules)
 templateEnv.globals.update(get_functions_modules=get_functions_modules)
 templateEnv.globals.update(get_edge=get_edge)
 templateEnv.globals.update(get_edges_for_source=get_edges_for_source)

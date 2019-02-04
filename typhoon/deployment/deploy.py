@@ -3,7 +3,8 @@ from shutil import rmtree, copytree
 from typing import Union, Sequence, Optional
 
 from typhoon.deployment.dags import generate_dag_code
-from typhoon.deployment.settings import out_directory, functions_directory, transformations_directory
+from typhoon.deployment.settings import out_directory, functions_directory, transformations_directory, \
+    adapters_directory
 from typhoon.deployment.zappa import generate_zappa_settings
 
 
@@ -36,4 +37,5 @@ def build_zappa_settings(
 
 def copy_user_defined_code():
     copytree(functions_directory(), os.path.join(out_directory(), 'functions'))
+    copytree(adapters_directory(), os.path.join(out_directory(), 'adapters'))
     copytree(transformations_directory(), os.path.join(out_directory(), 'transformations'))
