@@ -1,6 +1,7 @@
 import functools
 import io
 import logging
+import sys
 from datetime import datetime
 
 from zappa import async
@@ -47,7 +48,7 @@ def task_logging_wrapper(bucket, dag_config, task_id, batch_num):
             try:
                 root = logging.getLogger()
                 if len(root.handlers) < 2:          # Avoid duplicate logging
-                    handler = logging.StreamHandler()   # Log to stdout
+                    handler = logging.StreamHandler(sys.stdout)   # Log to stdout
                     root.addHandler(handler)
                 handler = logging.StreamHandler(log_buffer)
                 root.addHandler(handler)
