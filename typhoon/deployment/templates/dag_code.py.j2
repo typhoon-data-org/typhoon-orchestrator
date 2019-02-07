@@ -1,12 +1,10 @@
 # DAG name: {{ name }}
 # Schedule interval = {{ schedule_interval }}
-import io
-import logging
 from datetime import datetime
 
 import dateutil.parser
-from typhoon.aws import write_logs
 from typhoon.models.dag import dag
+from typhoon.models.task import task_logging_wrapper
 from zappa.async import task
 
 {% for functions_module in get_functions_modules(nodes) %}
@@ -63,34 +61,21 @@ def {{ adapter_name }}_adapter(data):
 # Nodes
 {% for node_name, node in nodes.items() %}
 def {{ node_name }}_node({% if node_name not in get_sources(structure)%}data, {% endif %}batch_num):
-    log_buffer = io.StringIO()
-    try:
-        root = logging.getLogger()
-        handler = logging.StreamHandler()   # Log to stdout
-        root.addHandler(handler)
-        handler = logging.StreamHandler(log_buffer)
-        root.addHandler(handler)
-        root.setLevel(logging.INFO)
+    node_function = task_logging_wrapper(
+        bucket='typhoon-orchestrator',
+        dag_config=DAG_CONFIG,
+        task_id='{{ node_name }}',
+        batch_num=batch_num,
+    )({{ node['function'] }})       # Wrapper to add S3 logging
 
-        yield from {{ node['function'] }}(
-            {% for param, value in node.get('config', {}).items() %}
-            {{ param }}={{ "'" + value + "'" if value is string else value }},
-            {% endfor %}
-            {% if node_name not in get_sources(structure) %}
-            **data,
-            {% endif %}
-        )
-    except Exception as e:
-        logging.error(e)
-    finally:
-        dag_id = DAG_CONFIG['dag_id']
-        ds = DAG_CONFIG['ds']
-        etl_timestamp = DAG_CONFIG['etl_timestamp']
-        write_logs(
-            log_buffer.getvalue(),
-            bucket='typhoon-orchestrator',
-            key=f'logs/{dag_id}/{ds}/execution{etl_timestamp}/{{ node_name }}_{batch_num}.log'
-        )
+    yield from node_function(
+        {% for param, value in node.get('config', {}).items() %}
+        {{ param }}={{ "'" + value + "'" if value is string else value }},
+        {% endfor %}
+        {% if node_name not in get_sources(structure) %}
+        **data,
+        {% endif %}
+    )
 
 
 {% endfor %}

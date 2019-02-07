@@ -39,26 +39,31 @@ def task(asynchronous=True):
     return decorator
 
 
-def node(bucket, dag_id, task_id, ds):
+def task_logging_wrapper(bucket, dag_config, task_id, batch_num):
     def decorator(func):
         @functools.wraps(func)
         def func_wrapper(*args, **kwargs):
             log_buffer = io.StringIO()
             try:
                 root = logging.getLogger()
+                if len(root.handlers) < 2:          # Avoid duplicate logging
+                    handler = logging.StreamHandler()   # Log to stdout
+                    root.addHandler(handler)
                 handler = logging.StreamHandler(log_buffer)
                 root.addHandler(handler)
-                # root.setLevel(settings.LOGGING_LEVEL)
+                root.setLevel(logging.INFO)
 
-                return func(*args, **kwargs)
+                yield from func(*args, **kwargs)
             except Exception as e:
                 logging.error(e)
             finally:
-                now = datetime.now()
+                dag_id = dag_config['dag_id']
+                ds = dag_config['ds']
+                etl_timestamp = dag_config['etl_timestamp']
                 write_logs(
                     log_buffer.getvalue(),
                     bucket=bucket,
-                    key=f'logs/{dag_id}/{ds}/{task_id}_{now}.log'
+                    key=f'logs/{dag_id}/{ds}/execution{etl_timestamp}/{ task_id }_{batch_num}.log'
                 )
 
         return func_wrapper
