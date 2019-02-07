@@ -1,5 +1,5 @@
 {
-  "dev": {
+  "{{ environment }}": {
     "profile_name": "{{ aws_profile }}",
     "project_name": "{{ project_name }}",
     "runtime": "python3.6",
@@ -12,6 +12,9 @@
       }{% if not loop.last %}, {% endif %}
       {% endfor %}
     ],
+    "environment_variables": {
+            "TYPHOON-ENV": "{{ environment }}"
+    },
     "apigateway_enabled": false,
     "keep_warm": false,
     "timeout_seconds": 300

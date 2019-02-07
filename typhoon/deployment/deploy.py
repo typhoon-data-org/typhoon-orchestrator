@@ -30,8 +30,9 @@ def build_zappa_settings(
         aws_profile: str,
         project_name: str,
         s3_bucket: str,
+        env: str,
 ):
-    zappa_settings = generate_zappa_settings(dags, aws_profile, project_name, s3_bucket)
+    zappa_settings = generate_zappa_settings(dags, aws_profile, project_name, s3_bucket, env)
     write_to_out(f'zappa_settings.json', zappa_settings)
 
 

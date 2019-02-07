@@ -22,7 +22,7 @@ def build_dags(args):
     for dag in dags:
         build_dag_code(dag, args.env)
 
-    build_zappa_settings(dags, profile, project_name, s3_bucket)
+    build_zappa_settings(dags, profile, project_name, s3_bucket, args.env)
 
     copy_user_defined_code()
 

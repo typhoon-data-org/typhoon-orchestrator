@@ -7,7 +7,6 @@ def typhoon_directory():
         return os.environ['TYPHOON_HOME']
     except KeyError:
         print('Error getting typhoon home directory. Please define TYPHOON_HOME environment variable.')
-        raise
         sys.exit(-1)
 
 
@@ -29,3 +28,7 @@ def adapters_directory():
 
 def transformations_directory():
     return os.path.join(typhoon_directory(), 'transformations')
+
+
+def get_env():
+    return os.environ["TYPHOON-ENV"]

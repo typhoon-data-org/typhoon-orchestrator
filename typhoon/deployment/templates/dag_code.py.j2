@@ -22,7 +22,6 @@ DAG_CONFIG = {} # Global variable with DAG config. Will be populated in main
 
 @dag
 def {{ name }}_main(event, context, env=None):
-    DAG_CONFIG['env'] = env or '{{ environment }}'
     DAG_CONFIG['dag_id'] = '{{ name }}'
     DAG_CONFIG['execution_date'] = dateutil.parser.parse(event['time'])
     DAG_CONFIG['ds'] = event['time'].split('T')[0]
@@ -83,6 +82,7 @@ def {{ node_name }}_node({% if node_name not in get_sources(structure)%}data, {%
 
 {% endfor %}
 if __name__ == '__main__':
+    os.environ['TYPHOON-ENV'] = 'dev'
     example_event = {
         'time': '2019-02-05T16:52:09Z'
     }
