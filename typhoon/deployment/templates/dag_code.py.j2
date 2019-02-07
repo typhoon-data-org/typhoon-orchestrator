@@ -35,7 +35,9 @@ def {{ name }}_main(event, context, env=None):
 
 # Branches
 {% for node_name, node in nodes.items() %}
+{% if node.get('async', True) %}
 @task
+{% endif %}
 def {{ node_name }}_branch({% if node_name not in get_sources(structure)%}data, {% endif %}batch_num=0):
     data_generator = {{ node_name }}_node({% if node_name not in get_sources(structure)%}data, {% endif %}batch_num)
     for batch_num, data in enumerate(data_generator, start=1):
