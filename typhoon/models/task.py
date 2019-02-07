@@ -1,4 +1,5 @@
 import functools
+import logging
 
 from typhoon import config
 from typhoon.logger import S3Logger, StdoutLogger, logger_factory, NullLogger
@@ -20,11 +21,7 @@ def task_logging_wrapper(bucket, dag_config, task_id, batch_num):
                 env=get_env(),
             ):
                 with StdoutLogger():
-                    try:
-                        yield from func(*args, **kwargs)
-                    except Exception:
-                        # TODO: Mark task as failed in DynamoDB
-                        pass
+                    yield from func(*args, **kwargs)
 
         return func_wrapper
 

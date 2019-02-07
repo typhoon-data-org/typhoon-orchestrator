@@ -6,7 +6,6 @@ from typing import ContextManager, Type
 
 from typhoon import config
 from typhoon.aws import write_logs
-from typhoon.settings import out_directory
 
 
 class LoggingContext(object):
