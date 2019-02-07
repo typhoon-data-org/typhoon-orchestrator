@@ -99,10 +99,23 @@ class S3Logger(LoggingInterface):
         self.logging_context.__exit__(exc_type, exc_val, exc_tb)
 
 
+class NullLogger(LoggingInterface):
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+
 def logger_factory(logger_type: str) -> Type[LoggingInterface]:
     if logger_type == 's3':
         return S3Logger
     if logger_type == 'file':
         return FileLogger
+    if logger_type == 'None':
+        return NullLogger
     else:
         raise ValueError(f'Logger {logger_type} is not a valid option')
