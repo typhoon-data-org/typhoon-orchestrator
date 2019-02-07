@@ -4,7 +4,7 @@ from typing import Sequence, Tuple, Iterable
 import jinja2 as jinja2
 import yaml
 
-from typhoon.deployment import settings
+from typhoon import settings
 
 
 def load_dags() -> Sequence:
@@ -104,7 +104,8 @@ templateEnv.globals.update(get_edge=get_edge)
 templateEnv.globals.update(get_edges_for_source=get_edges_for_source)
 
 
-def generate_dag_code(dag: dict):
+def generate_dag_code(dag: dict, env: str):
     dag_template = templateEnv.get_template('dag_code.py.j2')
+    dag['environment'] = env
     return dag_template.render(dag)
 

@@ -3,21 +3,26 @@ import os
 
 from zappa.cli import ZappaCLI
 
-from typhoon.deployment.deploy import copy_user_defined_code, build_zappa_settings
-from typhoon.deployment.settings import out_directory
+from typhoon import config
 from typhoon.deployment.dags import load_dags
 from typhoon.deployment.deploy import build_dag_code, clean_out
+from typhoon.deployment.deploy import copy_user_defined_code, build_zappa_settings
+from typhoon.settings import out_directory
 
 
 # noinspection PyUnusedLocal
 def build_dags(args):
+    profile = args.profile or config.get(args.env, 'aws-profile')
+    project_name = args.project_name or config.get(args.env, 'project-name')
+    s3_bucket = args.s3_bucket or config.get(args.env, 's3-bucket')
+
     clean()
 
     dags = load_dags()
     for dag in dags:
-        build_dag_code(dag)
+        build_dag_code(dag, args.env)
 
-    build_zappa_settings(dags, args.profile, args.project_name, args.s3_bucket)
+    build_zappa_settings(dags, profile, project_name, s3_bucket)
 
     copy_user_defined_code()
 
@@ -37,8 +42,9 @@ def handle():
     subparsers = parser.add_subparsers(help='sub-command help')
 
     build_dags_parser = subparsers.add_parser('build-dags', help='Build code for dags in $TYPHOON_HOME/out/')
-    build_dags_parser.add_argument('--profile', type=str, help='AWS profile used to deploy', required=True)
-    build_dags_parser.add_argument('--project-name', type=str, required=True)
+    build_dags_parser.add_argument('--env', type=str, help='Environment', required=True)
+    build_dags_parser.add_argument('--profile', type=str, help='AWS profile used to deploy', required=False)
+    build_dags_parser.add_argument('--project-name', type=str, required=False)
     build_dags_parser.add_argument('--s3-bucket', type=str, required=False)
     build_dags_parser.set_defaults(func=build_dags)
 

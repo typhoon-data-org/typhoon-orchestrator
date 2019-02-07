@@ -19,7 +19,7 @@ def generate_zappa_settings(
         dags: Sequence[dict],
         aws_profile: str,
         project_name: str,
-        s3_bucket: Optional[str] = None,
+        s3_bucket: str,
 ):
     zappa_settings_template = templateEnv.get_template('zappa_settings.json.j2')
     return zappa_settings_template.render({

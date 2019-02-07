@@ -1,7 +1,7 @@
 import io
 import logging
 import sys
-from typing import ContextManager
+from typing import ContextManager, Type
 
 from typhoon.aws import write_logs
 
@@ -38,7 +38,12 @@ class LoggingContext(object):
             self.logger.addHandler(self.old_handler)
 
 
-LoggingInterface = ContextManager
+class LoggingInterface:
+    def __enter__(self):
+        raise NotImplementedError
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        raise NotImplementedError
 
 
 class StdoutLogger(ContextManager):
@@ -70,3 +75,10 @@ class S3Logger(LoggingInterface):
             key=self.key
         )
         self.logging_context.__exit__(exc_type, exc_val, exc_tb)
+
+
+def logger_factory(logger_type: str) -> Type[LoggingInterface]:
+    if logger_type == 's3':
+        return S3Logger
+    else:
+        raise ValueError(f'Logger {logger_type} is not a valid option')

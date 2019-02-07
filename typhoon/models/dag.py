@@ -1,14 +1,15 @@
 import functools
+import logging
 
 
 def dag(func):
     # noinspection PyBroadException
     @functools.wraps(func)
-    def func_wrapper(event, context):
+    def func_wrapper(event, context, env):
         try:
-            func(event, context)
+            func(event, context, env)
         except Exception as e:
-            print(e)
+            logging.error(e)
             # TODO: Mark task as failed in dynamoDB
             return True     # To prevent lambda retries. Errors won't show up in cloudwatch
         finally:
