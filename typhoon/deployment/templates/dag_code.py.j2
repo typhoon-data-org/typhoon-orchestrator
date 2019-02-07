@@ -25,7 +25,7 @@ def {{ name }}_main(event, context, env=None):
     DAG_CONFIG['env'] = env or '{{ environment }}'
     DAG_CONFIG['dag_id'] = '{{ name }}'
     DAG_CONFIG['execution_date'] = dateutil.parser.parse(event['time'])
-    DAG_CONFIG['ds'] = event['time'].split()[0]
+    DAG_CONFIG['ds'] = event['time'].split('T')[0]
     DAG_CONFIG['ds_nodash'] = event['time'].replace('-', '')
     DAG_CONFIG['etl_timestamp'] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
 

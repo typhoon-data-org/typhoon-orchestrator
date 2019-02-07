@@ -1,5 +1,6 @@
 import functools
 import logging
+import traceback
 
 
 def dag(func):
@@ -9,8 +10,8 @@ def dag(func):
         try:
             func(event, context, env)
         except Exception as e:
-            logging.error(e)
-            # TODO: Mark task as failed in dynamoDB
+            traceback.print_exc()
+            # TODO: Mark DAG as failed in dynamoDB
             return True     # To prevent lambda retries. Errors won't show up in cloudwatch
         finally:
             # TODO: Write log to S3

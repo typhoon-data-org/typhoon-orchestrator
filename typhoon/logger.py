@@ -1,9 +1,12 @@
 import io
 import logging
+import os
 import sys
 from typing import ContextManager, Type
 
+from typhoon import config
 from typhoon.aws import write_logs
+from typhoon.settings import out_directory
 
 
 class LoggingContext(object):
@@ -56,9 +59,28 @@ class StdoutLogger(ContextManager):
         self.logging_context.__exit__(exc_type, exc_val, exc_tb)
 
 
+class FileLogger(LoggingInterface):
+    def __init__(self, dag_id, task_id, ds: str, etl_timestamp: str, batch_num, env):
+        self.log_buffer = io.StringIO()
+        self.log_file = os.path.join(
+            config.get(env, 'local-log-path'),
+            f'{dag_id}/{ds.replace("-", "_")}/execution{etl_timestamp.replace(":", "_").replace("-", "_")}/'
+            f'{ task_id }_{batch_num}.log'
+        )
+
+    def __enter__(self):
+        os.makedirs(os.path.dirname(self.log_file), exist_ok=True)
+        self.handler = logging.FileHandler(self.log_file)
+        self.logging_context = LoggingContext(handler=self.handler, handler_name='file')
+        self.logging_context.__enter__()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.logging_context.__exit__(exc_type, exc_val, exc_tb)
+
+
 class S3Logger(LoggingInterface):
-    def __init__(self, bucket, dag_id, task_id, ds, etl_timestamp, batch_num):
-        self.bucket = bucket
+    def __init__(self, dag_id, task_id, ds, etl_timestamp, batch_num, env):
+        self.bucket = config.get(env, 's3-bucket')
         self.log_buffer = io.StringIO()
         self.key = f'logs/{dag_id}/{ds}/execution{etl_timestamp}/{ task_id }_{batch_num}.log'
 
@@ -80,5 +102,7 @@ class S3Logger(LoggingInterface):
 def logger_factory(logger_type: str) -> Type[LoggingInterface]:
     if logger_type == 's3':
         return S3Logger
+    if logger_type == 'file':
+        return FileLogger
     else:
         raise ValueError(f'Logger {logger_type} is not a valid option')

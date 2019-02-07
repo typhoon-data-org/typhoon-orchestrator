@@ -11,15 +11,19 @@ def task_logging_wrapper(bucket, dag_config, task_id, batch_num):
             custom_logger_type = config.get(dag_config['env'], 'logger')
             custom_logger = logger_factory(custom_logger_type)
             with custom_logger(
-                bucket=bucket,
                 dag_id=dag_config['dag_id'],
                 task_id=task_id,
                 ds=dag_config['ds'],
                 etl_timestamp=dag_config['etl_timestamp'],
                 batch_num=batch_num,
+                env=dag_config['env'],
             ):
                 with StdoutLogger():
-                    yield from func(*args, **kwargs)
+                    try:
+                        yield from func(*args, **kwargs)
+                    except Exception:
+                        # TODO: Mark task as failed in DynamoDB
+                        pass
 
         return func_wrapper
 
