@@ -30,18 +30,16 @@ class Connection(NamedTuple):
 
 
 def get_connection_params(conn_id: str) -> ConnectionParams:
-    env = get_env()
-    if env == 'dev':
-        return get_connection_local(conn_id)
-    else:
-        raise ValueError(f'Environment f{env} not recognized')
+    conn = get_connection(get_env(), conn_id)
+    return ConnectionParams(**conn._asdict().pop('conn_id'))
 
 
-def get_connection_local(conn_id: str) -> ConnectionParams:
+def get_connection_local(conn_id: str, conn_env: Optional[str]) -> ConnectionParams:
     connections_yml = os.path.join(typhoon_directory(), 'connections.yml')
     with open(connections_yml, 'r') as f:
         connections = yaml.load(f)
-    return ConnectionParams(**connections[conn_id])
+    conn_params = connections[conn_id] if not conn_env else connections[conn_id][conn_env]
+    return ConnectionParams(**conn_params)
 
 
 def set_connection(env: str, conn_id: str, conn_params: ConnectionParams):

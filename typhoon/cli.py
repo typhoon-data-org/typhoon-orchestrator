@@ -48,7 +48,7 @@ def migrate(args):
 
 
 def cli_set_connection(args):
-    conn_params = get_connection_local(args.conn_id)
+    conn_params = get_connection_local(args.conn_id, args.conn_env)
     print(f'Setting connection for {args.conn_id} in {args.env}')
     set_connection(args.env, args.conn_id, conn_params)
 
@@ -80,6 +80,7 @@ def handle():
         help="Set connection from $TYPHOON_HOME/connections.yml to the specified environment")
     deploy_parser.add_argument('--env', type=str, help='Target environment', required=True)
     deploy_parser.add_argument('--conn-id', type=str, help='Connection ID', required=True)
+    deploy_parser.add_argument('--conn-env', type=str, help='Connection environment', required=False)
     deploy_parser.set_defaults(func=cli_set_connection)
 
     args = parser.parse_args()

@@ -14,6 +14,8 @@ def read_config():
     return config
 
 
-def get(env, var, default=None):
+def get(env, var, default=None, mandatory=False):
     config = read_config()
-    return config[env].get(var, default) if default is not None else config[env][var]
+    if mandatory and var not in config['env'].keys():
+        raise ValueError(f'No attribute {var} in {env} config')
+    return config[env].get(var, default)

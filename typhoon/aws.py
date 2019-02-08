@@ -39,25 +39,26 @@ def create_dynamodb_connections_table(env: str):
 
 
 def connect_dynamodb_metadata(env: str, conn_type: str = 'resource'):
-    endpoint_url = config.get(env, 'dynamodb-endpoint', '')
-    extra_params = {}
+    aws_profile = config.get(env, 'aws-profile')
+    endpoint_url = config.get(env, 'dynamodb-endpoint')
+    aws_region = config.get(env, 'aws-region')
+    extra_params = {'region_name': aws_region}
     if endpoint_url:
         extra_params = {
             'aws_access_key_id': 'dummy',
             'aws_secret_access_key': 'dummy',
             'endpoint_url': endpoint_url,
-            'region_name': 'us-west-2',
         }
 
+    if aws_profile:
+        session = boto3.session.Session(profile_name=aws_profile)
+    else:
+        session = boto3
+
     if conn_type == 'client':
-        ddb = boto3.client('dynamodb', **extra_params)
+        ddb = session.client('dynamodb', **extra_params)
     elif conn_type == 'resource':
-        ddb = boto3.resource('dynamodb', **extra_params)
+        ddb = session.resource('dynamodb', **extra_params)
     else:
         raise ValueError(f'Expected conn_type as client or resource, found: {conn_type}')
     return ddb
-
-
-if __name__ == '__main__':
-    t = create_dynamodb_connections_table('dev')
-    a = 2
