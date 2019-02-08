@@ -70,7 +70,7 @@ def {{ node_name }}_node({% if node_name not in get_sources(structure)%}data, {%
         dag_config=DAG_CONFIG,
         task_id='{{ node_name }}',
         batch_num=batch_num,
-    )({{ node['function'] }})       # Wrapper to add S3 logging
+    )({{ node['function'] }})       # Wrapper to add logging
 
     yield from node_function(
         {% for param, value in node.get('config', {}).items() %}
