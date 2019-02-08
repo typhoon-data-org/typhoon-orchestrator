@@ -17,35 +17,14 @@ def create_dynamodb_connections_table(env: str):
         KeySchema=[
             {
                 'AttributeName': 'conn_id',
-                'KeyType': 'HASH'  # Partition key
+                'KeyType': 'HASH'
             },
-            # {
-            #     'AttributeName': 'title',
-            #     'KeyType': 'RANGE'  # Sort key
-            # }
         ],
         AttributeDefinitions=[
             {
                 'AttributeName': 'conn_id',
                 'AttributeType': 'S'
             },
-            # {
-            #     'AttributeName': 'conn_type',
-            #     'AttributeType': 'S'
-            # },
-            # {
-            #     'AttributeName': 'host',
-            #     'AttributeType': 'S'
-            # },
-            # {
-            #     'AttributeName': 'port',
-            #     'AttributeType': 'N'
-            # },
-            # {
-            #     'AttributeName': 'login',
-            #     'AttributeType': 'S'
-            # },
-
         ],
         ProvisionedThroughput={
             'ReadCapacityUnits': 1,
