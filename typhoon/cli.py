@@ -4,6 +4,7 @@ import os
 from zappa.cli import ZappaCLI
 
 from typhoon import config
+from typhoon.aws import dynamodb_table_exists, create_dynamodb_connections_table
 from typhoon.deployment.dags import load_dags
 from typhoon.deployment.deploy import build_dag_code, clean_out
 from typhoon.deployment.deploy import copy_user_defined_code, build_zappa_settings
@@ -37,6 +38,14 @@ def deploy(args=None):
     zappa_cli.handle(['deploy', args.target])
 
 
+def migrate(args):
+    if dynamodb_table_exists(args.env, 'Connections'):
+        print('Connections table already exists. Skipping creation...')
+    else:
+        print('Creating table Connections')
+        create_dynamodb_connections_table(args.env)
+
+
 def handle():
     parser = argparse.ArgumentParser(description='Typhoon CLI')
     subparsers = parser.add_subparsers(help='sub-command help')
@@ -52,8 +61,12 @@ def handle():
     clean_parser.set_defaults(func=clean)
 
     deploy_parser = subparsers.add_parser('deploy', help='Deploy Typhoon scheduler')
-    deploy_parser.add_argument('--target', type=str, help='Target environment', required=True)
+    deploy_parser.add_argument('--env', type=str, help='Target environment', required=True)
     deploy_parser.set_defaults(func=deploy)
+
+    deploy_parser = subparsers.add_parser('migrate', help="Initialise DynamoDB metadata if it doesn't already exist")
+    deploy_parser.add_argument('--env', type=str, help='Target environment', required=True)
+    deploy_parser.set_defaults(func=migrate)
 
     args = parser.parse_args()
     try:

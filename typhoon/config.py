@@ -16,4 +16,4 @@ def read_config():
 
 def get(env, var, default=None):
     config = read_config()
-    return config[env].get(var, default) if default else config[env][var]
+    return config[env].get(var, default) if default is not None else config[env][var]

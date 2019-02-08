@@ -1,5 +1,3 @@
-from typing import Union
-
 import boto3
 
 from typhoon import config
@@ -8,6 +6,12 @@ from typhoon import config
 def write_logs(body, bucket, key):
     s3 = boto3.client('s3')
     s3.put_object(Body=body, Bucket=bucket, Key=key, ContentType='text/plain')
+
+
+def dynamodb_table_exists(env: str, table: str):
+    ddb = connect_dynamodb_metadata(env, 'client')
+    existing_tables = ddb.list_tables()['TableNames']
+    return table in existing_tables
 
 
 def create_dynamodb_connections_table(env: str):

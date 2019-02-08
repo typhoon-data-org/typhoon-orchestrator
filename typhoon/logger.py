@@ -110,6 +110,7 @@ class NullLogger(LoggingInterface):
 
 
 def logger_factory(logger_type: str) -> Type[LoggingInterface]:
+    # TODO: Add logging to elasticsearch
     if logger_type == 's3':
         return S3Logger
     if logger_type == 'file':
