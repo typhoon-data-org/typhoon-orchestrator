@@ -4,7 +4,7 @@ from typing import NamedTuple, Optional
 import yaml
 from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
 
-from typhoon.aws import connect_dynamodb_metadata, dict_to_ddb_item
+from typhoon.aws import connect_dynamodb_metadata
 from typhoon.settings import get_env, typhoon_directory
 
 
@@ -38,7 +38,7 @@ def get_connection_params(conn_id: str) -> ConnectionParams:
 
 
 def get_connection_local(conn_id: str) -> ConnectionParams:
-    connections_yml = os.path.join(os.path.dirname(typhoon_directory()), 'connections.yml')
+    connections_yml = os.path.join(typhoon_directory(), 'connections.yml')
     with open(connections_yml, 'r') as f:
         connections = yaml.load(f)
     return ConnectionParams(**connections[conn_id])

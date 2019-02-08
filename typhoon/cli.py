@@ -5,6 +5,7 @@ from zappa.cli import ZappaCLI
 
 from typhoon import config
 from typhoon.aws import dynamodb_table_exists, create_dynamodb_connections_table
+from typhoon.connections import get_connection_local, set_connection
 from typhoon.deployment.dags import load_dags
 from typhoon.deployment.deploy import build_dag_code, clean_out
 from typhoon.deployment.deploy import copy_user_defined_code, build_zappa_settings
@@ -46,6 +47,12 @@ def migrate(args):
         create_dynamodb_connections_table(args.env)
 
 
+def cli_set_connection(args):
+    conn_params = get_connection_local(args.conn_id)
+    print(f'Setting connection for {args.conn_id} in {args.env}')
+    set_connection(args.env, args.conn_id, conn_params)
+
+
 def handle():
     parser = argparse.ArgumentParser(description='Typhoon CLI')
     subparsers = parser.add_subparsers(help='sub-command help')
@@ -67,6 +74,13 @@ def handle():
     deploy_parser = subparsers.add_parser('migrate', help="Initialise DynamoDB metadata if it doesn't already exist")
     deploy_parser.add_argument('--env', type=str, help='Target environment', required=True)
     deploy_parser.set_defaults(func=migrate)
+
+    deploy_parser = subparsers.add_parser(
+        'set-connection',
+        help="Set connection from $TYPHOON_HOME/connections.yml to the specified environment")
+    deploy_parser.add_argument('--env', type=str, help='Target environment', required=True)
+    deploy_parser.add_argument('--conn-id', type=str, help='Connection ID', required=True)
+    deploy_parser.set_defaults(func=cli_set_connection)
 
     args = parser.parse_args()
     try:
