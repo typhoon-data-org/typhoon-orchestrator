@@ -66,3 +66,11 @@ def get_connection(env: str, conn_id: str) -> Connection:
     deserializer = TypeDeserializer()
     conn = {k: deserializer.deserialize(v) for k, v in response['Item'].items()}
     return Connection(**conn)
+
+
+def delete_connection(env: str, conn_id: str):
+    ddb = connect_dynamodb_metadata(env, 'client')
+    ddb.delete_item(
+        TableName='Connections',
+        Key={'conn_id': {'S': conn_id}}
+    )
