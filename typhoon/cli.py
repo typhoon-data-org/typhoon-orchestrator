@@ -5,7 +5,7 @@ from zappa.cli import ZappaCLI
 
 from typhoon import config
 from typhoon.aws import dynamodb_table_exists, create_dynamodb_connections_table
-from typhoon.connections import get_connection_local, set_connection
+from typhoon.connections import get_connection_local, set_connection, dump_connections
 from typhoon.deployment.dags import load_dags
 from typhoon.deployment.deploy import build_dag_code, clean_out
 from typhoon.deployment.deploy import copy_user_defined_code, build_zappa_settings
@@ -53,6 +53,10 @@ def cli_set_connection(args):
     set_connection(args.env, args.conn_id, conn_params)
 
 
+def cli_dump_connections(args):
+    print(dump_connections(args.env, dump_format='yaml'))
+
+
 def handle():
     parser = argparse.ArgumentParser(description='Typhoon CLI')
     subparsers = parser.add_subparsers(help='sub-command help')
@@ -82,6 +86,10 @@ def handle():
     deploy_parser.add_argument('--conn-id', type=str, help='Connection ID', required=True)
     deploy_parser.add_argument('--conn-env', type=str, help='Connection environment', required=False)
     deploy_parser.set_defaults(func=cli_set_connection)
+
+    deploy_parser = subparsers.add_parser('dump-connections', help="Print all connections to stdout")
+    deploy_parser.add_argument('--env', type=str, help='Target environment', required=True)
+    deploy_parser.set_defaults(func=cli_dump_connections)
 
     args = parser.parse_args()
     try:

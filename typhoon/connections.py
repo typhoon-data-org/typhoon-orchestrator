@@ -1,14 +1,18 @@
+import json
 import os
+from decimal import Decimal
 from typing import NamedTuple, Optional
 
 import yaml
 from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
+from dataclasses import dataclass
 
-from typhoon.aws import connect_dynamodb_metadata
+from typhoon.aws import connect_dynamodb_metadata, scan_dynamodb_table, replace_decimals
 from typhoon.settings import get_env, typhoon_directory
 
 
-class ConnectionParams(NamedTuple):
+@dataclass
+class ConnectionParams:
     conn_type: str
     host: Optional[str] = None
     port: Optional[int] = None
@@ -17,8 +21,13 @@ class ConnectionParams(NamedTuple):
     schema: Optional[str] = None
     extra: Optional[dict] = None
 
+    def __post_init__(self):
+        self.port = replace_decimals(self.port)
+        self.extra = replace_decimals(self.extra)
 
-class Connection(NamedTuple):
+
+@dataclass
+class Connection:
     conn_id: str
     conn_type: str
     host: Optional[str] = None
@@ -28,10 +37,14 @@ class Connection(NamedTuple):
     schema: Optional[str] = None
     extra: Optional[dict] = None
 
+    def __post_init__(self):
+        self.port = replace_decimals(self.port)
+        self.extra = replace_decimals(self.extra)
+
 
 def get_connection_params(conn_id: str) -> ConnectionParams:
     conn = get_connection(get_env(), conn_id)
-    return ConnectionParams(**conn._asdict().pop('conn_id'))
+    return ConnectionParams(**conn.__dict__.pop('conn_id'))
 
 
 def get_connection_local(conn_id: str, conn_env: Optional[str]) -> ConnectionParams:
@@ -49,7 +62,7 @@ def set_connection(env: str, conn_id: str, conn_params: ConnectionParams):
         TableName='Connections',
         Item={
             'conn_id': {'S': conn_id},
-            **serializer.serialize(conn_params._asdict())['M']
+            **serializer.serialize(conn_params.__dict__)['M']
         })
 
 
@@ -72,3 +85,22 @@ def delete_connection(env: str, conn_id: str):
         TableName='Connections',
         Key={'conn_id': {'S': conn_id}}
     )
+
+
+def dump_connections(env: str, dump_format='json') -> str:
+    """Prints the connections in json/yaml format"""
+    connections_raw = scan_dynamodb_table(env, 'Connections')
+    connections = {}
+    for conn in connections_raw:
+        k = conn.pop('conn_id')
+        v = ConnectionParams(**conn).__dict__
+        connections[k] = v
+
+    if dump_format == 'json':
+        return json.dumps(connections, indent=4)
+    elif dump_format == 'yaml':
+        represent_dict_order = lambda self, data: self.represent_mapping('tag:yaml.org,2002:map', data.items())
+        yaml.add_representer(dict, represent_dict_order)
+        return yaml.dump(connections, default_flow_style=False)
+    else:
+        ValueError(f'Format {dump_format} is not supported. Choose json/yaml')

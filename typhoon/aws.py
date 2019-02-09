@@ -1,4 +1,7 @@
+import decimal
+
 import boto3
+from boto3.dynamodb.types import TypeDeserializer
 
 from typhoon import config
 
@@ -38,6 +41,38 @@ def create_dynamodb_connections_table(env: str):
     return table
 
 
+def create_dynamodb_dags_table(env: str):
+    ddb = connect_dynamodb_metadata(env, 'resource')
+    table = ddb.create_table(
+        TableName='Dags',
+        KeySchema=[
+            {
+                'AttributeName': 'dag_id',
+                'KeyType': 'HASH'
+            },
+            {
+                'AttributeName': 'execution_date',
+                'KeyType': 'RANGE'
+            },
+        ],
+        AttributeDefinitions=[
+            {
+                'AttributeName': 'conn_id',
+                'AttributeType': 'S'
+            },
+            {
+                'AttributeName': 'execution_date',
+                'AttributeType': 'S'
+            },
+        ],
+        ProvisionedThroughput={
+            'ReadCapacityUnits': 1,
+            'WriteCapacityUnits': 1
+        }
+    )
+    return table
+
+
 def connect_dynamodb_metadata(env: str, conn_type: str = 'resource'):
     aws_profile = config.get(env, 'aws-profile')
     endpoint_url = config.get(env, 'dynamodb-endpoint')
@@ -62,3 +97,35 @@ def connect_dynamodb_metadata(env: str, conn_type: str = 'resource'):
     else:
         raise ValueError(f'Expected conn_type as client or resource, found: {conn_type}')
     return ddb
+
+
+def scan_dynamodb_table(env: str, table_name: str):
+    ddb = connect_dynamodb_metadata(env, 'resource')
+    table = ddb.Table(table_name)
+    response = table.scan()
+    data = response['Items']
+
+    while 'LastEvaluatedKey' in response:
+        response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+        data.extend(response['Items'])
+    return data
+
+
+def replace_decimals(obj):
+    if isinstance(obj, list):
+        for i in range(len(obj)):
+            obj[i] = replace_decimals(obj[i])
+        return obj
+    elif isinstance(obj, dict):
+        for k, v in obj.items():
+            obj[k] = replace_decimals(v)
+        return obj
+    elif isinstance(obj, set):
+        return set(replace_decimals(i) for i in obj)
+    elif isinstance(obj, decimal.Decimal):
+        if obj % 1 == 0:
+            return int(obj)
+        else:
+            return float(obj)
+    else:
+        return obj
