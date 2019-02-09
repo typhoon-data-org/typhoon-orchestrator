@@ -1,3 +1,4 @@
+import sqlite3
 from abc import ABC
 from typing import Union
 
@@ -9,7 +10,7 @@ from typhoon.connections import get_connection_params
 from typhoon.contrib.hooks.hook_interface import HookInterface
 
 
-DbApiConnection = Union[SnowflakeConnection]
+DbApiConnection = Union[SnowflakeConnection, sqlite3.Connection]
 
 
 class DbApiHook(HookInterface, ABC):
@@ -34,7 +35,7 @@ class PostgresHook(DbApiHook):
         return self.connection
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
+        self.connection.close()
 
 
 class SnowflakeHook(DbApiHook):
@@ -57,5 +58,17 @@ class SnowflakeHook(DbApiHook):
         return self.connection
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
+        self.connection.close()
 
+
+class SqliteHook(DbApiHook):
+    def __init__(self, conn_id):
+        self.conn_id = conn_id
+
+    def __enter__(self) -> sqlite3.Connection:
+        conn_params = get_connection_params(self.conn_id)
+        self.connection = sqlite3.connect(database=conn_params.extra['database'])
+        return self.connection
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.connection.close()
