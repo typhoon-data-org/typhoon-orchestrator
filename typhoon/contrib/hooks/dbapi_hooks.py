@@ -21,9 +21,10 @@ class DbApiHook(HookInterface, ABC):
 class PostgresHook(DbApiHook):
     def __init__(self, conn_id):
         self.conn_id = conn_id
+        self.connection = None
 
     def __enter__(self) -> psycopg2.extensions.connection:
-        conn_params = get_connection_params(self.conn_id)
+        self.conn_params = get_connection_params(self.conn_id)
         credentials = {
             'host': conn_params.host,
             'user': conn_params.login,
@@ -36,6 +37,7 @@ class PostgresHook(DbApiHook):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.connection.close()
+        self.connection = None
 
 
 class SnowflakeHook(DbApiHook):

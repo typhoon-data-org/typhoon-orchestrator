@@ -11,18 +11,19 @@ from typhoon.contrib.hooks.hook_interface import HookInterface
 class AwsSessionHook(HookInterface):
     def __init__(self, conn_id: str):
         self.conn_id = conn_id
+        self.session: boto3.session.Session = None
 
     def __enter__(self) -> boto3.session.Session:
-        conn_params = get_connection_params(self.conn_id)
+        self.conn_params = get_connection_params(self.conn_id)
         self.session = boto3.session.Session(
-            aws_access_key_id=conn_params.login,
-            aws_secret_access_key=conn_params.password,
-            region_name=conn_params.extra.get('region_name'),
+            aws_access_key_id=self.conn_params.login,
+            aws_secret_access_key=self.conn_params.password,
+            region_name=self.conn_params.extra.get('region_name'),
         )
         return self.session
     
     def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
+        self.session = None
 
 
 class DynamoDbHook(HookInterface):
