@@ -44,7 +44,9 @@ class Connection:
 
 def get_connection_params(conn_id: str) -> ConnectionParams:
     conn = get_connection(get_env(), conn_id)
-    return ConnectionParams(**conn.__dict__.pop('conn_id'))
+    conn_params = conn.__dict__
+    conn_params.pop('conn_id')
+    return ConnectionParams(**conn_params)
 
 
 def get_connection_local(conn_id: str, conn_env: Optional[str]) -> ConnectionParams:

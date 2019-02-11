@@ -36,12 +36,13 @@ def execute_query(
     :param query_template_params: Will used to render the query template
     :return: ExecuteQueryResult namedtuple
     """
-    logging.info(f'Executing query: {query}')
     hook: DbApiHook = get_hook(conn_id)
+    query_template_params = query_template_params or {}
     query = jinja2.Template(query).render(
         dict(schema=schema, table_name=table_name, **query_template_params)
     )
     with hook as conn, closing(conn.cursor()) as cursor:
+        logging.info(f'Executing query: {query}')
         cursor.execute(query)
         columns = [x[0] for x in cursor.description]
         if not batch_size:

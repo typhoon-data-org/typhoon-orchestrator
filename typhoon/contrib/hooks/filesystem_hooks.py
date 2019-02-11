@@ -1,4 +1,6 @@
 import os
+import re
+import unicodedata
 from io import BytesIO
 from nturl2path import pathname2url
 from typing import Iterable
@@ -78,19 +80,35 @@ class LocalStorageHook(FileSystemHookInterface):
 
     def __enter__(self):
         conn_params = get_connection_params(self.conn_id)
-        self.base_path = pathname2url(conn_params.extra.get('base_path', ''))
+        self.base_path = conn_params.extra.get('base_path', '')
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.base_path = None
 
     def _file_path(self, path):
-        return os.path.join(self.base_path, pathname2url(path))
+        return os.path.join(self.base_path, self._slugify_path(path))
+
+    @staticmethod
+    def _slugify(value: str):
+        """
+        Normalizes string, converts to lowercase, removes non-alpha characters,
+        and converts spaces to hyphens.
+        """
+        value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode()
+        value = str(re.sub(r'[^.\w\s-]', '', value).strip().lower())
+        value = str(re.sub(r'[-\s]+', '-', value))
+        return value
+
+    def _slugify_path(self, path: str):
+        return '/'.join([self._slugify(x) for x in path.split('/')])
 
     def list_directory(self, path: str) -> Iterable[str]:
         return os.listdir(self._file_path(path))
 
     def write_data(self, data: BytesIO, path: str):
-        with open(self._file_path(path), 'wb') as f:
+        file_path = self._file_path(path)
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        with open(file_path, 'wb') as f:
             f.write(data.getvalue())
 
     def read_data(self, path: str) -> bytes:

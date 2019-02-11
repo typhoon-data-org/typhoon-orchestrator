@@ -4,6 +4,8 @@ import os
 from datetime import datetime
 
 import dateutil.parser
+import typhoon.contrib.adapters as typhoon_adapters
+import typhoon.contrib.functions as typhoon_functions
 from typhoon.models.dag import dag
 from typhoon.models.task import task_logging_wrapper
 from zappa.async import task
@@ -11,10 +13,9 @@ from zappa.async import task
 {% for functions_module in get_functions_modules(nodes) %}
 from functions import {{ functions_module }}
 {% endfor %}
-{% for adapter_module in get_adapters_modules(adapters) %}
+{% for adapter_module in get_adapters_modules(edges) %}
 from adapters import {{ adapter_module }}
 {% endfor %}
-
 
 os.environ['TYPHOON_HOME'] = os.path.dirname(__file__)
 DAG_CONFIG = {} # Global variable with DAG config. Will be populated in main
@@ -42,7 +43,7 @@ def {{ node_name }}_branch({% if node_name not in get_sources(structure)%}data, 
     data_generator = {{ node_name }}_node({% if node_name not in get_sources(structure)%}data, {% endif %}batch_num)
     for batch_num, data in enumerate(data_generator, start=1):
         {% for out_node in structure[node_name] %}
-        data = {{ get_edge(edges, node_name, out_node)[1]['adapter'] }}_adapter(data)
+        data = {{ get_edge(edges, node_name, out_node)[0] }}_adapter(data)
         {{ out_node }}_branch(data, batch_num)
         {% else %}
         pass        # Necessary for the generator to be exhausted since it probably has side effects
@@ -51,12 +52,12 @@ def {{ node_name }}_branch({% if node_name not in get_sources(structure)%}data, 
 
 {% endfor %}
 # Adapters
-{% for adapter_name, adapter in adapters.items() %}
-def {{ adapter_name }}_adapter(data):
-    return {{ adapter['function'] }}(
+{% for edge_name, edge in edges.items() %}
+def {{ edge_name }}_adapter(data):
+    return {{ edge['adapter']['function'] | clean_function_name('adapters') }}(
         data=data,
-        {% for param, value in adapter.get('config', {}).items() %}
-        {{ param }}={{ "'" + value + "'" if value is string else value }},
+        {% for param, value in edge['adapter'].get('config', {}).items() %}
+        {{ param }}={{ value | clean_param }},
         {% endfor %}
     )
 
@@ -70,11 +71,11 @@ def {{ node_name }}_node({% if node_name not in get_sources(structure)%}data, {%
         dag_config=DAG_CONFIG,
         task_id='{{ node_name }}',
         batch_num=batch_num,
-    )({{ node['function'] }})       # Wrapper to add logging
+    )({{ node['function'] | clean_function_name('functions') }})       # Wrapper to add logging
 
     yield from node_function(
         {% for param, value in node.get('config', {}).items() %}
-        {{ param }}={{ "'" + value + "'" if value is string else value }},
+        {{ param }}={{ value | clean_param }},
         {% endfor %}
         {% if node_name not in get_sources(structure) %}
         **data,
@@ -86,6 +87,6 @@ def {{ node_name }}_node({% if node_name not in get_sources(structure)%}data, {%
 if __name__ == '__main__':
     os.environ['TYPHOON-ENV'] = 'dev'
     example_event = {
-        'time': '2019-02-05T16:52:09Z'
+        'time': '2019-02-05T03:00:00Z'
     }
     {{ name }}_main(example_event, None, env='dev')

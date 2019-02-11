@@ -15,6 +15,9 @@ class AwsSessionHook(HookInterface):
 
     def __enter__(self) -> boto3.session.Session:
         self.conn_params = get_connection_params(self.conn_id)
+        profile = self.conn_params.extra.get('profile')
+        if profile:
+            self.session = boto3.session.Session(profile_name=profile)
         self.session = boto3.session.Session(
             aws_access_key_id=self.conn_params.login,
             aws_secret_access_key=self.conn_params.password,
@@ -53,4 +56,4 @@ class DynamoDbHook(HookInterface):
         return self.connection
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
+        self.connection = None

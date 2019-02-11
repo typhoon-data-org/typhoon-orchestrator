@@ -6,4 +6,6 @@ from typhoon.contrib.hooks.hook_factory import get_hook
 
 def write_data(data: BytesIO, conn_id: str, path: str):
     hook: FileSystemHookInterface = get_hook(conn_id)
-    hook.write_data(data, path)
+    with hook:
+        hook.write_data(data, path)
+    yield path
