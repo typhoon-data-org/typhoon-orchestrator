@@ -1,1 +1,1 @@
-from typhoon.contrib.adapters import from_branch
+from typhoon.contrib.adapters import from_branch, generic
