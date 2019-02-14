@@ -6,9 +6,9 @@ import traceback
 def dag(func):
     # noinspection PyBroadException
     @functools.wraps(func)
-    def func_wrapper(event, context, env):
+    def func_wrapper(event, context):
         try:
-            func(event, context, env)
+            func(event, context)
         except Exception as e:
             traceback.print_exc()
             # TODO: Mark DAG as failed in dynamoDB

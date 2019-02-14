@@ -1,28 +1,28 @@
+{% import 'adapter.j2' as adapter %}
 # DAG name: {{ name }}
 # Schedule interval = {{ schedule_interval }}
 import os
 from datetime import datetime
 
 import dateutil.parser
-import typhoon.contrib.adapters as typhoon_adapters
 import typhoon.contrib.functions as typhoon_functions
+import typhoon.contrib.transformations as typhoon_transformations
 from typhoon.models.dag import dag
 from typhoon.models.task import task_logging_wrapper
 from zappa.async import task
-
-{% for functions_module in get_functions_modules(nodes) %}
-from functions import {{ functions_module }}
+{% for transformations_module in get_transformations_modules(edges) %}
+import {{ transformations_module }}
 {% endfor %}
-{% for adapter_module in get_adapters_modules(edges) %}
-from adapters import {{ adapter_module }}
+{% for functions_module in get_functions_modules(nodes) %}
+import {{ functions_module }}
 {% endfor %}
 
 os.environ['TYPHOON_HOME'] = os.path.dirname(__file__)
-DAG_CONFIG = {} # Global variable with DAG config. Will be populated in main
+DAG_CONFIG = {}     # Global variable with DAG config. Will be populated in main
 
 
 @dag
-def {{ name }}_main(event, context, env=None):
+def {{ name }}_main(event, context):
     DAG_CONFIG['dag_id'] = '{{ name }}'
     DAG_CONFIG['execution_date'] = dateutil.parser.parse(event['time'])
     DAG_CONFIG['ds'] = event['time'].split('T')[0]
@@ -43,29 +43,21 @@ def {{ node_name }}_branch({% if node_name not in get_sources(structure)%}data, 
     data_generator = {{ node_name }}_node({% if node_name not in get_sources(structure)%}data, {% endif %}batch_num)
     for batch_num, data in enumerate(data_generator, start=1):
         {% for out_node in structure[node_name] %}
-        data = {{ get_edge(edges, node_name, out_node)[0] }}_adapter(data)
-        {{ out_node }}_branch(data, batch_num)
+        config = {}
+        {% for k, v in get_edge(edges, node_name, out_node)[1]['adapter'].items() %}
+        {{ adapter.adapter_params(k, v) }}
+        {% endfor %}
+        {{ out_node }}_branch(config, batch_num)
+
         {% else %}
         pass        # Necessary for the generator to be exhausted since it probably has side effects
+
         {% endfor %}
-
-
-{% endfor %}
-# Adapters
-{% for edge_name, edge in edges.items() %}
-def {{ edge_name }}_adapter(data):
-    return {{ edge['adapter']['function'] | clean_function_name('adapters') }}(
-        data=data,
-        {% for param, value in edge['adapter'].get('config', {}).items() %}
-        {{ param }}={{ value | clean_param }},
-        {% endfor %}
-    )
-
 
 {% endfor %}
 # Nodes
 {% for node_name, node in nodes.items() %}
-def {{ node_name }}_node({% if node_name not in get_sources(structure)%}data, {% endif %}batch_num):
+def {{ node_name }}_node({% if node_name not in get_sources(structure)%}config, {% endif %}batch_num):
     node_function = task_logging_wrapper(
         bucket='typhoon-orchestrator',
         dag_config=DAG_CONFIG,
@@ -75,10 +67,10 @@ def {{ node_name }}_node({% if node_name not in get_sources(structure)%}data, {%
 
     yield from node_function(
         {% for param, value in node.get('config', {}).items() %}
-        {{ param }}={{ value | clean_param }},
+        {{ param }}={{ value | clean_simple_param }},
         {% endfor %}
         {% if node_name not in get_sources(structure) %}
-        **data,
+        **config,
         {% endif %}
     )
 
@@ -89,4 +81,4 @@ if __name__ == '__main__':
     example_event = {
         'time': '2019-02-05T03:00:00Z'
     }
-    {{ name }}_main(example_event, None, env='dev')
+    {{ name }}_main(example_event, None)

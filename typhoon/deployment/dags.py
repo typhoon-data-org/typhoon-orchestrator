@@ -1,4 +1,5 @@
 import os
+import re
 from typing import Sequence, Tuple, Iterable, Union, List
 
 import jinja2 as jinja2
@@ -78,6 +79,21 @@ def get_adapters_modules(edges: dict)  -> Iterable[str]:
     return list(modules)
 
 
+def get_transformations_modules(edges: dict) -> Iterable[str]:
+    modules = set()
+    for _, edge in edges.items():
+        for _, val in edge['adapter'].items():
+            if not isinstance(val, list):
+                if isinstance(val, str) and val.startswith('transformations.') and not val.startswith('typhoon.'):
+                    modules.add('.'.join(val.split('.')[:-1]))
+            else:
+                for x in val:
+                    if isinstance(x, str) and x.startswith('transformations.') and not x.startswith('typhoon.'):
+                        modules.add('.'.join(x.split('.')[:-1]))
+
+    return list(modules)
+
+
 def get_functions_modules(nodes: dict) -> Iterable[str]:
     modules = set()
     for _, node in nodes.items():
@@ -93,6 +109,27 @@ def clean_function_name(function_name: str, function_type: str) -> str:
     else:
         parts = function_name.split('.')
         return '.'.join([f'typhoon_{function_type}', *parts[1:]])
+
+
+def clean_simple_param(param: Union[str, int, float, List, dict]):
+    if isinstance(param, str):
+        if "'" in param:
+            return f'"""{param}"""'
+        else:
+            return f"'{param}'"
+    else:
+        return param
+
+
+def substitute_special(code: str, key: str) -> str:
+    if '=>' in key:
+        key = key.replace(' ', '').split('=>')[0]
+    code = code.replace('$SOURCE', 'data')
+    code = re.sub(r'\$DAG_CONFIG(\.(\w+))', r"DAG_CONFIG['\g<2>']", code)
+    code = code.replace('$DAG_CONFIG', 'DAG_CONFIG')
+    code = re.sub(r'\$(\d)+', r"{key}_\g<1>".format(key=key), code)
+    code = code.replace('$BATCH_NUM', 'batch_num')
+    return code
 
 
 def clean_param(param: Union[str, int, float, List, dict]):
@@ -131,11 +168,14 @@ templateEnv.globals.update(get_destinations=get_destinations)
 templateEnv.globals.update(get_transformations=get_transformations)
 templateEnv.globals.update(get_adapters_modules=get_adapters_modules)
 templateEnv.globals.update(get_functions_modules=get_functions_modules)
+templateEnv.globals.update(get_transformations_modules=get_transformations_modules)
 templateEnv.globals.update(get_edge=get_edge)
 templateEnv.globals.update(get_edges_for_source=get_edges_for_source)
 
 templateEnv.filters.update(clean_function_name=clean_function_name)
 templateEnv.filters.update(clean_param=clean_param)
+templateEnv.filters.update(clean_simple_param=clean_simple_param)
+templateEnv.filters.update(substitute_special=substitute_special)
 
 
 def generate_dag_code(dag: dict, env: str):
