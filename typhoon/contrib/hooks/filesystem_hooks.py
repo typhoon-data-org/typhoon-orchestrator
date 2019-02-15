@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 import unicodedata
@@ -40,6 +41,7 @@ class S3Hook(FileSystemHookInterface, AwsSessionHook):
         AwsSessionHook.__exit__(self, exc_type, exc_val, exc_tb)
 
     def list_directory(self, path: str) -> Iterable[str]:
+        logging.info(f'Listing keys in S3 {path}')
         s3 = self.session.resource('s3')
 
         kwargs = {}
@@ -65,11 +67,13 @@ class S3Hook(FileSystemHookInterface, AwsSessionHook):
         if encrypt:
             extra_args['ServerSideEncryption'] = "AES256"
 
+        logging.info(f'Writing data to S3 {path}')
         s3.upload_fileobj(data, self.bucket, path, ExtraArgs=extra_args)
 
     def read_data(self, path: str) -> bytes:
         s3 = self.session.resource('s3')
 
+        logging.info(f'Reading data from S3 {path}')
         obj = s3.Object(self.bucket, path)
         return obj.get()['Body'].read().decode('utf-8')
 

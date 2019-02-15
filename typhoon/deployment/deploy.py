@@ -38,6 +38,5 @@ def build_zappa_settings(
 
 def copy_user_defined_code():
     copytree(functions_directory(), os.path.join(out_directory(), 'functions'))
-    copytree(adapters_directory(), os.path.join(out_directory(), 'adapters'))
     copytree(transformations_directory(), os.path.join(out_directory(), 'transformations'))
     copy(os.path.join(typhoon_directory(), 'typhoonconfig.cfg'), os.path.join(out_directory(), 'typhoonconfig.cfg'))

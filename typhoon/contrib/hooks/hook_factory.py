@@ -5,6 +5,7 @@ from typhoon.connections import get_connection_params
 from typhoon.contrib.hooks.dbapi_hooks import SqliteHook, PostgresHook, SnowflakeHook
 from typhoon.contrib.hooks.filesystem_hooks import S3Hook, LocalStorageHook
 from typhoon.contrib.hooks.hook_interface import HookInterface
+from typhoon.contrib.hooks.sqlalchemy_hook import SqlAlchemyHook
 from typhoon.settings import typhoon_directory
 
 HOOK_MAPPINGS = {
@@ -13,6 +14,7 @@ HOOK_MAPPINGS = {
     'snowflake': SnowflakeHook,
     's3': S3Hook,
     'local_storage': LocalStorageHook,
+    'sqlalchemy': SqlAlchemyHook,
 }
 
 

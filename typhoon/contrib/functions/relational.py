@@ -4,9 +4,11 @@ from itertools import count
 from typing import Optional, NamedTuple, Sequence, Generator
 
 import jinja2
+from pandas import DataFrame
 
 from typhoon.contrib.hooks.dbapi_hooks import DbApiHook
 from typhoon.contrib.hooks.hook_factory import get_hook
+from typhoon.contrib.hooks.sqlalchemy_hook import SqlAlchemyHook
 
 
 class ExecuteQueryResult(NamedTuple):
@@ -67,3 +69,11 @@ def execute_query(
                     batch=batch,
                     batch_num=batch_num,
                 )
+
+
+def df_write(df: DataFrame, sql_alchemy_conn_id: str, table_name: str, schema: str = None):
+    hook: SqlAlchemyHook = get_hook(sql_alchemy_conn_id)
+    with hook as engine:
+        logging.info(f'Writing dataframe to {hook.conn_params.conn_type} table {table_name}, schema {schema or "default"}')
+        df.to_sql(name=table_name, con=engine, schema=schema, if_exists='append')
+    return schema, table_name

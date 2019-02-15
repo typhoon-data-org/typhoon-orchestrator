@@ -1,9 +1,13 @@
+from time import sleep
 from typing import Sequence, Iterator, Callable, Any
 
 
-def branch(branches: Sequence) -> Iterator:
+def branch(branches: Sequence, delay: int = 0) -> Iterator:
     """Yields each item in the sequence"""
-    return iter(branches)
+    for b in branches:
+        if delay:
+            sleep(delay)
+        yield b
 
 
 # noinspection PyShadowingBuiltins
