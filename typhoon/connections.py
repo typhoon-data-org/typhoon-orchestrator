@@ -1,7 +1,6 @@
 import json
 import os
-from decimal import Decimal
-from typing import NamedTuple, Optional
+from typing import Optional
 
 import yaml
 from boto3.dynamodb.types import TypeDeserializer, TypeSerializer

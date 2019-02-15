@@ -71,8 +71,16 @@ def execute_query(
                 )
 
 
-def df_write(df: DataFrame, sql_alchemy_conn_id: str, table_name: str, schema: str = None):
-    hook: SqlAlchemyHook = get_hook(sql_alchemy_conn_id)
+def df_write(df: DataFrame, conn_id: str, table_name: str, schema: str = None):
+    """
+    Given conn_id belonging to a SqlAlchemy hook, create or append the data to the specified table
+    :param df: Dataframe with data
+    :param conn_id: Connection id for a SqlAlchemyHook
+    :param table_name: Name of the table to write to
+    :param schema: Schema where the table is located
+    :return:
+    """
+    hook: SqlAlchemyHook = get_hook(conn_id)
     with hook as engine:
         logging.info(f'Writing dataframe to {hook.conn_params.conn_type} table {table_name}, schema {schema or "default"}')
         df.to_sql(name=table_name, con=engine, schema=schema, if_exists='append')

@@ -26,11 +26,11 @@ class PostgresHook(DbApiHook):
     def __enter__(self) -> psycopg2.extensions.connection:
         self.conn_params = get_connection_params(self.conn_id)
         credentials = {
-            'host': conn_params.host,
-            'user': conn_params.login,
-            'password': conn_params.password,
-            'dbname': conn_params.extra.get('dbname'),
-            'port': conn_params.port
+            'host': self.conn_params.host,
+            'user': self.conn_params.login,
+            'password': self.conn_params.password,
+            'dbname': self.conn_params.extra.get('dbname'),
+            'port': self.conn_params.port
         }
         self.connection = psycopg2.connect(**credentials)
         return self.connection

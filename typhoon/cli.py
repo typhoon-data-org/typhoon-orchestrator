@@ -95,6 +95,7 @@ def handle():
     try:
         args.func(args)
     except AttributeError:
+        raise
         parser.print_help()
 
 

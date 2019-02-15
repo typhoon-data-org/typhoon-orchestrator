@@ -1,12 +1,11 @@
 import functools
-import logging
 
 from typhoon import config
-from typhoon.logger import S3Logger, StdoutLogger, logger_factory, NullLogger
+from typhoon.logger import StdoutLogger, logger_factory
 from typhoon.settings import get_env
 
 
-def task_logging_wrapper(bucket, dag_config, task_id, batch_num):
+def task_logging_wrapper(dag_config, task_id, batch_num):
     def decorator(func):
         @functools.wraps(func)
         def func_wrapper(*args, **kwargs):
