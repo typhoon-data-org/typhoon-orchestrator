@@ -1,8 +1,11 @@
 from time import sleep
-from typing import Sequence, Iterator, Callable, Any, TypeVar
+from typing import Sequence, Iterator, Callable, TypeVar, Iterable
 
 
-def branch(branches: Sequence, delay: int = 0) -> Iterator:
+T = TypeVar('T')
+
+
+def branch(branches: Sequence[T], delay: int = 0) -> Iterable[T]:
     """
     Yields each item in the sequence with an optional delay
     :param branches:
@@ -13,9 +16,6 @@ def branch(branches: Sequence, delay: int = 0) -> Iterator:
         if delay and i > 0:
             sleep(delay)
         yield b
-
-
-T = TypeVar('T')
 
 
 # noinspection PyShadowingBuiltins
