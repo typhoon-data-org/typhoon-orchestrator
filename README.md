@@ -13,3 +13,32 @@ Typhoon is inspired by Airflow but departs from it in key ways. The most importa
  The ability to share data also has important implications for composability and code reuse. In Airflow you would have an operator that reads from one source and writes to another (eg: reads from Postgres and writes to S3). Whenever you want to read from Postgres and write to an FTP, or read from Mongo and write to S3 you need to create a different operator. This means that for N sources and M destinations you need to write potentially NxM Operators, repeating a lot of the code. In contrast, Typhoon would have a function to extract from Postgres (or any other DbAPI compatible connection), another for MongoDB and so on for every source. We would also have a function for every destination and adapt the output of the source to the input of the destination function via transformations.
  
  This way we just have N+M functions to maintain and can create new workflows by simply composing them and adapting the output of one to the input of the next.
+ 
+ ### Functional Data Pipelines
+ 
+ In the [following article](https://medium.com/@maximebeauchemin/functional-data-engineering-a-modern-paradigm-for-batch-data-processing-2327ec32c42a) (well worth a read), Airflow's creator Maxime Beauchemin advocates for functional data engineering and does a great job of laying out guidelines for modern data engineering, advocating "pure" and "immutable" tasks (by an admittedly loose definition of the terms). While this can be of great value and adds a lot of clarity to your processes, Airflow is still Object Oriented at heart. That coupled with the fact that Operators are isolated leads to a lot of Airflow-specific code that mixes implementation, business logic and regular data processing logic. Apart from making it harder to reuse code, this also makes it difficult to migrate it to a different technology.
+ 
+ With Typhoon we share the same philosophy and take it a step further. We believe that while Object Oriented Programming certainly has it's value (and we use it where it makes sense, like implementing Hooks for instance) a functional approach brings greater value for data processing where we just care about manipulating data and have no desire to abstract from it in any way. Where you would define an operator class in Airflow, this replaced directly with functions in Typhoon.
+ 
+ ```python
+def write_data(data: BytesIO, conn_id: str, path: str) -> str:
+    hook: FileSystemHookInterface = get_hook(conn_id)
+    with hook:
+        hook.write_data(data, path)
+    yield path
+```
+
+The above code is all that's needed to create a function that can be used to create a task, and is a great example of what we discussed earlier. This code is pure python, and has no Typhoon specific code except for get_hook() (we believe that in this case the benefit it provides is well worth the extra coupling, but it is by no means necessary to write your functions in the same way) and even that can be imported to a non Typhoon project (yes, even Airflow) by doing `pip install typhoon[hooks]`' if you ever wish to move away from the framework. Notice how this is inherently more testable and reusable than the alternative approach.
+
+We mentioned earlier that OOP makes sense for hooks. In this case by having a FileSystem Hook interface, both S3, FTP and local writes to disk amongst others can be performed in the same way by calling write_data. This brings an extra layer of testability where you can simply write data to disk during development/debugging and then deploy to a test or production server where it will be written to S3 without any code modifications, simply by virtue of having that conn_id point to an S3 connection in that environment.
+
+A Task is defined in a DAG by referencing that function and passing it the static arguments (the rest are passed in runtime by the preceding Task). From now on we will call them nodes instead of tasks. We will later justify our decision of using YAML instead of python for DAG definitions.
+
+```yaml
+  write_data:
+    function: typhoon.filesystem.write_data     # Previously defined function
+    config:
+      conn_id: s3_data_lake     # This can point to a Local Storage Hook in dev if you wish
+```
+
+Notice how this function can be used in any DAG that needs to write to S3, no matter the source of the data. Contrast that to airflow where in [contrib/operators/](https://github.com/apache/airflow/tree/master/airflow/operators) we have a hive_to_druid operator, hive_to_mysql, hive_to_samba, mssql_to_hive, mysql_to_hive and so on. You get the idea of the NxM complexity of defining operators that we discussed earlier.
