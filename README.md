@@ -187,14 +187,16 @@ edges:
         - typhoon.db_result.to_csv(description=$SOURCE.columns, data=$SOURCE.batch)
         - $1.encode('utf_8')
       path => APPLY:
-        - str('{{system_name}}/{{entity}}/{{dag_config.ds}}/{{dag_config.etl_timestamp}}_{{entity}}_part{{part_num}}.{{extension}}')
-        - typhoon.templates.render($1, system_name='postgres', entity=$SOURCE.table_name, dag_config=$DAG_CONFIG, part_num=$BATCH_NUM, extension='csv')
+        - str('{{system}}/{{entity}}/{{dag_cfg.ds}}/{{dag_cfg.etl_timestamp}}_{{part}}.{{ext}}')
+        - typhoon.templates.render($1, system='postgres', entity=$SOURCE.table_name, dag_cfg=$DAG_CONFIG, part=$BATCH_NUM, ext='csv')
     destination: load_csv_s3
 ```
 
 In a nutshell, branch will launch three lambdas, one for each table name and they will all extract data in batches simultaneously and send each batch to S3. Since batches can be very large it is not feasible to send it over to a new lambda function instance, so we set `async: false` to force it to execute the database extraction and S3 upload in the same lambda function. This is a tradeoff that reduces parallelism but keeps data transfer low. This way you don't need to blend them into one node to prevent it from lauching a new Lambda instance and you can still define them as regular nodes with the same composability this provides. If you still want to increase parallelism you can use `async: thread` and each instance of `load_csv_s3_node` will be run in a new thread (good for performance if there's a lot of IO). Realize that this is only for nodes that need to share a large amount of data that can't be easily serialized, if we wanted to import that data from S3 into our warehouse we just need to pass it the s3 key so that can be run in a regular asynchronous node that will trigger a new Lambda function instance.
 
 Those who are familiar will recognize `$DAG_CONFIG` as being very similar to the context received by Operators in Airflow, with the difference that in Typhoon we try to make our node functions unaware of such low level details and handle DAG specific configuration in the DAG definition where it belongs.
+
+Finally `$BATCH_NUM` is the last of the available special variables which denotes the current batch number, which is the same as the amount of batches that the source function has produced up to this point
 
 
 
