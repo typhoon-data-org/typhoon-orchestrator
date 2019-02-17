@@ -176,7 +176,7 @@ edges:
       query => APPLY:
         - str("SELECT * FROM {{ table_name }} WHERE creation_date='{{ date_string }}'")
         - typhoon.templates.render(template=$1, table_name=$SOURCE, date_string=$DAG_CONFIG.ds)
-      batch_size: 2
+      batch_size: 200
     destination: extract_table
 
   table_to_s3:
