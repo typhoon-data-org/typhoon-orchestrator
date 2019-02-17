@@ -17,3 +17,10 @@ def write_data(data: BytesIO, conn_id: str, path: str) -> Iterable[str]:
     with hook:
         hook.write_data(data, path)
     yield path
+
+
+def list_directory(conn_id: str, path: str) -> Iterable[str]:
+    hook: FileSystemHookInterface = get_hook(conn_id)
+    with hook:
+        for x in hook.list_directory(path):
+            yield x
