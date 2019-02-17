@@ -47,11 +47,11 @@ Notice how this function can be used in any DAG that needs to write to S3, no ma
 
 ### Asynchrony
 
-Factories             |  Assembly Line
-:-------------------------:|:-------------------------:
+
+Factories                             |  Assembly Line
+:------------------------------------:|:------------------------------------:
 ![](https://i.imgur.com/jsfwxeE.png)  |  ![](https://i.imgur.com/ycWPMmJ.png)
 
-![alt text 1](https://i.imgur.com/jsfwxeE.png) ![alt text 2](https://i.imgur.com/ycWPMmJ.png)
 
 To illustrate the limitations of the prevalent approach to data pipelines, picture a car assembly line. Each plant is specialised in one thing and one thing only, and from a series of raw materials it builds a product that the next piece in the chain can take, transform and assemble into something else. If we ever want to change the body of the car we can still reuse the engine, suspensions and a lot of the pieces.
 
