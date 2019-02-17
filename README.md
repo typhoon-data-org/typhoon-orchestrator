@@ -64,3 +64,138 @@ The product (analogous to our data) flows from one factory to the next, improvin
 ![alt text 1](https://i.imgur.com/tgTF6bv.png)
 
 On the image we see a simple DAG definition with two nodes. At execution time the source function will call the child function with some batch of data. The child function will run in a different instance of Lambda/Fargate to the parent function (and also a different one per batch) so the parent function is free to continue its execution. We can see that each instance of the child node can also create batches and send them to its child nodes achieving complete parallelism. We do not need to wait for preceding tasks to finish to execute their child tasks, the whole workflow can be executing simultaneously as the data becomes available.
+
+### Edges: Connecting nodes together
+
+We have seen how to define functions and nodes, but how do they fit together? How do we adapt the out put of one to the input of the other We connect them together by defining edges (keeping with the graph terminology) in YAML and use transformation functions to adapt input to output.
+
+Assume we have two nodes: send_data and write_data. Send_data sends batches made up of a tuple with (file_name, string_data), and write_data takes a BytesIO buffer in a parameter named data and the path where it has to be written to in a parameter named path. The edge would be defined as follows:
+
+```yaml
+edges:
+  e1:
+    source: send_data
+    adapter:
+      data => APPLY: transformations.data.to_bytes_buffer($SOURCE[1])
+      path => APPLY: f'/tmp/{$SOURCE[0]}'
+    destination: write_data
+```
+
+Notice how an edge is made up of a source node, a destination node and an adapter. The adapter has to define all the necessary parameters to the destination_function by applying transformations to the source function output. This is all standard YAML except for two things:
+
+- `=> APPLY` is used to indicate that the value received is not a string, but some code that needs to be executed at runtime to produce a value.
+- `$SOURCE` is one of a limited set of special variables (all in uppercase and starting with $) that will be substituted during code generation. This one in particular refers to the output (batch) of the source function.
+
+This part will be used to generate python code roughly equivalent to:
+
+```python
+source_data = send_data_node()
+for source_data_batch in source_data:
+    destination_config = {
+        'data': transformations.data.to_bytes_buffer(source_data_batch[1]),
+        'path': f'/tmp/source_data_batch[0]'
+    }
+    write_data(
+        # every static parameter defined in the write_data node config. eg: conn_id='s3_data_lake',
+        ** destination_config
+    )
+```
+
+We recognize that some transformations can be complex, or too long to comfortably fit in a line, so an  `= APPLY` key can take a list as a value, where the final value will be the result of executing the last line in the list. Previous transformations in the list can be referred to by index with `$N` where N is the position in the list. This is clearer with an example. Take the same function but lets assume it returns a named tuple instead of a regular tuple for clarity, and it can optionally return an encoding to apply:
+
+```yaml
+edges:
+  e1:
+    source: send_data
+    adapter:
+      data => APPLY:
+        - f'HEADER\n{$SOURCE.string_data\nFOOTER}'
+        - $SOURCE.encoding or 'utf-8'
+        - transformations.data.to_bytes_buffer(data=$1, encoding=$2)
+      path => APPLY: f'/tmp/{$SOURCE.file_name}'
+    destination: write_data
+```
+
+The code generated this time would be roughly:
+
+```python
+source_data = send_data_node()
+for source_data_batch in source_data:
+    destination_config = {}
+    data_1 = f'HEADER\n{source_data_batch.string_data\nFOOTER}'
+    data_2 = source_data_batch.encoding or 'utf-8'
+    destination_config['data'] = transformations.data.to_bytes_buffer(data=data_1, encoding=data_2)
+    destination_config['path'] = f'/tmp/{source_data_batch.file_name}'
+    write_data(
+        # every static parameter defined in the write_data node config. eg: conn_id='s3_data_lake',
+        ** destination_config
+    )
+```
+
+## Putting it all together
+
+Just so you get an idea of how it all fits together lets suppose we have the following pieces already developed or available in Typhoon:
+
+- `typhoon.flow_control.branch`: Which is a function that takes a list and yields each element.
+- `typhoon.relational.execute_query`: Function that takes a query, a table name and a batch size (indicates how many rows to fetch), executes this query and returns the rows, the columns, a batch result and the table name (the table name is not used in the extraction but it is passed nontheless because it can be useful further up to, for example, make up the S3 key).
+- `typhoon.filesystem.write_data`: Takes a bytes object and a path where it writes the data.
+- `typhoon.templates.render`: Transformation that takes a jinja template as a string and keyword arguments that will be used to render it.
+- `typhoon.db_result.to_csv`: Transformation function that takes a query execution result and transforms it into a CSV string.
+
+And we want to create a workflow that executes every day at 9pm, extracts data from 3 tables named `person`, `job`, and `property` from a database, then writes it in CSV form to S3. The definition for this DAG might be as follows:
+
+```yaml
+name: example_dag
+schedule_interval: '0 21 * * *'  # Run every day at 21:00
+
+nodes:
+  send_table_names:
+    function: typhoon.flow_control.branch
+    config:
+      branches:
+        - person
+        - job
+        - property
+
+  extract_table:
+    function: typhoon.relational.execute_query
+    config:
+      conn_id: test_db
+
+  load_csv_s3:
+    function: typhoon.filesystem.write_data
+    config:
+      conn_id: s3_data_lake
+
+
+edges:
+  send_extraction_params:
+    source: send_table_names
+    adapter:
+      table_name => APPLY: $SOURCE
+      query => APPLY:
+        - str("SELECT * FROM {{ table_name }} WHERE creation_date='{{ date_string }}'")
+        - typhoon.templates.render(template=$1, table_name=$SOURCE, date_string=$DAG_CONFIG.ds)
+      batch_size: 2
+    destination: extract_table
+
+  table_to_s3:
+    async: false        # The table may be large, it doesn't make sense to serialize each batch and send asynchronously
+    source: extract_table
+    adapter:
+      data => APPLY:
+        - typhoon.db_result.to_csv(description=$SOURCE.columns, data=$SOURCE.batch)
+        - $1.encode('utf_8')
+      path => APPLY:
+        - str('{{system_name}}/{{entity}}/{{dag_config.ds}}/{{dag_config.etl_timestamp}}_{{entity}}_part{{part_num}}.{{extension}}')
+        - typhoon.templates.render($1, system_name='postgres', entity=$SOURCE.table_name, dag_config=$DAG_CONFIG, part_num=$BATCH_NUM, extension='csv')
+    destination: load_csv_s3
+```
+
+In a nutshell, branch will launch three lambdas, one for each table name and they will all extract data in batches simultaneously and send each batch to S3. Since batches can be very large it is not feasible to send it over to a new lambda function instance, so we set `async: false` to force it to execute the database extraction and S3 upload in the same lambda function. This is a tradeoff that reduces parallelism but keeps data transfer low. This way you don't need to blend them into one node to prevent it from lauching a new Lambda instance and you can still define them as regular nodes with the same composability this provides. If you still want to increase parallelism you can use `async: thread` and each instance of `load_csv_s3_node` will be run in a new thread (good for performance if there's a lot of IO). Realize that this is only for nodes that need to share a large amount of data that can't be easily serialized, if we wanted to import that data from S3 into our warehouse we just need to pass it the s3 key so that can be run in a regular asynchronous node that will trigger a new Lambda function instance.
+
+Those who are familiar will recognize `$DAG_CONFIG` as being very similar to the context received by Operators in Airflow, with the difference that in Typhoon we try to make our node functions unaware of such low level details and handle DAG specific configuration in the DAG definition where it belongs.
+
+
+
+## More coming soon...
