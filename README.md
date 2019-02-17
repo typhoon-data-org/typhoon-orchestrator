@@ -122,7 +122,7 @@ The code generated this time would be roughly:
 source_data = send_data_node()
 for source_data_batch in source_data:
     destination_config = {}
-    data_1 = f'HEADER\n{source_data_batch.string_data\nFOOTER}'
+    data_1 = f'HEADER\n{source_data_batch.string_data}\nFOOTER'
     data_2 = source_data_batch.encoding or 'utf-8'
     destination_config['data'] = transformations.data.to_bytes_buffer(data=data_1, encoding=data_2)
     destination_config['path'] = f'/tmp/{source_data_batch.file_name}'
