@@ -55,23 +55,27 @@ function get_tokens(line, previous_indentation=0) {
   let indents = get_indentation(line);
   if (indents - previous_indentation > 0) {
     tokens = tokens.concat(
-      add_line_tokens(Array(indents - previous_indentation).fill(INDENT_TK()), line)
+      enrich_tokens(Array(indents - previous_indentation).fill(INDENT_TK()), line)
     );
   } else if (previous_indentation - indents > 0) {
     tokens = tokens.concat(
-      add_line_tokens(Array(previous_indentation - indents).fill(DEDENT_TK()), line)
+      enrich_tokens(Array(previous_indentation - indents).fill(DEDENT_TK()), line)
     );
   }
-  tokens = tokens.concat(add_line_tokens(line_tokens, line));
+  tokens = tokens.concat(enrich_tokens(line_tokens, line));
   let lb_tk = LINEBREAK_TK();
   lb_tk.line = line;
   tokens.push(lb_tk);
   return [tokens, indents];
 }
 
-function add_line_tokens(tokens, line) {
+// Add line and trim tokens, remove empty space ones
+function enrich_tokens(tokens, line) {
   return tokens.map(tk => {
     tk.line = line;
+    // if (tk.type === 'text') {
+    //   tk.value = tk.value.trim()
+    // }
     return tk;
   });
 }
@@ -116,18 +120,3 @@ export function check_not_eof(tk, msg) {
     push_warning_msg(msg, tk.line);
   }
 }
-
-// exports.get_all_tokens = function(editor) {
-//   let num_lines = editor.session.getLength();
-//   let tokens = [];
-//   for (let i = 0; i < num_lines; i++) {
-//     let tokens_line = editor.session.getTokens(i);
-//     tokens = tokens.concat(tokens_line);
-//   }
-//   return tokens;
-// };
-
-// module.exports = {
-//   syntactical_analysis: syntactical_analysis,
-//   get_tokens_block: get_tokens_block
-// };
