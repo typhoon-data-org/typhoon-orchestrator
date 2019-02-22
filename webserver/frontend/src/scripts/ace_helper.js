@@ -1,5 +1,7 @@
 import {A_DAG} from "./analize_dag";
 
+export function AnalysisException() {}
+
 let errors = [];
 let editor;
 let INDENT_TK = () => ({type: 'special', value: '__INDENT__'});
@@ -73,11 +75,8 @@ function get_tokens(line, previous_indentation=0) {
 function enrich_tokens(tokens, line) {
   return tokens.map(tk => {
     tk.line = line;
-    // if (tk.type === 'text') {
-    //   tk.value = tk.value.trim()
-    // }
     return tk;
-  });
+  }).filter(tk => (tk.value !== ' ') && (tk.value !== ''));
 }
 
 function get_indentation(line) {
@@ -103,20 +102,39 @@ export function get_tokens_block(line = 0) {
     line++;
     [line_tokens, indents] = get_tokens(line, indents);
   }
-  if (indents === -1)
-    tokens.push(EOF_TK());
+  if (indents === -1) {
+    let eof_tk = EOF_TK();
+    eof_tk.line = line;
+    tokens.push(eof_tk);
+  }
 
   return [tokens, line];
 }
 
 export function check_not_eol(tk, msg) {
   if ((tk.type === 'special') && (tk.value === LINEBREAK_TK().value)) {
-    push_warning_msg(msg, tk.line);
+    push_error_msg(msg, tk.line);
+    throw new AnalysisException();
   }
 }
 
 export function check_not_eof(tk, msg) {
   if ((tk.type === 'special') && (tk.value === EOF_TK().value)) {
-    push_warning_msg(msg, tk.line);
+    push_error_msg(msg, tk.line - 1);
+    throw new AnalysisException();
+  }
+}
+
+export function check_eol(tk, msg) {
+  if ((tk.type !== 'special') || (tk.value !== LINEBREAK_TK().value)) {
+    push_error_msg(msg, tk.line);
+    throw new AnalysisException();
+  }
+}
+
+export function check_eof(tk, msg) {
+  if ((tk.type !== 'special') && (tk.value !== EOF_TK().value)) {
+    push_error_msg(msg, tk.line);
+    throw new AnalysisException();
   }
 }

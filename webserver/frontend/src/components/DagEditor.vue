@@ -33,6 +33,25 @@
         require('brace/theme/dracula');
         require('brace/snippets/javascript'); //snippet
 
+        let ace = require('brace');
+        require("brace/ext/language_tools");
+        let langTools = ace.acequire("ace/ext/language_tools");
+        editor.setOptions({enableBasicAutocompletion: true, enableSnippets: true, enableLiveAutocompletion: true});
+        let customCompleter = {
+          getCompletions: function (editor, session, pos, prefix, callback) {
+            let wordList = ["name", "schedule-interval", "active", "nodes", "edges"];
+            if (pos.column !== prefix.length) {
+              wordList = []
+            }
+            callback(null,
+              // [{name: 'TODO', value: 'TODO', meta: 'TODO'}]
+              wordList.map(word => ({name: word, value: word, meta: 'static'}))
+            );
+          }
+        };
+        langTools.setCompleters([customCompleter]);
+        // langTools.addCompleter(customCompleter);
+
         editor.on('change',() => {
           let a = syntactical_analysis(editor);
           this.tokens = JSON.stringify(a, null, 4);
