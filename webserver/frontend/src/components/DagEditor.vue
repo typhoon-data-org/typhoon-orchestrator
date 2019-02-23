@@ -14,6 +14,7 @@
 <script>
 
   import {syntactical_analysis} from "../scripts/ace_helper";
+  import {get_completions} from "../scripts/completer";
 
   export default {
     components: {
@@ -39,10 +40,7 @@
         editor.setOptions({enableBasicAutocompletion: true, enableSnippets: true, enableLiveAutocompletion: true});
         let customCompleter = {
           getCompletions: function (editor, session, pos, prefix, callback) {
-            let wordList = ["name", "schedule-interval", "active", "nodes", "edges"];
-            if (pos.column !== prefix.length) {
-              wordList = []
-            }
+            let wordList = get_completions(editor, session, pos, prefix);
             callback(null,
               // [{name: 'TODO', value: 'TODO', meta: 'TODO'}]
               wordList.map(word => ({name: word, value: word, meta: 'static'}))

@@ -6,6 +6,14 @@ import {
   push_error_msg,
   push_warning_msg
 } from "./ace_helper";
+import {
+  A_CRON_DAY_OF_MONTH,
+  A_CRON_DAY_OF_WEEK,
+  A_CRON_HOURS,
+  A_CRON_MINUTES,
+  A_CRON_MONTH,
+  A_CRON_YEAR
+} from "./cron_checker";
 
 
 export function A_DAG() {
@@ -88,7 +96,7 @@ function A_SCHEDULE_INTERVAL(start_line) {
   }
   tk = tokens.shift();
   check_not_eol(tk, "Expected schedule interval, not end of line");
-  if (tk.type != 'text') {
+  if ((tk.type !== 'text') && (tk.type !== 'string') && (tk.type !== 'constant.numeric')) {
     push_error_msg('Schedule interval should be text', tk.line);
   }
   check_cron_expression(tk);
@@ -104,7 +112,7 @@ function check_cron_expression(tk) {
     push_error_msg('No schedule interval specified');
     throw new AnalysisException();
   }
-  let schedule_interval = tk.value.trim();
+  let schedule_interval = tk.value.trim().replace(/['"/]/g, "");
 
   if (schedule_interval.startsWith('rate(')) {
     let rate_re = /^rate\(\s*([^)]+)/g;
@@ -116,7 +124,7 @@ function check_cron_expression(tk) {
     let num, interval;
     let rate_exp = match[1].split(' ');
     if (rate_exp.length !== 2) {
-      push_error_msg('Rate expression should be made of two parts. Found ' + rate_exp.length);
+      push_error_msg('Rate expression should be made of two parts. Found ' + rate_exp.length, tk.line);
       throw new AnalysisException();
     }
     [num, interval] = rate_exp;
@@ -135,6 +143,43 @@ function check_cron_expression(tk) {
   } else {
     let intervals = schedule_interval.split(' ');
 
+    let minutes = intervals[0];
+    A_CRON_MINUTES(minutes, tk.line);
+
+    if (intervals.length < 2) {
+      push_error_msg('Cron expression is missing hours', tk.line);
+      throw new AnalysisException();
+    }
+    let hours = intervals[1];
+    A_CRON_HOURS(hours, tk.line);
+
+    if (intervals.length < 3) {
+      push_error_msg('Cron expression is missing day of month', tk.line);
+      throw new AnalysisException();
+    }
+    let day_of_month = intervals[2];
+    A_CRON_DAY_OF_MONTH(day_of_month, tk.line);
+
+    if (intervals.length < 4) {
+      push_error_msg('Cron expression is missing month', tk.line);
+      throw new AnalysisException();
+    }
+    let month = intervals[3];
+    A_CRON_MONTH(month, tk.line);
+
+    if (intervals.length < 5) {
+      push_error_msg('Cron expression is missing day of week', tk.line);
+      throw new AnalysisException();
+    }
+    let day_of_week = intervals[4];
+    A_CRON_DAY_OF_WEEK(day_of_week, tk.line);
+
+    if (intervals.length < 6) {
+      push_error_msg('Cron expression is missing year', tk.line);
+      throw new AnalysisException();
+    }
+    let year = intervals[5];
+    A_CRON_YEAR(year, tk.line);
   }
 
 

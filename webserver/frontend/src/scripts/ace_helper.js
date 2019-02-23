@@ -39,6 +39,7 @@ export function syntactical_analysis(_editor) {
 
   let tokens, line;
   [tokens, line] = get_tokens_block();
+  [tokens, line] = get_tokens_block(line);
   return tokens
 }
 // }
