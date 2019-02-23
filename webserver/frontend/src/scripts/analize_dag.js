@@ -20,7 +20,7 @@ export function A_DAG() {
   try {
     let line = A_NAME();
     line = A_SCHEDULE_INTERVAL(line);
-    // A_ACTIVE();
+    line = A_ACTIVE(line);
     // A_NODES();
     // A_EDGES();
   } catch (e) {
@@ -100,6 +100,14 @@ function A_SCHEDULE_INTERVAL(start_line) {
     push_error_msg('Schedule interval should be text', tk.line);
   }
   check_cron_expression(tk);
+
+  tk = tokens.shift();
+  check_eol(tk, 'Expected line break');
+
+  tk = tokens.shift();
+  if (tk !== undefined) {
+    check_not_eof(tk, 'Expected nodes definition');
+  }
 
   return end_line;
 }
@@ -181,6 +189,38 @@ function check_cron_expression(tk) {
     let year = intervals[5];
     A_CRON_YEAR(year, tk.line);
   }
+}
 
+function A_ACTIVE(start_line) {
+  let tokens, end_line;
+  [tokens, end_line] = get_tokens_block(start_line);
 
+  let tk = tokens.shift();
+  if ((tk.type !== "meta.tag") || (tk.value !== 'active')) {
+    // Active is optional so skip if not defined
+    return start_line;
+  }
+  tk = tokens.shift();
+  check_not_eol(tk, "Expected active definition, not end of line");
+  if (tk.type !== "keyword" || tk.value !== ':') {
+    push_error_msg("Expected ':' after name", tk.line);
+    throw new AnalysisException();
+  }
+
+  tk = tokens.shift();
+  check_not_eol(tk, "Expected active definition, not end of line");
+  if (tk.type !== 'constant.language.boolean') {
+    push_error_msg('Active definition should be boolean', tk.line);
+    throw new AnalysisException();
+  }
+
+  tk = tokens.shift();
+  check_eol(tk, 'Expected line break');
+
+  tk = tokens.shift();
+  if (tk !== undefined) {
+    check_not_eof(tk, 'Expected nodes definition');
+  }
+
+  return end_line;
 }

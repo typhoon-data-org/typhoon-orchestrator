@@ -21,7 +21,7 @@
       editor: require('vue2-ace-editor'),
     },
     data: () => ({
-      content: 'name: aaa',
+      content: 'name: aaa\nschedule-interval: "* * * * * *"',
       tokens: '[]'
     }),
     methods: {
