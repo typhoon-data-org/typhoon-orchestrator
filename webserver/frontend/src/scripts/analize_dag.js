@@ -1,8 +1,10 @@
 import {
-  AnalysisException, check_eol,
+  AnalysisException,
+  check_eol,
+  check_indent, check_meta_tag,
   check_not_eof,
-  check_not_eol,
-  get_tokens_block,
+  check_not_eol, check_semicolon, check_type, check_type_value,
+  get_tokens_block, is_eol, is_type, is_type_value, num_lines,
   push_error_msg,
   push_warning_msg
 } from "./ace_helper";
@@ -21,7 +23,7 @@ export function A_DAG() {
     let line = A_NAME();
     line = A_SCHEDULE_INTERVAL(line);
     line = A_ACTIVE(line);
-    // A_NODES();
+    line = A_NODES(line);
     // A_EDGES();
   } catch (e) {
     if (!(e instanceof AnalysisException)) {
@@ -35,22 +37,13 @@ function A_NAME() {
   [tokens, line] = get_tokens_block();
 
   let tk = tokens.shift();
-  if ((tk.type !== "meta.tag") || (tk.value !== 'name')) {
-    push_error_msg("Expected 'name:' at the top of DAG definition", tk.line);
-    throw new AnalysisException();
-  }
+  check_meta_tag(tk, "Expected 'name:' at the top of DAG definition", 'name');
   tk = tokens.shift();
   check_not_eol(tk, "Expected DAG name, not end of line");
-  if (tk.type !== "keyword" || tk.value !== ':') {
-    push_error_msg("Expected ':' after name");
-    throw new AnalysisException();
-  }
+  check_semicolon(tk);
   tk = tokens.shift();
   check_not_eol(tk, "Expected DAG name, not end of line");
-  if (tk.type !== 'text') {
-    push_error_msg('Dag name should be text');
-    throw new AnalysisException();
-  }
+  check_type(tk, 'text', 'DAG name should be text');
   check_dag_name(tk);
 
   tk = tokens.shift();
@@ -86,19 +79,19 @@ function A_SCHEDULE_INTERVAL(start_line) {
   [tokens, end_line] = get_tokens_block(start_line);
 
   let tk = tokens.shift();
-  if ((tk.type !== "meta.tag") || (tk.value !== 'schedule-interval')) {
-    push_error_msg("Expected 'schedule-interval:'", tk.line);
-  }
+  check_meta_tag(tk, "Expected 'schedule-interval:'", 'schedule-interval');
+  // if ((tk.type !== "meta.tag") || (tk.value !== 'schedule-interval')) {
+  //   push_error_msg("Expected 'schedule-interval:'", tk.line);
+  // }
   tk = tokens.shift();
   check_not_eol(tk, "Expected schedule interval, not end of line");
-  if (tk.type !== "keyword" || tk.value !== ':') {
-    push_error_msg("Expected ':' after name");
-  }
+  check_semicolon(tk);
   tk = tokens.shift();
   check_not_eol(tk, "Expected schedule interval, not end of line");
-  if ((tk.type !== 'text') && (tk.type !== 'string') && (tk.type !== 'constant.numeric')) {
-    push_error_msg('Schedule interval should be text', tk.line);
-  }
+  check_type(tk, ['text', 'string', 'constant.numeric', 'Schedule interval should be text']);
+  // if ((tk.type !== 'text') && (tk.type !== 'string') && (tk.type !== 'constant.numeric')) {
+  //   push_error_msg('Schedule interval should be text', tk.line);
+  // }
   check_cron_expression(tk);
 
   tk = tokens.shift();
@@ -223,4 +216,257 @@ function A_ACTIVE(start_line) {
   }
 
   return end_line;
+}
+
+function A_NODES(start_line) {
+  let tokens, end_line;
+  [tokens, end_line] = get_tokens_block(start_line);
+
+  let tk = tokens.shift();
+  if ((tk.type !== "meta.tag") || (tk.value !== 'nodes')) {
+    push_error_msg("Expected 'nodes:' definition", tk.line);
+    throw new AnalysisException();
+  }
+  tk = tokens.shift();
+  check_not_eol(tk, "Expected ':'");
+  if (tk.type !== "keyword" || tk.value !== ':') {
+    push_error_msg("Expected ':'", tk.line);
+    throw new AnalysisException();
+  }
+
+  tk = tokens.shift();
+  check_eol(tk, "Expected line break");
+
+  tk = tokens.shift();
+  if (tk === undefined) {
+    push_error_msg("Expected indent", num_lines() - 1);
+    throw new AnalysisException();
+  }
+  check_indent(tk, "Expected indent");
+
+  A_NODE(tokens);
+  while (tk.type === 'meta.tag') {
+    A_NODE(tokens);
+  }
+
+  return end_line;
+}
+
+function A_NODE(tokens) {
+  let tk = tokens.shift();
+  check_not_eol(tk, "Expected node definition, not end of line");
+  check_meta_tag(tk, 'Expected node definition');
+  tk = tokens.shift();
+  check_not_eol(tk, "Expected ':'");
+  check_type_value(tk, 'keyword', ':', "Expected ':'");
+  tk = tokens.shift();
+  check_eol(tk, 'Expected line break');
+  tk = tokens.shift();
+  check_indent(tk, "Expected indent");
+  tk = tokens.shift();
+  check_meta_tag(tk, "Expected 'function:' definition", 'function');
+  tk = tokens.shift();
+  check_semicolon(tk);
+  tk = tokens.shift();
+  check_type(tk, 'text', 'Invalid function');
+  A_FUNCTION(tk);
+  tk = tokens.shift();
+  check_eol(tk, 'Expected line break');
+  tk = tokens.shift();
+  check_meta_tag(tk, "Expected 'config:' definition", 'config');
+  tk = tokens.shift();
+  check_semicolon(tk);
+  tk = tokens.shift();
+  check_eol(tk, 'Expected line break');
+  tk = tokens.shift();
+  check_indent(tk, "Expected indent");
+  A_CONFIG(tokens);
+}
+
+function A_FUNCTION(tk) {
+  let parts = tk.value.trim().split('.');
+  if (parts[0] !== 'typhoon' && parts[0] !== 'functions') {
+    push_error_msg('Function should be built-in (typhoon.) or used refined (functions.)', tk.line);
+    throw new AnalysisException();
+  }
+  if (parts.length < 3 || (parts.length === 3 && parts[2] === '')) {
+    push_error_msg('Incomplete function definition', tk.line);
+    throw new AnalysisException();
+  }
+
+  let function_name = tk.value.trim();
+  let valid_name = /^[a-zA-Z][\w.]*$/.test(function_name);
+  if (!valid_name) {
+    push_error_msg('Invalid function name: Must be composed of letters, numbers, dots and underscores', tk.line);
+    throw new AnalysisException();
+  }
+}
+
+function A_CONFIG(tokens) {
+  let tk = tokens.shift();
+  check_meta_tag(tk, "Expected meta tag");
+  let config_name = tk.value.trim();
+  let valid_name = /^[a-zA-Z][\w_]*(\s?=>\s?APPLY)?$/.test(config_name);
+  if (!valid_name) {
+    push_error_msg("Invalid name. Use letters, numbers and underscores. May end with ' => APPLY'", tk.line);
+    throw new AnalysisException();
+  }
+
+  tk = tokens.shift();
+  check_semicolon(tk);
+
+  tk = tokens.shift();
+  if (is_type_value(tk, 'paren.lparen', /[[{][[{]+/)) {
+    // Workaround because ace groups parenthesis together. Separate each into its own token
+    let parens = tk.value.replace(/\s+/g, '').split('');
+    parens.reverse().forEach(paren => {
+      tokens.unshift({
+        type: 'paren.lparen',
+        value: paren,
+        line: tk.line,
+      })
+    });
+    tk = tokens.shift();
+  }
+  if (is_type_value(tk, 'paren.lparen', '[')) {
+    A_ARRAY(tokens);
+  } else if (is_type_value(tk, 'paren.lparen', '{')){
+    A_DICT(tokens);
+  } else {
+    check_type(tk, ['text', 'constant.numeric', 'constant.language.boolean', 'string'], 'Unrecognized type');
+  }
+  tk = tokens.shift();
+  check_eol(tk, 'Expected line break');
+
+  while (is_eol(tokens[0])) {
+    tokens.shift();
+  }
+  if (tokens[0].type === 'meta.tag') {
+    A_CONFIG(tokens);
+  }
+}
+
+function A_ARRAY(tokens) {
+  let tk = tokens.shift();
+  if (is_type_value(tk, 'paren.rparen', /][\]}]+/)) {
+    // Workaround because ace groups parenthesis together. Separate each into its own token
+    let parens = tk.value.replace(/\s+/g, '').split('');
+    parens.reverse().forEach(paren => {
+      tokens.unshift({
+        type: 'paren.rparen',
+        value: paren,
+        line: tk.line,
+      })
+    });
+    tk = tokens.shift();
+  }
+  while (!is_type_value(tk, 'paren.rparen', ']')) {
+    check_not_eol(tk, "Missing closing bracket ']'");
+    if (is_type_value(tk, 'paren.lparen', /[[{][[{]+/)) {
+      // Workaround because ace groups parenthesis together. Separate each into its own token
+      let parens = tk.value.replace(/\s+/g, '').split('');
+      parens.reverse().forEach(paren => {
+        tokens.unshift({
+          type: 'paren.lparen',
+          value: paren,
+          line: tk.line,
+        })
+      });
+      tk = tokens.shift();
+    }
+    if (is_type_value(tk, 'paren.lparen', '[')) {
+      A_ARRAY(tokens);
+    } else if (is_type_value(tk, 'paren.lparen', /\s*{\s*/)) {
+      A_DICT(tokens);
+    } else {
+      check_type(
+        tk, ['constant.numeric', 'constant.language.boolean', 'string'], 'Unrecognized type');
+    }
+    tk = tokens.shift();
+    check_not_eol(tk, "Missing closing bracket ']'");
+    if (is_type_value(tk, 'paren.rparen', /][\]}]+/)) {
+      // Workaround because ace groups parenthesis together. Separate each into its own token
+      let parens = tk.value.replace(/\s+/g, '').split('');
+      parens.reverse().forEach(paren => {
+        tokens.unshift({
+          type: 'paren.rparen',
+          value: paren,
+          line: tk.line,
+        })
+      });
+      tk = tokens.shift();
+    }
+    if (is_type_value(tk, 'text', ',') || is_type_value(tk, 'text', ', ')) {
+      tk = tokens.shift();
+    } else if (!is_type_value(tk, 'paren.rparen', ']')) {
+      push_error_msg("Expected ',' or ']'", tk.line);
+      throw new AnalysisException();
+    }
+  }
+}
+
+function A_DICT(tokens) {
+  let tk = tokens.shift();
+  if (is_type_value(tk, 'paren.rparen', /}[\]}]+/)) {
+    // Workaround because ace groups parenthesis together. Separate each into its own token
+    let parens = tk.value.replace(/\s+/g, '').split('');
+    parens.reverse().forEach(paren => {
+      tokens.unshift({
+        type: 'paren.rparen',
+        value: paren,
+        line: tk.line,
+      })
+    });
+    tk = tokens.shift();
+  }
+  while (!is_type_value(tk, 'paren.rparen', '}')) {
+    check_not_eol(tk, "Missing closing curly bracket '}'");
+    check_meta_tag(tk, 'Expected meta tag');
+    tk = tokens.shift();
+    check_not_eol(tk, "Missing ':'");
+    check_semicolon(tk);
+
+    tk = tokens.shift();
+    if (is_type_value(tk, 'paren.lparen', /[[{][[{]+/)) {
+      // Workaround because ace groups parenthesis together. Separate each into its own token
+      let parens = tk.value.replace(/\s+/g, '').split('');
+      parens.reverse().forEach(paren => {
+        tokens.unshift({
+          type: 'paren.lparen',
+          value: paren,
+          line: tk.line,
+        })
+      });
+      tk = tokens.shift();
+    }
+    if (is_type_value(tk, 'paren.lparen', /\s*\[\s*/)) {
+      A_ARRAY(tokens);
+    } else if (is_type_value(tk, 'paren.lparen', /\s*{\s*/)) {
+      A_DICT(tokens);
+    } else {
+      check_type(
+        tk, ['constant.numeric', 'constant.language.boolean', 'string'], 'Unrecognized type');
+    }
+
+    tk = tokens.shift();
+    check_not_eol(tk, "Missing closing bracket '}'");
+    if (is_type_value(tk, 'paren.rparen', /}[\]}]+/)) {
+      // Workaround because ace groups parenthesis together. Separate each into its own token
+      let parens = tk.value.replace(/\s+/g, '').split('');
+      parens.reverse().forEach(paren => {
+        tokens.unshift({
+          type: 'paren.rparen',
+          value: paren,
+          line: tk.line,
+        })
+      });
+      tk = tokens.shift();
+    }
+    if (is_type_value(tk, 'text', ',') || is_type_value(tk, 'text', ', ')) {
+      tk = tokens.shift();
+    } else if (!is_type_value(tk, 'paren.rparen', '}')) {
+      push_error_msg("Expected ',' or '}'", tk.line);
+      throw new AnalysisException();
+    }
+  }
 }

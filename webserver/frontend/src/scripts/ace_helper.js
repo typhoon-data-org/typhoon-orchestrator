@@ -134,9 +134,79 @@ export function check_eol(tk, msg) {
   }
 }
 
+export function is_eol(tk) {
+  return (tk.type === 'special') && (tk.value === LINEBREAK_TK().value);
+}
+
 export function check_eof(tk, msg) {
-  if ((tk.type !== 'special') && (tk.value !== EOF_TK().value)) {
+  if ((tk.type !== 'special') || (tk.value !== EOF_TK().value)) {
     push_error_msg(msg, tk.line);
     throw new AnalysisException();
   }
+}
+
+export function check_indent(tk, msg) {
+  if ((tk.type !== 'special') || (tk.value !== INDENT_TK().value)) {
+    push_error_msg(msg, tk.line);
+    throw new AnalysisException();
+  }
+}
+
+export function check_dedent(tk, msg) {
+  if ((tk.type !== 'special') || (tk.value !== DEDENT_TK().value)) {
+    push_error_msg(msg, tk.line);
+    throw new AnalysisException();
+  }
+}
+
+export function check_meta_tag(tk, msg, value = undefined) {
+  if ((tk.type !== "meta.tag") || ((value !== undefined) && (tk.value.trim() !== value))) {
+    push_error_msg(msg, tk.line);
+    throw new AnalysisException();
+  }
+}
+
+export function check_semicolon(tk) {
+  if (tk.type !== "keyword" || tk.value !== ':') {
+    push_error_msg("Expected ':' after name");
+    throw new AnalysisException();
+  }
+}
+
+export function check_type(tk, type, msg) {
+  if (typeof type === 'string' || type instanceof String) {
+    type = [type];
+  }
+  if (!type.includes(tk.type)) {
+    push_error_msg(msg, tk.line);
+    throw new AnalysisException();
+  }
+}
+
+export function is_type(tk, type) {
+  if (typeof type === 'string' || type instanceof String) {
+    type = [type];
+  }
+  return type.includes(tk.type);
+}
+
+export function is_type_value(tk, type, value) {
+  if (typeof type === 'string' || type instanceof String) {
+    type = [type];
+  }
+  if (value instanceof  RegExp) {
+    return type.includes(tk.type) && value.test(tk.value);
+  }
+  return type.includes(tk.type) && tk.value === value;
+}
+
+export function check_type_value(tk, type, value, msg) {
+  if ((tk.type !== type) || (tk.value !== value)) {
+    push_error_msg(msg, tk.line);
+    throw new AnalysisException();
+  }
+}
+
+export function num_lines() {
+  return editor.session.doc.getAllLines().length;
 }

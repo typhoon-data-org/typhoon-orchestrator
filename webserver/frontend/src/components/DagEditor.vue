@@ -21,7 +21,7 @@
       editor: require('vue2-ace-editor'),
     },
     data: () => ({
-      content: 'name: aaa\nschedule-interval: "* * * * * *"',
+      content: 'name: aaa\nschedule-interval: "* * * * * *"\nnodes:\n  aa:\n    function: typhoon.aa.bb\n    config:',
       tokens: '[]'
     }),
     methods: {
@@ -37,7 +37,12 @@
         let ace = require('brace');
         require("brace/ext/language_tools");
         let langTools = ace.acequire("ace/ext/language_tools");
-        editor.setOptions({enableBasicAutocompletion: true, enableSnippets: true, enableLiveAutocompletion: true});
+        editor.setOptions({
+          enableBasicAutocompletion: true,
+          enableSnippets: true,
+          enableLiveAutocompletion: true,
+          tabSize: 2,
+        });
         let customCompleter = {
           getCompletions: function (editor, session, pos, prefix, callback) {
             let wordList = get_completions(editor, session, pos, prefix);
