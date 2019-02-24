@@ -30,11 +30,11 @@ def write_data(data: BytesIO, conn_id: str, path: str) -> Iterable[str]:
     yield path
 ```
 
-The above code is all that's needed to create a function that can be used to define a task, and is a great example of what we discussed earlier. This code is pure python, and has no Typhoon specific code except for get_hook() (we believe that in this case the benefit it provides is well worth the extra coupling, but it is by no means necessary to write your functions in the same way) and even that can be imported to a non Typhoon project (yes, even Airflow) by doing `pip install typhoon[hooks]` if you ever wish to move away from the framework. Notice how this is inherently more testable and reusable than the alternative approach.
+The above code is all that's needed to create a function that can be used to define a task, and is a great example of what we discussed earlier. This code is pure python, and has no Typhoon specific code except for get_hook() (we believe that in this case the benefit it provides is well worth the extra coupling, but it is by no means necessary to write your own functions in the same way) and even that can be imported to a non Typhoon project (yes, even Airflow) by doing `pip install typhoon[hooks]` if you ever wish to move away from the framework. Notice how this is inherently more testable and reusable than the alternative approach.
 
 We mentioned earlier that OOP makes sense for hooks. In this case by having a FileSystem Hook interface, both S3, FTP and local writes to disk amongst others can be performed in the same way by calling write_data. This brings an extra layer of testability where you can simply write data to disk during development/debugging and then deploy to a test or production server where it will be written to S3 without any code modifications, simply by virtue of having the conn_id point to an S3 connection in that environment.
 
-A Task is defined in a DAG by referencing that function and passing it the static arguments (the rest are passed in runtime by the preceding Task). From now on we will call them nodes instead of tasks. We will later justify our decision of using YAML instead of python for DAG definitions.
+A Task is defined in a DAG by referencing that function and passing it the static arguments (the rest are passed in runtime by the preceding Task as we will see in the Edges section). From now on we will call them nodes instead of tasks. We will later justify our decision of using YAML instead of python for DAG definitions.
 
 ```yaml
   write_data:
@@ -101,7 +101,7 @@ for source_data_batch in source_data:
     )
 ```
 
-We recognize that some transformations can be complex, or too long to comfortably fit in a line, so an  `= APPLY` key can take a list as a value, where the final value will be the result of executing the last line in the list. Previous transformations in the list can be referred to by index with `$N` where N is the position in the list. This is clearer with an example. Take the same function but lets assume it returns a named tuple instead of a regular tuple for clarity, and it can optionally return an encoding to apply:
+We recognize that some transformations can be complex, or too long to comfortably fit in a line, so an  `=> APPLY` key can take a list as a value, where the final value will be the result of executing the last line in the list. Previous transformations in the list can be referred to by index with `$N` where N is the position in the list. This is clearer with an example. Take the same function but lets assume it returns a named tuple instead of a regular tuple for clarity, and it can optionally return an encoding to apply:
 
 ```yaml
 edges:
