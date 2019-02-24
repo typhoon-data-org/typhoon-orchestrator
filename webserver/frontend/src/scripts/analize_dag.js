@@ -1,12 +1,12 @@
 import {
-  AnalysisException,
+  AnalysisException, check_dedent,
   check_eol,
   check_indent, check_meta_tag,
   check_not_eof,
   check_not_eol, check_semicolon, check_type, check_type_value,
-  get_tokens_block, is_eol, is_type, is_type_value, num_lines,
+  get_tokens_block, is_eol, is_special_var, is_type, is_type_value, is_valid_special_var, num_lines,
   push_error_msg,
-  push_warning_msg
+  push_warning_msg, stringify_until_eol
 } from "./ace_helper";
 import {
   A_CRON_DAY_OF_MONTH,
@@ -315,7 +315,63 @@ function A_CONFIG(tokens) {
   tk = tokens.shift();
   check_semicolon(tk);
 
-  tk = tokens.shift();
+  if (/^[a-zA-Z][\w_]*(\s?=>\s?APPLY)$/.test(config_name)) {
+    A_APPLY(tokens);
+  } else {
+    A_VALUE(tokens);
+  }
+
+  while (is_eol(tokens[0])) {
+    tokens.shift();
+  }
+  if (tokens[0].type === 'meta.tag') {
+    A_CONFIG(tokens);
+  }
+}
+
+function A_APPLY(tokens) {
+  if (!is_eol(tokens[0])) {
+    A_APPLY_LINE(tokens, false);
+  } else {
+    let tk = tokens.shift();  // Skip end of line
+    tk = tokens.shift();  // Skip end of line
+    check_indent(tk, 'Expected indent');
+    tk = tokens.shift();
+    if (tk.type !== 'list.markup' || tk.value.trim() !== '-') {
+      push_error_msg("Expected list ('-')", tk.line);
+    }
+    A_APPLY_LINE(tokens, true);
+
+    tk = tokens.shift();
+    while(tk.type === 'list.markup' && tk.value.trim() === '-') {
+      A_APPLY_LINE(tokens, true);
+      tk = tokens.shift();
+    }
+    check_dedent(tk, 'Expected dedent');
+  }
+}
+
+function A_APPLY_LINE(tokens, special_var_nums) {
+  stringify_until_eol(tokens);
+  let tk = tokens.shift();
+  let special_vars = tk.value.match(/\$[\w]+/g);
+  if (special_vars != null) {
+    special_vars.forEach(special_var => {
+      if (!is_valid_special_var(special_var, special_var_nums)) {
+        push_error_msg(
+          'Invalid special variable ' + special_var + ". Must be '$SOURCE', '$DAG_CONFIG' or $BATCH_NUM",
+          tk.line
+        );
+        throw new AnalysisException();
+      }
+    });
+  }
+  // We know the next token is end of line
+  tokens.shift();
+}
+
+function A_VALUE(tokens) {
+  let tk = tokens.shift();
   if (is_type_value(tk, 'paren.lparen', /[[{][[{]+/)) {
     // Workaround because ace groups parenthesis together. Separate each into its own token
     let parens = tk.value.replace(/\s+/g, '').split('');
@@ -338,12 +394,6 @@ function A_CONFIG(tokens) {
   tk = tokens.shift();
   check_eol(tk, 'Expected line break');
 
-  while (is_eol(tokens[0])) {
-    tokens.shift();
-  }
-  if (tokens[0].type === 'meta.tag') {
-    A_CONFIG(tokens);
-  }
 }
 
 function A_ARRAY(tokens) {

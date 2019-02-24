@@ -210,3 +210,35 @@ export function check_type_value(tk, type, value, msg) {
 export function num_lines() {
   return editor.session.doc.getAllLines().length;
 }
+
+export function stringify_until_eol(tokens) {
+  let str = '';
+  let tk = tokens.shift();
+  while (!is_eol(tk)) {
+    // check_type(
+    //   tk,
+    //   ['text', 'string', 'constant.numeric', 'constant.language.boolean'],
+    //   'Invalid type for ' + tk.value,
+    // );
+    str += tk.value;
+    tk = tokens.shift();
+  }
+  let lb_tk = LINEBREAK_TK();
+  lb_tk.line = tk.line;
+  tokens.unshift(lb_tk);
+
+  tokens.unshift({
+    type: 'string',
+    value: str,
+    line: tk.line,
+  });
+}
+
+const SPECIAL_VARS = ['$SOURCE', '$DAG_CONFIG', '$BATCH_NUM'];
+
+export function is_valid_special_var(special_var, check_nums) {
+  if (SPECIAL_VARS.includes(special_var)) {
+    return true;
+  }
+  return check_nums && /^\$[\d]+$/.test(special_var)
+}
