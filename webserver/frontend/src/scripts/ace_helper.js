@@ -45,7 +45,7 @@ export function syntactical_analysis(_editor) {
 }
 // }
 
-function get_tokens(line, previous_indentation=0) {
+export function get_tokens(line, previous_indentation=0) {
   if (line >= editor.session.getLength()) {
     return [[EOF_TK], -1];
   }
@@ -82,11 +82,21 @@ function enrich_tokens(tokens, line) {
 }
 
 function get_indentation(line) {
-  let num_spaces = editor.session.getLine(line).search(/\S/);
+  let num_spaces = editor.session.getLine(line).search(/\S|$/);
   if (num_spaces % 2 !== 0)
     push_error_msg('Even number of spaces required: got ' + num_spaces)
 
   return Math.floor(num_spaces/2);
+}
+
+function empty_line(tokens) {
+  let i = 0;
+  let tk = tokens[i];
+  while (is_indent(tk) || is_dedent(tk)) {
+    i++;
+    tk = tokens[i];
+  }
+  return is_eol(tk);
 }
 
 export function get_tokens_block(line = 0) {
@@ -99,7 +109,10 @@ export function get_tokens_block(line = 0) {
 
   line++;
   [line_tokens, indents] = get_tokens(line, indents);
-  while (indents > 0) {
+  while (indents > 0 || empty_line(line_tokens, indents)) {
+    if (empty_line(line_tokens, indents)) {
+      line_tokens = line_tokens.filter(tk => !is_eol(tk));
+    }
     tokens = tokens.concat(line_tokens);
     line++;
     [line_tokens, indents] = get_tokens(line, indents);
@@ -136,6 +149,18 @@ export function check_eol(tk, msg) {
 
 export function is_eol(tk) {
   return (tk.type === 'special') && (tk.value === LINEBREAK_TK().value);
+}
+
+export function is_indent(tk) {
+  return (tk.type === 'special') && (tk.value === INDENT_TK().value);
+}
+
+export function is_dedent(tk) {
+  return (tk.type === 'special') && (tk.value === DEDENT_TK().value);
+}
+
+export function is_eof(tk) {
+  return (tk.type === 'special') && (tk.value === EOF_TK().value);
 }
 
 export function check_eof(tk, msg) {
@@ -241,4 +266,15 @@ export function is_valid_special_var(special_var, check_nums) {
     return true;
   }
   return check_nums && /^\$[\d]+$/.test(special_var)
+}
+
+export function skip_blank_lines(tokens) {
+  while (is_indent(tokens[0]) || is_dedent(tokens[0]) || is_eol(tokens[0])) {
+    tokens.shift();
+  }
+}
+
+export function get_indents(line) {
+  let [_, indents] = get_tokens(line);
+  return indents;
 }

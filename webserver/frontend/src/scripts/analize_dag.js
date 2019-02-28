@@ -1,12 +1,25 @@
 import {
-  AnalysisException, check_dedent,
+  AnalysisException,
+  check_dedent,
   check_eol,
-  check_indent, check_meta_tag,
+  check_indent,
+  check_meta_tag,
   check_not_eof,
-  check_not_eol, check_semicolon, check_type, check_type_value,
-  get_tokens_block, is_eol, is_special_var, is_type, is_type_value, is_valid_special_var, num_lines,
+  check_not_eol,
+  check_semicolon,
+  check_type,
+  check_type_value,
+  get_indents,
+  get_tokens_block, is_eof,
+  is_eol,
+  is_special_var,
+  is_type_value,
+  is_valid_special_var,
+  num_lines,
   push_error_msg,
-  push_warning_msg, stringify_until_eol
+  push_warning_msg,
+  skip_blank_lines,
+  stringify_until_eol
 } from "./ace_helper";
 import {
   A_CRON_DAY_OF_MONTH,
@@ -245,8 +258,20 @@ function A_NODES(start_line) {
   check_indent(tk, "Expected indent");
 
   A_NODE(tokens);
-  while (tk.type === 'meta.tag') {
+  skip_blank_lines(tokens);
+  check_not_eof(tokens[0], "Expected node definition or 'edges:' tag", tk.line);
+  let indents = get_indents(tokens[0].line);
+  while (tokens[0].type === 'meta.tag' && indents === 1) {
     A_NODE(tokens);
+    skip_blank_lines(tokens);
+    check_not_eof(tokens[0], "Expected node definition or 'edges:' tag", tk.line);
+    indents = get_indents(tokens[0].line);
+  }
+
+  if (indents > 1) {
+    push_error_msg("Wrong indentation. Expected 1 indent for node definition" +
+      " or 0 for 'edges:' tag. Found " + indents, tokens[0].line);
+    throw new AnalysisException();
   }
 
   return end_line;
@@ -321,9 +346,6 @@ function A_CONFIG(tokens) {
     A_VALUE(tokens);
   }
 
-  while (is_eol(tokens[0])) {
-    tokens.shift();
-  }
   if (tokens[0].type === 'meta.tag') {
     A_CONFIG(tokens);
   }

@@ -21,7 +21,14 @@
       editor: require('vue2-ace-editor'),
     },
     data: () => ({
-      content: 'name: aaa\nschedule-interval: "* * * * * *"\nnodes:\n  aa:\n    function: typhoon.aa.bb\n    config:',
+      content: 'name: aaa\nschedule-interval: "* * * * * *"\nnodes:\n  aa:\n    function: typhoon.aa.bb' +
+        '\n    config:\n' +
+        '      table_name => APPLY: $SOURCE\n' +
+        '      query => APPLY:\n' +
+        '        - str("SELECT * FROM {{ table_name }} WHERE creation_date=\'{{ date_string }}\'")\n' +
+        '        - typhoon.templates.render(template=$1, table_name=$SOURCE, date_string=$DAG_CONFIG.ds)\n' +
+        '      batch_size: 2\n\n' +
+        '  b:',
       tokens: '[]'
     }),
     methods: {
@@ -47,7 +54,6 @@
           getCompletions: function (editor, session, pos, prefix, callback) {
             let wordList = get_completions(editor, session, pos, prefix);
             callback(null,
-              // [{name: 'TODO', value: 'TODO', meta: 'TODO'}]
               wordList.map(word => ({name: word, value: word, meta: 'static'}))
             );
           }
