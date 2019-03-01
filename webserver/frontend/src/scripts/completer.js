@@ -27,14 +27,17 @@ export function get_completions(editor, session, pos, prefix) {
 function get_completions_node(editor, session, pos, prefix, parents) {
   let line_text = session.getLine(pos.row);
   let indents = line_indentation(line_text);
-  if (indents === 2 && '    function: '.includes(line_text)) {
+  if (indents === 2 && '    function'.includes(line_text)) {
     return ['function:'];
   } else if (indents === 2 && '    config: '.includes(line_text)) {
     return ['config:'];
+  } else if (indents === 2 && ('    function: typhoon'.includes(line_text) || '    function: functions'.includes(line_text))) {
+    return ['typhoon', 'functions'];
   } else if (indents === 3 && /^ {6}[^: ]+$/.test(line_text)) {
     let config_name = /^ {6}([^: ]+)$/.exec(line_text)[1];
     return [config_name + ' => APPLY'];
-  } else if (indents === 4 && (pos.column - prefix.length - 12) > 8 && line_text.slice(pos.column - prefix.length - 12, pos.column - prefix.length) === '$DAG_CONFIG.') {
+  } else if (indents === 4 && (pos.column - prefix.length - 12) > 8 &&
+    line_text.slice(pos.column - prefix.length - 12, pos.column - prefix.length) === '$DAG_CONFIG.') {
     return ['ds', 'ds_nodash', 'execution_date'];
   } else if (indents === 4 && prefix.startsWith('$')) {
     return SPECIAL_VARS;
