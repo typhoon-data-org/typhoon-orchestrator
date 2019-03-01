@@ -84,7 +84,7 @@ function enrich_tokens(tokens, line) {
 function get_indentation(line) {
   let num_spaces = editor.session.getLine(line).search(/\S|$/);
   if (num_spaces % 2 !== 0)
-    push_error_msg('Even number of spaces required: got ' + num_spaces)
+    push_error_msg('Even number of spaces required: got ' + num_spaces);
 
   return Math.floor(num_spaces/2);
 }
@@ -259,7 +259,7 @@ export function stringify_until_eol(tokens) {
   });
 }
 
-const SPECIAL_VARS = ['$SOURCE', '$DAG_CONFIG', '$BATCH_NUM'];
+export const SPECIAL_VARS = ['$SOURCE', '$DAG_CONFIG', '$BATCH_NUM'];
 
 export function is_valid_special_var(special_var, check_nums) {
   if (SPECIAL_VARS.includes(special_var)) {

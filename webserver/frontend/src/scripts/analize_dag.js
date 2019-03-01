@@ -30,6 +30,9 @@ import {
   A_CRON_YEAR
 } from "./cron_checker";
 
+export let NODE_NAMES=[];
+export let EDGE_NAMES=[];
+
 
 export function A_DAG() {
   try {
@@ -37,7 +40,7 @@ export function A_DAG() {
     line = A_SCHEDULE_INTERVAL(line);
     line = A_ACTIVE(line);
     line = A_NODES(line);
-    // A_EDGES();
+    // A_EDGES(line);
   } catch (e) {
     if (!(e instanceof AnalysisException)) {
       throw e;
