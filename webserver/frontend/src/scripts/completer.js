@@ -1,5 +1,17 @@
 import {SPECIAL_VARS} from "./ace_helper";
 
+let TYPHOON_MODULES = ['relational', 'file_system'];
+let TYPHOON_FUNCTIONS = {
+  relational: ['execute_query', 'fetchmany', 'fetchall'],
+  file_system: ['s3_write', 'write_file'],
+};
+
+let CUSTOM_MODULES = ['scraping', 'others'];
+let CUSTOM_FUNCTIONS = {
+  scraping: ['scrape_hackernews'],
+  others: ['aaa', 'bbb'],
+};
+
 function is_beginning_line(pos, prefix) {
   return pos.column === prefix.length;
 }
@@ -33,6 +45,16 @@ function get_completions_node(editor, session, pos, prefix, parents) {
     return ['config:'];
   } else if (indents === 2 && ('    function: typhoon'.includes(line_text) || '    function: functions'.includes(line_text))) {
     return ['typhoon', 'functions'];
+  } else if (indents === 2 && /^ {4}function: typhoon\.([^.]+)(\.([^.]+$))/.test(line_text)) {
+    let typhoon_module = /^ {4}function: typhoon\.([^.]+)(\.([^.]+))/.exec(line_text)[1];
+    return TYPHOON_FUNCTIONS[typhoon_module];
+  } else if (indents === 2 && /^ {4}function: typhoon\.([^.]+$)/.test(line_text)) {
+    return TYPHOON_MODULES;
+  } else if (indents === 2 && /^ {4}function: functions\.([^.]+)(\.([^.]+$))/.test(line_text)) {
+    let custom_module = /^ {4}function: functions\.([^.]+)(\.([^.]+))/.exec(line_text)[1];
+    return CUSTOM_FUNCTIONS[custom_module];
+  } else if (indents === 2 && /^ {4}function: functions\.([^.]+$)/.test(line_text)) {
+    return CUSTOM_FUNCTIONS;
   } else if (indents === 3 && /^ {6}[^: ]+$/.test(line_text)) {
     let config_name = /^ {6}([^: ]+)$/.exec(line_text)[1];
     return [config_name + ' => APPLY'];
@@ -66,6 +88,8 @@ function get_parents(session, pos) {
     let previous_line_text = session.getLine(i);
     let previous_line_indents = line_indentation(previous_line_text);
 
+    if (/^\s*$/.test(previous_line_text))
+      continue;
     if (parent_indents > 2) {
       parent_indents --;
     } else if (previous_line_indents === parent_indents) {
