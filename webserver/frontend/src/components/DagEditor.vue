@@ -1,13 +1,44 @@
 <template>
-  <v-container>
-    <editor v-model="content" @init="editorInit" lang="yaml" theme="dracula" width="1000" height="400"></editor>
-    <v-textarea
-        name="input-7-1"
-        label="Default style"
-        v-model="tokens"
-        hint="Hint text"
-        rows="50"
-    ></v-textarea>
+  <v-container grid-list-md>
+    <v-layout row wrap>
+      <v-flex xs10>
+        <v-alert
+            :value="true"
+            type="error"
+            v-if="errors"
+        >
+          Syntax errors
+        </v-alert>
+        <v-alert
+            :value="true"
+            type="success"
+            v-else
+        >
+          All good
+        </v-alert>
+      </v-flex>
+    </v-layout>
+
+    <v-layout row wrap>
+      <v-flex xs12>
+        <editor v-model="content" @init="editorInit" lang="yaml" theme="dracula" width="1000" height="400"></editor>
+      </v-flex>
+    </v-layout>
+
+    <v-layout row wrap>
+      <v-btn outline fab color="teal">
+        <v-icon color="white">assignment</v-icon>
+      </v-btn>
+      <v-checkbox v-model="disable_syntax_checking" label="Disable syntax checks"></v-checkbox>
+    </v-layout>
+
+      <!--<v-textarea-->
+          <!--name="input-7-1"-->
+          <!--label="Default style"-->
+          <!--v-model="tokens"-->
+          <!--hint="Hint text"-->
+          <!--rows="50"-->
+      <!--&gt;</v-textarea>-->
   </v-container>
 </template>
 
@@ -29,7 +60,9 @@
         '        - typhoon.templates.render(template=$1, table_name=$SOURCE, date_string=$DAG_CONFIG.ds)\n' +
         '      batch_size: 2\n\n' +
         '  b:',
-      tokens: '[]'
+      tokens: '[]',
+      disable_syntax_checking: false,
+      errors: false,
     }),
     methods: {
       editorInit: function (editor) {
@@ -62,8 +95,12 @@
         // langTools.addCompleter(customCompleter);
 
         editor.on('change',() => {
-          let a = syntactical_analysis(editor);
-          this.tokens = JSON.stringify(a, null, 4);
+          if (this.disable_syntax_checking) {
+            editor.session.setAnnotations([]);
+          } else {
+            let a = syntactical_analysis(editor);
+            this.tokens = JSON.stringify(a, null, 4);
+          }
         });
       }
     }
