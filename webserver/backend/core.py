@@ -1,10 +1,12 @@
 import os
 
 from flask import Flask, jsonify
+from flask_cors import CORS
 from reflection import get_modules_in_package, package_tree, package_tree_from_path
 from typhoon.settings import typhoon_directory
 
 app = Flask(__name__)
+CORS(app)
 
 
 @app.route('/typhoon-modules')
