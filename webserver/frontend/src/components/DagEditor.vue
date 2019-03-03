@@ -21,12 +21,12 @@
 
     <v-layout row wrap>
       <v-flex xs12>
-        <editor v-model="content" @init="editorInit" lang="yaml" theme="dracula" width="1000" height="400"></editor>
+        <editor ref="dag_editor" v-model="content" @init="editorInit" lang="yaml" theme="dracula" width="1000" height="400"></editor>
       </v-flex>
     </v-layout>
 
     <v-layout row wrap>
-      <v-btn outline fab color="teal">
+      <v-btn v-on:click="copyEditorContentsToClipboard" outline fab color="teal">
         <v-icon color="white">assignment</v-icon>
       </v-btn>
       <v-checkbox v-model="disable_syntax_checking" label="Disable syntax checks"></v-checkbox>
@@ -44,7 +44,7 @@
 
 <script>
 
-  import {syntactical_analysis} from "../scripts/ace_helper";
+  import {copyToClipboard, syntactical_analysis} from "../scripts/ace_helper";
   import {get_completions} from "../scripts/completer";
 
   export default {
@@ -102,6 +102,10 @@
             this.tokens = JSON.stringify(a, null, 4);
           }
         });
+      },
+      copyEditorContentsToClipboard: function (event) {
+        let code = this.$refs.dag_editor.editor.getValue();
+        copyToClipboard(code);
       }
     }
   }

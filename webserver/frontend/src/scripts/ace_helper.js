@@ -278,3 +278,12 @@ export function get_indents(line) {
   let [_, indents] = get_tokens(line);
   return indents;
 }
+
+export function copyToClipboard(str) {
+  const el = document.createElement('textarea');
+  el.value = str;
+  document.body.appendChild(el);
+  el.select();
+  document.execCommand('copy');
+  document.body.removeChild(el);
+};
