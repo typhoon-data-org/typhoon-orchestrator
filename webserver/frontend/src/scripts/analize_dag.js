@@ -41,10 +41,12 @@ export function A_DAG() {
     line = A_ACTIVE(line);
     line = A_NODES(line);
     // A_EDGES(line);
+    return true;
   } catch (e) {
     if (!(e instanceof AnalysisException)) {
       throw e;
     }
+    return false;
   }
 }
 

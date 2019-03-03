@@ -33,15 +33,15 @@ export function push_warning_msg(message, line) {
 export function syntactical_analysis(_editor) {
   errors = [];
   editor = _editor;
-  A_DAG();
+  let success = A_DAG();
 
   editor.session.setAnnotations(errors);
 
-  let tokens, line;
-  [tokens, line] = get_tokens_block();
-  [tokens, line] = get_tokens_block(line);
-  [tokens, line] = get_tokens_block(line);
-  return tokens
+  // let tokens, line;
+  // [tokens, line] = get_tokens_block();
+  // [tokens, line] = get_tokens_block(line);
+  // [tokens, line] = get_tokens_block(line);
+  return success
 }
 // }
 

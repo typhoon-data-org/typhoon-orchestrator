@@ -4,8 +4,15 @@
       <v-flex xs10>
         <v-alert
             :value="true"
+            type="warning"
+            v-if="disable_syntax_checking"
+        >
+          Syntax checking disabled
+        </v-alert>
+        <v-alert
+            :value="true"
             type="error"
-            v-if="errors"
+            v-else-if="errors"
         >
           Syntax errors
         </v-alert>
@@ -115,8 +122,9 @@
           if (this.disable_syntax_checking) {
             editor.session.setAnnotations([]);
           } else {
-            let a = syntactical_analysis(editor);
-            this.tokens = JSON.stringify(a, null, 4);
+            // let a = syntactical_analysis(editor);
+            // this.tokens = JSON.stringify(a, null, 4);
+            this.errors = !syntactical_analysis(editor);
           }
         });
       },
