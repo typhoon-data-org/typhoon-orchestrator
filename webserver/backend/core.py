@@ -2,7 +2,7 @@ import os
 
 from flask import Flask, jsonify
 from flask_cors import CORS
-from reflection import get_modules_in_package, package_tree, package_tree_from_path
+from reflection import get_modules_in_package, package_tree, package_tree_from_path, user_defined_modules
 from typhoon.settings import typhoon_directory
 
 app = Flask(__name__)
@@ -30,8 +30,8 @@ def get_typhoon_package_trees():
 @app.route('/typhoon-user-defined-modules')
 def get_user_defined_modules():
     modules = {
-        'functions': get_user_defined_modules(os.path.join(typhoon_directory(), 'functions')),
-        'transformations': get_user_defined_modules(os.path.join(typhoon_directory(), 'transformations')),
+        'functions': user_defined_modules(os.path.join(typhoon_directory(), 'functions')),
+        'transformations': user_defined_modules(os.path.join(typhoon_directory(), 'transformations')),
     }
     return jsonify(modules)
 

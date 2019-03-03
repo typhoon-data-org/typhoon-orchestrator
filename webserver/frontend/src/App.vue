@@ -2,8 +2,8 @@
   <v-app dark>
     <v-toolbar app>
       <v-toolbar-title class="headline text-uppercase">
-        <span>Vuetify</span>
-        <span class="font-weight-light">MATERIAL DESIGN</span>
+        <span>TYPHOON</span>
+        <span class="font-weight-light">PROJECT</span>
       </v-toolbar-title>
       <v-spacer></v-spacer>
       <v-btn
@@ -30,14 +30,14 @@
           class="indigo lighten-1 white--text text-xs-center"
       >
         <v-card-text>
-          <v-btn
-              v-for="icon in icons"
-              :key="icon"
-              class="mx-3 white--text"
-              icon
-          >
-            <v-icon size="24px">{{ icon }}</v-icon>
-          </v-btn>
+          <!--<v-btn-->
+              <!--v-for="icon in icons"-->
+              <!--:key="icon"-->
+              <!--class="mx-3 white&#45;&#45;text"-->
+              <!--icon-->
+          <!--&gt;-->
+            <!--<v-icon size="24px">{{ icon }}</v-icon>-->
+          <!--</v-btn>-->
         </v-card-text>
 
         <v-card-text class="white--text pt-0">

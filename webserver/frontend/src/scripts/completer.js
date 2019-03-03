@@ -1,22 +1,21 @@
 import {SPECIAL_VARS} from "./ace_helper";
 
-let TYPHOON_MODULES = ['relational', 'file_system'];
-let TYPHOON_FUNCTIONS = {
-  relational: ['execute_query', 'fetchmany', 'fetchall'],
-  file_system: ['s3_write', 'write_file'],
-};
+let TYPHOON_MODULES = [];
+let TYPHOON_FUNCTIONS = {};
 
-let CUSTOM_MODULES = ['scraping', 'others'];
-let CUSTOM_FUNCTIONS = {
-  scraping: ['scrape_hackernews'],
-  others: ['aaa', 'bbb'],
-};
+let CUSTOM_MODULES = [];
+let CUSTOM_FUNCTIONS = {};
 
 function is_beginning_line(pos, prefix) {
   return pos.column === prefix.length;
 }
 
-export function get_completions(editor, session, pos, prefix) {
+export function get_completions(editor, session, pos, prefix, typhoonModules, typhoonFunctions, userDefinedModules, userDefinedFunctions) {
+  TYPHOON_MODULES = typhoonModules;
+  TYPHOON_FUNCTIONS = typhoonFunctions;
+  CUSTOM_MODULES = userDefinedModules;
+  CUSTOM_FUNCTIONS = userDefinedFunctions;
+
   if (is_beginning_line(pos, prefix)) {
     return ["name", "schedule-interval", "active", "nodes", "edges"];
   }
@@ -45,16 +44,16 @@ function get_completions_node(editor, session, pos, prefix, parents) {
     return ['config:'];
   } else if (indents === 2 && ('    function: typhoon'.includes(line_text) || '    function: functions'.includes(line_text))) {
     return ['typhoon', 'functions'];
-  } else if (indents === 2 && /^ {4}function: typhoon\.([^.]+)(\.([^.]+$))/.test(line_text)) {
-    let typhoon_module = /^ {4}function: typhoon\.([^.]+)(\.([^.]+))/.exec(line_text)[1];
+  } else if (indents === 2 && /^ {4}function: typhoon\.([^.]+)(\.([^.]*$))/.test(line_text)) {
+    let typhoon_module = /^ {4}function: typhoon\.([^.]+)(\.([^.]*))/.exec(line_text)[1];
     return TYPHOON_FUNCTIONS[typhoon_module];
-  } else if (indents === 2 && /^ {4}function: typhoon\.([^.]+$)/.test(line_text)) {
+  } else if (indents === 2 && /^ {4}function: typhoon\.([^.]*$)/.test(line_text)) {
     return TYPHOON_MODULES;
-  } else if (indents === 2 && /^ {4}function: functions\.([^.]+)(\.([^.]+$))/.test(line_text)) {
-    let custom_module = /^ {4}function: functions\.([^.]+)(\.([^.]+))/.exec(line_text)[1];
+  } else if (indents === 2 && /^ {4}function: functions\.([^.]+)(\.([^.]*$))/.test(line_text)) {
+    let custom_module = /^ {4}function: functions\.([^.]+)(\.([^.]*))/.exec(line_text)[1];
     return CUSTOM_FUNCTIONS[custom_module];
-  } else if (indents === 2 && /^ {4}function: functions\.([^.]+$)/.test(line_text)) {
-    return CUSTOM_FUNCTIONS;
+  } else if (indents === 2 && /^ {4}function: functions\.([^.]*$)/.test(line_text)) {
+    return CUSTOM_MODULES;
   } else if (indents === 3 && /^ {6}[^: ]+$/.test(line_text)) {
     let config_name = /^ {6}([^: ]+)$/.exec(line_text)[1];
     return [config_name + ' => APPLY'];

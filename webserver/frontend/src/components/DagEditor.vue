@@ -64,8 +64,24 @@
       disable_syntax_checking: false,
       errors: false,
     }),
+    computed: {
+      typhoonModules() {
+        return this.$store.state.typhoonModules;
+      },
+      typhoonFunctions() {
+        return this.$store.state.typhoonFunctions;
+      },
+      userDefinedModules() {
+        return this.$store.state.userDefinedModules;
+      },
+      userDefinedFunctions() {
+        return this.$store.state.userDefinedFunctions;
+      },
+    },
     methods: {
       editorInit: function (editor) {
+        this.fetchTyphoonPackageInfo();
+
         require('brace/ext/language_tools'); //language extension prerequsite...
         require('brace/mode/html');
         require('brace/mode/yaml');    //language
@@ -83,9 +99,10 @@
           enableLiveAutocompletion: true,
           tabSize: 2,
         });
+        let parent = this;
         let customCompleter = {
-          getCompletions: function (editor, session, pos, prefix, callback) {
-            let wordList = get_completions(editor, session, pos, prefix);
+          getCompletions: (editor, session, pos, prefix, callback) => {
+            let wordList = get_completions(editor, session, pos, prefix, parent.typhoonModules, parent.typhoonFunctions, parent.userDefinedModules, parent.userDefinedFunctions);
             callback(null,
               wordList.map(word => ({name: word, value: word, meta: 'static'}))
             );
@@ -106,6 +123,28 @@
       copyEditorContentsToClipboard: function (event) {
         let code = this.$refs.dag_editor.editor.getValue();
         copyToClipboard(code);
+      },
+      fetchTyphoonPackageInfo: function () {
+        const baseURI = 'http://localhost:5000/';
+        this.$http.get(baseURI + 'typhoon-modules')
+          .then((result) => {
+            this.$store.commit('setTyphoonModules', result.data['functions']);
+          });
+
+        this.$http.get(baseURI + 'typhoon-package-trees')
+          .then((result) => {
+            this.$store.commit('setTyphoonFunctions', result.data['functions']);
+          });
+
+        this.$http.get(baseURI + 'typhoon-user-defined-modules')
+          .then((result) => {
+            this.$store.commit('setUserDefinedModules', result.data['functions']);
+          });
+
+        this.$http.get(baseURI + 'typhoon-user-defined-package-trees')
+          .then((result) => {
+            this.$store.commit('setUserDefinedFunctions', result.data['functions']);
+          });
       }
     }
   }

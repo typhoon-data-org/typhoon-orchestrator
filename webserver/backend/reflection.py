@@ -41,16 +41,16 @@ def package_tree(package_name: str):
     return tree
 
 
-def get_user_defined_modules(path):
-    return [x for x in os.listdir(path) if x.endswith('.py')]
+def user_defined_modules(path):
+    return [x[:-3] for x in os.listdir(path) if x.endswith('.py') and not x.startswith('_')]
 
 
 def package_tree_from_path(package_path: str):
     tree = {}
-    for file_name in get_user_defined_modules(package_path):
-        module_name = file_name[:-3]
+    for file_name in user_defined_modules(package_path):
+        module_name = file_name
         tree[module_name] = []
-        for function_name in get_function_names_in_module_path(os.path.join(package_path, file_name)):
+        for function_name in get_function_names_in_module_path(os.path.join(package_path, file_name + '.py')):
             tree[module_name].append(function_name)
 
     return tree
