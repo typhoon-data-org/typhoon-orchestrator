@@ -33,11 +33,12 @@
     </v-layout>
 
     <v-layout row wrap>
-      <v-btn v-on:click="copyEditorContentsToClipboard" outline fab color="teal">
+      <v-btn v-on:click="copyEditorContentsToClipboard" outline fab>
         <v-icon color="white">assignment</v-icon>
       </v-btn>
       <v-checkbox v-model="disable_syntax_checking" label="Disable syntax checks"></v-checkbox>
     </v-layout>
+    <EdgeTester edge_name="e1"></EdgeTester>
 
       <!--<v-textarea-->
           <!--name="input-7-1"-->
@@ -53,20 +54,22 @@
 
   import {copyToClipboard, syntactical_analysis} from "../scripts/ace_helper";
   import {get_completions} from "../scripts/completer";
+  import EdgeTester from "./EdgeTester";
 
   export default {
     components: {
+      EdgeTester,
       editor: require('vue2-ace-editor'),
     },
     data: () => ({
-      content: 'name: aaa\nschedule-interval: "* * * * * *"\nnodes:\n  aa:\n    function: typhoon.aa.bb' +
+      content: 'name: example_dag\nschedule-interval: "* * * * * *"\nnodes:\n  e1:\n    function: typhoon.aa.bb' +
         '\n    config:\n' +
         '      table_name => APPLY: $SOURCE\n' +
         '      query => APPLY:\n' +
         '        - str("SELECT * FROM {{ table_name }} WHERE creation_date=\'{{ date_string }}\'")\n' +
         '        - typhoon.templates.render(template=$1, table_name=$SOURCE, date_string=$DAG_CONFIG.ds)\n' +
         '      batch_size: 2\n\n' +
-        '  b:',
+        '  ',
       tokens: '[]',
       disable_syntax_checking: false,
       errors: false,
