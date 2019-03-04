@@ -1,29 +1,38 @@
 <template>
-  <v-container>
-    <v-divider class="pb-2"></v-divider>
-    <v-layout v-if="param.apply" row wrap>
-      <v-flex offset-md2 md10>
-        <v-textarea
-            outline
-            name="input-7-4"
-            label="Outline textarea"
-            v-bind:value="transformations_text"
-            readonly
-        ></v-textarea>
-      </v-flex>
-    </v-layout>
-    <v-layout row wrap>
-      <v-flex md2>
-        <v-subheader>{{param_name}}</v-subheader>
-      </v-flex>
-      <v-flex md6>
-        <v-text-field
-            label="Output"
-            v-bind:value="param.apply ? `None` : param.contents"
-        ></v-text-field>
-      </v-flex>
-    </v-layout>
-    <v-divider></v-divider>
+  <v-container  class="pt-0 pb-1">
+    <v-expansion-panel>
+    <v-expansion-panel-content>
+      <template v-slot:header>
+        <div>{{param_name}}</div>
+      </template>
+      <v-card>
+        <v-divider class="pb-2"></v-divider>
+        <v-layout v-if="param.apply" row wrap>
+          <v-flex offset-md2 md10>
+            <v-textarea
+                outline
+                name="input-7-4"
+                label="Outline textarea"
+                v-bind:value="transformations_text"
+                readonly
+            ></v-textarea>
+          </v-flex>
+        </v-layout>
+        <v-layout row wrap>
+          <v-flex md2>
+            <v-subheader>Output</v-subheader>
+          </v-flex>
+          <v-flex md6>
+            <v-text-field
+                label="Output"
+                v-bind:value="param.apply ? `None` : param.contents"
+            ></v-text-field>
+          </v-flex>
+        </v-layout>
+        <v-divider></v-divider>
+      </v-card>
+    </v-expansion-panel-content>
+  </v-expansion-panel>
   </v-container>
 </template>
 <script>

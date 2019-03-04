@@ -28,7 +28,7 @@
         </v-flex>
       </v-layout>
 
-      <v-container v-for="(param, param_name) in edge" v-bind:key="param_name">
+      <v-container v-for="(param, param_name) in edge" v-bind:key="param_name" class="pt-0 pb-0">
         <ParamView v-bind:param_name="param_name" v-bind:param="param"/>
       </v-container>
       <!--<ParamView param_name="query"/>-->
