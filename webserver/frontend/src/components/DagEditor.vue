@@ -38,7 +38,10 @@
       </v-btn>
       <v-checkbox v-model="disable_syntax_checking" label="Disable syntax checks"></v-checkbox>
     </v-layout>
-    <EdgeTester edge_name="e1"></EdgeTester>
+
+    <v-container v-for="(edge, edge_name) in edges" v-bind:key="edge_name">
+      <EdgeTester v-bind:edge_name="edge_name" v-bind:edge="edge"></EdgeTester>
+    </v-container>
 
       <!--<v-textarea-->
           <!--name="input-7-1"-->
@@ -87,6 +90,9 @@
       userDefinedFunctions() {
         return this.$store.state.userDefinedFunctions;
       },
+      edges() {
+        return this.$store.state.edges;
+      }
     },
     methods: {
       editorInit: function (editor) {

@@ -1,13 +1,13 @@
 <template>
   <v-container>
     <v-divider class="pb-2"></v-divider>
-    <v-layout row wrap>
-      <v-flex offset-md2 md6>
+    <v-layout v-if="param.apply" row wrap>
+      <v-flex offset-md2 md10>
         <v-textarea
             outline
             name="input-7-4"
             label="Outline textarea"
-            value="The Woodman set to work at once, and so sharp was his axe that the tree was soon chopped nearly through."
+            v-bind:value="transformations_text"
             readonly
         ></v-textarea>
       </v-flex>
@@ -19,7 +19,7 @@
       <v-flex md6>
         <v-text-field
             label="Output"
-            value="None"
+            v-bind:value="param.apply ? `None` : param.contents"
         ></v-text-field>
       </v-flex>
     </v-layout>
@@ -30,8 +30,16 @@
   export default {
     name: 'ParamView',
     props: {
-      edge_name: String,
       param_name: String,
+      param: Object,
+    },
+    computed: {
+      transformations_text() {
+        if (!this.param.apply) {
+          return null;
+        }
+        return this.param.contents.map(line => '- ' + line).join('\n');
+      }
     }
   }
 </script>

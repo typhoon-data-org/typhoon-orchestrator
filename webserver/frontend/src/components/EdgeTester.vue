@@ -4,7 +4,7 @@
     <!--<v-divider></v-divider>-->
     <!--</v-layout>-->
     <v-card elevation="8">
-      <v-layout row wrap>
+      <v-layout row wrap class="pt-2">
         <v-flex md2>
           <v-subheader>Edge</v-subheader>
         </v-flex>
@@ -27,10 +27,13 @@
           ></v-text-field>
         </v-flex>
       </v-layout>
-      <ParamView param_name="table_name"/>
-      <ParamView param_name="query"/>
-      <v-layout row wrap>
-        <v-flex pb12>
+
+      <v-container v-for="(param, param_name) in edge" v-bind:key="param_name">
+        <ParamView v-bind:param_name="param_name" v-bind:param="param"/>
+      </v-container>
+      <!--<ParamView param_name="query"/>-->
+      <v-layout row wrap class="pb-2">
+        <v-flex>
           <v-btn color="success">Test</v-btn>
         </v-flex>
       </v-layout>
@@ -49,7 +52,7 @@
     components: {ParamView},
     props: {
       edge_name: String,
-      adapter: Object,
+      edge: Object,
     }
   }
 </script>
