@@ -27,7 +27,7 @@
       <v-card
           flat
           tile
-          class="indigo lighten-1 white--text text-xs-center"
+          class="lighten-1 white--text text-xs-center"
       >
         <v-card-text>
           <!--<v-btn-->
@@ -41,8 +41,9 @@
         </v-card-text>
 
         <v-card-text class="white--text pt-0">
-          Typhoon Orchestrator: DEV MODE
-          Typhoon is a task orchestrator and workfow manager used to create asynchronous data pipelines that can be deployed to AWS Lambda/Fargate to be completely serverless.
+          <div>Typhoon Orchestrator: DEV MODE</div>
+          Typhoon is a task orchestrator and workflow manager used to create asynchronous data pipelines that can be deployed to AWS Lambda/Fargate to be completely serverless.
+          Development mode active.
         </v-card-text>
 
         <v-divider></v-divider>

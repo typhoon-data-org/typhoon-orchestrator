@@ -23,7 +23,7 @@
         <v-flex md6>
           <v-text-field
               label="Data"
-              v-bind:value="source_data"
+              v-model="source_data"
           ></v-text-field>
         </v-flex>
       </v-layout>
