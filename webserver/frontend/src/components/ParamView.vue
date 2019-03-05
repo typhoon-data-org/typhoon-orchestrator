@@ -25,7 +25,8 @@
           <v-flex md6>
             <v-text-field
                 label="Output"
-                v-bind:value="param.apply ? `None` : param.contents"
+                v-bind:value="param_output"
+                readonly
             ></v-text-field>
           </v-flex>
         </v-layout>
@@ -39,6 +40,7 @@
   export default {
     name: 'ParamView',
     props: {
+      edge_name: String,
       param_name: String,
       param: Object,
     },
@@ -48,6 +50,12 @@
           return null;
         }
         return this.param.contents.map(line => '- ' + line).join('\n');
+      },
+      param_output() {
+        if (!this.param.apply) {
+          return this.param.contents;
+        }
+        return this.$store.state.edges[this.edge_name][this.param_name].transformation_result;
       }
     }
   }

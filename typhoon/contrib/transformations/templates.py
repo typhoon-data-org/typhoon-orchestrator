@@ -1,5 +1,5 @@
 import jinja2
 
 
-def render(s: str, **context):
-    return jinja2.Template(s).render(context)
+def render(template: str, **context):
+    return jinja2.Template(template).render(context)

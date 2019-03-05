@@ -42,6 +42,12 @@ export default new Vuex.Store({
     setUserDefinedFunctions(state, modules) {
       state.userDefinedFunctions = modules;
     },
+    setEdges(state, edges) {
+      state.edges = edges;
+    },
+    setTransformationResult(state, payload) {
+      Vue.set(state.edges[payload.edge_name][payload.param_name], 'transformation_result', payload.result);
+    },
   },
   actions: {
 
