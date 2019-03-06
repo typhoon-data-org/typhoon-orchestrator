@@ -12,7 +12,7 @@
             <v-textarea
                 outline
                 name="input-7-4"
-                label="Outline textarea"
+                label="Transformations"
                 v-bind:value="transformations_text"
                 readonly
             ></v-textarea>
@@ -20,9 +20,9 @@
         </v-layout>
         <v-layout row wrap>
           <v-flex md2>
-            <v-subheader>Output</v-subheader>
+            <v-subheader>Value</v-subheader>
           </v-flex>
-          <v-flex md6>
+          <v-flex md10>
             <v-text-field
                 label="Output"
                 v-bind:value="param_output"
