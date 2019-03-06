@@ -39,6 +39,21 @@
       <v-checkbox v-model="disable_syntax_checking" label="Disable syntax checks"></v-checkbox>
     </v-layout>
 
+    <v-layout row wrap>
+      <v-flex offset-md1 md5>
+        <v-text-field
+            label="Filter edges by name"
+            v-model="filter_exp"
+        ></v-text-field>
+      </v-flex>
+      <v-flex offset-md2>
+        <v-btn color="brown">
+          <v-icon left>extension</v-icon>
+          DAG config
+        </v-btn>
+      </v-flex>
+    </v-layout>
+
     <v-container v-for="(edge, edge_name) in edges" v-bind:key="edge_name">
       <EdgeTester v-bind:edge_name="edge_name" v-bind:edge="edge"></EdgeTester>
     </v-container>
@@ -76,6 +91,7 @@
       tokens: '[]',
       disable_syntax_checking: false,
       errors: false,
+      filter_exp: '',
     }),
     computed: {
       typhoonModules() {
@@ -91,7 +107,17 @@
         return this.$store.state.userDefinedFunctions;
       },
       edges() {
-        return this.$store.state.edges;
+        if (self.filter_exp === '') {
+          return this.$store.state.edges;
+        } else {
+          let result = {};
+          for (let key in this.$store.state.edges) {
+            if (this.$store.state.edges.hasOwnProperty(key) && key.includes(this.filter_exp)) {
+              result[key] = this.$store.state.edges[key];
+            }
+          }
+          return result;
+        }
       }
     },
     methods: {
