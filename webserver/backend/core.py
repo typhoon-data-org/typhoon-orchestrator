@@ -50,10 +50,11 @@ def get_typhoon_user_defined_package_trees():
 def get_run_transformations_result():
     body = request.get_json()
     response = {}
+    source_data = eval(body['source']) if body['eval_source'] else body['source']
     for param_name, param in body['edge'].items():
         if param['apply']:
             response[param_name] = run_transformations(
-                source_data=body['source'],
+                source_data=source_data,
                 dag_config=body['dag_config'],
                 transformations=param['contents']
             )

@@ -15,6 +15,7 @@
                 label="Transformations"
                 v-bind:value="transformations_text"
                 readonly
+                disabled
             ></v-textarea>
           </v-flex>
         </v-layout>
@@ -27,6 +28,7 @@
                 label="Output"
                 v-bind:value="param_output"
                 readonly
+                disabled
             ></v-text-field>
           </v-flex>
         </v-layout>
