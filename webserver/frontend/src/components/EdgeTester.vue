@@ -76,7 +76,10 @@
           edge: this.edge,
           source: this.source_data,
           eval_source: this.source_value_type === 'eval',
-          dag_config: {ds: '2019-02-01'},  // TODO: Ask for dag config
+          dag_config: {
+            execution_date: this.$store.getters.executionDatetime,
+            dag_name: this.$store.state.dag_name,
+          },
         };
         this.$http.post(baseURI + 'run-transformations', body)
           .then((result) => {

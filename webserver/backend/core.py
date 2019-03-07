@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 from code_execution import run_transformations
 from flask import Flask, jsonify, request
@@ -51,11 +52,17 @@ def get_run_transformations_result():
     body = request.get_json()
     response = {}
     source_data = eval(body['source']) if body['eval_source'] else body['source']
+    dag_config = {
+        'execution_date': datetime.strptime(body['dag_config']['execution_date'], '%Y-%m-%dT%H:%M'),
+        'ds': body['dag_config']['execution_date'].split('T')[0],
+        'ds_nodash': body['dag_config']['execution_date'].split('T')[0].replace('-', ''),
+        'dag_name': body['dag_config']['dag_name'],
+    }
     for param_name, param in body['edge'].items():
         if param['apply']:
             response[param_name] = run_transformations(
                 source_data=source_data,
-                dag_config=body['dag_config'],
+                dag_config=dag_config,
                 transformations=param['contents']
             )
 
