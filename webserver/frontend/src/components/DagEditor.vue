@@ -44,25 +44,28 @@
         <v-text-field
             label="Filter edges by name"
             v-model="filter_exp"
+            prepend-icon="search"
         ></v-text-field>
       </v-flex>
       <v-flex offset-md2>
-        <v-btn color="brown">
-          <v-icon left>extension</v-icon>
-          DAG config
-        </v-btn>
+        <DagConfigDialog></DagConfigDialog>
       </v-flex>
     </v-layout>
 
-    <v-container v-for="(edge, edge_name) in edges" v-bind:key="edge_name">
-      <EdgeTester v-bind:edge_name="edge_name" v-bind:edge="edge"></EdgeTester>
+    <div v-if="Object.entries(edges).length > 0 && edges.constructor === Object">
+      <v-container v-for="(edge, edge_name) in edges" v-bind:key="edge_name">
+        <EdgeTester v-bind:edge_name="edge_name" v-bind:edge="edge"></EdgeTester>
+      </v-container>
+    </div>
+    <v-container v-else>
+      <h1 class="text-md-center">No edges matching filter criteria</h1>
     </v-container>
 
-      <!--<v-textarea-->
-          <!--name="input-7-1"-->
-          <!--label="Default style"-->
-          <!--v-model="tokens"-->
-          <!--hint="Hint text"-->
+    <!--<v-textarea-->
+    <!--name="input-7-1"-->
+    <!--label="Default style"-->
+    <!--v-model="tokens"-->
+    <!--hint="Hint text"-->
           <!--rows="50"-->
       <!--&gt;</v-textarea>-->
   </v-container>
@@ -73,9 +76,11 @@
   import {copyToClipboard, syntactical_analysis} from "../scripts/ace_helper";
   import {get_completions} from "../scripts/completer";
   import EdgeTester from "./EdgeTester";
+  import DagConfigDialog from "./DagConfigDialog";
 
   export default {
     components: {
+      DagConfigDialog,
       EdgeTester,
       editor: require('vue2-ace-editor'),
     },
