@@ -68,6 +68,19 @@
     <!--hint="Hint text"-->
           <!--rows="50"-->
       <!--&gt;</v-textarea>-->
+    <v-snackbar
+      v-model="snackbar_clipboard"
+      timeout="1500"
+      top="true"
+    >
+      Copied code to clipboard
+      <v-btn
+        flat
+        @click="snackbar = false"
+      >
+        Close
+      </v-btn>
+    </v-snackbar>
   </v-container>
 </template>
 
@@ -97,6 +110,7 @@
       disable_syntax_checking: false,
       errors: false,
       filter_exp: '',
+      snackbar_clipboard: false,
     }),
     computed: {
       typhoonModules() {
@@ -171,6 +185,7 @@
       copyEditorContentsToClipboard: function (event) {
         let code = this.$refs.dag_editor.editor.getValue();
         copyToClipboard(code);
+        this.snackbar_clipboard = true;
       },
       fetchTyphoonPackageInfo: function () {
         const baseURI = 'http://localhost:5000/';
