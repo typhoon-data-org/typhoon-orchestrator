@@ -49,6 +49,8 @@ def get_typhoon_user_defined_package_trees():
 
 @app.route('/run-transformations', methods=['POST'])
 def get_run_transformations_result():
+    from pandas import DataFrame
+
     body = request.get_json()
     response = {}
     source_data = eval(body['source']) if body['eval_source'] else body['source']
