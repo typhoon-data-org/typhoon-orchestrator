@@ -3,6 +3,12 @@ import {A_DAG} from "./analize_dag";
 export function AnalysisException() {}
 
 let errors = [];
+export function firstSyntaxError() {
+  if (errors.length > 0) {
+    return errors[0].text;
+  }
+  return '';
+}
 let editor;
 let INDENT_TK = () => ({type: 'special', value: '__INDENT__'});
 let DEDENT_TK = () => ({type: 'special', value: '__DEDENT__'});
@@ -37,10 +43,6 @@ export function syntactical_analysis(_editor) {
 
   editor.session.setAnnotations(errors);
 
-  // let tokens, line;
-  // [tokens, line] = get_tokens_block();
-  // [tokens, line] = get_tokens_block(line);
-  // [tokens, line] = get_tokens_block(line);
   return success
 }
 // }
@@ -48,14 +50,16 @@ export function syntactical_analysis(_editor) {
 export function get_tokens(line, previous_indentation=0) {
   if (line >= editor.session.getLength()) {
     return [[EOF_TK], -1];
+  } else if (editor.session.getLine(line).trim() === '') {
+    return [[], -2];
   }
 
   let tokens = [];
   let line_tokens = editor.session.getTokens(line);
-  while (line_tokens === []) {
-    line++;
-    line_tokens = editor.session.getTokens(line);
-  }
+  // while (line_tokens === []) {
+  //   line++;
+  //   line_tokens = editor.session.getTokens(line);
+  // }
   let indents = get_indentation(line);
   if (indents - previous_indentation > 0) {
     tokens = tokens.concat(
@@ -103,19 +107,35 @@ export function get_tokens_block(line = 0) {
   let tokens = [];
   let line_tokens, indents;
   [line_tokens, indents] = get_tokens(line);
-  if (indents !== 0)
-    push_error_msg('Block should start without indentation. Found ' + indents);
+  while (indents === -2) {
+    line++;
+    [line_tokens, indents] = get_tokens(line);
+  }
+  if (indents !== 0) {
+    push_error_msg('Block should start without indentation. Found ' + indents, line);
+    throw new AnalysisException();
+  }
   tokens = tokens.concat(line_tokens);
 
   line++;
   [line_tokens, indents] = get_tokens(line, indents);
-  while (indents > 0 || empty_line(line_tokens, indents)) {
-    if (empty_line(line_tokens, indents)) {
-      line_tokens = line_tokens.filter(tk => !is_eol(tk));
+  while (indents === -2) {
+    line++;
+    [line_tokens, indents] = get_tokens(line);
+  }
+  while (line < editor.session.getLength() && (indents > 0 || editor.session.getLine(line).trim() === '')) {
+    // if (empty_line(line_tokens, indents)) {
+    //   line_tokens = line_tokens.filter(tk => !is_eol(tk));
+    // }
+    if (!(editor.session.getLine(line).trim() === '')){
+      tokens = tokens.concat(line_tokens);
     }
-    tokens = tokens.concat(line_tokens);
     line++;
     [line_tokens, indents] = get_tokens(line, indents);
+    while (indents === -2) {
+      line++;
+      [line_tokens, indents] = get_tokens(line);
+    }
   }
   if (indents === -1) {
     let eof_tk = EOF_TK();
@@ -220,9 +240,9 @@ export function is_type_value(tk, type, value) {
     type = [type];
   }
   if (value instanceof  RegExp) {
-    return type.includes(tk.type) && value.test(tk.value);
+    return type.includes(tk.type) && value.trim().test(tk.value);
   }
-  return type.includes(tk.type) && tk.value === value;
+  return type.includes(tk.type) && (tk.value.trim() === value);
 }
 
 export function check_type_value(tk, type, value, msg) {
@@ -287,3 +307,12 @@ export function copyToClipboard(str) {
   document.execCommand('copy');
   document.body.removeChild(el);
 };
+
+export function skip_to_next_block(line) {
+  line++;
+  if (line >= editor.session.getLength()) {
+    push_error_msg('Expected block, found EOF', line);
+    throw new AnalysisException();
+  }
+  return line;
+}

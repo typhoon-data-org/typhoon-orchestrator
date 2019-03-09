@@ -1,6 +1,6 @@
 import {
   AnalysisException,
-  check_dedent,
+  check_dedent, check_eof,
   check_eol,
   check_indent,
   check_meta_tag,
@@ -10,15 +10,15 @@ import {
   check_type,
   check_type_value,
   get_indents,
-  get_tokens_block, is_eof,
-  is_eol,
+  get_tokens_block, is_dedent, is_eof,
+  is_eol, is_indent,
   is_special_var,
   is_type_value,
   is_valid_special_var,
   num_lines,
   push_error_msg,
   push_warning_msg,
-  skip_blank_lines,
+  skip_blank_lines, skip_to_next_block,
   stringify_until_eol
 } from "./ace_helper";
 import {
@@ -31,16 +31,18 @@ import {
 } from "./cron_checker";
 
 export let NODE_NAMES=[];
-export let EDGE_NAMES=[];
+export let EDGE_CONFIGS={};
 
 
 export function A_DAG() {
+  EDGE_CONFIGS = {};
   try {
     let line = A_NAME();
     line = A_SCHEDULE_INTERVAL(line);
     line = A_ACTIVE(line);
     line = A_NODES(line);
-    // A_EDGES(line);
+    line = skip_to_next_block(line);
+    A_EDGES(line);
     return true;
   } catch (e) {
     if (!(e instanceof AnalysisException)) {
@@ -124,11 +126,11 @@ function A_SCHEDULE_INTERVAL(start_line) {
 }
 
 function check_cron_expression(tk) {
-  if (!tk.value.startsWith(' ')) {
-    push_warning_msg("Add a space after 'schedule-interval:' tag");
+  if (!tk.value.startsWith(' ') && !tk.value.startsWith('"')) {
+    push_warning_msg("Add a space after 'schedule-interval:' tag", tk.line);
   }
   if (tk.value === ' ') {
-    push_error_msg('No schedule interval specified');
+    push_error_msg('No schedule interval specified', tk.line);
     throw new AnalysisException();
   }
   let schedule_interval = tk.value.trim().replace(/['"/]/g, "");
@@ -262,22 +264,32 @@ function A_NODES(start_line) {
   }
   check_indent(tk, "Expected indent");
 
-  A_NODE(tokens);
-  skip_blank_lines(tokens);
+  end_line = A_NODE(tokens);
+  if (tokens[0] === undefined) {
+    return end_line;
+  }
+  if (is_indent(tokens[0])) {
+    tokens.shift();
+  }
   check_not_eof(tokens[0], "Expected node definition or 'edges:' tag", tk.line);
   let indents = get_indents(tokens[0].line);
   while (tokens[0].type === 'meta.tag' && indents === 1) {
-    A_NODE(tokens);
-    skip_blank_lines(tokens);
+    end_line = A_NODE(tokens);
+    if (tokens[0] === undefined) {
+      return end_line;
+    }
+    if (is_indent(tokens[0])) {
+      tokens.shift();
+    }
     check_not_eof(tokens[0], "Expected node definition or 'edges:' tag", tk.line);
     indents = get_indents(tokens[0].line);
   }
 
-  if (indents > 1) {
-    push_error_msg("Wrong indentation. Expected 1 indent for node definition" +
-      " or 0 for 'edges:' tag. Found " + indents, tokens[0].line);
-    throw new AnalysisException();
-  }
+  // if (indents > 1) {
+  //   push_error_msg("Wrong indentation. Expected 1 indent for node definition" +
+  //     " or 0 for 'edges:' tag. Found " + indents, tokens[0].line);
+  //   throw new AnalysisException();
+  // }
 
   return end_line;
 }
@@ -286,6 +298,7 @@ function A_NODE(tokens) {
   let tk = tokens.shift();
   check_not_eol(tk, "Expected node definition, not end of line");
   check_meta_tag(tk, 'Expected node definition');
+  let node_name = tk.value;
   tk = tokens.shift();
   check_not_eol(tk, "Expected ':'");
   check_type_value(tk, 'keyword', ':', "Expected ':'");
@@ -310,7 +323,8 @@ function A_NODE(tokens) {
   check_eol(tk, 'Expected line break');
   tk = tokens.shift();
   check_indent(tk, "Expected indent");
-  A_CONFIG(tokens);
+  let end_line = A_CONFIG(tokens, node_name, false);
+  return end_line;
 }
 
 function A_FUNCTION(tk) {
@@ -332,7 +346,7 @@ function A_FUNCTION(tk) {
   }
 }
 
-function A_CONFIG(tokens) {
+function A_CONFIG(tokens, parent_name, is_edge) {
   let tk = tokens.shift();
   check_meta_tag(tk, "Expected meta tag");
   let config_name = tk.value.trim();
@@ -345,20 +359,42 @@ function A_CONFIG(tokens) {
   tk = tokens.shift();
   check_semicolon(tk);
 
+  let end_line, value;
   if (/^[a-zA-Z][\w_]*(\s?=>\s?APPLY)$/.test(config_name)) {
-    A_APPLY(tokens);
+    [end_line, value] = A_APPLY(tokens);
+    if (is_edge) {
+      EDGE_CONFIGS[parent_name][config_name.split(' => APPLY')[0]] = {
+        'apply': true,
+        'contents': value,
+      };
+    }
   } else {
-    A_VALUE(tokens);
+    [end_line, value] = A_VALUE(tokens);
+    if (is_edge) {
+      EDGE_CONFIGS[parent_name][config_name.split(' => APPLY')[0]] = {
+        'apply': false,
+        'contents': value,
+      }
+    }
   }
 
-  if (tokens[0].type === 'meta.tag') {
-    A_CONFIG(tokens);
+  if (tokens[0] !== undefined && tokens[0].type === 'meta.tag') {
+    return A_CONFIG(tokens, parent_name, is_edge);
   }
+  if (tokens[0] !== undefined && is_dedent(tokens[0])) {
+    tokens.shift();
+    end_line++;
+  }
+  return end_line;
 }
 
 function A_APPLY(tokens) {
+  let transformations = [];
+  let transformation;
   if (!is_eol(tokens[0])) {
-    A_APPLY_LINE(tokens, false);
+    transformation = A_APPLY_LINE(tokens, false);
+    transformations.push(transformation);
+    return [tokens[0].line, transformations]
   } else {
     let tk = tokens.shift();  // Skip end of line
     tk = tokens.shift();  // Skip end of line
@@ -367,20 +403,24 @@ function A_APPLY(tokens) {
     if (tk.type !== 'list.markup' || tk.value.trim() !== '-') {
       push_error_msg("Expected list ('-')", tk.line);
     }
-    A_APPLY_LINE(tokens, true);
+    transformation = A_APPLY_LINE(tokens, true);
+    transformations.push(transformation);
 
     tk = tokens.shift();
     while(tk.type === 'list.markup' && tk.value.trim() === '-') {
-      A_APPLY_LINE(tokens, true);
+      transformation = A_APPLY_LINE(tokens, true);
+      transformations.push(transformation);
       tk = tokens.shift();
     }
     check_dedent(tk, 'Expected dedent');
+    return [tk.line, transformations];
   }
 }
 
 function A_APPLY_LINE(tokens, special_var_nums) {
   stringify_until_eol(tokens);
   let tk = tokens.shift();
+  let apply_line_str = tk.value;
   let special_vars = tk.value.match(/\$[\w]+/g);
   if (special_vars != null) {
     special_vars.forEach(special_var => {
@@ -395,9 +435,11 @@ function A_APPLY_LINE(tokens, special_var_nums) {
   }
   // We know the next token is end of line
   tokens.shift();
+  return apply_line_str;
 }
 
 function A_VALUE(tokens) {
+  let value;
   let tk = tokens.shift();
   if (is_type_value(tk, 'paren.lparen', /[[{][[{]+/)) {
     // Workaround because ace groups parenthesis together. Separate each into its own token
@@ -412,18 +454,21 @@ function A_VALUE(tokens) {
     tk = tokens.shift();
   }
   if (is_type_value(tk, 'paren.lparen', '[')) {
-    A_ARRAY(tokens);
+    value = A_ARRAY(tokens);
   } else if (is_type_value(tk, 'paren.lparen', '{')){
-    A_DICT(tokens);
+    value = A_DICT(tokens);
   } else {
     check_type(tk, ['text', 'constant.numeric', 'constant.language.boolean', 'string'], 'Unrecognized type');
+    value = tk.value;
   }
   tk = tokens.shift();
   check_eol(tk, 'Expected line break');
-
+  return [tk.line, value];
 }
 
 function A_ARRAY(tokens) {
+  let elements;
+  elements = [];
   let tk = tokens.shift();
   if (is_type_value(tk, 'paren.rparen', /][\]}]+/)) {
     // Workaround because ace groups parenthesis together. Separate each into its own token
@@ -452,12 +497,15 @@ function A_ARRAY(tokens) {
       tk = tokens.shift();
     }
     if (is_type_value(tk, 'paren.lparen', '[')) {
-      A_ARRAY(tokens);
+      let array = A_ARRAY(tokens);
+      elements.push(array);
     } else if (is_type_value(tk, 'paren.lparen', /\s*{\s*/)) {
-      A_DICT(tokens);
+      let dict = A_DICT(tokens);
+      elements.push(dict);
     } else {
       check_type(
         tk, ['constant.numeric', 'constant.language.boolean', 'string'], 'Unrecognized type');
+      elements.push(tk.value);
     }
     tk = tokens.shift();
     check_not_eol(tk, "Missing closing bracket ']'");
@@ -480,9 +528,11 @@ function A_ARRAY(tokens) {
       throw new AnalysisException();
     }
   }
+  return '[' + elements.join(', ') + ']';
 }
 
 function A_DICT(tokens) {
+  let key_vals = {};
   let tk = tokens.shift();
   if (is_type_value(tk, 'paren.rparen', /}[\]}]+/)) {
     // Workaround because ace groups parenthesis together. Separate each into its own token
@@ -499,6 +549,7 @@ function A_DICT(tokens) {
   while (!is_type_value(tk, 'paren.rparen', '}')) {
     check_not_eol(tk, "Missing closing curly bracket '}'");
     check_meta_tag(tk, 'Expected meta tag');
+    let k = tk.value;
     tk = tokens.shift();
     check_not_eol(tk, "Missing ':'");
     check_semicolon(tk);
@@ -517,12 +568,15 @@ function A_DICT(tokens) {
       tk = tokens.shift();
     }
     if (is_type_value(tk, 'paren.lparen', /\s*\[\s*/)) {
-      A_ARRAY(tokens);
+      let array = A_ARRAY(tokens);
+      key_vals[k] = array;
     } else if (is_type_value(tk, 'paren.lparen', /\s*{\s*/)) {
-      A_DICT(tokens);
+      let dict = A_DICT(tokens);
+      key_vals[k] = dict;
     } else {
       check_type(
         tk, ['constant.numeric', 'constant.language.boolean', 'string'], 'Unrecognized type');
+      key_vals[k] = tk.value;
     }
 
     tk = tokens.shift();
@@ -545,5 +599,119 @@ function A_DICT(tokens) {
       push_error_msg("Expected ',' or '}'", tk.line);
       throw new AnalysisException();
     }
+  }
+  return JSON.stringify(key_vals);
+}
+
+function A_EDGES(start_line) {
+  let tokens, end_line;
+  [tokens, end_line] = get_tokens_block(start_line);
+
+  let tk = tokens.shift();
+  if ((tk.type !== "meta.tag") || (tk.value !== 'edges')) {
+    push_error_msg("Expected 'edges:' definition", tk.line);
+    throw new AnalysisException();
+  }
+  tk = tokens.shift();
+  check_not_eol(tk, "Expected ':'");
+  if (tk.type !== "keyword" || tk.value !== ':') {
+    push_error_msg("Expected ':'", tk.line);
+    throw new AnalysisException();
+  }
+
+  tk = tokens.shift();
+  check_eol(tk, "Expected line break");
+
+  tk = tokens.shift();
+  if (tk === undefined) {
+    push_error_msg("Expected indent", num_lines() - 1);
+    throw new AnalysisException();
+  }
+  check_indent(tk, "Expected indent");
+
+  A_EDGE(tokens);
+  while (is_eol(tokens[0]) || is_indent(tokens[0])) {
+    tokens.shift();
+  }
+  if (is_eof(tokens[0])) {
+    return;
+  }
+  let indents = get_indents(tokens[0].line);
+  while (tokens[0].type === 'meta.tag' && indents === 1) {
+    A_EDGE(tokens);
+    if (is_eof(tokens[0])) {
+      return;
+    }
+    indents = get_indents(tokens[0].line);
+  }
+
+  // if (indents > 1) {
+  //   push_error_msg("Wrong indentation. Expected 1 indent for edge definition" +
+  //     " or end of file. Found " + indents, tokens[0].line);
+  //   throw new AnalysisException();
+  // }
+
+  tk = tokens.shift();
+  check_eol(tk, 'Expected line break');
+  tk = tokens.shift();
+  check_eof(tk, 'Expected file end');
+}
+
+function A_EDGE(tokens) {
+  let tk = tokens.shift();
+  check_not_eol(tk, "Expected edge definition, not end of line");
+  check_meta_tag(tk, 'Expected edge definition');
+  let edge_name = tk.value;
+  EDGE_CONFIGS[edge_name] = {};
+  tk = tokens.shift();
+  check_not_eol(tk, "Expected ':'");
+  check_type_value(tk, 'keyword', ':', "Expected ':'");
+  tk = tokens.shift();
+  check_eol(tk, 'Expected line break');
+  tk = tokens.shift();
+  check_indent(tk, "Expected indent");
+  tk = tokens.shift();
+  if (is_type_value(tk, 'meta.tag', 'async')) {
+    tk = tokens.shift();
+    check_semicolon(tk);
+    tk = tokens.shift();
+    check_type(tk, 'constant.language.boolean', 'Expected boolean value');
+    tk = tokens.shift();
+    check_eol(tk, 'Expected line break');
+    tk = tokens.shift();
+  }
+  check_meta_tag(tk, "Expected 'source:' definition", 'source');
+  tk = tokens.shift();
+  check_semicolon(tk);
+  tk = tokens.shift();
+  check_type(tk, 'text', 'Invalid source');
+  A_ID(tk, 'Invalid source identifier');
+  tk = tokens.shift();
+  check_eol(tk, 'Expected line break');
+  tk = tokens.shift();
+  check_meta_tag(tk, "Expected 'adapter:' definition", 'adapter');
+  tk = tokens.shift();
+  check_semicolon(tk);
+  tk = tokens.shift();
+  check_eol(tk, 'Expected line break');
+  tk = tokens.shift();
+  check_indent(tk, "Expected indent");
+  A_CONFIG(tokens, edge_name, true);
+  tk = tokens.shift();
+  check_meta_tag(tk, "Expected 'destination:' definition", 'destination');
+  tk = tokens.shift();
+  check_semicolon(tk);
+  tk = tokens.shift();
+  check_type(tk, 'text', 'Invalid destination');
+  A_ID(tk, 'Invalid destination identifier');
+}
+
+function A_ID(tk, error_msg) {
+  let dag_name = tk.value.trim();
+  let valid_name = /^[a-zA-Z][\w]*$/.test(dag_name);
+  if (!valid_name) {
+    let invalid_characters = dag_name.replace(/^[a-zA-Z][\w]*$/g, '');
+    push_error_msg(error_msg, tk.line);
+    throw new AnalysisException();
   }
 }

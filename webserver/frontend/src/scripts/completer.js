@@ -46,7 +46,7 @@ function get_completions_node(editor, session, pos, prefix, parents) {
     return ['typhoon', 'functions'];
   } else if (indents === 2 && /^ {4}function: typhoon\.([^.]+)(\.([^.]*$))/.test(line_text)) {
     let typhoon_module = /^ {4}function: typhoon\.([^.]+)(\.([^.]*))/.exec(line_text)[1];
-    return TYPHOON_FUNCTIONS[typhoon_module];
+    return TYPHOON_FUNCTIONS[typhoon_module] || [];
   } else if (indents === 2 && /^ {4}function: typhoon\.([^.]*$)/.test(line_text)) {
     return TYPHOON_MODULES;
   } else if (indents === 2 && /^ {4}function: functions\.([^.]+)(\.([^.]*$))/.test(line_text)) {

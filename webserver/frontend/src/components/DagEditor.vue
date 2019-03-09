@@ -14,7 +14,7 @@
             type="error"
             v-else-if="errors"
         >
-          Syntax errors
+          Syntax errors: {{ first_error }}
         </v-alert>
         <v-alert
             :value="true"
@@ -28,7 +28,7 @@
 
     <v-layout row wrap>
       <v-flex xs12>
-        <editor ref="dag_editor" v-model="content" @init="editorInit" lang="yaml" theme="dracula" width="1000" height="400"></editor>
+        <editor ref="dag_editor" v-model="content" @init="editorInit" lang="yaml" theme="dracula" width="1000" height="550"></editor>
       </v-flex>
     </v-layout>
 
@@ -70,8 +70,8 @@
       <!--&gt;</v-textarea>-->
     <v-snackbar
       v-model="snackbar_clipboard"
-      timeout="1500"
-      top="true"
+      :timeout="1500"
+      :top="true"
     >
       Copied code to clipboard
       <v-btn
@@ -86,10 +86,11 @@
 
 <script>
 
-  import {copyToClipboard, syntactical_analysis} from "../scripts/ace_helper";
+  import {copyToClipboard, firstSyntaxError, syntactical_analysis} from "../scripts/ace_helper";
   import {get_completions} from "../scripts/completer";
   import EdgeTester from "./EdgeTester";
   import DagConfigDialog from "./DagConfigDialog";
+  import {EDGE_CONFIGS} from "../scripts/analize_dag";
 
   export default {
     components: {
@@ -98,14 +99,24 @@
       editor: require('vue2-ace-editor'),
     },
     data: () => ({
-      content: 'name: example_dag\nschedule-interval: "* * * * * *"\nnodes:\n  e1:\n    function: typhoon.aa.bb' +
+      content: 'name: example_dag\nschedule-interval: "* * * * * *"\nnodes:\n  a:\n    function: typhoon.aa.bb' +
         '\n    config:\n' +
         '      table_name => APPLY: $SOURCE\n' +
         '      query => APPLY:\n' +
         '        - str("SELECT * FROM {{ table_name }} WHERE creation_date=\'{{ date_string }}\'")\n' +
         '        - typhoon.templates.render(template=$1, table_name=$SOURCE, date_string=$DAG_CONFIG.ds)\n' +
         '      batch_size: 2\n\n' +
-        '  ',
+        '  b:\n' +
+        '    function: typhoon.relational.extract\n' +
+        '    config:\n' +
+        '      table_name => APPLY: $SOURCE\n' +
+        '      query => APPLY:\n' +
+        '        - str("SELECT * FROM {{ table_name }} WHERE creation_date=\'{{ date_string }}\'")\n' +
+        '        - typhoon.templates.render(template=$1, table_name=$SOURCE, date_string=$DAG_CONFIG.ds)\n' +
+        '      batch_size: 2\n\n' +
+        'edges:\n  e1:\n    source: a\n    adapter:\n' +
+        '      x => APPLY: 2*3\n' +
+        '      y: xdxdxd',
       tokens: '[]',
       disable_syntax_checking: false,
       errors: false,
@@ -137,6 +148,9 @@
           }
           return result;
         }
+      },
+      first_error() {
+        return firstSyntaxError();
       }
     },
     methods: {
@@ -179,6 +193,11 @@
             // let a = syntactical_analysis(editor);
             // this.tokens = JSON.stringify(a, null, 4);
             this.errors = !syntactical_analysis(editor);
+            if (!this.errors) {
+              this.$store.commit('setEdges', EDGE_CONFIGS);
+            } else {
+              this.$store.commit('setEdges', {});
+            }
           }
         });
       },
