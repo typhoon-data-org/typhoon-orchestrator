@@ -51,7 +51,8 @@ def package_tree_from_path(package_path: str):
         module_name = file_name
         tree[module_name] = []
         for function_name in get_function_names_in_module_path(os.path.join(package_path, file_name + '.py')):
-            tree[module_name].append(function_name)
+            if not function_name.startswith('_'):
+                tree[module_name].append(function_name)
 
     return tree
 
