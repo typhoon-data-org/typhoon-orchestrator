@@ -36,6 +36,7 @@ export let EDGE_CONFIGS={};
 
 export function A_DAG() {
   EDGE_CONFIGS = {};
+  NODE_NAMES = [];
   try {
     let line = A_NAME();
     line = A_SCHEDULE_INTERVAL(line);
@@ -299,6 +300,7 @@ function A_NODE(tokens) {
   check_not_eol(tk, "Expected node definition, not end of line");
   check_meta_tag(tk, 'Expected node definition');
   let node_name = tk.value;
+  NODE_NAMES.push(node_name.trim());
   tk = tokens.shift();
   check_not_eol(tk, "Expected ':'");
   check_type_value(tk, 'keyword', ':', "Expected ':'");
