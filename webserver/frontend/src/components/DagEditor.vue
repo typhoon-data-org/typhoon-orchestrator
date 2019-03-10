@@ -28,7 +28,7 @@
 
     <v-layout row wrap>
       <v-flex xs12>
-        <editor ref="dag_editor" v-model="content" @init="editorInit" lang="yaml" theme="dracula" width="1000" height="550"></editor>
+        <editor ref="dag_editor" v-model="content" @init="editorInit" lang="yaml" theme="tomorrow_night" width="1000" height="550"></editor>
       </v-flex>
     </v-layout>
 
@@ -57,6 +57,9 @@
         <EdgeTester v-bind:edge_name="edge_name" v-bind:edge="edge"></EdgeTester>
       </v-container>
     </div>
+    <v-container v-else-if="errors">
+      <h1 class="text-md-center">Fix syntax errors to show edges</h1>
+    </v-container>
     <v-container v-else>
       <h1 class="text-md-center">No edges matching filter criteria</h1>
     </v-container>
@@ -162,7 +165,7 @@
         require('brace/mode/yaml');    //language
         require('brace/mode/less');
         require('brace/theme/chrome');
-        require('brace/theme/dracula');
+        require('brace/theme/tomorrow_night');
         require('brace/snippets/javascript'); //snippet
 
         let ace = require('brace');
