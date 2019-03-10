@@ -62,7 +62,7 @@
     name: "EdgeTester",
     components: {ParamView},
     data: () => ({
-      source_data: 'aaaa',
+      source_data: '',
       source_value_type: 'str',
     }),
     props: {

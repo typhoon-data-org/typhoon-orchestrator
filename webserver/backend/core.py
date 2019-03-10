@@ -6,6 +6,7 @@ from code_execution import run_transformations
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from reflection import get_modules_in_package, package_tree, package_tree_from_path, user_defined_modules
+from responses import transform_response
 from typhoon.settings import typhoon_directory
 
 app = Flask(__name__)
@@ -64,7 +65,7 @@ def get_run_transformations_result():
     source_data = eval(body['source']) if body['eval_source'] else body['source']
     dag_config = {
         'execution_date': datetime.strptime(body['dag_config']['execution_date'], '%Y-%m-%dT%H:%M'),
-        'etl_timestamp': body['dag_config']['execution_date'],
+        'ts': body['dag_config']['execution_date'],
         'ds': body['dag_config']['execution_date'].split('T')[0],
         'ds_nodash': body['dag_config']['execution_date'].split('T')[0].replace('-', ''),
         'dag_name': body['dag_config']['dag_name'],
@@ -77,4 +78,5 @@ def get_run_transformations_result():
                 transformations=param['contents']
             )
 
+    response = transform_response(response)
     return jsonify(response)
