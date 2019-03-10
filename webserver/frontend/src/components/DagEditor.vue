@@ -1,7 +1,7 @@
 <template>
   <v-container grid-list-md>
     <v-layout row wrap>
-      <v-flex xs10>
+      <v-flex xs9>
         <v-alert
             :value="true"
             type="warning"
@@ -23,6 +23,12 @@
         >
           All good
         </v-alert>
+      </v-flex>
+      <v-flex>
+        <v-btn color="info" v-on:click="reloadBackend">
+          <v-icon left>refresh</v-icon>
+          Code
+        </v-btn>
       </v-flex>
     </v-layout>
 
@@ -80,7 +86,20 @@
       Copied code to clipboard
       <v-btn
         flat
-        @click="snackbar = false"
+        @click="snackbar_clipboard = false"
+      >
+        Close
+      </v-btn>
+    </v-snackbar>
+    <v-snackbar
+        v-model="snackbar_code"
+        :timeout="1500"
+        :top="true"
+    >
+      Reloaded backend
+      <v-btn
+          flat
+          @click="snackbar_code = false"
       >
         Close
       </v-btn>
@@ -126,6 +145,7 @@
       errors: false,
       filter_exp: '',
       snackbar_clipboard: false,
+      snackbar_code: false,
     }),
     computed: {
       typhoonModules() {
@@ -210,6 +230,10 @@
         let code = this.$refs.dag_editor.editor.getValue();
         copyToClipboard(code);
         this.snackbar_clipboard = true;
+      },
+      reloadBackend: function (event) {
+        this.fetchTyphoonPackageInfo();
+        this.snackbar_code = true;
       },
       fetchTyphoonPackageInfo: function () {
         const baseURI = 'http://localhost:5000/';
