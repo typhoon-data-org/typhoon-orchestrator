@@ -122,24 +122,7 @@
       editor: require('vue2-ace-editor'),
     },
     data: () => ({
-      content: 'name: example_dag\nschedule-interval: "* * * * * *"\nnodes:\n  a:\n    function: typhoon.aa.bb' +
-        '\n    config:\n' +
-        '      table_name => APPLY: $SOURCE\n' +
-        '      query => APPLY:\n' +
-        '        - str("SELECT * FROM {{ table_name }} WHERE creation_date=\'{{ date_string }}\'")\n' +
-        '        - typhoon.templates.render(template=$1, table_name=$SOURCE, date_string=$DAG_CONFIG.ds)\n' +
-        '      batch_size: 2\n\n' +
-        '  b:\n' +
-        '    function: typhoon.relational.extract\n' +
-        '    config:\n' +
-        '      table_name => APPLY: $SOURCE\n' +
-        '      query => APPLY:\n' +
-        '        - str("SELECT * FROM {{ table_name }} WHERE creation_date=\'{{ date_string }}\'")\n' +
-        '        - typhoon.templates.render(template=$1, table_name=$SOURCE, date_string=$DAG_CONFIG.ds)\n' +
-        '      batch_size: 2\n\n' +
-        'edges:\n  e1:\n    source: a\n    adapter:\n' +
-        '      x => APPLY: 2*3\n' +
-        '      y: xdxdxd',
+      content: 'name: example_dag\nschedule_interval: rate(5 minutes)\nnodes:\n\nedges:\n\n',
       tokens: '[]',
       disable_syntax_checking: false,
       errors: false,
