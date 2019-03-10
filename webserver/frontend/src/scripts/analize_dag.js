@@ -12,7 +12,7 @@ import {
   get_indents,
   get_tokens_block, is_dedent, is_eof,
   is_eol, is_indent,
-  is_special_var,
+  is_special_var, is_type,
   is_type_value,
   is_valid_special_var,
   num_lines,
@@ -99,7 +99,7 @@ function A_SCHEDULE_INTERVAL(start_line) {
   [tokens, end_line] = get_tokens_block(start_line);
 
   let tk = tokens.shift();
-  check_meta_tag(tk, "Expected 'schedule-interval:'", 'schedule-interval');
+  check_meta_tag(tk, "Expected 'schedule_interval:'", 'schedule_interval');
   // if ((tk.type !== "meta.tag") || (tk.value !== 'schedule-interval')) {
   //   push_error_msg("Expected 'schedule-interval:'", tk.line);
   // }
@@ -441,7 +441,24 @@ function A_APPLY_LINE(tokens, special_var_nums) {
 function A_VALUE(tokens) {
   let value;
   let tk = tokens.shift();
-  if (is_type_value(tk, 'paren.lparen', /[[{][[{]+/)) {
+  if (is_eol(tk)) {
+    tk = tokens.shift();
+    check_indent(tk, 'Expected indent');
+    if (is_type_value(tokens[0], 'list.markup', '-')) {
+      value = A_YAML_LIST(tokens);
+      if (is_dedent(tokens[0])) {
+        tk = tokens.shift();
+      }
+    }
+    else if (is_type(tokens[0], 'meta.tag')) {
+      value = A_YAML_DICT(tokens);
+      if (is_dedent(tokens[0])) {
+        tk = tokens.shift();
+      }
+    }
+    return [tk.line, value];
+  }
+  else if (is_type_value(tk, 'paren.lparen', /[[{][[{]+/)) {
     // Workaround because ace groups parenthesis together. Separate each into its own token
     let parens = tk.value.replace(/\s+/g, '').split('');
     parens.reverse().forEach(paren => {
@@ -459,11 +476,84 @@ function A_VALUE(tokens) {
     value = A_DICT(tokens);
   } else {
     check_type(tk, ['text', 'constant.numeric', 'constant.language.boolean', 'string'], 'Unrecognized type');
-    value = tk.value;
+    if (is_type(tk, 'text') || is_type(tk, 'string')) {
+      value = '"' + tk.value + '"'
+    } else {
+      value = tk.value;
+    }
   }
   tk = tokens.shift();
   check_eol(tk, 'Expected line break');
   return [tk.line, value];
+}
+
+function A_YAML_LIST(tokens) {
+  let elements = [];
+  let tk = tokens.shift();
+  while (is_type_value(tk, 'list.markup', '-')) {
+    if (is_eol(tokens[0])) {
+      tk = tokens.shift();
+      tk = tokens.shift();
+      check_indent(tk, 'Expected indent');
+      if (is_type(tokens[0], 'meta.tag')) {
+        let e = A_YAML_DICT(tokens);
+        elements.push(e);
+        tk = tokens.shift();
+        check_dedent(tk, 'Expected dedent');
+        tk = tokens.shift();
+      } else {
+        check_type(tokens[0], 'list.markup', 'Expected nested list');
+        let e = A_YAML_LIST(tokens);
+        elements.push(e);
+        tk = tokens.shift();
+        check_dedent(tk, 'Expected dedent');
+        tk = tokens.shift();
+      }
+    } else {
+      let end_line, val;
+      [end_line, val] = A_VALUE(tokens);
+      elements.push(val);
+      tk = tokens.shift();
+    }
+  }
+  tokens.unshift(tk);
+  return '[' + elements.join(', ') + ']';
+}
+
+function A_YAML_DICT(tokens) {
+  let key_vals = {};
+  let tk = tokens.shift();
+  while (is_type(tk, 'meta.tag')) {
+    let k = tk.value.trim();
+    tk = tokens.shift();
+    check_semicolon(tk);
+    if (is_eol(tokens[0])) {
+      tk = tokens.shift();
+      tk = tokens.shift();
+      check_indent(tk, 'Expected indent');
+      if (is_type(tokens[0], 'meta.tag')) {
+        let v = A_YAML_DICT(tokens);
+        key_vals[k] = v;
+        tk = tokens.shift();
+        check_dedent(tk, 'Expected dedent');
+        tk = tokens.shift();
+      } else {
+        check_type(tokens[0], 'list.markup', 'Expected nested list');
+        let v = A_YAML_LIST(tokens);
+        key_vals[k] = v;
+        tk = tokens.shift();
+        check_dedent(tk, 'Expected dedent');
+        tk = tokens.shift();
+      }
+    } else {
+      let end_line, val;
+      [end_line, val] = A_VALUE(tokens);
+      key_vals[k] = val;
+      tk = tokens.shift();
+    }
+  }
+  tokens.unshift(tk);
+  return JSON.stringify(key_vals);
 }
 
 function A_ARRAY(tokens) {
