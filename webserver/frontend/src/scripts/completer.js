@@ -57,10 +57,10 @@ function get_completions_node(editor, session, pos, prefix, parents) {
   } else if (indents === 3 && /^ {6}[^: ]+$/.test(line_text)) {
     let config_name = /^ {6}([^: ]+)$/.exec(line_text)[1];
     return [config_name + ' => APPLY'];
-  } else if (indents === 4 && (pos.column - prefix.length - 12) > 8 &&
+  } else if (indents >= 3 && (pos.column - prefix.length - 12) > 8 &&
     line_text.slice(pos.column - prefix.length - 12, pos.column - prefix.length) === '$DAG_CONFIG.') {
-    return ['ds', 'ds_nodash', 'execution_date'];
-  } else if (indents === 4 && prefix.startsWith('$')) {
+    return ['ds', 'ds_nodash', 'ts', 'execution_date'];
+  } else if (indents >= 3 && prefix.startsWith('$')) {
     return SPECIAL_VARS;
   }
   return [];
