@@ -58,7 +58,8 @@
       </v-container>
     </div>
     <v-container v-else-if="errors">
-      <h1 class="text-md-center">Fix syntax errors to show edges</h1>
+
+      <h1 class="text-md-center"><v-icon x-large>error_outline</v-icon> Fix syntax errors to show edges</h1>
     </v-container>
     <v-container v-else>
       <h1 class="text-md-center">No edges matching filter criteria</h1>
