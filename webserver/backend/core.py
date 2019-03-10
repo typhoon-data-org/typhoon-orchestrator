@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 
+import pytest
 from code_execution import run_transformations
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -50,12 +51,20 @@ def get_typhoon_user_defined_package_trees():
 @app.route('/run-transformations', methods=['POST'])
 def get_run_transformations_result():
     from pandas import DataFrame
+    from mock import Mock
+
+    def Obj(**kwargs):
+        m = Mock()
+        for k, v in kwargs.items():
+            m.__setattr__(k, v)
+        return m
 
     body = request.get_json()
     response = {}
     source_data = eval(body['source']) if body['eval_source'] else body['source']
     dag_config = {
         'execution_date': datetime.strptime(body['dag_config']['execution_date'], '%Y-%m-%dT%H:%M'),
+        'etl_timestamp': body['dag_config']['execution_date'],
         'ds': body['dag_config']['execution_date'].split('T')[0],
         'ds_nodash': body['dag_config']['execution_date'].split('T')[0].replace('-', ''),
         'dag_name': body['dag_config']['dag_name'],

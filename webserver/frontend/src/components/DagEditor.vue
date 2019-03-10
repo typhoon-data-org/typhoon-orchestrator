@@ -173,6 +173,7 @@
           enableSnippets: true,
           enableLiveAutocompletion: true,
           tabSize: 2,
+          showPrintMargin: false,
         });
         let parent = this;
         let customCompleter = {

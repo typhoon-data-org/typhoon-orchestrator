@@ -6,6 +6,8 @@ def _replace_special_vars(string: str):
     string = re.sub(r'\$(\d+)', r'results[\1 - 1]', string)
     string = re.sub(r'\$SOURCE', 'source_data', string)
     string = re.sub(r'\$DAG_CONFIG\.([\w]+)', r'dag_config["""\1"""]', string)
+    string = string.replace('$DAG_CONFIG', 'dag_config')
+    string = string.replace('$BATCH_NUM', '2')
     # string = string.replace('typhoon.', 'typhoon_transformations')
     return string
 
