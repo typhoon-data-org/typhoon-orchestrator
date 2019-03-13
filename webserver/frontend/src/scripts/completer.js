@@ -2,10 +2,14 @@ import {SPECIAL_VARS} from "./ace_helper";
 import {NODE_NAMES} from "./analize_dag";
 
 let TYPHOON_FUNCTION_MODULES = [];
+let TYPHOON_TRANSFORMATION_MODULES = [];
 let TYPHOON_FUNCTIONS = {};
+let TYPHOON_TRANSFORMATIONS = {};
 
 let CUSTOM_FUNCTION_MODULES = [];
+let CUSTOM_TRANSFORMATION_MODULES = [];
 let CUSTOM_FUNCTIONS = {};
+let CUSTOM_TRANSFORMATIONS = {};
 
 function is_beginning_line(pos, prefix) {
   return pos.column === prefix.length;
@@ -18,9 +22,13 @@ export function get_completions(
   userDefinedFunctionModules, userDefinedTransformationModules,
   userDefinedFunctions, userDefinedTransformations) {
   TYPHOON_FUNCTION_MODULES = typhoonFunctionModules;
+  TYPHOON_TRANSFORMATION_MODULES = typhoonTransformationModules;
   TYPHOON_FUNCTIONS = typhoonFunctions;
+  TYPHOON_TRANSFORMATIONS = typhoonTransformations;
   CUSTOM_FUNCTION_MODULES = userDefinedFunctionModules;
+  CUSTOM_TRANSFORMATION_MODULES = userDefinedTransformationModules;
   CUSTOM_FUNCTIONS = userDefinedFunctions;
+  CUSTOM_TRANSFORMATIONS = userDefinedTransformations;
 
   if (is_beginning_line(pos, prefix)) {
     return ["name", "schedule-interval", "active", "nodes", "edges"];
@@ -57,12 +65,28 @@ function get_completions_node(editor, session, pos, prefix, parents) {
     return TYPHOON_FUNCTION_MODULES;
   } else if (indents === 2 && /^ {4}function: functions\.([^.]+)(\.([^.]*$))/.test(line_text)) {
     let custom_module = /^ {4}function: functions\.([^.]+)(\.([^.]*))/.exec(line_text)[1];
-    return CUSTOM_FUNCTIONS[custom_module];
+    return CUSTOM_FUNCTIONS[custom_module] || [];
   } else if (indents === 2 && /^ {4}function: functions\.([^.]*$)/.test(line_text)) {
     return CUSTOM_FUNCTION_MODULES;
   } else if (indents === 3 && /^ {6}[^: ]+$/.test(line_text)) {
     let config_name = /^ {6}([^: ]+)$/.exec(line_text)[1];
     return [config_name + ' => APPLY'];
+  } else if (indents === 3 && /^ {6}\w+\s*=>\s*APPLY: /.test(line_text) && /typhoon\.[^.]*$/.test(line_text)) {
+    return TYPHOON_TRANSFORMATION_MODULES;
+  } else if (indents === 3 && /^ {6}\w+\s*=>\s*APPLY: /.test(line_text) && /typhoon\.([^.]+)\.[^.]*$/.test(line_text)) {
+    let typhoon_module = /typhoon\.([^.]+)\.[^.]*$/.exec(line_text)[1];
+    return TYPHOON_TRANSFORMATIONS[typhoon_module] || [];
+  } else if (indents === 3 && /^ {6}\w+\s*=>\s*APPLY: /.test(line_text) && prefix !== '' && prefix === 't') {
+    return ['typhoon', 'transformations'];
+  } else if (indents === 3 && /^ {6}\w+\s*=>\s*APPLY: /.test(line_text) && /transformations\.[^.]*$/.test(line_text)) {
+    return CUSTOM_TRANSFORMATION_MODULES;
+  } else if (indents === 3 && /^ {6}\w+\s*=>\s*APPLY: /.test(line_text) && /transformations\.([^.]+)\.[^.]*$/.test(line_text)) {
+    let typhoon_module = /transformations\.([^.]+)\.[^.]*$/.exec(line_text)[1];
+    return CUSTOM_TRANSFORMATIONS[typhoon_module] || [];
+  } else if (indents === 3 && /^ {6}\w+\s*=>\s*APPLY: /.test(line_text) && prefix !== '' && 'typhoon'.includes(prefix)) {
+    return ['typhoon'];
+  } else if (indents === 3 && /^ {6}\w+\s*=>\s*APPLY: /.test(line_text) && prefix !== '' && 'transformations'.includes(prefix)) {
+    return ['transformations'];
   } else if (indents >= 3 && (pos.column - prefix.length - 12) > 8 &&
     line_text.slice(pos.column - prefix.length - 12, pos.column - prefix.length) === '$DAG_CONFIG.') {
     return ['ds', 'ds_nodash', 'ts', 'execution_date'];
@@ -88,6 +112,22 @@ function get_completions_edge(editor, session, pos, prefix, parents) {
   } else if (indents >= 3 && (pos.column - prefix.length - 12) > 8 &&
     line_text.slice(pos.column - prefix.length - 12, pos.column - prefix.length) === '$DAG_CONFIG.') {
     return ['ds', 'ds_nodash', 'ts', 'execution_date'];
+  } else if (indents === 3 && /^ {6}\w+\s*=>\s*APPLY: /.test(line_text) && /typhoon\.[^.]*$/.test(line_text)) {
+    return TYPHOON_TRANSFORMATION_MODULES;
+  } else if (indents === 3 && /^ {6}\w+\s*=>\s*APPLY: /.test(line_text) && /typhoon\.([^.]+)\.[^.]*$/.test(line_text)) {
+    let typhoon_module = /typhoon\.([^.]+)\.[^.]*$/.exec(line_text)[1];
+    return TYPHOON_TRANSFORMATIONS[typhoon_module] || [];
+  } else if (indents === 3 && /^ {6}\w+\s*=>\s*APPLY: /.test(line_text) && prefix !== '' && prefix === 't') {
+    return ['typhoon', 'transformations'];
+  } else if (indents === 3 && /^ {6}\w+\s*=>\s*APPLY: /.test(line_text) && /transformations\.[^.]*$/.test(line_text)) {
+    return CUSTOM_TRANSFORMATION_MODULES;
+  } else if (indents === 3 && /^ {6}\w+\s*=>\s*APPLY: /.test(line_text) && /transformations\.([^.]+)\.[^.]*$/.test(line_text)) {
+    let typhoon_module = /transformations\.([^.]+)\.[^.]*$/.exec(line_text)[1];
+    return CUSTOM_TRANSFORMATIONS[typhoon_module] || [];
+  } else if (indents === 3 && /^ {6}\w+\s*=>\s*APPLY: /.test(line_text) && prefix !== '' && 'typhoon'.includes(prefix)) {
+    return ['typhoon'];
+  } else if (indents === 3 && /^ {6}\w+\s*=>\s*APPLY: /.test(line_text) && prefix !== '' && 'transformations'.includes(prefix)) {
+    return ['transformations'];
   } else if (indents >= 3 && prefix.startsWith('$')) {
     return SPECIAL_VARS;
   }
