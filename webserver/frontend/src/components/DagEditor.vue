@@ -37,7 +37,7 @@
       </v-flex>
       <v-flex>
         <v-btn color="info" v-on:click="reloadBackend">
-          <v-progress-circular v-if="loading_code" :size="25" indeterminate></v-progress-circular>
+          <v-progress-circular v-if="loadingCode" :size="25" indeterminate></v-progress-circular>
           <v-icon v-else left>refresh</v-icon>
           Code
         </v-btn>

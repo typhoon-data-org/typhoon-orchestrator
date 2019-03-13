@@ -26,10 +26,14 @@
           <v-flex md10>
             <v-text-field
                 label="Output"
-                v-bind:value="param_output"
+                v-bind:value="error_msg || param_output"
+                :color="error_msg ? 'red' : ''"
                 readonly
                 disabled
-            ></v-text-field>
+                outline
+                :error="!!error_msg"
+            >
+            </v-text-field>
           </v-flex>
         </v-layout>
         <v-divider></v-divider>
@@ -58,6 +62,16 @@
           return this.param.contents;
         }
         return this.$store.state.edges[this.edge_name][this.param_name].transformation_result;
+      },
+      error_msg() {
+        if (!this.param.apply) {
+          return false;
+        }
+        let val = this.$store.state.edges[this.edge_name][this.param_name].transformation_result;
+        if (typeof val === 'object' && '__error__' in val) {
+          return val['__error__'];
+        }
+        return false;
       }
     }
   }

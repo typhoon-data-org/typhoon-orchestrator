@@ -69,6 +69,7 @@ def get_run_transformations_result():
     source_data = eval(body['source']) if body['eval_source'] else body['source']
     dag_config = {
         'execution_date': datetime.strptime(body['dag_config']['execution_date'], '%Y-%m-%dT%H:%M'),
+        'etl_timestamp': datetime.now(),
         'ts': body['dag_config']['execution_date'],
         'ds': body['dag_config']['execution_date'].split('T')[0],
         'ds_nodash': body['dag_config']['execution_date'].split('T')[0].replace('-', ''),
