@@ -1,6 +1,7 @@
 from time import sleep
 from typing import Sequence, Iterator, Callable, TypeVar, Iterable
 
+from typhoon.core import SKIP_BATCH
 
 T = TypeVar('T')
 
@@ -28,3 +29,5 @@ def filter(data: T, filter_func: Callable[[T], bool]) -> Iterator:
     """
     if filter_func(data):
         yield data
+    else:
+        yield SKIP_BATCH

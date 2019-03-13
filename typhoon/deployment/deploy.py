@@ -4,7 +4,7 @@ from typing import Union, Sequence, Optional
 
 from typhoon.deployment.dags import generate_dag_code
 from typhoon.settings import out_directory, functions_directory, transformations_directory, \
-    adapters_directory, typhoon_directory
+    adapters_directory, typhoon_directory, hooks_directory
 from typhoon.deployment.zappa import generate_zappa_settings
 
 
@@ -39,4 +39,5 @@ def build_zappa_settings(
 def copy_user_defined_code():
     copytree(functions_directory(), os.path.join(out_directory(), 'functions'))
     copytree(transformations_directory(), os.path.join(out_directory(), 'transformations'))
+    copytree(hooks_directory(), os.path.join(out_directory(), 'hooks'))
     copy(os.path.join(typhoon_directory(), 'typhoonconfig.cfg'), os.path.join(out_directory(), 'typhoonconfig.cfg'))

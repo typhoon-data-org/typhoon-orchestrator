@@ -127,7 +127,7 @@
       editor: require('vue2-ace-editor'),
     },
     data: () => ({
-      content: 'name: example_dag\nschedule_interval: rate(5 minutes)\nnodes:\n\nedges:\n\n',
+      content: 'name: example_dag\nschedule_interval: rate(5 minutes)\nnodes:\n\n',
       tokens: '[]',
       disable_syntax_checking: false,
       errors: false,

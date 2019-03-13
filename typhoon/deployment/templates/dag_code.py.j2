@@ -7,6 +7,7 @@ from datetime import datetime
 import dateutil.parser
 import typhoon.contrib.functions as typhoon_functions
 import typhoon.contrib.transformations as typhoon_transformations
+from typhoon.core import SKIP_BATCH
 from typhoon.models.dag import dag
 from typhoon.models.task import task_logging_wrapper
 from zappa.async import task
@@ -27,6 +28,7 @@ def {{ name }}_main(event, context):
     DAG_CONFIG['execution_date'] = dateutil.parser.parse(event['time'])
     DAG_CONFIG['ds'] = event['time'].split('T')[0]
     DAG_CONFIG['ds_nodash'] = event['time'].replace('-', '')
+    DAG_CONFIG['ts'] = event['time'].replace('Z', '')
     DAG_CONFIG['etl_timestamp'] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
 
     {% for source in get_sources(structure) %}
@@ -41,11 +43,14 @@ def {{ name }}_main(event, context):
 {% endif %}
 def {{ node_name }}_branches({% if node_name not in get_sources(structure)%}data, {% endif %}batch_num=0):
     data_generator = {{ node_name }}_node({% if node_name not in get_sources(structure)%}data, {% endif %}batch_num)
-    for batch_num, data in enumerate(data_generator, start=1):
+    for batch_num, data in enumerate(data_generator or [], start=1):
+        if data is SKIP_BATCH:
+            print(f'Skipping batch {batch_num} for {{ node_name }}')
+            continue
         {% for out_node in structure[node_name] %}
         config = {}
         {% for k, v in get_edge(edges, node_name, out_node)[1]['adapter'].items() %}
-        {{ adapter.adapter_params(k, v) }}
+        {{ adapter.adapter_params(k, v) | indent(8, False) }}
         {% endfor %}
         {{ out_node }}_branches(config, batch_num)
 
@@ -64,13 +69,15 @@ def {{ node_name }}_node({% if node_name not in get_sources(structure)%}config, 
         batch_num=batch_num,
     )({{ node['function'] | clean_function_name('functions') }})       # Wrapper to add logging
 
+    {% if node_name in get_sources(structure)%}
+    config = {}
+
+    {% endif %}
+    {% for k, v in node.get('config', {}).items() %}
+    {{ adapter.adapter_params(k, v) | indent(4, False) }}
+    {% endfor %}
     yield from node_function(
-        {% for param, value in node.get('config', {}).items() %}
-        {{ param }}={{ value | clean_simple_param }},
-        {% endfor %}
-        {% if node_name not in get_sources(structure) %}
         **config,
-        {% endif %}
     )
 
 

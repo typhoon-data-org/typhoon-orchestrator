@@ -30,5 +30,9 @@ def transformations_directory():
     return os.path.join(typhoon_directory(), 'transformations')
 
 
+def hooks_directory():
+    return os.path.join(typhoon_directory(), 'hooks')
+
+
 def get_env():
     return os.environ["TYPHOON-ENV"]

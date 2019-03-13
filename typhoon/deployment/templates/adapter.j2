@@ -1,14 +1,14 @@
 {% macro adapter_params(key, value) -%}
-        # Parameter {{ key }}
-        {% if '=>APPLY' not in key | replace(' ', '') %}
-        config['{{ key }}'] = {{ value | clean_simple_param }}
-        {% else %}
-        {% set transforms = value if value is iterable and value is not string else [value] %}
-        {% for transform in transforms %}
-        {{ key.replace(' ', '').split('=>')[0] }}_{{ loop.index }} = {{ transform | substitute_special(key) | clean_function_name('transformations') }}
-        {% if loop.last %}
-        config['{{ key.replace(' ', '').split('=>')[0] }}'] = {{ key.replace(' ', '').split('=>')[0] }}_{{ loop.index }}
-        {% endif %}
-        {% endfor %}
-        {% endif %}
+# Parameter {{ key }}
+{% if '=>APPLY' not in key | replace(' ', '') %}
+config['{{ key }}'] = {{ value | clean_simple_param }}
+{% else %}
+{% set transforms = value if value is iterable and value is not string else [value] %}
+{% for transform in transforms %}
+{{ key.replace(' ', '').split('=>')[0] }}_{{ loop.index }} = {{ transform | substitute_special(key) | clean_function_name('transformations') }}
+{% if loop.last %}
+config['{{ key.replace(' ', '').split('=>')[0] }}'] = {{ key.replace(' ', '').split('=>')[0] }}_{{ loop.index }}
+{% endif %}
+{% endfor %}
+{% endif %}
 {%- endmacro %}
