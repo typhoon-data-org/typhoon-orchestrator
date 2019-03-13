@@ -138,8 +138,8 @@
       loadingCode: false,
     }),
     computed: {
-      typhoonModules() {
-        return this.$store.state.typhoonModules;
+      typhoonFunctionModules() {
+        return this.$store.state.typhoonFunctionModules;
       },
       typhoonFunctions() {
         return this.$store.state.typhoonFunctions;
@@ -192,7 +192,7 @@
         let parent = this;
         let customCompleter = {
           getCompletions: (editor, session, pos, prefix, callback) => {
-            let wordList = get_completions(editor, session, pos, prefix, parent.typhoonModules, parent.typhoonFunctions, parent.userDefinedModules, parent.userDefinedFunctions);
+            let wordList = get_completions(editor, session, pos, prefix, parent.typhoonFunctionModules, parent.typhoonFunctions, parent.userDefinedModules, parent.userDefinedFunctions);
             callback(null,
               wordList.map(word => ({name: word, value: word, meta: 'static'}))
             );
@@ -230,7 +230,7 @@
         this.loadingCode = true;
         this.$http.get(baseURI + 'typhoon-modules')
           .then((result) => {
-            this.$store.commit('setTyphoonModules', result.data['functions']);
+            this.$store.commit('setTyphoonFunctionModules', result.data['functions']);
           });
 
         this.$http.get(baseURI + 'typhoon-package-trees')

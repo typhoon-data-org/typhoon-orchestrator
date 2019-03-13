@@ -5,7 +5,7 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
-    typhoonModules: [],
+    typhoonFunctionModules: [],
     typhoonFunctions: {},
     userDefinedModules: [],
     userDefinedFunctions: {},
@@ -20,8 +20,8 @@ export default new Vuex.Store({
     }
   },
   mutations: {
-    setTyphoonModules(state, modules) {
-      state.typhoonModules = modules;
+    setTyphoonFunctionModules(state, modules) {
+      state.typhoonFunctionModules = modules;
     },
     setTyphoonFunctions(state, functions) {
       state.typhoonFunctions = functions;

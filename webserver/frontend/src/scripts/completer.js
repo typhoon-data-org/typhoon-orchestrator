@@ -1,7 +1,7 @@
 import {SPECIAL_VARS} from "./ace_helper";
 import {NODE_NAMES} from "./analize_dag";
 
-let TYPHOON_MODULES = [];
+let TYPHOON_FUNCTION_MODULES = [];
 let TYPHOON_FUNCTIONS = {};
 
 let CUSTOM_MODULES = [];
@@ -11,8 +11,8 @@ function is_beginning_line(pos, prefix) {
   return pos.column === prefix.length;
 }
 
-export function get_completions(editor, session, pos, prefix, typhoonModules, typhoonFunctions, userDefinedModules, userDefinedFunctions) {
-  TYPHOON_MODULES = typhoonModules;
+export function get_completions(editor, session, pos, prefix, typhoonFunctionModules, typhoonFunctions, userDefinedModules, userDefinedFunctions) {
+  TYPHOON_FUNCTION_MODULES = typhoonFunctionModules;
   TYPHOON_FUNCTIONS = typhoonFunctions;
   CUSTOM_MODULES = userDefinedModules;
   CUSTOM_FUNCTIONS = userDefinedFunctions;
@@ -49,7 +49,7 @@ function get_completions_node(editor, session, pos, prefix, parents) {
     let typhoon_module = /^ {4}function: typhoon\.([^.]+)(\.([^.]*))/.exec(line_text)[1];
     return TYPHOON_FUNCTIONS[typhoon_module] || [];
   } else if (indents === 2 && /^ {4}function: typhoon\.([^.]*$)/.test(line_text)) {
-    return TYPHOON_MODULES;
+    return TYPHOON_FUNCTION_MODULES;
   } else if (indents === 2 && /^ {4}function: functions\.([^.]+)(\.([^.]*$))/.test(line_text)) {
     let custom_module = /^ {4}function: functions\.([^.]+)(\.([^.]*))/.exec(line_text)[1];
     return CUSTOM_FUNCTIONS[custom_module];
