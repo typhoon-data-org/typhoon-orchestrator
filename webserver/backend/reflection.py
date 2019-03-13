@@ -24,11 +24,19 @@ def get_function_names_in_module(module_name: str):
     return [x[0] for x in get_functions_in_module(module_name)]
 
 
+class BrokenImportError(object):
+    pass
+
+
 def get_function_names_in_module_path(module_path: str):
     sys.path.append(os.path.dirname(os.path.dirname(module_path)))
     spec = util.spec_from_file_location("module.name", module_path)
     module = util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    try:
+        spec.loader.exec_module(module)
+    except (NameError, SyntaxError):
+        raise BrokenImportError
+
     return [x[0] for x in getmembers(module, lambda func: isfunction(func) and getmodule(func) is None)]
 
 

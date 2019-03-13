@@ -3,6 +3,17 @@
     <v-layout row wrap>
       <v-flex xs9>
         <v-alert
+            v-model="userPackagesError"
+            dismissible
+            type="error"
+        >
+          Error refreshing backend
+        </v-alert>
+      </v-flex>
+    </v-layout>
+    <v-layout row wrap>
+      <v-flex xs9>
+        <v-alert
             :value="true"
             type="warning"
             v-if="disable_syntax_checking"
@@ -26,7 +37,8 @@
       </v-flex>
       <v-flex>
         <v-btn color="info" v-on:click="reloadBackend">
-          <v-icon left>refresh</v-icon>
+          <v-progress-circular v-if="loading_code" :size="25" indeterminate></v-progress-circular>
+          <v-icon v-else left>refresh</v-icon>
           Code
         </v-btn>
       </v-flex>
@@ -71,13 +83,6 @@
       <h1 class="text-md-center">No edges matching filter criteria</h1>
     </v-container>
 
-    <!--<v-textarea-->
-    <!--name="input-7-1"-->
-    <!--label="Default style"-->
-    <!--v-model="tokens"-->
-    <!--hint="Hint text"-->
-          <!--rows="50"-->
-      <!--&gt;</v-textarea>-->
     <v-snackbar
       v-model="snackbar_clipboard"
       :timeout="1500"
@@ -129,6 +134,8 @@
       filter_exp: '',
       snackbar_clipboard: false,
       snackbar_code: false,
+      userPackagesError: false,
+      loadingCode: false,
     }),
     computed: {
       typhoonModules() {
@@ -220,6 +227,7 @@
       },
       fetchTyphoonPackageInfo: function () {
         const baseURI = 'http://localhost:5000/';
+        this.loadingCode = true;
         this.$http.get(baseURI + 'typhoon-modules')
           .then((result) => {
             this.$store.commit('setTyphoonModules', result.data['functions']);
@@ -233,11 +241,20 @@
         this.$http.get(baseURI + 'typhoon-user-defined-modules')
           .then((result) => {
             this.$store.commit('setUserDefinedModules', result.data['functions']);
+          })
+          .catch((error) => {
+            this.userPackagesError = true;
           });
 
         this.$http.get(baseURI + 'typhoon-user-defined-package-trees')
           .then((result) => {
             this.$store.commit('setUserDefinedFunctions', result.data['functions']);
+            this.userPackagesError = false;
+            this.loadingCode = false;
+          })
+          .catch((error) => {
+            this.userPackagesError = true;
+            this.loadingCode = false;
           });
       }
     }
