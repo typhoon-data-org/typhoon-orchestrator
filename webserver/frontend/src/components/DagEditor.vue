@@ -144,8 +144,8 @@
       typhoonFunctions() {
         return this.$store.state.typhoonFunctions;
       },
-      userDefinedModules() {
-        return this.$store.state.userDefinedModules;
+      userDefinedFunctionModules() {
+        return this.$store.state.userDefinedFunctionModules;
       },
       userDefinedFunctions() {
         return this.$store.state.userDefinedFunctions;
@@ -192,7 +192,17 @@
         let parent = this;
         let customCompleter = {
           getCompletions: (editor, session, pos, prefix, callback) => {
-            let wordList = get_completions(editor, session, pos, prefix, parent.typhoonFunctionModules, parent.typhoonFunctions, parent.userDefinedModules, parent.userDefinedFunctions);
+            let wordList = get_completions(
+              editor, session, pos, prefix,
+              parent.typhoonFunctionModules,
+              parent.$store.state.typhoonTransformationModules,
+              parent.typhoonFunctions,
+              parent.$store.state.typhoonTransformations,
+              parent.userDefinedFunctionModules,
+              parent.$store.state.userDefinedTransformationModules,
+              parent.userDefinedFunctions,
+              parent.$store.state.userDefinedTransformations,
+            );
             callback(null,
               wordList.map(word => ({name: word, value: word, meta: 'static'}))
             );
@@ -231,16 +241,19 @@
         this.$http.get(baseURI + 'typhoon-modules')
           .then((result) => {
             this.$store.commit('setTyphoonFunctionModules', result.data['functions']);
+            this.$store.commit('setTyphoonTransformationModules', result.data['transformations']);
           });
 
         this.$http.get(baseURI + 'typhoon-package-trees')
           .then((result) => {
             this.$store.commit('setTyphoonFunctions', result.data['functions']);
+            this.$store.commit('setTyphoonTransformations', result.data['transformations']);
           });
 
         this.$http.get(baseURI + 'typhoon-user-defined-modules')
           .then((result) => {
-            this.$store.commit('setUserDefinedModules', result.data['functions']);
+            this.$store.commit('setUserDefinedFunctionModules', result.data['functions']);
+            this.$store.commit('setUserDefinedTransformationModules', result.data['transformations']);
           })
           .catch((error) => {
             this.userPackagesError = true;
@@ -249,6 +262,7 @@
         this.$http.get(baseURI + 'typhoon-user-defined-package-trees')
           .then((result) => {
             this.$store.commit('setUserDefinedFunctions', result.data['functions']);
+            this.$store.commit('setUserDefinedTransformations', result.data['transformations']);
             this.userPackagesError = false;
             this.loadingCode = false;
           })

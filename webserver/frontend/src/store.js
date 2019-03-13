@@ -6,9 +6,13 @@ Vue.use(Vuex);
 export default new Vuex.Store({
   state: {
     typhoonFunctionModules: [],
+    typhoonTransformationModules: [],
     typhoonFunctions: {},
-    userDefinedModules: [],
+    typhoonTransformations: {},
+    userDefinedFunctionModules: [],
+    userDefinedTransformationModules: [],
     userDefinedFunctions: {},
+    userDefinedTransformations: {},
     dag_name: 'example_dag',
     execution_date: new Date().toISOString().substr(0, 10),
     execution_time: '00:00',
@@ -23,14 +27,26 @@ export default new Vuex.Store({
     setTyphoonFunctionModules(state, modules) {
       state.typhoonFunctionModules = modules;
     },
+    setTyphoonTransformationModules(state, modules) {
+      state.typhoonTransformationModules = modules;
+    },
     setTyphoonFunctions(state, functions) {
       state.typhoonFunctions = functions;
     },
-    setUserDefinedModules(state, modules) {
-      state.userDefinedModules = modules;
+    setTyphoonTransformations(state, transformations) {
+      state.typhoonTransformations = transformations;
+    },
+    setUserDefinedFunctionModules(state, modules) {
+      state.userDefinedFunctionModules = modules;
+    },
+    setUserDefinedTransformationModules(state, transformations) {
+      state.userDefinedTransformationModules = transformations;
     },
     setUserDefinedFunctions(state, functions) {
       state.userDefinedFunctions = functions;
+    },
+    setUserDefinedTransformations(state, transformations) {
+      state.userDefinedTransformations = transformations;
     },
     setEdges(state, edges) {
       state.edges = edges;

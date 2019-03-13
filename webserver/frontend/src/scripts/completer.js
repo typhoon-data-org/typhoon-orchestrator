@@ -4,17 +4,22 @@ import {NODE_NAMES} from "./analize_dag";
 let TYPHOON_FUNCTION_MODULES = [];
 let TYPHOON_FUNCTIONS = {};
 
-let CUSTOM_MODULES = [];
+let CUSTOM_FUNCTION_MODULES = [];
 let CUSTOM_FUNCTIONS = {};
 
 function is_beginning_line(pos, prefix) {
   return pos.column === prefix.length;
 }
 
-export function get_completions(editor, session, pos, prefix, typhoonFunctionModules, typhoonFunctions, userDefinedModules, userDefinedFunctions) {
+export function get_completions(
+  editor, session, pos, prefix,
+  typhoonFunctionModules, typhoonTransformationModules,
+  typhoonFunctions, typhoonTransformations,
+  userDefinedFunctionModules, userDefinedTransformationModules,
+  userDefinedFunctions, userDefinedTransformations) {
   TYPHOON_FUNCTION_MODULES = typhoonFunctionModules;
   TYPHOON_FUNCTIONS = typhoonFunctions;
-  CUSTOM_MODULES = userDefinedModules;
+  CUSTOM_FUNCTION_MODULES = userDefinedFunctionModules;
   CUSTOM_FUNCTIONS = userDefinedFunctions;
 
   if (is_beginning_line(pos, prefix)) {
@@ -54,7 +59,7 @@ function get_completions_node(editor, session, pos, prefix, parents) {
     let custom_module = /^ {4}function: functions\.([^.]+)(\.([^.]*))/.exec(line_text)[1];
     return CUSTOM_FUNCTIONS[custom_module];
   } else if (indents === 2 && /^ {4}function: functions\.([^.]*$)/.test(line_text)) {
-    return CUSTOM_MODULES;
+    return CUSTOM_FUNCTION_MODULES;
   } else if (indents === 3 && /^ {6}[^: ]+$/.test(line_text)) {
     let config_name = /^ {6}([^: ]+)$/.exec(line_text)[1];
     return [config_name + ' => APPLY'];
