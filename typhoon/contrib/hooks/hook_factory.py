@@ -25,7 +25,7 @@ def get_hook(conn_id: str) -> HookInterface:
     if hook_class:
         return hook_class(conn_id)
     else:
-        return get_user_defined_hook(conn_id, conn_params)
+        return get_user_defined_hook(conn_id)
 
 
 def get_user_defined_hook(conn_id: str) -> HookInterface:
