@@ -70,7 +70,7 @@ function get_completions_node(editor, session, pos, prefix, parents) {
     return CUSTOM_FUNCTION_MODULES;
   } else if (indents === 3 && /^ {6}[^: ]+$/.test(line_text)) {
     let config_name = /^ {6}([^: ]+)$/.exec(line_text)[1];
-    return [config_name + ' => APPLY'];
+    return [config_name + ' => APPLY:'];
   } else if (indents === 3 && /^ {6}\w+\s*=>\s*APPLY: /.test(line_text) && /typhoon\.[^.]*$/.test(line_text)) {
     return TYPHOON_TRANSFORMATION_MODULES;
   } else if (indents === 3 && /^ {6}\w+\s*=>\s*APPLY: /.test(line_text) && /typhoon\.([^.]+)\.[^.]*$/.test(line_text)) {
@@ -104,11 +104,13 @@ function get_completions_edge(editor, session, pos, prefix, parents) {
     return ['source:'];
   } else if (indents === 2 && '    adapter: '.includes(line_text)) {
     return ['adapter:'];
+  } else if (indents === 2 && '    destination'.includes(line_text)) {
+    return ['destination:'];
   } else if (indents === 2) {
     return NODE_NAMES;
   } else if (indents === 3 && /^ {6}[^: ]+$/.test(line_text)) {
     let config_name = /^ {6}([^: ]+)$/.exec(line_text)[1];
-    return [config_name + ' => APPLY'];
+    return [config_name + ' => APPLY:'];
   } else if (indents >= 3 && (pos.column - prefix.length - 12) > 8 &&
     line_text.slice(pos.column - prefix.length - 12, pos.column - prefix.length) === '$DAG_CONFIG.') {
     return ['ds', 'ds_nodash', 'ts', 'execution_date'];
