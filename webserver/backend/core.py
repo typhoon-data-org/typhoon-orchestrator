@@ -1,12 +1,10 @@
 import os
 from datetime import datetime
 
-import pytest
 from code_execution import run_transformations
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from reflection import get_modules_in_package, package_tree, package_tree_from_path, user_defined_modules, \
-    BrokenImportError
+from reflection import get_modules_in_package, package_tree, package_tree_from_path, user_defined_modules
 from responses import transform_response
 from typhoon.settings import typhoon_directory
 
@@ -58,11 +56,9 @@ def get_run_transformations_result():
 
     # Do not remove import so it can be used in eval
     # noinspection PyUnusedLocal,PyPep8Naming
-    def Obj(**kwargs):
-        m = Mock()
-        for k, v in kwargs.items():
-            m.__setattr__(k, v)
-        return m
+    class Obj:
+        def __init__(self, **kwargs):
+            self.__dict__.update(kwargs)
 
     body = request.get_json()
     response = {}
