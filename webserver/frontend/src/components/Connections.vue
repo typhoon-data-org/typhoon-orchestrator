@@ -4,6 +4,60 @@
       <v-card-title>
         <v-icon large left>power</v-icon>
         <h2>Connections</h2>
+        <v-dialog v-model="dialog" max-width="500px">
+          <template v-slot:activator="{ on }">
+            <v-btn dark class="mb-2" v-on="on">New Connection</v-btn>
+          </template>
+          <v-card>
+            <v-card-title>
+              <span class="headline">{{ formTitle }}</span>
+            </v-card-title>
+
+            <v-card-text>
+              <v-container grid-list-md>
+                <v-layout wrap>
+                  <v-flex xs12 sm6 md4>
+                    <v-text-field
+                        v-model="editedItem.conn_id"
+                        label="Connection ID"
+                        :disabled="isNewConnection"
+                        :readonly="isNewConnection">
+                    </v-text-field>
+                  </v-flex>
+                  <v-flex xs12 sm6 md4>
+                    <v-text-field v-model="editedItem.conn_type" label="connection_type"></v-text-field>
+                  </v-flex>
+                  <v-flex xs12 sm6 md4>
+                    <v-text-field v-model="editedItem.host" label="Host"></v-text-field>
+                  </v-flex>
+                  <v-flex xs12 sm6 md4>
+                    <v-text-field v-model="editedItem.port" label="Port"></v-text-field>
+                  </v-flex>
+                  <v-flex xs12 sm6 md4>
+                    <v-text-field v-model="editedItem.login" label="Login"></v-text-field>
+                  </v-flex>
+                  <v-flex xs12 sm6 md4>
+                    <v-text-field
+                        v-model="editedItem.password"
+                        label="Password"
+                        type="password"
+                        append-icon="visibility_off">
+                    </v-text-field>
+                  </v-flex>
+                  <v-flex md12>
+                    <v-textarea v-model="extra" label="Extra"></v-textarea>
+                  </v-flex>
+                </v-layout>
+              </v-container>
+            </v-card-text>
+
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn color="blue darken-1" flat @click="close">Cancel</v-btn>
+              <v-btn color="blue darken-1" flat @click="save">Save</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
         <v-spacer></v-spacer>
         <v-text-field
             v-model="search"
@@ -17,14 +71,31 @@
           :headers="headers"
           :items="connections"
           :search="search"
+          item-key="conn_id"
+          :rows-per-page-items="[25,50,100,{'text':'$vuetify.dataIterator.rowsPerPageAll','value':-1}]"
       >
         <template v-slot:items="props">
-          <td>{{ props.item.conn_id }}</td>
+          <td><b>{{ props.item.conn_id }}</b></td>
           <td>{{ props.item.conn_type }}</td>
           <td>{{ props.item.host }}</td>
           <td>{{ props.item.port }}</td>
           <td>{{ props.item.login }}</td>
-          <td>{{ props.item.schema }}</td>
+          <!--<td>{{ props.item.schema }}</td>-->
+          <td class="justify-center layout px-0">
+            <v-icon
+                small
+                class="mr-2"
+                @click="editItem(props.item)"
+            >
+              edit
+            </v-icon>
+            <v-icon
+                small
+                @click="deleteItem(props.item)"
+            >
+              delete
+            </v-icon>
+          </td>
         </template>
         <v-alert v-slot:no-results :value="true" color="error" icon="warning">
           Your search for "{{ search }}" found no results.
@@ -45,12 +116,46 @@
         { text: 'Host', value: 'host' },
         { text: 'Port', value: 'port' },
         { text: 'Login', value: 'login' },
-        { text: 'Schema', value: 'schema' },
+        // { text: 'Schema', value: 'schema' },
+        { text: 'Actions', value: 'conn_id', sortable: false },
       ],
+      dialog: false,
+      editedIndex: -1,
+      editedItem: {
+        conn_id: '',
+        conn_type: '',
+        schema: '',
+        host: '',
+        port: '',
+        login: '',
+        password: '',
+      },
+      defaultItem: {
+        conn_id: '',
+        conn_type: '',
+        schema: '',
+        host: '',
+        port: '',
+        login: '',
+        password: '',
+      }
     }),
     computed: {
       connections () {
         return this.$store.state.connections.items;
+      },
+      formTitle () {
+        return this.editedIndex === -1 ? 'New Connection' : 'Edit Connection';
+      },
+      isNewConnection () {
+        return this.editedIndex !== -1;
+      },
+      extra() {
+        if (this.editedItem.extra) {
+          return JSON.stringify(this.editedItem.extra, null, 2);
+        } else {
+          return '';
+        }
       }
     },
     methods: {
@@ -64,11 +169,39 @@
           .then((result) => {
             this.$store.commit('setConnections', result.data);
           });
+      },
+
+      editItem: function (item) {
+        this.editedIndex = this.connections.indexOf(item);
+        this.editedItem = Object.assign({}, item);
+        this.dialog = true;
+      },
+
+      deleteItem: function (item) {
+        const index = this.connections.indexOf(item);
+        confirm('Are you sure you want to delete this connection?') // && delete api call
+      },
+
+      close: function () {
+        this.dialog = false;
+        setTimeout(() => {
+          this.editedItem = Object.assign({}, this.defaultItem);
+          this.editedIndex = -1
+        }, 300)
+      },
+
+      save: function () {
+        // if (this.editedIndex > -1) {
+        //   Object.assign(this.desserts[this.editedIndex], this.editedItem)
+        // } else {
+        //   this.desserts.push(this.editedItem)
+        // }
+        this.close()
       }
     },
     created: function () {
       this.getConnections();
-    }
+    },
   }
 </script>
 
