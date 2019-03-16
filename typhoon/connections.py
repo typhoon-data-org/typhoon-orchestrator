@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Optional
+from typing import Optional, Dict
 
 import yaml
 from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
@@ -90,12 +90,7 @@ def delete_connection(env: str, conn_id: str):
 
 def dump_connections(env: str, dump_format='json') -> str:
     """Prints the connections in json/yaml format"""
-    connections_raw = scan_dynamodb_table(env, 'Connections')
-    connections = {}
-    for conn in connections_raw:
-        k = conn.pop('conn_id')
-        v = ConnectionParams(**conn).__dict__
-        connections[k] = v
+    connections = scan_connection_params(env)
 
     if dump_format == 'json':
         return json.dumps(connections, indent=4)
@@ -105,3 +100,18 @@ def dump_connections(env: str, dump_format='json') -> str:
         return yaml.dump(connections, default_flow_style=False)
     else:
         ValueError(f'Format {dump_format} is not supported. Choose json/yaml')
+
+
+def scan_connection_params(env):
+    connections_raw = scan_dynamodb_table(env, 'Connections')
+    connection_params = {}
+    for conn in connections_raw:
+        k = conn.pop('conn_id')
+        v = ConnectionParams(**conn).__dict__
+        connection_params[k] = v
+    return connection_params
+
+
+def scan_connections(env):
+    connections_raw = scan_dynamodb_table(env, 'Connections')
+    return [Connection(**conn).__dict__ for conn in connections_raw]

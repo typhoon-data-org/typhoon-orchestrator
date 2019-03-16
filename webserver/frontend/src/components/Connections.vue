@@ -52,6 +52,22 @@
       connections () {
         return this.$store.state.connections.items;
       }
+    },
+    methods: {
+      getConnections: function () {
+        const baseURI = 'http://localhost:5000/';
+        this.$http.get(baseURI + 'connections', {
+          params: {
+            env: 'dev'
+          }
+        })
+          .then((result) => {
+            this.$store.commit('setConnections', result.data);
+          });
+      }
+    },
+    created: function () {
+      this.getConnections();
     }
   }
 </script>

@@ -6,6 +6,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from reflection import get_modules_in_package, package_tree, package_tree_from_path, user_defined_modules
 from responses import transform_response
+from typhoon.connections import scan_connections
 from typhoon.settings import typhoon_directory
 
 app = Flask(__name__)
@@ -81,3 +82,10 @@ def get_run_transformations_result():
 
     response = transform_response(response)
     return jsonify(response)
+
+
+@app.route('/connections')
+def get_connections():
+    env = request.args.get('env')
+    connections = scan_connections(env)
+    return jsonify(connections)
