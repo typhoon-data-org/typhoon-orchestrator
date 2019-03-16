@@ -5,11 +5,17 @@
         <span>TYPHOON</span>
         <span class="font-weight-light">PROJECT</span>
       </v-toolbar-title>
+      <v-toolbar-items class="hidden-sm-and-down">
+        <v-btn @click="$router.push('connections')" flat>
+          Connections
+        </v-btn>
+        <v-btn  @click="$router.push('dag-editor')" flat>DAG Editor</v-btn>
+      </v-toolbar-items>
       <v-spacer></v-spacer>
       <v-btn
-        flat
-        href="https://github.com/vuetifyjs/vuetify/releases/latest"
-        target="_blank"
+          flat
+          href="https://github.com/vuetifyjs/vuetify/releases/latest"
+          target="_blank"
       >
         <span class="mr-2">Latest Release</span>
       </v-btn>
@@ -17,7 +23,8 @@
 
     <v-content>
       <!--<HelloWorld/>-->
-      <DagEditor></DagEditor>
+      <router-view></router-view>
+      <!--<DagEditor></DagEditor>-->
     </v-content>
 
     <v-footer
