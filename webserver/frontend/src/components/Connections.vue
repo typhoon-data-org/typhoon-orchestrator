@@ -47,17 +47,12 @@
         { text: 'Login', value: 'login' },
         { text: 'Schema', value: 'schema' },
       ],
-      connections: [
-        {
-          conn_id: 'reminder_bot',
-          conn_type: 'telegram',
-          host: 'telegram.com',
-          port: '1234',
-          login: 'jkdfnkjabs36814qwhasndjn',
-          schema: 'None'
-        }
-      ],
     }),
+    computed: {
+      connections () {
+        return this.$store.state.connections.items;
+      }
+    }
   }
 </script>
 
