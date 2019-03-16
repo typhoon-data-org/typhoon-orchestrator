@@ -139,25 +139,25 @@
     }),
     computed: {
       typhoonFunctionModules() {
-        return this.$store.state.typhoonFunctionModules;
+        return this.$store.state.dagEditor.typhoonFunctionModules;
       },
       typhoonFunctions() {
-        return this.$store.state.typhoonFunctions;
+        return this.$store.state.dagEditor.typhoonFunctions;
       },
       userDefinedFunctionModules() {
-        return this.$store.state.userDefinedFunctionModules;
+        return this.$store.state.dagEditor.userDefinedFunctionModules;
       },
       userDefinedFunctions() {
-        return this.$store.state.userDefinedFunctions;
+        return this.$store.state.dagEditor.userDefinedFunctions;
       },
       edges() {
         if (self.filter_exp === '') {
-          return this.$store.state.edges;
+          return this.$store.state.dagEditor.edges;
         } else {
           let result = {};
-          for (let key in this.$store.state.edges) {
-            if (this.$store.state.edges.hasOwnProperty(key) && key.includes(this.filter_exp)) {
-              result[key] = this.$store.state.edges[key];
+          for (let key in this.$store.state.dagEditor.edges) {
+            if (this.$store.state.dagEditor.edges.hasOwnProperty(key) && key.includes(this.filter_exp)) {
+              result[key] = this.$store.state.dagEditor.edges[key];
             }
           }
           return result;

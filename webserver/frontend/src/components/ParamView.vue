@@ -61,13 +61,13 @@
         if (!this.param.apply) {
           return this.param.contents;
         }
-        return this.$store.state.edges[this.edge_name][this.param_name].transformation_result;
+        return this.$store.state.dagEditor.edges[this.edge_name][this.param_name].transformation_result;
       },
       error_msg() {
         if (!this.param.apply) {
           return false;
         }
-        let val = this.$store.state.edges[this.edge_name][this.param_name].transformation_result;
+        let val = this.$store.state.dagEditor.edges[this.edge_name][this.param_name].transformation_result;
         if (typeof val === 'object' && '__error__' in val) {
           return val['__error__'];
         }

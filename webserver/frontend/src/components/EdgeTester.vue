@@ -78,7 +78,7 @@
           eval_source: this.source_value_type === 'eval',
           dag_config: {
             execution_date: this.$store.getters.executionDatetime,
-            dag_name: this.$store.state.dag_name,
+            dag_name: this.$store.state.dagEditor.dag_name,
           },
         };
         this.$http.post(baseURI + 'run-transformations', body)

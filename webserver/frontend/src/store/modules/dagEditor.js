@@ -1,9 +1,6 @@
 import Vue from 'vue'
-import Vuex from 'vuex'
 
-Vue.use(Vuex);
-
-export default new Vuex.Store({
+export default {
   state: {
     typhoonFunctionModules: [],
     typhoonTransformationModules: [],
@@ -63,8 +60,5 @@ export default new Vuex.Store({
     setExecutionTime(state, time) {
       Vue.set(state, 'execution_time',  time);
     },
-  },
-  actions: {
-
   }
-})
+}

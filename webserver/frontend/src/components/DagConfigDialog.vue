@@ -122,7 +122,7 @@
     computed: {
       execution_date: {
         get: function () {
-          return this.$store.state.execution_date;
+          return this.$store.state.dagEditor.execution_date;
         },
         set: function (value) {
           this.$store.commit('setExecutionDate', value);
@@ -130,7 +130,7 @@
       },
       execution_time: {
         get: function () {
-          return this.$store.state.execution_time;
+          return this.$store.state.dagEditor.execution_time;
         },
         set: function (value) {
           this.$store.commit('setExecutionTime', value);
@@ -144,7 +144,7 @@
       },
       dag_name: {
         get: function () {
-          return this.$store.state.dag_name;
+          return this.$store.state.dagEditor.dag_name;
         },
         set: function (dag_name) {
           this.$store.commit('setDagName', dag_name);
