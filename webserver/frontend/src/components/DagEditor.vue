@@ -165,11 +165,15 @@
       },
       first_error() {
         return firstSyntaxError();
-      }
+      },
+      connection_ids () {
+        return this.$store.state.connections.items.map(x => x.conn_id);
+      },
     },
     methods: {
       editorInit: function (editor) {
         this.fetchTyphoonPackageInfo();
+        this.getConnections();
 
         require('brace/ext/language_tools'); //language extension prerequsite...
         require('brace/mode/html');
@@ -202,6 +206,7 @@
               parent.$store.state.userDefinedTransformationModules,
               parent.userDefinedFunctions,
               parent.$store.state.userDefinedTransformations,
+              parent.connection_ids,
             );
             callback(null,
               wordList.map(word => ({name: word, value: word, meta: 'static'}))
@@ -270,7 +275,19 @@
             this.userPackagesError = true;
             this.loadingCode = false;
           });
-      }
+      },
+
+      getConnections: function () {
+        const baseURI = 'http://localhost:5000/';
+        this.$http.get(baseURI + 'connections', {
+          params: {
+            env: 'dev'
+          }
+        })
+          .then((result) => {
+            this.$store.commit('setConnections', result.data);
+          });
+      },
     }
   }
 </script>
