@@ -4,10 +4,12 @@ from datetime import datetime
 from code_execution import run_transformations
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from reflection import get_modules_in_package, package_tree, package_tree_from_path, user_defined_modules
+from reflection import get_modules_in_package, package_tree, package_tree_from_path, user_defined_modules, \
+    load_module_from_path
 from responses import transform_response
 from typhoon import connections
 from typhoon.connections import scan_connections, ConnectionParams
+from typhoon.contrib.hooks import hook_factory
 from typhoon.settings import typhoon_directory
 
 app = Flask(__name__)
@@ -106,3 +108,11 @@ def set_connection():
         connections.delete_connection(env, conn_id)
     return 'Ok'
 
+
+@app.route('/connection-types')
+def get_connection_types():
+    typhoon_conn_types = set(hook_factory.HOOK_MAPPINGS.keys())
+    custom_conn_types = set(load_module_from_path(
+        os.path.join(typhoon_directory(), 'hooks', 'hook_factory.py')).HOOK_MAPPINGS.keys())
+    conn_types = list(typhoon_conn_types.union(custom_conn_types))
+    return jsonify(conn_types)

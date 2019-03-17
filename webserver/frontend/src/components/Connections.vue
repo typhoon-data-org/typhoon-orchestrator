@@ -26,8 +26,15 @@
                           :readonly="isNewConnection">
                       </v-text-field>
                     </v-flex>
+                    <!--<v-flex xs12 sm6 md4>-->
+                      <!--<v-text-field v-model="editedItem.conn_type" label="connection_type"></v-text-field>-->
+                    <!--</v-flex>-->
                     <v-flex xs12 sm6 md4>
-                      <v-text-field v-model="editedItem.conn_type" label="connection_type"></v-text-field>
+                      <v-autocomplete
+                          v-model="editedItem.conn_type"
+                          label="connection_type"
+                          :items="connection_types">
+                      </v-autocomplete>
                     </v-flex>
                     <v-flex xs12 sm6 md4>
                       <v-text-field v-model="editedItem.host" label="Host"></v-text-field>
@@ -123,6 +130,7 @@
         // { text: 'Schema', value: 'schema' },
         { text: 'Actions', value: 'conn_id', sortable: false },
       ],
+      connection_types: [],
       dialog: false,
       editedIndex: -1,
       editedItem: {
@@ -174,6 +182,14 @@
         })
           .then((result) => {
             this.$store.commit('setConnections', result.data);
+          });
+      },
+
+      getConnectionTypes: function () {
+        const baseURI = 'http://localhost:5000/';
+        this.$http.get(baseURI + 'connection-types')
+          .then((result) => {
+            this.connection_types = result.data;
           });
       },
 
@@ -238,6 +254,7 @@
     },
     created: function () {
       this.getConnections();
+      this.getConnectionTypes();
     },
   }
 </script>

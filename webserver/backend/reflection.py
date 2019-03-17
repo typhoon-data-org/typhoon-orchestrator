@@ -29,6 +29,12 @@ class BrokenImportError(object):
 
 
 def get_function_names_in_module_path(module_path: str):
+    module = load_module_from_path(module_path)
+
+    return [x[0] for x in getmembers(module, lambda func: isfunction(func) and getmodule(func) is None)]
+
+
+def load_module_from_path(module_path):
     sys.path.append(os.path.dirname(os.path.dirname(module_path)))
     spec = util.spec_from_file_location("module.name", module_path)
     module = util.module_from_spec(spec)
@@ -36,8 +42,7 @@ def get_function_names_in_module_path(module_path: str):
         spec.loader.exec_module(module)
     except (NameError, SyntaxError):
         raise BrokenImportError
-
-    return [x[0] for x in getmembers(module, lambda func: isfunction(func) and getmodule(func) is None)]
+    return module
 
 
 def package_tree(package_name: str):
