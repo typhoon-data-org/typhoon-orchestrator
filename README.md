@@ -23,14 +23,13 @@ Typhoon is inspired by Airflow but departs from it in key ways. The most importa
  With Typhoon we share the same philosophy outlined in that article and take it a step further. We believe that while Object Oriented Programming certainly has its value (and we use it where it makes sense, like implementing Hooks for instance) a functional approach brings greater value for data processing where we just care about manipulating data and have no desire to abstract from it in any way. Where you would define an operator class in Airflow, this is replaced directly with functions in Typhoon.
  
  ```python
-def write_data(data: BytesIO, conn_id: str, path: str) -> Iterable[str]:
-    hook: FileSystemHookInterface = get_hook(conn_id)
+def write_data(data: BytesIO, hook: FileSystemHookInterface, path: str) -> Iterable[str]:
     with hook:
         hook.write_data(data, path)
     yield path
 ```
 
-The above code is all that's needed to create a function that can be used to define a task, and is a great example of what we discussed earlier. This code is pure python, and has no Typhoon specific code except for get_hook() (we believe that in this case the benefit it provides is well worth the extra coupling, but it is by no means necessary to write your own functions in the same way) and even that can be imported to a non Typhoon project (yes, even Airflow) by doing `pip install typhoon[hooks]` if you ever wish to move away from the framework. Notice how this is inherently more testable and reusable than the alternative approach.
+The above code is all that's needed to create a function that can be used to define a task, and is a great example of what we discussed earlier. This code is pure python, and has no Typhoon specific code. Notice how this is inherently more testable and reusable than the alternative approach.
 
 We mentioned earlier that OOP makes sense for hooks. In this case by having a FileSystem Hook interface, both S3, FTP and local writes to disk amongst others can be performed in the same way by calling write_data. This brings an extra layer of testability where you can simply write data to disk during development/debugging and then deploy to a test or production server where it will be written to S3 without any code modifications, simply by virtue of having the conn_id point to an S3 connection in that environment.
 
@@ -40,7 +39,7 @@ A Task is defined in a DAG by referencing that function and passing it the stati
   write_data:
     function: typhoon.filesystem.write_data     # Previously defined function
     config:
-      conn_id: s3_data_lake     # This can point to a Local Storage Hook in dev if you wish
+      hook: $HOOK.s3_data_lake     # This can point to a Local Storage Hook in dev if you wish
 ```
 
 Notice how this function can be used in any DAG that needs to write to S3, no matter the source of the data. Contrast that to airflow where in [contrib/operators/](https://github.com/apache/airflow/tree/master/airflow/operators) we have a hive_to_druid operator, hive_to_mysql, hive_to_samba, mssql_to_hive, mysql_to_hive and so on. You get the idea of the NxM complexity of defining operators that we discussed earlier.
@@ -55,7 +54,7 @@ Factories                             |  Assembly Line
 
 To illustrate the limitations of the prevalent approach to data pipelines, picture a car assembly line. Each plant is specialised in one thing and one thing only, and from a series of raw materials it builds a product that the next piece in the chain can take, transform and assemble into something else. If we ever want to change the body of the car we can still reuse the engine, suspensions and a lot of the pieces.
 
-Now imagine if each factory was isolated and there was no communication between them. The engine factory would produce all engines for the day, then leave them at a specific place that had to be agreed beforehand. Once all the engines are produced, the assembly plant, which has been sitting idle while all the engines piled up, would then go get them a that specific location, bring them over and start assembling them into the power trains, then leave them in a different pre agreed location. Once all the power trains are created, the next piece in the assembly line has to get them and assemble them into the body, and so on. You can see how terribly inefficient that process would be. Also note how every piece has to be aware of the other and know where it needs to go to fetch the product because there is no communication between them. Paradoxically, task isolation has actually created coupling. This is in a nutshell how current workflow managers work.
+Now imagine if each factory was isolated and there was no communication between them. The engine factory would produce all engines for the day, then leave them at a specific place that had to be agreed beforehand. Once all the engines are produced, the assembly plant, which has been sitting idle while all the engines piled up, would then go get them a that specific location, bring them over and start assembling them into the power trains, then leave them in a different pre agreed location. Once all the power trains are created, the next piece in the assembly line has to get them and assemble them into the body, and so on. You can see how inefficient that process would be. Also note how every piece has to be aware of the other and know where it needs to go to fetch the product because there is no communication between them. Paradoxically, task isolation has actually created coupling. This is in a nutshell how most current workflow managers work.
 
 A better way would be to push the engines out of the factory as soon as each one of them is finished. We do not need to care about what happens to them after. Maybe a truck will pick it up. Or a conveyor belt will carry it. We just know that it will get delivered where it's needed and that is someone else's responsibility. On the other side, another factory wil get fed that engine without caring where it came from and start using it along with all the other parts to build the first car, all the while most of the parts for future cars are being produced at the same time.
 
@@ -67,7 +66,7 @@ On the image we see a simple DAG definition with two nodes. At execution time th
 
 ### Edges: Connecting nodes together
 
-We have seen how to define functions and nodes, but how do they fit together? How do we adapt the out put of one to the input of the other We connect them together by defining edges (keeping with the graph terminology) in YAML and use transformation functions to adapt input to output.
+We have seen how to define functions and nodes, but how do they fit together? How do we adapt the output of one to the input of the other We connect them together by defining edges (keeping with the graph terminology) in YAML and use transformation functions to adapt input to output.
 
 Assume we have two nodes: send_data and write_data. Send_data sends batches made up of a tuple with (file_name, string_data), and write_data takes a BytesIO buffer in a parameter named data and the path where it has to be written to in a parameter named path. The edge would be defined as follows:
 
@@ -160,12 +159,12 @@ nodes:
   extract_table:
     function: typhoon.relational.execute_query
     config:
-      conn_id: test_db
+      hook: $HOOK.test_db
 
   load_csv_s3:
     function: typhoon.filesystem.write_data
     config:
-      conn_id: s3_data_lake
+      hook: $HOOK.s3_data_lake
 
 
 edges:
@@ -195,6 +194,8 @@ edges:
 In a nutshell, branch will launch three lambdas, one for each table name and they will all extract data in batches simultaneously and send each batch to S3. Since batches can be very large it is not feasible to send it over to a new lambda function instance, so we set `async: false` to force it to execute the database extraction and S3 upload in the same lambda function. This is a tradeoff that reduces parallelism but keeps data transfer low. This way you don't need to blend them into one node to prevent it from lauching a new Lambda instance and you can still define them as regular nodes with the same composability this provides. If you still want to increase parallelism you can use `async: thread` and each instance of `load_csv_s3_node` will be run in a new thread (good for performance if there's a lot of IO). Realize that this is only for nodes that need to share a large amount of data that can't be easily serialized, if we wanted to import that data from S3 into our warehouse we just need to pass it the s3 key so that can be run in a regular asynchronous node that will trigger a new Lambda function instance.
 
 Those who are familiar will recognize `$DAG_CONFIG` as being very similar to the context received by Operators in Airflow, with the difference that in Typhoon we try to make our node functions unaware of such low level details and handle DAG specific configuration in the DAG definition where it belongs.
+
+The $HOOK special variable creates a hook with the connection id passed after the '.' with the right connection type by calling typhoon's connection factory (which can be extended with custom hooks).
 
 Finally `$BATCH_NUM` is the last of the available special variables which denotes the current batch number, which is the same as the amount of batches that the source function has produced up to this point
 
