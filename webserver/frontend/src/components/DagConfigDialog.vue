@@ -14,6 +14,9 @@
         <v-card-text>
 
           <v-layout row wrap>
+            <v-flex xs12>
+              <v-text-field label="DAG name" v-model="dag_name" required></v-text-field>
+            </v-flex>
             <v-flex md4>
               <v-menu
                   ref="menu"
@@ -93,9 +96,6 @@
                     readonly
                     deactivated
                 ></v-text-field>
-              </v-flex>
-              <v-flex xs12>
-                <v-text-field label="DAG name" v-model="dag_name" required></v-text-field>
               </v-flex>
             </v-layout>
           </v-container>
