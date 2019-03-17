@@ -45,7 +45,7 @@
                     </v-text-field>
                   </v-flex>
                   <v-flex md12>
-                    <v-textarea v-model="extra" label="Extra"></v-textarea>
+                    <v-textarea v-model="editedItem.extra" label="Extra"></v-textarea>
                   </v-flex>
                 </v-layout>
               </v-container>
@@ -129,6 +129,7 @@
         port: '',
         login: '',
         password: '',
+        extra: '',
       },
       defaultItem: {
         conn_id: '',
@@ -138,6 +139,7 @@
         port: '',
         login: '',
         password: '',
+        extra: '',
       }
     }),
     computed: {
@@ -150,13 +152,18 @@
       isNewConnection () {
         return this.editedIndex !== -1;
       },
-      extra() {
-        if (this.editedItem.extra) {
-          return JSON.stringify(this.editedItem.extra, null, 2);
-        } else {
-          return '';
-        }
-      }
+      // extra: {
+      //   get: function () {
+      //     if (this.editedItem.extra) {
+      //       return JSON.stringify(this.editedItem.extra, null, 2);
+      //     } else {
+      //       return '';
+      //     }
+      //   },
+      //   set: function (newValue) {
+      //     this.editItem.extra = JSON.parse(newValue);
+      //   }
+      // }
     },
     methods: {
       getConnections: function () {
@@ -171,9 +178,22 @@
           });
       },
 
+      setConnection: function (conn) {
+        const baseURI = 'http://localhost:5000/';
+        this.$http.put(baseURI + 'connection', conn, {
+          params: {
+            env: 'dev'
+          }
+        })
+          .then((result) => {
+            this.getConnections();
+          });
+      },
+
       editItem: function (item) {
         this.editedIndex = this.connections.indexOf(item);
         this.editedItem = Object.assign({}, item);
+        this.editedItem.extra = JSON.stringify(this.editedItem.extra, null, 2);
         this.dialog = true;
       },
 
@@ -191,11 +211,10 @@
       },
 
       save: function () {
-        // if (this.editedIndex > -1) {
-        //   Object.assign(this.desserts[this.editedIndex], this.editedItem)
-        // } else {
-        //   this.desserts.push(this.editedItem)
-        // }
+        let conn = Object.assign({}, this.editedItem);
+        conn.extra = JSON.parse(conn.extra);
+        // if (this.editedIndex > -1) {  // Editing existing object
+        this.setConnection(conn);
         this.close()
       }
     },

@@ -6,7 +6,8 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from reflection import get_modules_in_package, package_tree, package_tree_from_path, user_defined_modules
 from responses import transform_response
-from typhoon.connections import scan_connections
+from typhoon import connections
+from typhoon.connections import scan_connections, ConnectionParams
 from typhoon.settings import typhoon_directory
 
 app = Flask(__name__)
@@ -89,3 +90,12 @@ def get_connections():
     env = request.args.get('env')
     connections = scan_connections(env)
     return jsonify(connections)
+
+
+@app.route('/connection', methods=['PUT'])
+def set_connection():
+    body = request.get_json()
+    env = request.args.get('env')
+    conn_id = body.pop('conn_id')
+    conn_params = ConnectionParams(**body)
+    connections.set_connection(env=env, conn_id=conn_id, conn_params=conn_params)
