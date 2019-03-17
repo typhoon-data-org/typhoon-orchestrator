@@ -7,6 +7,7 @@ from datetime import datetime
 import dateutil.parser
 import typhoon.contrib.functions as typhoon_functions
 import typhoon.contrib.transformations as typhoon_transformations
+from typhoon.contrib.hooks.hook_factory import get_hook
 from typhoon.core import SKIP_BATCH
 from typhoon.models.dag import dag
 from typhoon.models.task import task_logging_wrapper

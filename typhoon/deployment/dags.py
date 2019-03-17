@@ -129,6 +129,7 @@ def substitute_special(code: str, key: str) -> str:
     code = code.replace('$DAG_CONFIG', 'DAG_CONFIG')
     code = re.sub(r'\$(\d)+', r"{key}_\g<1>".format(key=key), code)
     code = code.replace('$BATCH_NUM', 'batch_num')
+    code = re.sub(r'\$HOOK(\.(\w+))', r'get_hook("\g<2>")', code)
     return code
 
 

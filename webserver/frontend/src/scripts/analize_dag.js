@@ -394,9 +394,10 @@ function A_APPLY(tokens) {
   let transformations = [];
   let transformation;
   if (!is_eol(tokens[0])) {
+    let line = tokens[0].line;
     transformation = A_APPLY_LINE(tokens, false);
     transformations.push(transformation);
-    return [tokens[0].line, transformations]
+    return [line, transformations]
   } else {
     let tk = tokens.shift();  // Skip end of line
     tk = tokens.shift();  // Skip end of line
@@ -428,7 +429,7 @@ function A_APPLY_LINE(tokens, special_var_nums) {
     special_vars.forEach(special_var => {
       if (!is_valid_special_var(special_var, special_var_nums)) {
         push_error_msg(
-          'Invalid special variable ' + special_var + ". Must be '$SOURCE', '$DAG_CONFIG' or $BATCH_NUM",
+          'Invalid special variable ' + special_var + ". Must be '$SOURCE', '$DAG_CONFIG', '$HOOK' or $BATCH_NUM",
           tk.line
         );
         throw new AnalysisException();
