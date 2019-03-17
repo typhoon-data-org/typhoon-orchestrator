@@ -195,7 +195,7 @@ In a nutshell, branch will launch three lambdas, one for each table name and the
 
 Those who are familiar will recognize `$DAG_CONFIG` as being very similar to the context received by Operators in Airflow, with the difference that in Typhoon we try to make our node functions unaware of such low level details and handle DAG specific configuration in the DAG definition where it belongs.
 
-The $HOOK special variable creates a hook with the connection id passed after the '.' with the right connection type by calling typhoon's connection factory (which can be extended with custom hooks).
+The `$HOOK` special variable creates a hook with the connection id passed after the '.' with the right connection type by calling typhoon's connection factory (which can be extended with custom hooks).
 
 Finally `$BATCH_NUM` is the last of the available special variables which denotes the current batch number, which is the same as the amount of batches that the source function has produced up to this point
 
