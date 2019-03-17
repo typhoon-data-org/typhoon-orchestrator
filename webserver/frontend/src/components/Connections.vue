@@ -14,41 +14,44 @@
             </v-card-title>
 
             <v-card-text>
-              <v-container grid-list-md>
-                <v-layout wrap>
-                  <v-flex xs12 sm6 md4>
-                    <v-text-field
-                        v-model="editedItem.conn_id"
-                        label="Connection ID"
-                        :disabled="isNewConnection"
-                        :readonly="isNewConnection">
-                    </v-text-field>
-                  </v-flex>
-                  <v-flex xs12 sm6 md4>
-                    <v-text-field v-model="editedItem.conn_type" label="connection_type"></v-text-field>
-                  </v-flex>
-                  <v-flex xs12 sm6 md4>
-                    <v-text-field v-model="editedItem.host" label="Host"></v-text-field>
-                  </v-flex>
-                  <v-flex xs12 sm6 md4>
-                    <v-text-field v-model="editedItem.port" label="Port"></v-text-field>
-                  </v-flex>
-                  <v-flex xs12 sm6 md4>
-                    <v-text-field v-model="editedItem.login" label="Login"></v-text-field>
-                  </v-flex>
-                  <v-flex xs12 sm6 md4>
-                    <v-text-field
-                        v-model="editedItem.password"
-                        label="Password"
-                        type="password"
-                        append-icon="visibility_off">
-                    </v-text-field>
-                  </v-flex>
-                  <v-flex md12>
-                    <v-textarea v-model="editedItem.extra" label="Extra"></v-textarea>
-                  </v-flex>
-                </v-layout>
-              </v-container>
+              <v-form v-model="valid">
+                <v-container grid-list-md>
+                  <v-layout wrap>
+                    <v-flex xs12 sm6 md4>
+                      <v-text-field
+                          v-model="editedItem.conn_id"
+                          label="Connection ID"
+                          :rules="[rules.required]"
+                          :disabled="isNewConnection"
+                          :readonly="isNewConnection">
+                      </v-text-field>
+                    </v-flex>
+                    <v-flex xs12 sm6 md4>
+                      <v-text-field v-model="editedItem.conn_type" label="connection_type"></v-text-field>
+                    </v-flex>
+                    <v-flex xs12 sm6 md4>
+                      <v-text-field v-model="editedItem.host" label="Host"></v-text-field>
+                    </v-flex>
+                    <v-flex xs12 sm6 md4>
+                      <v-text-field v-model="editedItem.port" label="Port" :rules="[rules.numeric]"></v-text-field>
+                    </v-flex>
+                    <v-flex xs12 sm6 md4>
+                      <v-text-field v-model="editedItem.login" label="Login"></v-text-field>
+                    </v-flex>
+                    <v-flex xs12 sm6 md4>
+                      <v-text-field
+                          v-model="editedItem.password"
+                          label="Password"
+                          type="password"
+                          append-icon="visibility_off">
+                      </v-text-field>
+                    </v-flex>
+                    <v-flex md12>
+                      <v-textarea v-model="editedItem.extra" label="Extra"></v-textarea>
+                    </v-flex>
+                  </v-layout>
+                </v-container>
+              </v-form>
             </v-card-text>
 
             <v-card-actions>
@@ -109,6 +112,7 @@
   export default {
     name: "Connections",
     data: () => ({
+      valid: false,
       search: '',
       headers: [
         { text: 'Connection ID', align: 'left', value: 'conn_id' },
@@ -140,6 +144,10 @@
         login: null,
         password: null,
         extra: '',
+      },
+      rules: {
+        required: value => !!value || 'Required.',
+        numeric: value => /^\d*$/.test(value) || 'Invalid port number',
       }
     }),
     computed: {
@@ -152,18 +160,9 @@
       isNewConnection () {
         return this.editedIndex !== -1;
       },
-      // extra: {
-      //   get: function () {
-      //     if (this.editedItem.extra) {
-      //       return JSON.stringify(this.editedItem.extra, null, 2);
-      //     } else {
-      //       return '';
-      //     }
-      //   },
-      //   set: function (newValue) {
-      //     this.editItem.extra = JSON.parse(newValue);
-      //   }
-      // }
+      connection_ids () {
+        return this.$store.state.connections.items.map(x => x.conn_id);
+      }
     },
     methods: {
       getConnections: function () {
@@ -229,10 +228,12 @@
 
       save: function () {
         let conn = Object.assign({}, this.editedItem);
-        conn.extra = (conn.extra && JSON.parse(conn.extra)) || null;
-        // if (this.editedIndex > -1) {  // Editing existing object
-        this.setConnection(conn);
-        this.close()
+        if (this.valid) {
+          conn.extra = (conn.extra && JSON.parse(conn.extra)) || null;
+          // if (this.editedIndex > -1) {  // Editing existing object
+          this.setConnection(conn);
+          this.close()
+        }
       }
     },
     created: function () {
