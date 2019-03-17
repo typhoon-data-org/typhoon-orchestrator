@@ -122,23 +122,23 @@
       dialog: false,
       editedIndex: -1,
       editedItem: {
-        conn_id: '',
-        conn_type: '',
-        schema: '',
-        host: '',
-        port: '',
-        login: '',
-        password: '',
+        conn_id: null,
+        conn_type: null,
+        schema: null,
+        host: null,
+        port: null,
+        login: null,
+        password: null,
         extra: '',
       },
       defaultItem: {
-        conn_id: '',
-        conn_type: '',
-        schema: '',
-        host: '',
-        port: '',
-        login: '',
-        password: '',
+        conn_id: null,
+        conn_type: null,
+        schema: null,
+        host: null,
+        port: null,
+        login: null,
+        password: null,
         extra: '',
       }
     }),
@@ -190,16 +190,33 @@
           });
       },
 
+
+      deleteConnection: function (conn) {
+        const baseURI = 'http://localhost:5000/';
+        this.$http.delete(baseURI + 'connection', {
+          params: {
+            env: 'dev',
+            conn_id: conn.conn_id
+          }
+        })
+          .then((result) => {
+            this.getConnections();
+          });
+      },
+
       editItem: function (item) {
         this.editedIndex = this.connections.indexOf(item);
         this.editedItem = Object.assign({}, item);
-        this.editedItem.extra = JSON.stringify(this.editedItem.extra, null, 2);
+        this.editedItem.extra = (this.editedItem.extra && JSON.stringify(this.editedItem.extra, null, 2)) || '';
         this.dialog = true;
       },
 
       deleteItem: function (item) {
         const index = this.connections.indexOf(item);
-        confirm('Are you sure you want to delete this connection?') // && delete api call
+        let confirmed = confirm('Are you sure you want to delete this connection?') // && delete api call
+        if (confirmed) {
+          this.deleteConnection(item)
+        }
       },
 
       close: function () {
@@ -212,7 +229,7 @@
 
       save: function () {
         let conn = Object.assign({}, this.editedItem);
-        conn.extra = JSON.parse(conn.extra);
+        conn.extra = (conn.extra && JSON.parse(conn.extra)) || null;
         // if (this.editedIndex > -1) {  // Editing existing object
         this.setConnection(conn);
         this.close()

@@ -92,10 +92,17 @@ def get_connections():
     return jsonify(connections)
 
 
-@app.route('/connection', methods=['PUT'])
+@app.route('/connection', methods=['PUT', 'DELETE'])
 def set_connection():
-    body = request.get_json()
     env = request.args.get('env')
-    conn_id = body.pop('conn_id')
-    conn_params = ConnectionParams(**body)
-    connections.set_connection(env=env, conn_id=conn_id, conn_params=conn_params)
+    if request.method == 'PUT':
+        body = request.get_json()
+        conn_id = body.pop('conn_id')
+        conn_params = ConnectionParams(**body)
+        connections.set_connection(env=env, conn_id=conn_id, conn_params=conn_params)
+    else:   # Delete
+        env = request.args.get('env')
+        conn_id = request.args.get('conn_id')
+        connections.delete_connection(env, conn_id)
+    return 'Ok'
+

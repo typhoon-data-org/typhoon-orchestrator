@@ -1,10 +1,13 @@
+import Vue from 'vue'
+
 export default {
   state: {
     items: [],
   },
   mutations: {
     setConnections(state, connections) {
-      state.items = connections;
+      Vue.set(state, 'items', connections);
+      // state.items = connections;
     },
   }
 }
