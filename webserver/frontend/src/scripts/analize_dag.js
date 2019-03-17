@@ -735,6 +735,9 @@ function A_EDGES(start_line) {
     if (is_eof(tokens[0])) {
       return;
     }
+    while (is_eol(tokens[0]) || is_indent(tokens[0])) {
+      tokens.shift();
+    }
     indents = get_indents(tokens[0].line);
   }
 
@@ -744,8 +747,6 @@ function A_EDGES(start_line) {
   //   throw new AnalysisException();
   // }
 
-  tk = tokens.shift();
-  check_eol(tk, 'Expected line break');
   tk = tokens.shift();
   check_eof(tk, 'Expected file end');
 }
