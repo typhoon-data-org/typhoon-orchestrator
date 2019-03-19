@@ -14,10 +14,10 @@
             </v-card-title>
 
             <v-card-text>
-              <v-form v-model="valid">
+              <v-form ref="connection_form" v-model="valid">
                 <v-container grid-list-md>
                   <v-layout wrap>
-                    <v-flex xs12 sm6 md4>
+                    <v-flex md6>
                       <v-text-field
                           v-model="editedItem.conn_id"
                           label="Connection ID"
@@ -29,23 +29,24 @@
                     <!--<v-flex xs12 sm6 md4>-->
                       <!--<v-text-field v-model="editedItem.conn_type" label="connection_type"></v-text-field>-->
                     <!--</v-flex>-->
-                    <v-flex xs12 sm6 md4>
+                    <v-flex md6>
                       <v-autocomplete
                           v-model="editedItem.conn_type"
                           label="connection_type"
+                          :rules="[rules.required]"
                           :items="connection_types">
                       </v-autocomplete>
                     </v-flex>
-                    <v-flex xs12 sm6 md4>
+                    <v-flex md8>
                       <v-text-field v-model="editedItem.host" label="Host"></v-text-field>
                     </v-flex>
-                    <v-flex xs12 sm6 md4>
+                    <v-flex md4>
                       <v-text-field v-model="editedItem.port" label="Port" :rules="[rules.numeric]"></v-text-field>
                     </v-flex>
-                    <v-flex xs12 sm6 md4>
+                    <v-flex md6>
                       <v-text-field v-model="editedItem.login" label="Login"></v-text-field>
                     </v-flex>
-                    <v-flex xs12 sm6 md4>
+                    <v-flex md6>
                       <v-text-field
                           v-model="editedItem.password"
                           label="Password"
@@ -155,7 +156,7 @@
       },
       rules: {
         required: value => !!value || 'Required.',
-        numeric: value => /^\d*$/.test(value) || 'Invalid port number',
+        numeric: value => (!value || /^\d*$/.test(value)) || 'Invalid port number',
       }
     }),
     computed: {
@@ -244,7 +245,7 @@
 
       save: function () {
         let conn = Object.assign({}, this.editedItem);
-        if (this.valid) {
+        if (this.$refs.connection_form.validate()) {
           conn.extra = (conn.extra && JSON.parse(conn.extra)) || null;
           // if (this.editedIndex > -1) {  // Editing existing object
           this.setConnection(conn);
