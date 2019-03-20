@@ -4,7 +4,7 @@ import os
 from zappa.cli import ZappaCLI
 
 from typhoon import config
-from typhoon.aws import dynamodb_table_exists, create_dynamodb_connections_table
+from typhoon.aws import dynamodb_table_exists, create_dynamodb_connections_table, create_dynamodb_variables_table
 from typhoon.connections import get_connection_local, set_connection, dump_connections
 from typhoon.deployment.dags import load_dags
 from typhoon.deployment.deploy import build_dag_code, clean_out
@@ -45,6 +45,12 @@ def migrate(args):
     else:
         print('Creating table Connections')
         create_dynamodb_connections_table(args.env)
+
+    if dynamodb_table_exists(args.env, 'Variables'):
+        print('Variables table already exists. Skipping creation...')
+    else:
+        print('Creating table Variables')
+        create_dynamodb_variables_table(args.env)
 
 
 def cli_set_connection(args):
@@ -90,6 +96,13 @@ def handle():
     deploy_parser = subparsers.add_parser('dump-connections', help="Print all connections to stdout")
     deploy_parser.add_argument('--env', type=str, help='Target environment', required=True)
     deploy_parser.set_defaults(func=cli_dump_connections)
+
+    deploy_parser = subparsers.add_parser(
+        'set-variable',
+        help="Set variable from $TYPHOON_HOME/variables/[VAR_ENV]/[VAR_ID].[EXTENSION] to the specified environment")
+    deploy_parser.add_argument('--env', type=str, help='Target environment', required=True)
+    deploy_parser.add_argument('--var-id', type=str, help='Variable ID', required=True)
+    deploy_parser.add_argument('--var-env', type=str, help='Variable environment', required=False)
 
     args = parser.parse_args()
     try:

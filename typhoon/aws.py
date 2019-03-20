@@ -41,6 +41,30 @@ def create_dynamodb_connections_table(env: str):
     return table
 
 
+def create_dynamodb_variables_table(env: str):
+    ddb = connect_dynamodb_metadata(env, 'resource')
+    table = ddb.create_table(
+        TableName='Variables',
+        KeySchema=[
+            {
+                'AttributeName': 'id',
+                'KeyType': 'HASH'
+            },
+        ],
+        AttributeDefinitions=[
+            {
+                'AttributeName': 'id',
+                'AttributeType': 'S'
+            },
+        ],
+        ProvisionedThroughput={
+            'ReadCapacityUnits': 1,
+            'WriteCapacityUnits': 1
+        }
+    )
+    return table
+
+
 def create_dynamodb_dags_table(env: str):
     ddb = connect_dynamodb_metadata(env, 'resource')
     table = ddb.create_table(
