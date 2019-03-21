@@ -130,6 +130,7 @@ def substitute_special(code: str, key: str) -> str:
     code = re.sub(r'\$(\d)+', r"{key}_\g<1>".format(key=key), code)
     code = code.replace('$BATCH_NUM', 'batch_num')
     code = re.sub(r'\$HOOK(\.(\w+))', r'get_hook("\g<2>")', code)
+    code = re.sub(r'\$VARIABLE(\.(\w+))', r'get_variable_contents("\g<2>")', code)
     return code
 
 

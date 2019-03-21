@@ -279,7 +279,7 @@ export function stringify_until_eol(tokens) {
   });
 }
 
-export const SPECIAL_VARS = ['$SOURCE', '$DAG_CONFIG', '$BATCH_NUM', '$HOOK'];
+export const SPECIAL_VARS = ['$SOURCE', '$DAG_CONFIG', '$BATCH_NUM', '$HOOK', '$VARIABLE'];
 
 export function is_valid_special_var(special_var, check_nums) {
   if (SPECIAL_VARS.includes(special_var)) {

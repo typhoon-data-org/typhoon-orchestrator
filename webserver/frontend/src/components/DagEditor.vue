@@ -169,11 +169,15 @@
       connection_ids () {
         return this.$store.state.connections.items.map(x => x.conn_id);
       },
+      variable_ids () {
+        return this.$store.state.variables.items.map(x => x.id);
+      },
     },
     methods: {
       editorInit: function (editor) {
         this.fetchTyphoonPackageInfo();
         this.getConnections();
+        this.getVariables();
 
         require('brace/ext/language_tools'); //language extension prerequsite...
         require('brace/mode/html');
@@ -207,6 +211,7 @@
               parent.userDefinedFunctions,
               parent.$store.state.userDefinedTransformations,
               parent.connection_ids,
+              parent.variable_ids,
             );
             callback(null,
               wordList.map(word => ({name: word, value: word, meta: 'static'}))
@@ -286,6 +291,18 @@
         })
           .then((result) => {
             this.$store.commit('setConnections', result.data);
+          });
+      },
+
+      getVariables: function () {
+        const baseURI = 'http://localhost:5000/';
+        this.$http.get(baseURI + 'variables', {
+          params: {
+            env: 'dev'
+          }
+        })
+          .then((result) => {
+            this.$store.commit('setVariables', result.data);
           });
       },
     }

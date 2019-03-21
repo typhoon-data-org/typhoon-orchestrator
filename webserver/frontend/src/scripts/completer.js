@@ -12,6 +12,7 @@ let CUSTOM_FUNCTIONS = {};
 let CUSTOM_TRANSFORMATIONS = {};
 
 let CONNECTION_IDS = [];
+let VARIABLE_IDS = [];
 
 function is_beginning_line(pos, prefix) {
   return pos.column === prefix.length;
@@ -22,7 +23,7 @@ export function get_completions(
   typhoonFunctionModules, typhoonTransformationModules,
   typhoonFunctions, typhoonTransformations,
   userDefinedFunctionModules, userDefinedTransformationModules,
-  userDefinedFunctions, userDefinedTransformations, connection_ids) {
+  userDefinedFunctions, userDefinedTransformations, connection_ids, variable_ids) {
   TYPHOON_FUNCTION_MODULES = typhoonFunctionModules;
   TYPHOON_TRANSFORMATION_MODULES = typhoonTransformationModules;
   TYPHOON_FUNCTIONS = typhoonFunctions;
@@ -32,6 +33,7 @@ export function get_completions(
   CUSTOM_FUNCTIONS = userDefinedFunctions;
   CUSTOM_TRANSFORMATIONS = userDefinedTransformations;
   CONNECTION_IDS = connection_ids;
+  VARIABLE_IDS = variable_ids;
 
   if (is_beginning_line(pos, prefix)) {
     return ["name", "schedule-interval", "active", "nodes", "edges"];
@@ -96,6 +98,9 @@ function get_completions_node(editor, session, pos, prefix, parents) {
   } else if (indents >= 3 && (pos.column - prefix.length - '$HOOK.'.length) > 8 &&
     line_text.slice(pos.column - prefix.length - '$HOOK.'.length, pos.column - prefix.length) === '$HOOK.') {
     return CONNECTION_IDS;
+  } else if (indents >= 3 && (pos.column - prefix.length - '$VARIABLE.'.length) > 8 &&
+    line_text.slice(pos.column - prefix.length - '$VARIABLE.'.length, pos.column - prefix.length) === '$VARIABLE.') {
+    return VARIABLE_IDS;
   } else if (indents >= 3 && parents.length === 3 && parents[2].type === 'config' && prefix === 't') {
     return ['typhoon', 'transformations']
   } else if (indents >= 3 && parents.length === 3 && parents[2].type === 'config' && prefix && 'typhoon'.includes(prefix)) {
@@ -139,6 +144,9 @@ function get_completions_edge(editor, session, pos, prefix, parents) {
   } else if (indents >= 3 && (pos.column - prefix.length - '$HOOK.'.length) > 8 &&
     line_text.slice(pos.column - prefix.length - '$HOOK.'.length, pos.column - prefix.length) === '$HOOK.') {
     return CONNECTION_IDS;
+  } else if (indents >= 3 && (pos.column - prefix.length - '$VARIABLE.'.length) > 8 &&
+    line_text.slice(pos.column - prefix.length - '$VARIABLE.'.length, pos.column - prefix.length) === '$VARIABLE.') {
+    return VARIABLE_IDS;
   } else if (indents === 3 && /^ {6}\w+\s*=>\s*APPLY: /.test(line_text) && /typhoon\.[^.]*$/.test(line_text)) {
     return TYPHOON_TRANSFORMATION_MODULES;
   } else if (indents === 3 && /^ {6}\w+\s*=>\s*APPLY: /.test(line_text) && /typhoon\.([^.]+)\.[^.]*$/.test(line_text)) {
