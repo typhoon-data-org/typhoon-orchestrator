@@ -63,6 +63,7 @@
           :headers="headers"
           :items="variables"
           :search="search"
+          :loading="loading"
           item-key="id"
           :rows-per-page-items="[25,50,100,{'text':'$vuetify.dataIterator.rowsPerPageAll','value':-1}]"
       >
@@ -105,6 +106,7 @@
         { text: 'Actions', value: 'id', sortable: false },
       ],
       dialog: false,
+      loading: false,
       variable_types: [],
       editedIndex: -1,
       editedItem: {
@@ -134,6 +136,7 @@
     },
     methods: {
       getVariables: function () {
+        this.loading = true;
         const baseURI = 'http://localhost:5000/';
         this.$http.get(baseURI + 'variables', {
           params: {
@@ -142,6 +145,7 @@
         })
           .then((result) => {
             this.$store.commit('setVariables', result.data);
+            this.loading = false;
           });
       },
       getVariableTypes: function () {

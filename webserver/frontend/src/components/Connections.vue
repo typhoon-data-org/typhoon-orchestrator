@@ -82,6 +82,7 @@
           :headers="headers"
           :items="connections"
           :search="search"
+          :loading="loading"
           item-key="conn_id"
           :rows-per-page-items="[25,50,100,{'text':'$vuetify.dataIterator.rowsPerPageAll','value':-1}]"
       >
@@ -133,6 +134,7 @@
       ],
       connection_types: [],
       dialog: false,
+      loading: false,
       editedIndex: -1,
       editedItem: {
         conn_id: null,
@@ -175,6 +177,7 @@
     },
     methods: {
       getConnections: function () {
+        this.loading = true;
         const baseURI = 'http://localhost:5000/';
         this.$http.get(baseURI + 'connections', {
           params: {
@@ -183,6 +186,7 @@
         })
           .then((result) => {
             this.$store.commit('setConnections', result.data);
+            this.loading = false;
           });
       },
 
