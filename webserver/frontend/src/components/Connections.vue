@@ -229,7 +229,7 @@
 
       deleteItem: function (item) {
         const index = this.connections.indexOf(item);
-        let confirmed = confirm('Are you sure you want to delete this connection?') // && delete api call
+        let confirmed = confirm('Are you sure you want to delete this connection?')
         if (confirmed) {
           this.deleteConnection(item)
         }

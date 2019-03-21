@@ -6,9 +6,8 @@
         <span class="font-weight-light">PROJECT</span>
       </v-toolbar-title>
       <v-toolbar-items class="hidden-sm-and-down">
-        <v-btn @click="$router.push('connections')" flat>
-          Connections
-        </v-btn>
+        <v-btn @click="$router.push('connections')" flat>Connections</v-btn>
+        <v-btn @click="$router.push('variables')" flat>Variables</v-btn>
         <v-btn  @click="$router.push('dag-editor')" flat>DAG Editor</v-btn>
       </v-toolbar-items>
       <v-spacer></v-spacer>

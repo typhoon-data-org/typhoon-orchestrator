@@ -3,6 +3,7 @@ import Router from 'vue-router'
 import Home from './views/Home.vue'
 import Connections from "./components/Connections";
 import DagEditor from "./components/DagEditor";
+import Variables from "./components/Variables";
 
 Vue.use(Router)
 
@@ -19,6 +20,11 @@ export default new Router({
       path: '/connections',
       name: 'connections',
       component: Connections
+    },
+    {
+      path: '/variables',
+      name: 'variables',
+      component: Variables
     },
     {
       path: '/dag-editor',

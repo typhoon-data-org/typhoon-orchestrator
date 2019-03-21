@@ -7,10 +7,11 @@ from flask_cors import CORS
 from reflection import get_modules_in_package, package_tree, package_tree_from_path, user_defined_modules, \
     load_module_from_path
 from responses import transform_response
-from typhoon import connections
+from typhoon import connections, variables
 from typhoon.connections import scan_connections, ConnectionParams
 from typhoon.contrib.hooks import hook_factory
 from typhoon.settings import typhoon_directory
+from typhoon.variables import scan_variables
 
 app = Flask(__name__)
 CORS(app)
@@ -116,3 +117,25 @@ def get_connection_types():
         os.path.join(typhoon_directory(), 'hooks', 'hook_factory.py')).HOOK_MAPPINGS.keys())
     conn_types = list(typhoon_conn_types.union(custom_conn_types))
     return jsonify(conn_types)
+
+
+@app.route('/variables')
+def get_variables():
+    env = request.args.get('env')
+    variables = scan_variables(env)
+    return jsonify(variables)
+
+
+@app.route('/variable', methods=['PUT', 'DELETE'])
+def update_variable():
+    env = request.args.get('env')
+    if request.method == 'PUT':
+        body = request.get_json()
+        body['type'] = variables.VariableType(body['type'])
+        variable = variables.Variable(**body)
+        variables.set_variable(env=env, variable=variable)
+    else:   # Delete
+        env = request.args.get('env')
+        variable_id = request.args.get('id')
+        variables.delete_variable(env, variable_id)
+    return 'Ok'

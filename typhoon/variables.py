@@ -23,6 +23,7 @@ class Variable:
     def dict_contents(self):
         contents = self.__dict__
         contents.pop('id')
+        contents['type'] = contents['type'].value
         return contents
 
 
