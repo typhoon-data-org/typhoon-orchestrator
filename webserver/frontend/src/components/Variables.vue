@@ -4,6 +4,52 @@
       <v-card-title>
         <v-icon large left>assignment_ind</v-icon>
         <h2>Variables</h2>
+        <v-dialog v-model="dialog" max-width="500px">
+          <template v-slot:activator="{ on }">
+            <v-btn dark class="mb-2" v-on="on">New Variable</v-btn>
+          </template>
+          <v-card>
+            <v-card-title>
+              <span class="headline">{{ formTitle }}</span>
+            </v-card-title>
+
+            <v-card-text>
+              <v-form ref="variable_form" v-model="valid">
+                <v-container grid-list-md>
+                  <v-layout wrap>
+                    <v-flex md6>
+                      <v-text-field
+                          v-model="editedItem.id"
+                          label="Variable ID"
+                          :rules="[rules.required]"
+                          :disabled="isNewVariable"
+                          :readonly="isNewVariable">
+                      </v-text-field>
+                    </v-flex>
+                    <v-flex md6>
+                      <v-autocomplete
+                          v-model="editedItem.type"
+                          label="variable_type"
+                          :rules="[rules.required]"
+                          :items="variable_types">
+                      </v-autocomplete>
+                    </v-flex>
+                    <v-flex md12>
+                      <v-textarea v-model="editedItem.contents" label="Contents" :rules="[rules.required]">
+                      </v-textarea>
+                    </v-flex>
+                  </v-layout>
+                </v-container>
+              </v-form>
+            </v-card-text>
+
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn color="blue darken-1" flat @click="close">Cancel</v-btn>
+              <v-btn color="blue darken-1" flat @click="save">Save</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
         <v-spacer></v-spacer>
         <v-text-field
             v-model="search"
@@ -58,30 +104,32 @@
         { text: 'Type', value: 'type' },
         { text: 'Actions', value: 'id', sortable: false },
       ],
+      dialog: false,
+      variable_types: [],
+      editedIndex: -1,
       editedItem: {
-        conn_id: null,
-        conn_type: null,
-        schema: null,
-        host: null,
-        port: null,
-        login: null,
-        password: null,
-        extra: '',
+        id: null,
+        type: null,
+        contents: null,
       },
       defaultItem: {
-        conn_id: null,
-        conn_type: null,
-        schema: null,
-        host: null,
-        port: null,
-        login: null,
-        password: null,
-        extra: '',
+        id: null,
+        type: null,
+        contents: null,
       },
+      rules: {
+        required: value => !!value || 'Required.',
+      }
     }),
     computed: {
       variables() {
         return this.$store.state.variables.items;
+      },
+      isNewVariable () {
+        return this.editedIndex !== -1;
+      },
+      formTitle () {
+        return this.editedIndex === -1 ? 'New Variable' : 'Edit Variable';
       },
     },
     methods: {
@@ -96,6 +144,17 @@
             this.$store.commit('setVariables', result.data);
           });
       },
+      getVariableTypes: function () {
+        const baseURI = 'http://localhost:5000/';
+        this.$http.get(baseURI + 'variable-types', {
+          params: {
+            env: 'dev'
+          }
+        })
+          .then((result) => {
+            this.variable_types = result.data;
+          });
+      },
       setVariable: function (variable) {
         const baseURI = 'http://localhost:5000/';
         this.$http.put(baseURI + 'variable', variable, {
@@ -104,24 +163,51 @@
           }
         })
           .then((result) => {
-            this.getConnections();
+            this.getVariables();
+          });
+      },
+      deleteVariable: function (variable) {
+        const baseURI = 'http://localhost:5000/';
+        this.$http.delete(baseURI + 'variable', {
+          params: {
+            env: 'dev',
+            id: variable.id
+          }
+        })
+          .then((result) => {
+            this.getVariables();
           });
       },
       editItem: function (item) {
         this.editedIndex = this.variables.indexOf(item);
         this.editedItem = Object.assign({}, item);
-        // this.dialog = true;
+        this.dialog = true;
       },
       deleteItem: function (item) {
         const index = this.variables.indexOf(item);
         let confirmed = confirm('Are you sure you want to delete this variable?')
         if (confirmed) {
-          // this.deleteVariable(item)
+          this.deleteVariable(item)
         }
       },
+      close: function () {
+        this.dialog = false;
+        setTimeout(() => {
+          this.editedItem = Object.assign({}, this.defaultItem);
+          this.editedIndex = -1
+        }, 300)
+      },
+
+      save: function () {
+        let variable = Object.assign({}, this.editedItem);
+        if (this.$refs.variable_form.validate()) {
+          this.setVariable(variable);
+          this.close()
+        }
+      }
     },
     created: function () {
-      // this.setVariable({'id': 'num_b', 'type': 'number', 'contents': '3'});
+      this.getVariableTypes();
       this.getVariables();
     },
   }

@@ -11,7 +11,7 @@ from typhoon import connections, variables
 from typhoon.connections import scan_connections, ConnectionParams
 from typhoon.contrib.hooks import hook_factory
 from typhoon.settings import typhoon_directory
-from typhoon.variables import scan_variables
+from typhoon.variables import scan_variables, VariableType
 
 app = Flask(__name__)
 CORS(app)
@@ -116,7 +116,7 @@ def get_connection_types():
     custom_conn_types = set(load_module_from_path(
         os.path.join(typhoon_directory(), 'hooks', 'hook_factory.py')).HOOK_MAPPINGS.keys())
     conn_types = list(typhoon_conn_types.union(custom_conn_types))
-    return jsonify(conn_types)
+    return jsonify(sorted(conn_types))
 
 
 @app.route('/variables')
@@ -139,3 +139,9 @@ def update_variable():
         variable_id = request.args.get('id')
         variables.delete_variable(env, variable_id)
     return 'Ok'
+
+
+@app.route('/variable-types')
+def get_variable_types():
+    typhoon_var_types = [x.value for x in VariableType]
+    return jsonify(sorted(typhoon_var_types))
