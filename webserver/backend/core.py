@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from types import SimpleNamespace
 
 from code_execution import run_transformations
 from flask import Flask, jsonify, request
@@ -8,6 +9,7 @@ from reflection import get_modules_in_package, package_tree, package_tree_from_p
     load_module_from_path
 from responses import transform_response
 from typhoon import connections, variables
+from typhoon.cli import build_dags
 from typhoon.connections import scan_connections, ConnectionParams, get_connection_local, \
     get_connections_local_by_conn_id
 from typhoon.contrib.hooks import hook_factory
@@ -16,6 +18,14 @@ from typhoon.variables import scan_variables, VariableType
 
 app = Flask(__name__)
 CORS(app)
+
+
+@app.route('/build-dags')
+def do_build_dags():
+    env = request.args.get('env')
+    args = SimpleNamespace(env=env, profile=None, project_name=None, s3_bucket=None)
+    build_dags(args)
+    return 'Ok'
 
 
 @app.route('/typhoon-modules')

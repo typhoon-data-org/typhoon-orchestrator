@@ -7,7 +7,6 @@
         <v-dialog v-model="dialog" max-width="500px">
           <template v-slot:activator="{ on }">
             <v-btn dark class="mb-2" v-on="on">
-              <v-icon left>add_circle_outline</v-icon>
               New Variable
             </v-btn>
           </template>

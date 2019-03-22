@@ -1,5 +1,18 @@
 <template>
   <v-app dark>
+    <v-snackbar
+        v-model="snackbar"
+        :timeout="1500"
+        :top="true"
+    >
+      {{ snackbar_message }}
+      <v-btn
+          flat
+          @click="snackbar_clipboard = false"
+      >
+        Close
+      </v-btn>
+    </v-snackbar>
     <v-toolbar app>
       <v-toolbar-title class="headline text-uppercase">
         <span>TYPHOON</span>
@@ -10,6 +23,24 @@
         <v-btn @click="$router.push('variables')" flat>Variables</v-btn>
         <v-btn  @click="$router.push('dag-editor')" flat>DAG Editor</v-btn>
       </v-toolbar-items>
+      <v-menu>
+        <template v-slot:activator="{ on }">
+          <v-toolbar-title v-on="on">
+            <v-btn  flat>
+              Deploy
+              <v-icon dark>arrow_drop_down</v-icon>
+            </v-btn>
+            <!--<span class="text-uppercase">Deploy</span>-->
+            <!--<v-icon dark>arrow_drop_down</v-icon>-->
+          </v-toolbar-title>
+        </template>
+
+        <v-list>
+          <v-list-tile @click="">
+            <v-list-tile-title v-text="'Build DAGs'" @click="buildDags"></v-list-tile-title>
+          </v-list-tile>
+        </v-list>
+      </v-menu>
       <v-spacer></v-spacer>
       <v-btn
           flat
@@ -21,9 +52,7 @@
     </v-toolbar>
 
     <v-content>
-      <!--<HelloWorld/>-->
       <router-view></router-view>
-      <!--<DagEditor></DagEditor>-->
     </v-content>
 
     <v-footer
@@ -63,20 +92,29 @@
 </template>
 
 <script>
-  // import HelloWorld from './components/HelloWorld'
-  import DagEditor from "./components/DagEditor";
-
-
   export default {
     name: 'App',
     components: {
-      // HelloWorld,
-      DagEditor,
     },
     data () {
       return {
-        //
+        snackbar: false,
+        snackbar_message: '',
       }
     },
+    methods: {
+      buildDags() {
+        const baseURI = 'http://localhost:5000/';
+        this.$http.get(baseURI + 'build-dags', {
+          params: {
+            env: 'dev'
+          }
+        })
+          .then((result) => {
+            this.snackbar_message = 'Finished building DAGs';
+            this.snackbar = true;
+          });
+      }
+    }
   }
 </script>
