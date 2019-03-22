@@ -240,7 +240,7 @@ export function is_type_value(tk, type, value) {
     type = [type];
   }
   if (value instanceof  RegExp) {
-    return type.includes(tk.type) && value.trim().test(tk.value);
+    return type.includes(tk.type) && value.test(tk.value.trim());
   }
   return type.includes(tk.type) && (tk.value.trim() === value);
 }
