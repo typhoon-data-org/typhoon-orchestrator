@@ -213,7 +213,7 @@ export function check_meta_tag(tk, msg, value = undefined) {
 
 export function check_semicolon(tk) {
   if (tk.type !== "keyword" || tk.value !== ':') {
-    push_error_msg("Expected ':' after name");
+    push_error_msg("Expected ':' after name", tk.line);
     throw new AnalysisException();
   }
 }

@@ -317,7 +317,22 @@ function A_NODE(tokens) {
   A_FUNCTION(tk);
   tk = tokens.shift();
   check_eol(tk, 'Expected line break');
+  if (!is_type(tokens[0], 'meta.tag')) {
+    return tk.line;
+  }
   tk = tokens.shift();
+  if (is_type_value(tk, 'meta.tag', 'async')) {
+    tk = tokens.shift();
+    check_semicolon(tk);
+    tk = tokens.shift();
+    if (tk.type !== 'constant.language.boolean') {
+      push_error_msg('async definition should be boolean', tk.line);
+      throw new AnalysisException();
+    }
+    tk = tokens.shift();
+    check_eol(tk, 'Expected line break');
+    tk = tokens.shift();
+  }
   check_meta_tag(tk, "Expected 'config:' definition", 'config');
   tk = tokens.shift();
   check_semicolon(tk);
