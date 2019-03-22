@@ -8,7 +8,8 @@ from reflection import get_modules_in_package, package_tree, package_tree_from_p
     load_module_from_path
 from responses import transform_response
 from typhoon import connections, variables
-from typhoon.connections import scan_connections, ConnectionParams
+from typhoon.connections import scan_connections, ConnectionParams, get_connection_local, \
+    get_connections_local_by_conn_id
 from typhoon.contrib.hooks import hook_factory
 from typhoon.settings import typhoon_directory
 from typhoon.variables import scan_variables, VariableType
@@ -95,6 +96,14 @@ def get_connections():
     return jsonify(connections)
 
 
+@app.route('/connection-envs')
+def get_connections_envs():
+    conn_id = request.args.get('conn_id')
+    connections = get_connections_local_by_conn_id(conn_id)
+    connections = [{'conn_id': conn_id, 'conn_env': k, 'conn_type': v['conn_type']} for k, v in connections.items()]
+    return jsonify(connections)
+
+
 @app.route('/connection', methods=['PUT', 'DELETE'])
 def set_connection():
     env = request.args.get('env')
@@ -107,6 +116,17 @@ def set_connection():
         env = request.args.get('env')
         conn_id = request.args.get('conn_id')
         connections.delete_connection(env, conn_id)
+    return 'Ok'
+
+
+@app.route('/swap-connection', methods=['PUT'])
+def swap_connection():
+    conn_id = request.args.get('conn_id')
+    conn_env = request.args.get('conn_env')
+    env = request.args.get('env')
+
+    conn_params = get_connection_local(conn_id, conn_env)
+    connections.set_connection(env=env, conn_id=conn_id, conn_params=conn_params)
     return 'Ok'
 
 

@@ -96,10 +96,21 @@
           <td>{{ props.item.port }}</td>
           <td>{{ props.item.login }}</td>
           <!--<td>{{ props.item.schema }}</td>-->
-          <td class="justify-center layout px-0">
+          <td>
+            <!--<v-icon-->
+                <!--smallction HideAllWindows-->
+                <!--@click="editItem(props.item)"-->
+            <!--&gt;-->
+              <!--swap_horiz-->
+            <!--</v-icon>-->
+            <SwapConnectionDialogue
+                v-bind:dialog="swap_dialog"
+                v-bind:conn_id="props.item.conn_id"
+                v-on:update-connections="getConnections"
+            >
+            </SwapConnectionDialogue>
             <v-icon
                 small
-                class="mr-2"
                 @click="editItem(props.item)"
             >
               edit
@@ -121,8 +132,13 @@
 </template>
 
 <script>
+  import SwapConnectionDialogue from "./SwapConnectionDialogue";
+
   export default {
     name: "Connections",
+    components: {
+      SwapConnectionDialogue,
+    },
     data: () => ({
       valid: false,
       search: '',
@@ -137,6 +153,7 @@
       ],
       connection_types: [],
       dialog: false,
+      swap_dialog: false,
       loading: false,
       editedIndex: -1,
       editedItem: {

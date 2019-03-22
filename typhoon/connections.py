@@ -56,6 +56,14 @@ def get_connection_local(conn_id: str, conn_env: Optional[str]) -> ConnectionPar
     return ConnectionParams(**conn_params)
 
 
+def get_connections_local_by_conn_id(conn_id: str) -> dict:
+    connections_yml = os.path.join(typhoon_directory(), 'connections.yml')
+    with open(connections_yml, 'r') as f:
+        connections = yaml.load(f)
+    connections = connections[conn_id]
+    return connections
+
+
 def set_connection(env: str, conn_id: str, conn_params: ConnectionParams):
     ddb = connect_dynamodb_metadata(env, 'client')
     serializer = TypeSerializer()

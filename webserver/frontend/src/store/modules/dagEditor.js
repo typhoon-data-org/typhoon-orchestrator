@@ -14,6 +14,7 @@ export default {
     execution_date: new Date().toISOString().substr(0, 10),
     execution_time: '00:00',
     edges: {},
+    savedCode: '',
   },
   getters: {
     executionDatetime(state) {
@@ -59,6 +60,9 @@ export default {
     },
     setExecutionTime(state, time) {
       Vue.set(state, 'execution_time',  time);
+    },
+    setSavedCode(state, code) {
+      state.savedCode = code;
     },
   }
 }

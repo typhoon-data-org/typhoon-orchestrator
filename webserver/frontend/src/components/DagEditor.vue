@@ -197,6 +197,11 @@
           tabSize: 2,
           showPrintMargin: false,
         });
+
+        if (this.$store.state.dagEditor.savedCode) {
+          this.content = this.$store.state.dagEditor.savedCode;
+        }
+
         let parent = this;
         let customCompleter = {
           getCompletions: (editor, session, pos, prefix, callback) => {
@@ -305,6 +310,9 @@
             this.$store.commit('setVariables', result.data);
           });
       },
+    },
+    beforeDestroy() {
+      this.$store.commit('setSavedCode', this.$refs.dag_editor.editor.getValue());
     }
   }
 </script>

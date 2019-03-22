@@ -73,10 +73,9 @@
         <template v-slot:items="props">
           <td><b>{{ props.item.id }}</b></td>
           <td>{{ props.item.type }}</td>
-          <td class="justify-center layout px-0">
+          <td>
             <v-icon
                 small
-                class="mr-2"
                 @click="editItem(props.item)"
             >
               edit
