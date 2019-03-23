@@ -92,7 +92,7 @@ def get_run_transformations_result():
             response[param_name] = run_transformations(
                 source_data=source_data,
                 dag_config=dag_config,
-                transformations=param['contents']
+                user_transformations=param['contents']
             )
 
     response = transform_response(response)

@@ -1,3 +1,5 @@
+from io import BytesIO
+
 
 def transform_response(response):
     if isinstance(response, dict):
@@ -8,4 +10,6 @@ def transform_response(response):
             response[i] = transform_response(x)
     elif isinstance(response, bytes):
         response = f"utf8('{response.decode('utf-8')}')"
+    elif isinstance(response, BytesIO):
+        response = f"utf8BytesIO('{response.getvalue().decode('utf-8')}')"
     return response

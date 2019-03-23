@@ -9,5 +9,5 @@ def test_run_transformations():
         "f'{$DAG_CONFIG.ds}: {$3}'"
     ]
     dag_config = {'ds': '2019-03-04'}
-    result = run_transformations(source_data=3, dag_config=dag_config, transformations=transformations)
+    result = run_transformations(source_data=3, dag_config=dag_config, user_transformations=transformations)
     assert result == 15
