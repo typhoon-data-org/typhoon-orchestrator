@@ -1,5 +1,6 @@
 import argparse
 import os
+import zipfile
 
 from zappa.cli import ZappaCLI
 
@@ -63,6 +64,17 @@ def cli_dump_connections(args):
     print(dump_connections(args.env, dump_format='yaml'))
 
 
+def cli_init(args):
+    dest = os.path.join('.', args.name)
+    os.makedirs(dest)
+    bin_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'bin', 'typhoon_init.zip')
+    with zipfile.ZipFile(bin_path, "r") as zip_ref:
+        zip_ref.extractall(dest)
+
+    print(f'Created new project in {dest}')
+    print(f'You may want to run: export TYPHOON_HOME="{dest}"')
+
+
 def handle():
     parser = argparse.ArgumentParser(description='Typhoon CLI')
     subparsers = parser.add_subparsers(help='sub-command help')
@@ -81,9 +93,9 @@ def handle():
     deploy_parser.add_argument('--env', type=str, help='Target environment', required=True)
     deploy_parser.set_defaults(func=deploy)
 
-    deploy_parser = subparsers.add_parser('migrate', help="Initialise DynamoDB metadata if it doesn't already exist")
-    deploy_parser.add_argument('--env', type=str, help='Target environment', required=True)
-    deploy_parser.set_defaults(func=migrate)
+    migrate_parser = subparsers.add_parser('migrate', help="Initialise DynamoDB metadata if it doesn't already exist")
+    migrate_parser.add_argument('--env', type=str, help='Target environment', required=True)
+    migrate_parser.set_defaults(func=migrate)
 
     deploy_parser = subparsers.add_parser(
         'set-connection',
@@ -93,9 +105,9 @@ def handle():
     deploy_parser.add_argument('--conn-env', type=str, help='Connection environment', required=False)
     deploy_parser.set_defaults(func=cli_set_connection)
 
-    deploy_parser = subparsers.add_parser('dump-connections', help="Print all connections to stdout")
-    deploy_parser.add_argument('--env', type=str, help='Target environment', required=True)
-    deploy_parser.set_defaults(func=cli_dump_connections)
+    dump_connections_parser = subparsers.add_parser('dump-connections', help="Print all connections to stdout")
+    dump_connections_parser.add_argument('--env', type=str, help='Target environment', required=True)
+    dump_connections_parser.set_defaults(func=cli_dump_connections)
 
     deploy_parser = subparsers.add_parser(
         'set-variable',
@@ -103,6 +115,10 @@ def handle():
     deploy_parser.add_argument('--env', type=str, help='Target environment', required=True)
     deploy_parser.add_argument('--var-id', type=str, help='Variable ID', required=True)
     deploy_parser.add_argument('--var-env', type=str, help='Variable environment', required=False)
+
+    init_parser = subparsers.add_parser('init', help="Create a new Typhoon project")
+    init_parser.add_argument('--name', type=str, help='Project name', required=True)
+    init_parser.set_defaults(func=cli_init)
 
     args = parser.parse_args()
     try:
