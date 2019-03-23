@@ -2,25 +2,22 @@ from io import BytesIO
 from typing import Iterable
 
 from typhoon.contrib.hooks.filesystem_hooks import FileSystemHookInterface
-from typhoon.contrib.hooks.hook_factory import get_hook
 
 
-def write_data(data: BytesIO, conn_id: str, path: str) -> Iterable[str]:
+def write_data(data: BytesIO, hook: FileSystemHookInterface, path: str) -> Iterable[str]:
     """
     Write the given data to the path specified.
     :param data: Bytes buffer
-    :param conn_id: A connection id belonging to a FileSystemHookInterface
+    :param hook: A FileSystemHookInterface hook instance
     :param path: Path where the data should be written
     :return:
     """
-    hook: FileSystemHookInterface = get_hook(conn_id)
     with hook:
         hook.write_data(data, path)
     yield path
 
 
-def list_directory(conn_id: str, path: str) -> Iterable[str]:
-    hook: FileSystemHookInterface = get_hook(conn_id)
+def list_directory(hook: FileSystemHookInterface, path: str) -> Iterable[str]:
     with hook:
         for x in hook.list_directory(path):
             yield x

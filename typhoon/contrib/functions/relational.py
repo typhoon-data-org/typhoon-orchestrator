@@ -7,7 +7,6 @@ import jinja2
 from pandas import DataFrame
 
 from typhoon.contrib.hooks.dbapi_hooks import DbApiHook
-from typhoon.contrib.hooks.hook_factory import get_hook
 from typhoon.contrib.hooks.sqlalchemy_hook import SqlAlchemyHook
 
 
@@ -20,7 +19,7 @@ class ExecuteQueryResult(NamedTuple):
 
 
 def execute_query(
-        conn_id: str,
+        hook: DbApiHook,
         schema: str,
         table_name: str,
         query: str,
@@ -30,7 +29,7 @@ def execute_query(
     """
     Executes query against a relational database. Schema and table name are returned with the result since they can be
     useful for governance purposes.
-    :param conn_id: Should belong to a DbApiHook
+    :param hook: DbApiHook instance
     :param schema:  Can be used as template parameter {{ schema }} inside the query
     :param table_name: Can be used as template parameter {{ table }} inside the query
     :param query: Query. Can be a jinja2 template
@@ -38,7 +37,6 @@ def execute_query(
     :param query_template_params: Will used to render the query template
     :return: ExecuteQueryResult namedtuple
     """
-    hook: DbApiHook = get_hook(conn_id)
     query_template_params = query_template_params or {}
     query = jinja2.Template(query).render(
         dict(schema=schema, table_name=table_name, **query_template_params)
@@ -71,16 +69,15 @@ def execute_query(
                 )
 
 
-def df_write(df: DataFrame, conn_id: str, table_name: str, schema: str = None):
+def df_write(df: DataFrame, hook: SqlAlchemyHook, table_name: str, schema: str = None):
     """
     Given conn_id belonging to a SqlAlchemy hook, create or append the data to the specified table
     :param df: Dataframe with data
-    :param conn_id: Connection id for a SqlAlchemyHook
+    :param hook: SqlAlchemyHook instance
     :param table_name: Name of the table to write to
     :param schema: Schema where the table is located
     :return:
     """
-    hook: SqlAlchemyHook = get_hook(conn_id)
     with hook as engine:
         logging.info(f'Writing dataframe to {hook.conn_params.conn_type} table {table_name}, schema {schema or "default"}')
         df.to_sql(name=table_name, con=engine, schema=schema, if_exists='append')
