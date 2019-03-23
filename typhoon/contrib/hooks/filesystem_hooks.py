@@ -3,7 +3,6 @@ import os
 import re
 import unicodedata
 from io import BytesIO
-from nturl2path import pathname2url
 from typing import Iterable
 
 from typhoon.connections import get_connection_params
