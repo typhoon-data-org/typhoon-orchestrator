@@ -1,0 +1,11 @@
+# Define binary file attributes.
+# - Do not treat them as text.
+# - Include binary diff in patches instead of "binary files differ."
+*.sln     -text diff
+*.suo     -text diff
+*.vcxproj -text diff
+*.gif     -text diff
+*.gz      -text diff
+*.ico     -text diff
+*.jpeg    -text diff
+*.zip    -text diff
