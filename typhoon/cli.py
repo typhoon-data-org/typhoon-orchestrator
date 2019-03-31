@@ -37,7 +37,7 @@ def clean(args=None):
 def deploy(args=None):
     os.chdir(out_directory())
     zappa_cli = ZappaCLI()
-    zappa_cli.handle(['deploy', args.target])
+    zappa_cli.handle(['deploy', args.env])
 
 
 def migrate(args):

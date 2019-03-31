@@ -208,16 +208,17 @@
             let wordList = get_completions(
               editor, session, pos, prefix,
               parent.typhoonFunctionModules,
-              parent.$store.state.typhoonTransformationModules,
+              parent.$store.state.dagEditor.typhoonTransformationModules,
               parent.typhoonFunctions,
-              parent.$store.state.typhoonTransformations,
+              parent.$store.state.dagEditor.typhoonTransformations,
               parent.userDefinedFunctionModules,
-              parent.$store.state.userDefinedTransformationModules,
+              parent.$store.state.dagEditor.userDefinedTransformationModules,
               parent.userDefinedFunctions,
-              parent.$store.state.userDefinedTransformations,
+              parent.$store.state.dagEditor.userDefinedTransformations,
               parent.connection_ids,
               parent.variable_ids,
             );
+            wordList = wordList || [];
             callback(null,
               wordList.map(word => ({name: word, value: word, meta: 'static'}))
             );

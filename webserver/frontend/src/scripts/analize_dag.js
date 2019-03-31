@@ -541,20 +541,44 @@ function A_YAML_LIST(tokens) {
 function A_YAML_DICT(tokens) {
   let key_vals = {};
   let tk = tokens.shift();
+  if (tk === undefined) {
+    push_error_msg('Unexpected end of file');
+    throw new AnalysisException()
+  }
   while (is_type(tk, 'meta.tag')) {
     let k = tk.value.trim();
     tk = tokens.shift();
+    if (tk === undefined) {
+      push_error_msg('Unexpected end of file');
+      throw new AnalysisException()
+    }
     check_semicolon(tk);
     if (is_eol(tokens[0])) {
       tk = tokens.shift();
+      if (tk === undefined) {
+        push_error_msg('Unexpected end of file');
+        throw new AnalysisException()
+      }
       tk = tokens.shift();
+      if (tk === undefined) {
+        push_error_msg('Unexpected end of file');
+        throw new AnalysisException()
+      }
       check_indent(tk, 'Expected indent');
       if (is_type(tokens[0], 'meta.tag')) {
         let v = A_YAML_DICT(tokens);
         key_vals[k] = v;
         tk = tokens.shift();
+        if (tk === undefined) {
+          push_error_msg('Unexpected end of file');
+          throw new AnalysisException()
+        }
         check_dedent(tk, 'Expected dedent');
         tk = tokens.shift();
+        if (tk === undefined) {
+          push_error_msg('Unexpected end of file');
+          throw new AnalysisException()
+        }
       } else {
         check_type(tokens[0], 'list.markup', 'Expected nested list');
         let v = A_YAML_LIST(tokens);
@@ -562,12 +586,20 @@ function A_YAML_DICT(tokens) {
         tk = tokens.shift();
         check_dedent(tk, 'Expected dedent');
         tk = tokens.shift();
+        if (tk === undefined) {
+          push_error_msg('Unexpected end of file');
+          throw new AnalysisException()
+        }
       }
     } else {
       let end_line, val;
       [end_line, val] = A_VALUE(tokens);
       key_vals[k] = val;
       tk = tokens.shift();
+      if (tk === undefined) {
+        push_error_msg('Unexpected end of file');
+        throw new AnalysisException()
+      }
     }
   }
   tokens.unshift(tk);

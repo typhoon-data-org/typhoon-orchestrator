@@ -76,6 +76,8 @@ function get_completions_node(editor, session, pos, prefix, parents) {
   } else if (indents === 3 && /^ {6}[^: ]+$/.test(line_text)) {
     let config_name = /^ {6}([^: ]+)$/.exec(line_text)[1];
     return [config_name + ' => APPLY:'];
+  } else if (indents >= 3 && prefix.startsWith('$')) {
+    return SPECIAL_VARS;
   } else if (indents === 3 && /^ {6}\w+\s*=>\s*APPLY: /.test(line_text) && /typhoon\.[^.]*$/.test(line_text)) {
     return TYPHOON_TRANSFORMATION_MODULES;
   } else if (indents === 3 && /^ {6}\w+\s*=>\s*APPLY: /.test(line_text) && /typhoon\.([^.]+)\.[^.]*$/.test(line_text)) {
@@ -117,8 +119,6 @@ function get_completions_node(editor, session, pos, prefix, parents) {
   } else if (indents >= 3 && parents.length === 3 && parents[2].type === 'config' && /transformations\.([^.]+)\.[^.]*$/.test(line_text)) {
     let typhoon_module = /transformations\.([^.]+)\.[^.]*$/.exec(line_text)[1];
     return CUSTOM_TRANSFORMATIONS[typhoon_module] || [];
-  } else if (indents >= 3 && prefix.startsWith('$')) {
-    return SPECIAL_VARS;
   }
   return [];
 }
@@ -147,6 +147,8 @@ function get_completions_edge(editor, session, pos, prefix, parents) {
   } else if (indents >= 3 && (pos.column - prefix.length - '$VARIABLE.'.length) > 8 &&
     line_text.slice(pos.column - prefix.length - '$VARIABLE.'.length, pos.column - prefix.length) === '$VARIABLE.') {
     return VARIABLE_IDS;
+  } else if (indents >= 3 && prefix.startsWith('$')) {
+    return SPECIAL_VARS;
   } else if (indents === 3 && /^ {6}\w+\s*=>\s*APPLY: /.test(line_text) && /typhoon\.[^.]*$/.test(line_text)) {
     return TYPHOON_TRANSFORMATION_MODULES;
   } else if (indents === 3 && /^ {6}\w+\s*=>\s*APPLY: /.test(line_text) && /typhoon\.([^.]+)\.[^.]*$/.test(line_text)) {
@@ -181,8 +183,6 @@ function get_completions_edge(editor, session, pos, prefix, parents) {
     return ['typhoon']
   } else if (indents >= 3 && parents.length === 3 && parents[2].type === 'config' && 'transformations'.includes(prefix)) {
     return ['transformations']
-  } else if (indents >= 3 && prefix.startsWith('$')) {
-    return SPECIAL_VARS;
   }
   return [];
 }

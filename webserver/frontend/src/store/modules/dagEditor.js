@@ -50,7 +50,13 @@ export default {
       state.edges = edges;
     },
     setTransformationResult(state, payload) {
-      Vue.set(state.edges[payload.edge_name][payload.param_name], 'transformation_result', payload.result);
+      let result;
+      if (typeof payload.result === 'object' && '__error__' in payload.result) {
+        result = payload.result;
+      } else {
+        result = JSON.stringify(payload.result)
+      }
+      Vue.set(state.edges[payload.edge_name][payload.param_name], 'transformation_result', result);
     },
     setDagName(state, name) {
       state.dag_name = name;
