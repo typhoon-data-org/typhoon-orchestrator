@@ -14,11 +14,22 @@ with open(os.path.join(os.path.dirname(__file__), 'requirements.txt')) as f:
 #     test_required = f.read().splitlines()
 test_required = []
 
+
+postgres = ['psycopg2']
+sqlalchemy = ['sqlalchemy']
+
+all_requirements = postgres + sqlalchemy
+
 setup(
     name='typhoon-orchestrator',
     version=__version__,
     packages=['typhoon'],
     install_requires=required,
+    extras_require={
+        'all': all_requirements,
+        'postgres': postgres,
+        'sqlalchemy': sqlalchemy,
+    },
     tests_require=test_required,
     test_suite='pytest',
     include_package_data=True,
