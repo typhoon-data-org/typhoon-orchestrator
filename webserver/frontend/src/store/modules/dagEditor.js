@@ -15,6 +15,7 @@ export default {
     execution_time: '00:00',
     edges: {},
     savedCode: '',
+    currentDocObject: null,
   },
   getters: {
     executionDatetime(state) {
@@ -118,5 +119,8 @@ export default {
     setSavedCode(state, code) {
       state.savedCode = code;
     },
+    setCurrentDocObject(state, docObj) {
+      state.currentDocObject = docObj;
+    }
   }
 }

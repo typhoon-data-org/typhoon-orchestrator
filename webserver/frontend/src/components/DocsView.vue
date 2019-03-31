@@ -1,5 +1,5 @@
 <template>
-  <v-card flat>
+  <v-card v-if="hasDocObj" flat>
     <v-card-title>
       <v-icon
         large
@@ -7,18 +7,18 @@
       >
         description
       </v-icon>
-      <span v-if="output_type" class="title">
-        {{ title }} -> {{ output_type }}
+      <span v-if="return_type" class="title">
+        {{ title }} -> {{ return_type }}
       </span>
       <span v-else class="title">
         {{ title }}
       </span>
     </v-card-title>
     <v-card-text>
-      <h3>Parameters:</h3>
+      <h3>Arguments:</h3>
       <v-data-table
-          :items="input_parameters"
-          class="elevation-8 mb-4"
+          :items="func_args"
+          class="elevation-8 mb-4 ma-2"
           hide-actions
           hide-headers
       >
@@ -27,8 +27,15 @@
           <td class="text-xs-right">{{ props.item.type }}</td>
         </template>
       </v-data-table>
-      <h3>Description:</h3>
-      {{ description }}
+      <div v-if="description">
+        <h3>Description:</h3>
+        <v-textarea v-model="description" readonly disabled></v-textarea>
+      </div>
+    </v-card-text>
+  </v-card>
+  <v-card v-else flat>
+    <v-card-text>
+      <h1 class="text-md-center">No Docs</h1>
     </v-card-text>
   </v-card>
 </template>
@@ -36,14 +43,57 @@
   export default {
     name: 'DocsView',
     data: () => ({
-      title: 'to_csv',
-      description: 'Converts a DataFrame parameter to a csv buffer',
-      input_parameters: [
-        {'name': 'aa', 'type': 'int'},
-        {'name': 'b', 'type': 'str'},
-        {'name': 'data', 'type': 'DataFrame'},
-      ],
-      output_type: 'BytesIO',
     }),
+    computed: {
+      hasDocObj() {
+        return this.$store.state.dagEditor.currentDocObject !== null;
+      },
+      title() {
+        let docObj = this.$store.state.dagEditor.currentDocObject;
+        if (docObj) {
+          return docObj.name;
+        } else {
+          return null;
+        }
+      },
+      description() {
+        let docObj = this.$store.state.dagEditor.currentDocObject;
+        if (docObj.type === 'user_function') {
+          return this.$store.state.dagEditor.userDefinedFunctions[docObj.module][docObj.name].docstring;
+        } else if (docObj.type === 'user_transformation') {
+          return this.$store.state.dagEditor.userDefinedTransformations[docObj.module][docObj.name].docstring;
+        } else if (docObj.type === 'typhoon_function') {
+          return this.$store.state.dagEditor.typhoonFunctions[docObj.module][docObj.name].docstring;
+        } else if (docObj.type === 'typhoon_transformation') {
+          return this.$store.state.dagEditor.typhoonTransformations[docObj.module][docObj.name].docstring;
+        }
+      },
+      return_type() {
+        let docObj = this.$store.state.dagEditor.currentDocObject;
+        if (docObj.type === 'user_function') {
+          return this.$store.state.dagEditor.userDefinedFunctions[docObj.module][docObj.name].return_type;
+        } else if (docObj.type === 'user_transformation') {
+          return this.$store.state.dagEditor.userDefinedTransformations[docObj.module][docObj.name].return_type;
+        } else if (docObj.type === 'typhoon_function') {
+          return this.$store.state.dagEditor.typhoonFunctions[docObj.module][docObj.name].return_type;
+        } else if (docObj.type === 'typhoon_transformation') {
+          return this.$store.state.dagEditor.typhoonTransformations[docObj.module][docObj.name].return_type;
+        }
+      },
+      func_args() {
+        let docObj = this.$store.state.dagEditor.currentDocObject;
+        let args = [];
+        if (docObj.type === 'user_function') {
+          args = this.$store.state.dagEditor.userDefinedFunctions[docObj.module][docObj.name].args;
+        } else if (docObj.type === 'user_transformation') {
+          args = this.$store.state.dagEditor.userDefinedTransformations[docObj.module][docObj.name].args;
+        } else if (docObj.type === 'typhoon_function') {
+          args = this.$store.state.dagEditor.typhoonFunctions[docObj.module][docObj.name].args;
+        } else if (docObj.type === 'typhoon_transformation') {
+          args = this.$store.state.dagEditor.typhoonTransformations[docObj.module][docObj.name].args;
+        }
+        return args || [];
+      }
+    }
   }
 </script>

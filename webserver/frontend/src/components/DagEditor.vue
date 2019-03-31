@@ -90,7 +90,6 @@
               </v-container>
             </div>
             <v-container v-else-if="errors">
-
               <h1 class="text-md-center"><v-icon x-large>error_outline</v-icon> Fix syntax errors to show edges</h1>
             </v-container>
             <v-container v-else>
@@ -138,6 +137,7 @@
   import DagConfigDialog from "./DagConfigDialog";
   import {EDGE_CONFIGS} from "../scripts/analize_dag";
   import DocsView from "./DocsView";
+  import {get_docobject} from "../scripts/doc_helper";
 
   export default {
     components: {
@@ -247,7 +247,7 @@
         langTools.setCompleters([customCompleter]);
         // langTools.addCompleter(customCompleter);
 
-        editor.on('change',() => {
+        editor.on('change', () => {
           if (this.disable_syntax_checking) {
             editor.session.setAnnotations([]);
           } else {
@@ -260,6 +260,10 @@
               this.$store.commit('setEdges', {});
             }
           }
+        });
+        editor.session.selection.on('changeCursor', () => {
+          let docObj = get_docobject(editor.session.getLine(editor.getCursorPosition().row), editor.session, editor.getCursorPosition());
+          this.$store.commit('setCurrentDocObject', docObj);
         });
       },
       copyEditorContentsToClipboard: function (event) {

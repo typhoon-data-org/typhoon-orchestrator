@@ -195,7 +195,7 @@ function line_indentation(line_text) {
     return Math.floor(num_spaces/2);
 }
 
-function get_parents(session, pos) {
+export function get_parents(session, pos) {
   let line_text = session.getLine(pos.row);
   let line_indents = line_indentation(line_text);
   if (line_indents < 1)
