@@ -1,8 +1,4 @@
-from typing import Union
-
 import boto3
-from boto3.resources.base import ServiceResource
-from botocore.client import BaseClient
 
 from typhoon.connections import get_connection_params
 from typhoon.contrib.hooks.hook_interface import HookInterface
@@ -11,9 +7,9 @@ from typhoon.contrib.hooks.hook_interface import HookInterface
 class AwsSessionHook(HookInterface):
     def __init__(self, conn_id: str):
         self.conn_id = conn_id
-        self.session: boto3.session.Session = None
+        self.session = None
 
-    def __enter__(self) -> boto3.session.Session:
+    def __enter__(self):
         self.conn_params = get_connection_params(self.conn_id)
         profile = self.conn_params.extra.get('profile')
         if profile:
@@ -34,7 +30,9 @@ class DynamoDbHook(HookInterface):
         self.conn_id = conn_id
         self.conn_type = conn_type
 
-    def __enter__(self) -> Union[BaseClient, ServiceResource]:
+    def __enter__(self):
+        import boto3
+
         conn_params = get_connection_params(self.conn_id)
         endpoint_url = None
         if conn_params.extra.get('local'):
@@ -48,9 +46,9 @@ class DynamoDbHook(HookInterface):
             'region_name': conn_params.extra['region_name']
         }
         if self.conn_type == 'client':
-            self.connection: BaseClient = boto3.client('dynamodb', **credentials)
+            self.connection = boto3.client('dynamodb', **credentials)
         elif self.conn_type == 'resource':
-            self.connection: int = boto3.resource('dynamodb', **credentials)
+            self.connection = boto3.resource('dynamodb', **credentials)
         else:
             raise ValueError(f'Expected conn_type as client or resource, found: {self.conn_type}')
         return self.connection

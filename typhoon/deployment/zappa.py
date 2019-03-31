@@ -1,5 +1,5 @@
 import os
-from typing import Sequence, Optional
+from typing import Sequence
 
 import jinja2
 

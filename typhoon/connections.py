@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Optional, Dict
+from typing import Optional
 
 import yaml
 from boto3.dynamodb.types import TypeDeserializer, TypeSerializer

@@ -4,10 +4,8 @@ from itertools import count
 from typing import Optional, NamedTuple, Sequence, Generator
 
 import jinja2
-from pandas import DataFrame
 
 from typhoon.contrib.hooks.dbapi_hooks import DbApiHook
-from typhoon.contrib.hooks.sqlalchemy_hook import SqlAlchemyHook
 
 
 class ExecuteQueryResult(NamedTuple):
@@ -69,16 +67,16 @@ def execute_query(
                 )
 
 
-def df_write(df: DataFrame, hook: SqlAlchemyHook, table_name: str, schema: str = None):
-    """
-    Given conn_id belonging to a SqlAlchemy hook, create or append the data to the specified table
-    :param df: Dataframe with data
-    :param hook: SqlAlchemyHook instance
-    :param table_name: Name of the table to write to
-    :param schema: Schema where the table is located
-    :return:
-    """
-    with hook as engine:
-        logging.info(f'Writing dataframe to {hook.conn_params.conn_type} table {table_name}, schema {schema or "default"}')
-        df.to_sql(name=table_name, con=engine, schema=schema, if_exists='append')
-    return schema, table_name
+# def df_write(df: DataFrame, hook: SqlAlchemyHook, table_name: str, schema: str = None):
+#     """
+#     Given conn_id belonging to a SqlAlchemy hook, create or append the data to the specified table
+#     :param df: Dataframe with data
+#     :param hook: SqlAlchemyHook instance
+#     :param table_name: Name of the table to write to
+#     :param schema: Schema where the table is located
+#     :return:
+#     """
+#     with hook as engine:
+#         logging.info(f'Writing dataframe to {hook.conn_params.conn_type} table {table_name}, schema {schema or "default"}')
+#         df.to_sql(name=table_name, con=engine, schema=schema, if_exists='append')
+#     return schema, table_name

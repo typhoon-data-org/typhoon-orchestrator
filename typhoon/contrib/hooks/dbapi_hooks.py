@@ -1,20 +1,11 @@
-import sqlite3
 from abc import ABC
-from typing import Union
-
-import psycopg2 as psycopg2
-import snowflake.connector
-from snowflake.connector import SnowflakeConnection
 
 from typhoon.connections import get_connection_params
 from typhoon.contrib.hooks.hook_interface import HookInterface
 
 
-DbApiConnection = Union[SnowflakeConnection, sqlite3.Connection]
-
-
 class DbApiHook(HookInterface, ABC):
-    def __enter__(self) -> DbApiConnection:
+    def __enter__(self):
         raise NotImplementedError
 
 
@@ -23,7 +14,9 @@ class PostgresHook(DbApiHook):
         self.conn_id = conn_id
         self.connection = None
 
-    def __enter__(self) -> psycopg2.extensions.connection:
+    def __enter__(self):
+        import psycopg2
+
         self.conn_params = get_connection_params(self.conn_id)
         credentials = {
             'host': self.conn_params.host,
@@ -44,7 +37,10 @@ class SnowflakeHook(DbApiHook):
     def __init__(self, conn_id):
         self.conn_id = conn_id
 
-    def __enter__(self) -> SnowflakeConnection:
+    # noinspection PyProtectedMember
+    def __enter__(self):
+        import snowflake.connector
+
         conn_params = get_connection_params(self.conn_id)
         credentials = {
             'account': conn_params.extra['account'],
@@ -67,7 +63,9 @@ class SqliteHook(DbApiHook):
     def __init__(self, conn_id):
         self.conn_id = conn_id
 
-    def __enter__(self) -> sqlite3.Connection:
+    def __enter__(self):
+        import sqlite3
+
         conn_params = get_connection_params(self.conn_id)
         self.connection = sqlite3.connect(database=conn_params.extra['database'])
         return self.connection
