@@ -70,21 +70,39 @@
       </v-flex>
     </v-layout>
 
-    <div v-if="Object.entries(edges).length > 0 && edges.constructor === Object">
-      <v-container v-for="(edge, edge_name) in edges" v-bind:key="edge_name">
-        <EdgeTester v-bind:edge_name="edge_name" v-bind:edge="edge"></EdgeTester>
-      </v-container>
-    </div>
-    <v-container v-else-if="errors">
+    <div>
+      <v-tabs fixed-tabs>
+        <v-tab ripple>
+          Docs
+        </v-tab>
+        <v-tab-item>
+          <DocsView/>
+        </v-tab-item>
 
-      <h1 class="text-md-center"><v-icon x-large>error_outline</v-icon> Fix syntax errors to show edges</h1>
-    </v-container>
-    <v-container v-else>
-      <h1 class="text-md-center">No edges matching filter criteria</h1>
-    </v-container>
+        <v-tab ripple>
+          Edges
+        </v-tab>
+        <v-tab-item>
+          <v-card flat>
+            <div v-if="Object.entries(edges).length > 0 && edges.constructor === Object">
+              <v-container v-for="(edge, edge_name) in edges" v-bind:key="edge_name">
+                <EdgeTester v-bind:edge_name="edge_name" v-bind:edge="edge"></EdgeTester>
+              </v-container>
+            </div>
+            <v-container v-else-if="errors">
+
+              <h1 class="text-md-center"><v-icon x-large>error_outline</v-icon> Fix syntax errors to show edges</h1>
+            </v-container>
+            <v-container v-else>
+              <h1 class="text-md-center">No edges matching filter criteria</h1>
+            </v-container>
+          </v-card>
+        </v-tab-item>
+      </v-tabs>
+    </div>
 
     <v-snackbar
-      v-model="snackbar_clipboard"
+        v-model="snackbar_clipboard"
       :timeout="1500"
       :top="true"
     >
@@ -119,9 +137,11 @@
   import EdgeTester from "./EdgeTester";
   import DagConfigDialog from "./DagConfigDialog";
   import {EDGE_CONFIGS} from "../scripts/analize_dag";
+  import DocsView from "./DocsView";
 
   export default {
     components: {
+      DocsView,
       DagConfigDialog,
       EdgeTester,
       editor: require('vue2-ace-editor'),
@@ -209,12 +229,12 @@
               editor, session, pos, prefix,
               parent.typhoonFunctionModules,
               parent.$store.state.dagEditor.typhoonTransformationModules,
-              parent.typhoonFunctions,
-              parent.$store.state.dagEditor.typhoonTransformations,
+              parent.$store.getters.typhoonFunctionNames,
+              parent.$store.getters.typhoonTransformationNames,
               parent.userDefinedFunctionModules,
               parent.$store.state.dagEditor.userDefinedTransformationModules,
-              parent.userDefinedFunctions,
-              parent.$store.state.dagEditor.userDefinedTransformations,
+              parent.$store.getters.userDefinedFunctionNames,
+              parent.$store.getters.userDefinedTransformationNames,
               parent.connection_ids,
               parent.variable_ids,
             );
@@ -318,6 +338,3 @@
   }
 </script>
 
-<style>
-
-</style>

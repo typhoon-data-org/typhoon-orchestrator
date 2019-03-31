@@ -19,7 +19,55 @@ export default {
   getters: {
     executionDatetime(state) {
       return state.execution_date + 'T' + state.execution_time;
-    }
+    },
+    typhoonFunctionNames(state) {
+      let result = {};
+      Object.keys(state.typhoonFunctions).forEach(k => {
+        if (!result.hasOwnProperty(k)) {
+          result[k] = [];
+        }
+        Object.keys(state.typhoonFunctions[k]).forEach(k2 => {
+          result[k].push(state.typhoonFunctions[k][k2].name);
+        });
+      });
+      return result;
+    },
+    typhoonTransformationNames(state) {
+      let result = {};
+      Object.keys(state.typhoonTransformations).forEach(k => {
+        if (!result.hasOwnProperty(k)) {
+          result[k] = [];
+        }
+        Object.keys(state.typhoonTransformations[k]).forEach(k2 => {
+          result[k].push(state.typhoonTransformations[k][k2].name);
+        });
+      });
+      return result;
+    },
+    userDefinedFunctionNames(state) {
+      let result = {};
+      Object.keys(state.userDefinedFunctions).forEach(k => {
+        if (!result.hasOwnProperty(k)) {
+          result[k] = [];
+        }
+        Object.keys(state.userDefinedFunctions[k]).forEach(k2 => {
+          result[k].push(state.userDefinedFunctions[k][k2].name);
+        });
+      });
+      return result;
+    },
+    userDefinedTransformationNames(state) {
+      let result = {};
+      Object.keys(state.userDefinedTransformations).forEach(k => {
+        if (!result.hasOwnProperty(k)) {
+          result[k] = [];
+        }
+        Object.keys(state.userDefinedTransformations[k]).forEach(k2 => {
+          result[k].push(state.userDefinedTransformations[k][k2].name);
+        });
+      });
+      return result;
+    },
   },
   mutations: {
     setTyphoonFunctionModules(state, modules) {
