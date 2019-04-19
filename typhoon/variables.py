@@ -80,7 +80,7 @@ def get_variable_contents(variable_id: str):
     elif variable.type is VariableType.JSON:
         return json.loads(variable.contents)
     elif variable.type is VariableType.YAML:
-        return yaml.load(StringIO(variable.contents))
+        return yaml.load(StringIO(variable.contents), Loader=yaml.FullLoader)
     assert False
 
 
