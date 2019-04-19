@@ -1,7 +1,6 @@
 import decimal
 
 import boto3
-from boto3.dynamodb.types import TypeDeserializer
 
 from typhoon import config
 
@@ -81,7 +80,7 @@ def create_dynamodb_dags_table(env: str):
         ],
         AttributeDefinitions=[
             {
-                'AttributeName': 'conn_id',
+                'AttributeName': 'dag_id',
                 'AttributeType': 'S'
             },
             {
