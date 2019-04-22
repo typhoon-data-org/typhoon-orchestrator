@@ -12,7 +12,7 @@ with open(os.path.join(os.path.dirname(__file__), 'requirements.txt')) as f:
 
 # with open(os.path.join(os.path.dirname(__file__), 'test_requirements.txt')) as f:
 #     test_required = f.read().splitlines()
-test_required = []
+test_required = ['pytest', 'moto']
 
 
 postgres = ['psycopg2']
