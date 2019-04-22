@@ -1,22 +1,25 @@
 import os
 from configparser import ConfigParser
+from typing import Any
 
+from typhoon.logger import logger_factory
 from typhoon.settings import typhoon_directory
 
 
 class Config:
-    def __init__(self, path, env):
+    def __init__(self, path: str, env: str):
         self.path = path
         self.env = env
-        self.config_dict = ConfigParser().read(self.path)
+        self.config = ConfigParser()
+        self.config.read(self.path)
 
     def reload(self):
-        self.config_dict = ConfigParser().read(self.path)
+        self.config = ConfigParser().read(self.path)
 
-    def get(self, var, default=None, mandatory=False):
-        if mandatory and var not in self.config_dict[self.env].keys():
+    def get(self, var: str, default: Any = None, mandatory: bool = False) -> Any:
+        if mandatory and var not in self.config[self.env.upper()].keys():
             raise ValueError(f'No attribute {var} in {self.env} config for {self.path}')
-        return self.config_dict[self.env].get(var, default)
+        return self.config[self.env.upper()].get(var, default)
 
 
 class TyphoonConfig:
@@ -28,7 +31,8 @@ class TyphoonConfig:
     @property
     def logger(self):
         """Mandatory parameter defining what kind of Logger we will be using"""
-        return self.config.get('logger', mandatory=True)
+        logger_name = self.config.get('logger', mandatory=True)
+        return logger_factory(logger_name)
 
     @property
     def local_db(self):
