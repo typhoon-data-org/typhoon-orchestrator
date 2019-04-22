@@ -1,8 +1,8 @@
 import os
 from configparser import ConfigParser
-from typing import Any
+from typing import Any, Type
 
-from typhoon.logger import logger_factory
+from typhoon.logger import logger_factory, LoggingInterface
 from typhoon.settings import typhoon_directory
 
 
@@ -29,13 +29,13 @@ class TyphoonConfig:
         self.config = Config(os.path.join(typhoon_directory(), 'typhoonconfig.cfg'), env)
 
     @property
-    def logger(self):
+    def logger(self) -> Type[LoggingInterface]:
         """Mandatory parameter defining what kind of Logger we will be using"""
         logger_name = self.config.get('logger', mandatory=True)
         return logger_factory(logger_name)
 
     @property
-    def local_db(self):
+    def local_db(self) -> str:
         """If you are running a local instance of DynamoDB specify the endpoint"""
         return self.config.get('local-db')
 
@@ -47,11 +47,16 @@ class DeployConfig:
         self.config = Config(os.path.join(typhoon_directory(), 'deployconfig.cfg'), deploy_env)
 
     @property
-    def aws_profile(self):
+    def aws_profile(self) -> str:
         """Profile used to deploy Typhoon to the specified environment"""
         return self.config.get('aws-profile', mandatory=True)
 
     @property
-    def project_name(self):
+    def project_name(self) -> str:
         """Name of the project used to give a unique name to resources in AWS"""
         return self.config.get('project-name', default='project')
+
+    @property
+    def s3_bucket(self):
+        """Name of the S3 bucket where we will do our deployment (calculated from project-name)"""
+        return f'typhoon_{self.project_name.lower()}'

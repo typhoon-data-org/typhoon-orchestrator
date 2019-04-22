@@ -45,6 +45,7 @@ def test_typhoon_config(typhoon_home):
     assert deploy_config_test.aws_profile == 'testaws'
     assert deploy_config_test.project_name == 'project'
 
-    deploy_config_test = DeployConfig(deploy_env='prod')
-    assert deploy_config_test.aws_profile == 'prodaws'
-    assert deploy_config_test.project_name == 'first_project'
+    deploy_config_prod = DeployConfig(deploy_env='prod')
+    assert deploy_config_prod.aws_profile == 'prodaws'
+    assert deploy_config_prod.project_name == 'first_project'
+    assert deploy_config_prod.s3_bucket == 'typhoon_first_project'
