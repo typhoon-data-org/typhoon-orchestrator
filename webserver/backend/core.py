@@ -9,7 +9,7 @@ from reflection import get_modules_in_package, package_tree, package_tree_from_p
     load_module_from_path
 from responses import transform_response
 from typhoon import connections, variables
-from typhoon.cli import build_dags
+from typhoon.old_cli import build_dags
 from typhoon.connections import scan_connections, ConnectionParams, get_connection_local, \
     get_connections_local_by_conn_id
 from typhoon.contrib.hooks import hook_factory

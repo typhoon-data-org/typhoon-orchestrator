@@ -11,6 +11,7 @@ def task_logging_wrapper(dag_config, task_id, batch_num):
         def func_wrapper(*args, **kwargs):
             custom_logger_type = config.get(get_env(), 'logger', 'None')
             custom_logger = logger_factory(custom_logger_type)
+            print(dag_config)
             with custom_logger(
                 dag_id=dag_config['dag_id'],
                 task_id=task_id,

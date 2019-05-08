@@ -15,7 +15,7 @@ def load_dags() -> Sequence:
     dag_files = filter(lambda x: x.endswith('.yml'), os.listdir(dags_directory))
     for dag_file in dag_files:
         with open(os.path.join(dags_directory, dag_file), 'r') as f:
-            dag = yaml.load(f)
+            dag = yaml.load(f, Loader=yaml.FullLoader)
             if dag.get('active', True):
                 dag['structure'] = build_dag_structure(dag['edges'])
                 dags.append(dag)
