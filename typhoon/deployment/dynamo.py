@@ -35,11 +35,12 @@ def create_variables_table(use_cli_config: bool = False, target_env: Optional[st
             table_name=table_name,
     ):
         print(f'Table {table_name} exists. Skipping creation...')
-
-    dynamodb_plumbing.create_dynamodb_table(
-        ddb_client=ddb_client,
-        table_name=table_name,
-        primary_key='id',
-        read_capacity_units=config.variables_table_read_capacity_units,
-        write_capacity_units=config.variables_table_write_capacity_units,
-    )
+    else:
+        print(f'Creating table {table_name}...')
+        dynamodb_plumbing.create_dynamodb_table(
+            ddb_client=ddb_client,
+            table_name=table_name,
+            primary_key='id',
+            read_capacity_units=config.variables_table_read_capacity_units,
+            write_capacity_units=config.variables_table_write_capacity_units,
+        )

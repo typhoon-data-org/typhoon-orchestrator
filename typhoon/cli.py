@@ -17,8 +17,8 @@ def migrate(target_env):
     """Add the necessary IAM roles and DynamoDB tables"""
     deploy_role(use_cli_config=True, target_env=target_env)
 
-    # create_connections_table(use_cli_config=True, target_env=target_env)
-    # create_variables_table(use_cli_config=True, target_env=target_env)
+    create_connections_table(use_cli_config=True, target_env=target_env)
+    create_variables_table(use_cli_config=True, target_env=target_env)
 
 
 @cli.command()
