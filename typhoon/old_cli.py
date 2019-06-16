@@ -9,7 +9,7 @@ from typhoon.aws import dynamodb_table_exists, create_dynamodb_connections_table
 from typhoon.connections import get_connection_local, set_connection, dump_connections
 from typhoon.deployment.dags import load_dags
 from typhoon.deployment.deploy import build_dag_code, clean_out
-from typhoon.deployment.deploy import copy_user_defined_code, build_zappa_settings
+from typhoon.deployment.deploy import old_copy_user_defined_code, build_zappa_settings
 from typhoon.settings import out_directory
 
 
@@ -27,7 +27,7 @@ def build_dags(args):
 
     build_zappa_settings(dags, profile, project_name, s3_bucket, args.env)
 
-    copy_user_defined_code()
+    old_copy_user_defined_code()
 
 
 def clean(args=None):

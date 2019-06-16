@@ -2,10 +2,11 @@ import io
 import logging
 import os
 import sys
-from typing import ContextManager, Type
+from typing import ContextManager, Type, Optional
 
-from typhoon import config
-from typhoon.aws import write_logs
+# from typhoon.aws import write_logs
+from typhoon.core import get_typhoon_config
+from typhoon.logger_interface import LoggingInterface
 
 
 class LoggingContext(object):
@@ -40,14 +41,6 @@ class LoggingContext(object):
             self.logger.addHandler(self.old_handler)
 
 
-class LoggingInterface:
-    def __enter__(self):
-        raise NotImplementedError
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        raise NotImplementedError
-
-
 class StdoutLogger(ContextManager):
     def __enter__(self):
         self.handler = logging.StreamHandler(sys.stdout)   # Log to stdout
@@ -60,9 +53,10 @@ class StdoutLogger(ContextManager):
 
 class FileLogger(LoggingInterface):
     def __init__(self, dag_id, task_id, ds: str, etl_timestamp: str, batch_num, env):
+        config = get_typhoon_config()
         self.log_buffer = io.StringIO()
         self.log_file = os.path.join(
-            config.get(env, 'local-log-path'),
+            config.local_log_path,
             f'{dag_id}/{ds.replace("-", "_")}/execution{etl_timestamp.replace(":", "_").replace("-", "_")}/'
             f'{ task_id }_{batch_num}.log'
         )
@@ -79,7 +73,8 @@ class FileLogger(LoggingInterface):
 
 class S3Logger(LoggingInterface):
     def __init__(self, dag_id, task_id, ds, etl_timestamp, batch_num, env):
-        self.bucket = config.get(env, 's3-bucket')
+        config = get_typhoon_config()
+        self.bucket = config.s3_bucket
         self.log_buffer = io.StringIO()
         self.key = f'logs/{dag_id}/{ds}/execution{etl_timestamp}/{ task_id }_{batch_num}.log'
 
@@ -90,11 +85,11 @@ class S3Logger(LoggingInterface):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        write_logs(
-            self.log_buffer.getvalue(),
-            bucket=self.bucket,
-            key=self.key
-        )
+        # write_logs(
+        #     self.log_buffer.getvalue(),
+        #     bucket=self.bucket,
+        #     key=self.key
+        # )
         self.logging_context.__exit__(exc_type, exc_val, exc_tb)
 
 
@@ -109,13 +104,13 @@ class NullLogger(LoggingInterface):
         pass
 
 
-def logger_factory(logger_type: str) -> Type[LoggingInterface]:
+def logger_factory(logger_type: Optional[str]) -> Type[LoggingInterface]:
     # TODO: Add logging to elasticsearch
     if logger_type == 's3':
         return S3Logger
     if logger_type == 'file':
         return FileLogger
-    if logger_type == 'None':
+    if logger_type == 'None' or logger_type is None:
         return NullLogger
     else:
         raise ValueError(f'Logger {logger_type} is not a valid option')

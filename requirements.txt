@@ -2,6 +2,5 @@ click
 botocore
 jinja2
 PyYAML
-zappa
 boto3
 dataclasses

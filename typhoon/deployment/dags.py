@@ -13,6 +13,7 @@ def load_dags() -> Sequence:
     dags = []
 
     dag_files = filter(lambda x: x.endswith('.yml'), os.listdir(dags_directory))
+    # dag_files = Path(dags_directory).rglob('*.yml')
     for dag_file in dag_files:
         with open(os.path.join(dags_directory, dag_file), 'r') as f:
             dag = yaml.load(f, Loader=yaml.FullLoader)

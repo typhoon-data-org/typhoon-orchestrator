@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  AWS
+
+  Template generated with Typhoon Orchestrator
+
+Globals:
+  Function:
+    Runtime: python3.6
+    Timeout: {{ lambda_function_timeout }}
+
+Resources:
+  {% for dag in dags %}
+  {{ dag.name | to_camelcase }}Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: {{ dag.name }}/
+      Handler: {{ dag.name }}.schedule_event_handler
+      {% if dag.get('schedule_interval') %}
+      Events:
+        CheckWebsiteScheduledEvent:
+          Type: Schedule
+          Properties:
+            Schedule: {{ dag.schedule_interval }}
+      {% endif %}
+      {% if dag.get('custom_events') %}
+      {{ dag.custom_events | indent(3) }}
+      {% endif %}
+  {% endfor %}
+
+Outputs:
+  {% for dag in dags %}
+  {{ dag.name | to_camelcase }}Function:
+    Description: "Hello World Lambda Function ARN"
+    Value: !GetAtt {{ dag.name | to_camelcase }}Function.Arn
+  {{ dag.name | to_camelcase }}IamRole:
+    Description: "IAM Role for {{ dag.name }} function"
+    Value: {{ dag.get('iam_role') or default_iam_role }}
+  {% endfor %}

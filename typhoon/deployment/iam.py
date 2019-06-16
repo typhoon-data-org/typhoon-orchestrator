@@ -64,16 +64,21 @@ def create_attach_policy(role_name: str, attach_policy: str, aws_profile: Option
 def deploy_role(use_cli_config: bool = False, target_env: Optional[str] = None):
     """Create a role that has sufficient permissions to run DAGs"""
     config = get_typhoon_config(use_cli_config, target_env)
+    aws_profile = config.aws_profile
     role_name = config.iam_role_name
+
+    if aws_profile is None:
+        print('AWS profile not defined. Skipping role creation...')
+        return
 
     role = None
     try:
         print(f'Creating role {role_name}')
-        role = create_role(role_name, _render_assume_policy(), config.aws_profile)
+        role = create_role(role_name, _render_assume_policy(), aws_profile)
     except TyphoonResourceCreationError:
         print(f'Role {role_name} already exists. Skipping creation...')
 
-    create_attach_policy(role_name, _render_attach_policy(), config.aws_profile)
+    create_attach_policy(role_name, _render_attach_policy(), aws_profile)
 
     return role
 

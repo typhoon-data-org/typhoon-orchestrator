@@ -12,7 +12,6 @@ from typhoon.variables import get_variable_contents
 from typhoon.core import SKIP_BATCH
 from typhoon.models.dag import dag
 from typhoon.models.task import task_logging_wrapper
-from zappa.async import task
 {% for transformations_module in get_transformations_modules(edges) %}
 import {{ transformations_module }}
 {% endfor %}
@@ -41,7 +40,7 @@ def {{ name }}_main(event, context):
 # Branches
 {% for node_name, node in nodes.items() %}
 {% if node.get('async', True) %}
-@task
+#@task
 {% endif %}
 def {{ node_name }}_branches({% if node_name not in get_sources(structure)%}data, {% endif %}batch_num=0):
     data_generator = {{ node_name }}_node({% if node_name not in get_sources(structure)%}data, {% endif %}batch_num)

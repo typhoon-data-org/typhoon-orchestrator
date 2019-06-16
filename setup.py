@@ -38,11 +38,11 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/biellls/typhoon-orchestrator',
-    author='Gabriel Llobera',
+    author='Gabriel Llobera Salas',
     author_email='bielllobera@gmail.com',
     entry_points={
         'console_scripts': [
-            'typhoon=typhoon.cli:handle',
+            'typhoon=typhoon.cli:cli',
         ]
     },
     classifiers=[

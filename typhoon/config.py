@@ -1,10 +1,15 @@
 import os
+import re
 from configparser import ConfigParser
-from typing import Any, Type, Union
+from typing import Any, Type, Union, Optional
 
-# from typhoon.logger import logger_factory, LoggingInterface
 from typhoon.aws.plumbing.dynamodb_plumbing import dynamodb_connection, DynamoDBConnectionType
+from typhoon.logger_interface import LoggingInterface
 from typhoon.settings import typhoon_directory
+
+
+class TyphoonConfigError(Exception):
+    pass
 
 
 class Config:
@@ -18,9 +23,13 @@ class Config:
         self.config = ConfigParser().read(self.path)
 
     def get(self, var: str, default: Any = None, mandatory: bool = False) -> Any:
-        if mandatory and var not in self.config[self.env.upper()].keys():
-            raise ValueError(f'No attribute {var} in {self.env} config for {self.path}')
-        return self.config[self.env.upper()].get(var, default)
+        env = self.env.upper()
+        if env not in self.config.keys():
+            raise TyphoonConfigError(f'Environment {env} not in {self.path}')
+
+        if mandatory and var not in self.config[env].keys():
+            raise TyphoonConfigError(f'No attribute {var} in {env} config for {self.path}')
+        return self.config[env].get(var, default)
 
 
 class TyphoonConfig:
@@ -30,11 +39,19 @@ class TyphoonConfig:
         self.config_path = config_path or 'typhoonconfig.cfg'
         self.config = Config(os.path.join(typhoon_directory(), self.config_path), env)
 
-    # @property
-    # def logger(self) -> Type[LoggingInterface]:
-    #     """Mandatory parameter defining what kind of Logger we will be using"""
-    #     logger_name = self.config.get('logger', mandatory=True)
-    #     return logger_factory(logger_name)
+    @property
+    def logger(self) -> Type[LoggingInterface]:
+        """Mandatory parameter defining what kind of Logger we will be using"""
+        # TODO: Add logging to elasticsearch
+        logger_type = self.config.get('logger')
+        if logger_type not in ['s3', 'file', 'None', None]:
+            raise ValueError(f'Logger {logger_type} is not a valid option')
+        return logger_type
+
+    @property
+    def local_log_path(self) -> Optional[str]:
+        """If logger is set to file set the path where we should log"""
+        return self.config.get('local-log-path')
 
     @property
     def local_db(self) -> str:
@@ -105,6 +122,10 @@ class TyphoonConfig:
     def iam_role_name(self):
         return f'typhoon_{self.project_name}_role'
 
+    @property
+    def lambda_function_timeout(self) -> str:
+        return self.config.get('lambda-function-timeout', 50)
+
 
 class CLIConfig(TyphoonConfig):
     """
@@ -118,9 +139,9 @@ class CLIConfig(TyphoonConfig):
         self.config = Config(os.path.join(typhoon_directory(), config_path), target_env)
 
     @property
-    def aws_profile(self) -> str:
+    def aws_profile(self) -> Optional[str]:
         """Profile used to deploy Typhoon to the specified environment"""
-        return self.config.get('aws-profile', mandatory=True)
+        return self.config.get('aws-profile')
 
     @property
     def dynamodb_resource(self):
@@ -141,6 +162,14 @@ class CLIConfig(TyphoonConfig):
             aws_region=self.dynamodb_region,
             endpoint_url=self.dynamodb_endpoint,
         )
+
+    @property
+    def typhoon_version(self) -> Optional[str]:
+        return self.config.get('typhoon-version', default='latest')
+
+    def typhoon_version_is_local(self):
+        version = self.typhoon_version
+        return version and version != 'latest' and not re.match(r'\d\.\d\.\d', version)
 
 
 TyphoonConfigType = Union[TyphoonConfig, CLIConfig]
