@@ -7,6 +7,7 @@ def typhoon_directory():
         return os.environ['TYPHOON_HOME']
     except KeyError:
         print('Error getting typhoon home directory. Please define TYPHOON_HOME environment variable.')
+        print(f'To define in current directory run: export TYPHOON_HOME=$(cwd)')
         sys.exit(-1)
 
 

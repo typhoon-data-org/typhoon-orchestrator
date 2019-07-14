@@ -112,6 +112,7 @@ class LocalStorageHook(FileSystemHookInterface):
         file_path = self._file_path(path)
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
         with open(file_path, 'wb') as f:
+            print(f'Writing to {file_path}...')
             f.write(data.getvalue())
 
     def read_data(self, path: str) -> bytes:

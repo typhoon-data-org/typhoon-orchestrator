@@ -9,7 +9,7 @@ import typhoon.contrib.functions as typhoon_functions
 import typhoon.contrib.transformations as typhoon_transformations
 from typhoon.contrib.hooks.hook_factory import get_hook
 from typhoon.variables import get_variable_contents
-from typhoon.core import SKIP_BATCH
+from typhoon.core import SKIP_BATCH, task
 from typhoon.models.dag import dag
 from typhoon.models.task import task_logging_wrapper
 {% for transformations_module in get_transformations_modules(edges) %}
@@ -22,6 +22,12 @@ import {{ functions_module }}
 os.environ['TYPHOON_HOME'] = os.path.dirname(__file__)
 DAG_CONFIG = {}     # Global variable with DAG config. Will be populated in main
 
+{% if debug_mode %}
+
+# Only meant for local debugging. Do NOT use in production
+os.environ['TYPHOON-ENV'] = '{{ environment }}'
+
+{% endif %}
 
 @dag
 def {{ name }}_main(event, context):
@@ -39,15 +45,14 @@ def {{ name }}_main(event, context):
 
 # Branches
 {% for node_name, node in nodes.items() %}
-{% if node.get('async', True) %}
-#@task
-{% endif %}
+@task(asynchronous={% if not dev_mode and node.get('async', True) %}True{% else %}False{% endif %}, execution_context=DAG_CONFIG)
 def {{ node_name }}_branches({% if node_name not in get_sources(structure)%}data, {% endif %}batch_num=0):
     data_generator = {{ node_name }}_node({% if node_name not in get_sources(structure)%}data, {% endif %}batch_num)
     for batch_num, data in enumerate(data_generator or [], start=1):
         if data is SKIP_BATCH:
             print(f'Skipping batch {batch_num} for {{ node_name }}')
             continue
+
         {% for out_node in structure[node_name] %}
         config = {}
         {% for k, v in get_edge(edges, node_name, out_node)[1]['adapter'].items() %}
@@ -84,7 +89,6 @@ def {{ node_name }}_node({% if node_name not in get_sources(structure)%}config, 
 
 {% endfor %}
 if __name__ == '__main__':
-    os.environ['TYPHOON-ENV'] = 'dev'
     example_event = {
         'time': '2019-02-05T03:00:00Z'
     }

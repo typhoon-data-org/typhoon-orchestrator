@@ -31,7 +31,8 @@ def clean(target_env):
 
 @cli.command()
 @click.argument('target_env')
-def build_dags(target_env):
+@click.option('--debug', default=False, is_flag=True)
+def build_dags(target_env, debug):
     """Build code for dags in $TYPHOON_HOME/out/"""
     from typhoon.deployment.deploy import clean_out, build_dag_code
     from typhoon.deployment.dags import load_dags
@@ -45,7 +46,7 @@ def build_dags(target_env):
     dags = load_dags()
     deploy_sam_template(dags, use_cli_config=True, target_env=target_env)
     for dag in dags:
-        build_dag_code(dag, target_env)
+        build_dag_code(dag, target_env, debug)
         deploy_dag_requirements(dag, config.typhoon_version_is_local(), config.typhoon_version)
         if config.typhoon_version_is_local():
             copy_local_typhoon(dag, config.typhoon_version)

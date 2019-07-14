@@ -181,8 +181,8 @@ templateEnv.filters.update(clean_simple_param=clean_simple_param)
 templateEnv.filters.update(substitute_special=substitute_special)
 
 
-def generate_dag_code(dag: dict, env: str):
+def generate_dag_code(dag: dict, env: str, debug_mode: bool = False):
     dag_template = templateEnv.get_template('dag_code.py.j2')
     dag['environment'] = env
+    dag['debug_mode'] = debug_mode
     return dag_template.render(dag)
-

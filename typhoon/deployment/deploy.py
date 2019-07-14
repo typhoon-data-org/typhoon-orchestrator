@@ -28,8 +28,8 @@ def clean_out():
     rmtree(out_directory(), ignore_errors=True)
 
 
-def build_dag_code(dag: dict, env: str):
-    dag_code = generate_dag_code(dag, env)
+def build_dag_code(dag: dict, env: str, debug_mode: bool = False):
+    dag_code = generate_dag_code(dag, env, debug_mode)
     dag_name = dag['name']
     write_to_out(directory=dag_name, filename=f'{dag_name}.py', data=dag_code)
 
