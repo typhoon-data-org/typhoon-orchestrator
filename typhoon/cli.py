@@ -61,8 +61,6 @@ def _build_dags(target_env, debug):
         if config.typhoon_version_is_local():
             copy_local_typhoon(dag, config.typhoon_version)
 
-        copy(Path(__file__).parent / 'handler.py', Path(out_directory()) / dag['name'])
-
         copy_user_defined_code(dag)
 
 
