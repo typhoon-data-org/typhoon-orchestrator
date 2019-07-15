@@ -66,7 +66,7 @@ class TyphoonConfig:
     @property
     def s3_bucket(self) -> str:
         """Name of the S3 bucket where we will do our deployment (calculated from project-name)"""
-        return f'typhoon_{self.project_name.lower()}'
+        return f'typhoon-{self.project_name.lower()}'
 
     @property
     def connections_table_name(self) -> str:
@@ -97,6 +97,10 @@ class TyphoonConfig:
     @property
     def dynamodb_region(self) -> str:
         return self.config.get('dynamodb-region')
+
+    @property
+    def deploy_region(self) -> str:
+        return self.config.get('deploy-region', mandatory=True)
 
     @property
     def dynamodb_endpoint(self) -> str:

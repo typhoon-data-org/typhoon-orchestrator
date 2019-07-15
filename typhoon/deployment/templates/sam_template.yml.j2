@@ -16,7 +16,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: {{ dag.name }}/
-      Handler: {{ dag.name }}.schedule_event_handler
+      Handler: {{ dag.name }}.{{ dag.name }}_main
       {% if dag.get('schedule_interval') %}
       Events:
         CheckWebsiteScheduledEvent:

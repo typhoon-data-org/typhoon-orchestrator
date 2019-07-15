@@ -45,7 +45,7 @@ def {{ name }}_main(event, context):
 
 # Branches
 {% for node_name, node in nodes.items() %}
-@task(asynchronous={% if not dev_mode and node.get('async', True) %}True{% else %}False{% endif %}, execution_context=DAG_CONFIG)
+@task(asynchronous={% if not dev_mode and node.get('async', True) %}True{% else %}False{% endif %}, dag_name='{{ name }}', execution_context=DAG_CONFIG)
 def {{ node_name }}_branches({% if node_name not in get_sources(structure)%}data, {% endif %}batch_num=0):
     data_generator = {{ node_name }}_node({% if node_name not in get_sources(structure)%}data, {% endif %}batch_num)
     for batch_num, data in enumerate(data_generator or [], start=1):
@@ -86,10 +86,11 @@ def {{ node_name }}_node({% if node_name not in get_sources(structure)%}config, 
         **config,
     )
 
-
 {% endfor %}
+{% if debug_mode %}
 if __name__ == '__main__':
     example_event = {
         'time': '2019-02-05T03:00:00Z'
     }
     {{ name }}_main(example_event, None)
+{% endif %}

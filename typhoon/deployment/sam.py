@@ -49,6 +49,6 @@ def generate_sam_template(
     zappa_settings_template = templateEnv.get_template('sam_template.yml.j2')
     return zappa_settings_template.render({
         'dags': dags,
-        'default_iam_profile': default_iam_role,
+        'default_iam_role': default_iam_role,
         'lambda_function_timeout': lambda_function_timeout,
     })
