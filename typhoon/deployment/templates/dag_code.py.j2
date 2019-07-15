@@ -9,6 +9,7 @@ import typhoon.contrib.functions as typhoon_functions
 import typhoon.contrib.transformations as typhoon_transformations
 from typhoon.contrib.hooks.hook_factory import get_hook
 from typhoon.variables import get_variable_contents
+from typhoon.handler import handle
 from typhoon.core import SKIP_BATCH, task
 from typhoon.models.dag import dag
 from typhoon.models.task import task_logging_wrapper
@@ -31,6 +32,10 @@ os.environ['TYPHOON-ENV'] = '{{ environment }}'
 
 @dag
 def {{ name }}_main(event, context):
+    if context.get('type'):     # Async execution
+        return handle(event, context)
+
+    # Main execution
     DAG_CONFIG['dag_id'] = '{{ name }}'
     DAG_CONFIG['execution_date'] = dateutil.parser.parse(event['time'])
     DAG_CONFIG['ds'] = event['time'].split('T')[0]
