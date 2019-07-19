@@ -32,7 +32,7 @@ os.environ['TYPHOON-ENV'] = '{{ environment }}'
 
 @dag
 def {{ name }}_main(event, context):
-    if context.get('type'):     # Async execution
+    if event.get('type'):     # Async execution
         return handle(event, context)
 
     # Main execution

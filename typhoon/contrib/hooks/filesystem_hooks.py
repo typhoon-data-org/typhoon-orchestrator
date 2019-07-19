@@ -3,7 +3,7 @@ import os
 import re
 import unicodedata
 from io import BytesIO
-from typing import Iterable
+from typing import Iterable, Union
 
 from typhoon.connections import get_connection_params
 from typhoon.contrib.hooks.aws_hooks import AwsSessionHook
@@ -21,7 +21,7 @@ class FileSystemHookInterface(HookInterface):
     def list_directory(self, path: str) -> Iterable[str]:
         raise NotImplementedError
 
-    def write_data(self, data: BytesIO, path: str):
+    def write_data(self, data: Union[BytesIO, str], path: str):
         raise NotImplementedError
 
     def read_data(self, path: str) -> bytes:
@@ -59,8 +59,11 @@ class S3Hook(FileSystemHookInterface, AwsSessionHook):
             except KeyError:
                 break
 
-    def write_data(self, data: BytesIO, path: str, encrypt=False):
+    def write_data(self, data: Union[BytesIO, str], path: str, encrypt=False):
         s3 = self.session.client('s3')
+
+        if isinstance(data, str):
+            data = BytesIO(data.encode())
 
         extra_args = {}
         if encrypt:
@@ -108,7 +111,10 @@ class LocalStorageHook(FileSystemHookInterface):
     def list_directory(self, path: str) -> Iterable[str]:
         return os.listdir(self._file_path(path))
 
-    def write_data(self, data: BytesIO, path: str):
+    def write_data(self, data: Union[BytesIO, str], path: str):
+        if isinstance(data, str):
+            data = BytesIO(data.encode())
+
         file_path = self._file_path(path)
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
         with open(file_path, 'wb') as f:

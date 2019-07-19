@@ -1,4 +1,3 @@
-import sqlite3
 from abc import ABC
 
 from typhoon.connections import get_connection_params
@@ -65,6 +64,7 @@ class SqliteHook(DbApiHook):
         self.conn_id = conn_id
 
     def __enter__(self):
+        import sqlite3
 
         conn_params = get_connection_params(self.conn_id)
         self.connection = sqlite3.connect(database=conn_params.extra['database'])

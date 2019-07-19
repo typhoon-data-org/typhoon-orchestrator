@@ -68,10 +68,10 @@ class SubprocessError(Exception):
     pass
 
 
-def run_in_subprocess(command: str):
+def run_in_subprocess(command: str, cwd: str):
     print(f'Executing command in shell:  {command}')
     args = command.split(' ')
-    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=os.environ.copy())
+    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=os.environ.copy(), cwd=cwd)
     stdout, stderr = p.communicate()
     stdout = stdout.decode()
     if stderr:
@@ -90,20 +90,20 @@ def deploy_dags(target_env, build_dependencies):
 
     config = get_typhoon_config(use_cli_config=True, target_env=target_env)
 
-    template_path = Path(out_directory()) / 'template.yml'
-    out_template_path = Path(out_directory()) / 'out_template.yml'
     _build_dags(target_env=target_env, debug=False)
-    run_in_subprocess(
-        f'sam package --template-file {template_path} --s3-bucket {config.s3_bucket} --profile {config.aws_profile}'
-        f' --output-template-file {out_template_path}'
-    )
     if build_dependencies:
-        run_in_subprocess(f'sam build --base-dir {Path(out_directory())} '
-                          f'--template {Path(out_directory()) / "template.yml"} --use-container')
+        run_in_subprocess(f'sam build --use-container', cwd=out_directory())
+    build_dir = str(Path(out_directory()) / '.aws-sam' / 'build')
     run_in_subprocess(
-        f'sam deploy --template-file {out_template_path} '
+        f'sam package --template-file template.yaml --s3-bucket {config.s3_bucket} --profile {config.aws_profile}'
+        f' --output-template-file out_template.yaml',
+        cwd=build_dir
+    )
+    run_in_subprocess(
+        f'sam deploy --template-file out_template.yaml '
         f'--stack-name {config.project_name.replace("_", "-")} --profile {config.aws_profile} '
-        f'--region {config.deploy_region} --capabilities CAPABILITY_IAM'
+        f'--region {config.deploy_region} --capabilities CAPABILITY_IAM',
+        cwd=build_dir
     )
 
 

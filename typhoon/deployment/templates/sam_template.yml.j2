@@ -13,6 +13,7 @@ Globals:
 Resources:
   {% for dag in dags %}
   {{ dag.name | to_camelcase }}Function:
+    FunctionName: {{ dag.name | to_camelcase }}Function
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: {{ dag.name }}/
@@ -27,6 +28,9 @@ Resources:
       {% if dag.get('custom_events') %}
       {{ dag.custom_events | indent(3) }}
       {% endif %}
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: orchestrator-test-{{ dag.name | to_camelcase }}Function
   {% endfor %}
 
 Outputs:

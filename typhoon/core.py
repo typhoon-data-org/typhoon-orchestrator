@@ -24,7 +24,6 @@ def task(
         asynchronous: bool,
         dag_name: str,
         remote_aws_lambda_function_name: Optional[str] = None,
-        remote_aws_region: Optional[str] = None,
         execution_context: Optional[Dict] = None,
 ):
     def task_decorator(func):
@@ -40,7 +39,6 @@ def task(
         @wraps(func)
         def async_wrapper(*args, **kwargs):
             lambda_function_name = remote_aws_lambda_function_name or os.environ.get('AWS_LAMBDA_FUNCTION_NAME')
-            aws_region = remote_aws_region or os.environ.get('AWS_REGION')
 
             if lambda_function_name:
                 payload = make_lambda_payload(
@@ -51,7 +49,7 @@ def task(
                     execution_context=execution_context,
                 )
 
-                boto3.Session(region_name=aws_region, profile_name='new-aws').client('lambda').invoke(
+                boto3.client('lambda').invoke(
                     FunctionName=lambda_function_name,
                     InvocationType='Event',  # makes the call async
                     Payload=payload,

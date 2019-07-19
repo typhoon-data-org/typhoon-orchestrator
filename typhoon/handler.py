@@ -14,9 +14,9 @@ class BrokenImportError(Exception):
 
 
 def handle(event, context):
-    if context['type'] == 'task':
-        return handle_task(context)
-    elif context['type'] == 'dag':
+    if event['type'] == 'task':
+        return handle_task(event)
+    elif event['type'] == 'dag':
         raise NotImplementedError()
     else:
         raise NotImplementedError()
@@ -42,4 +42,3 @@ def _load_module_from_path(module_path, module_name):
     except (NameError, SyntaxError):
         raise BrokenImportError(f'Error loading module {module_path}')
     return module
-
