@@ -79,19 +79,19 @@ def get_run_transformations_result():
     body = request.get_json()
     response = {}
     source_data = eval(body['source']) if body['eval_source'] else body['source']
-    dag_config = {
-        'execution_date': datetime.strptime(body['dag_config']['execution_date'], '%Y-%m-%dT%H:%M'),
+    dag_context = {
+        'execution_date': datetime.strptime(body['dag_context']['execution_date'], '%Y-%m-%dT%H:%M'),
         'etl_timestamp': datetime.now(),
-        'ts': body['dag_config']['execution_date'],
-        'ds': body['dag_config']['execution_date'].split('T')[0],
-        'ds_nodash': body['dag_config']['execution_date'].split('T')[0].replace('-', ''),
-        'dag_name': body['dag_config']['dag_name'],
+        'ts': body['dag_context']['execution_date'],
+        'ds': body['dag_context']['execution_date'].split('T')[0],
+        'ds_nodash': body['dag_context']['execution_date'].split('T')[0].replace('-', ''),
+        'dag_name': body['dag_context']['dag_name'],
     }
     for param_name, param in body['edge'].items():
         if param['apply']:
             response[param_name] = run_transformations(
                 source_data=source_data,
-                dag_config=dag_config,
+                dag_context=dag_context,
                 user_transformations=param['contents']
             )
 

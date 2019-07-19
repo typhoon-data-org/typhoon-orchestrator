@@ -6,7 +6,7 @@ import pytest
 
 @pytest.fixture
 def set_dev_env(monkeypatch):
-    monkeypatch.setenv('TYPHOON-ENV', 'dev')
+    monkeypatch.setenv('TYPHOON_ENV', 'dev')
     yield
 
 

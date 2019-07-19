@@ -95,7 +95,7 @@ function get_completions_node(editor, session, pos, prefix, parents) {
   } else if (indents === 3 && /^ {6}\w+\s*=>\s*APPLY: /.test(line_text) && prefix !== '' && 'transformations'.includes(prefix)) {
     return ['transformations'];
   } else if (indents >= 3 && (pos.column - prefix.length - 12) > 8 &&
-    line_text.slice(pos.column - prefix.length - 12, pos.column - prefix.length) === '$DAG_CONFIG.') {
+    line_text.slice(pos.column - prefix.length - 12, pos.column - prefix.length) === '$DAG_CONTEXT.') {
     return ['ds', 'ds_nodash', 'ts', 'execution_date'];
   } else if (indents >= 3 && (pos.column - prefix.length - '$HOOK.'.length) > 8 &&
     line_text.slice(pos.column - prefix.length - '$HOOK.'.length, pos.column - prefix.length) === '$HOOK.') {
@@ -139,7 +139,7 @@ function get_completions_edge(editor, session, pos, prefix, parents) {
     let config_name = /^ {6}([^: ]+)$/.exec(line_text)[1];
     return [config_name + ' => APPLY:'];
   } else if (indents >= 3 && (pos.column - prefix.length - 12) > 8 &&
-    line_text.slice(pos.column - prefix.length - 12, pos.column - prefix.length) === '$DAG_CONFIG.') {
+    line_text.slice(pos.column - prefix.length - 12, pos.column - prefix.length) === '$DAG_CONTEXT.') {
     return ['ds', 'ds_nodash', 'ts', 'execution_date'];
   } else if (indents >= 3 && (pos.column - prefix.length - '$HOOK.'.length) > 8 &&
     line_text.slice(pos.column - prefix.length - '$HOOK.'.length, pos.column - prefix.length) === '$HOOK.') {

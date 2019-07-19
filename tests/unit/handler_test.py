@@ -3,17 +3,13 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-import mock
-
 from typhoon.core import make_lambda_payload
 from typhoon.handler import handle
-import typhoon.settings
-
-DAG_CONFIG = {}
+from typhoon.models.dag_context import DagContext
 
 
-def foo(a, b, batch_num):
-    return a + b, batch_num, DAG_CONFIG['execution_date']
+def foo(a, b, dag_context: DagContext, batch_num):
+    return a + b, batch_num, dag_context.execution_date
 
 
 def test_handle_task(monkeypatch):
@@ -23,11 +19,10 @@ def test_handle_task(monkeypatch):
         dag_name='handler_test',
         task_name='foo',
         args=(3, 2),
-        kwargs={'batch_num': 4},
-        execution_context={
-            'ds': '2019-08-16',
-            'execution_date': datetime(2019, 8, 16),
-        }
+        kwargs={
+            'dag_context': DagContext.from_dict({'execution_date': '2019-08-16 00:00:00'}),
+            'batch_num': 4
+        },
     )
 
-    assert handle(None, json.loads(payload.decode())) == (5, 4, datetime(2019, 8, 16))
+    assert handle(json.loads(payload.decode()), None) == (5, 4, datetime(2019, 8, 16))

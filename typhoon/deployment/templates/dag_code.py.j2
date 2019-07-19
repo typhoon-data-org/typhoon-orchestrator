@@ -3,8 +3,9 @@
 # Schedule interval = {{ schedule_interval }}
 import os
 from datetime import datetime
+from typing import Dict
 
-import dateutil.parser
+from typhoon.models.dag_context import DagContext
 import typhoon.contrib.functions as typhoon_functions
 import typhoon.contrib.transformations as typhoon_transformations
 from typhoon.contrib.hooks.hook_factory import get_hook
@@ -14,6 +15,7 @@ from typhoon.core import SKIP_BATCH, task
 from typhoon.models.dag import dag
 from typhoon.models.task import task_logging_wrapper
 {% for transformations_module in get_transformations_modules(edges) %}
+
 import {{ transformations_module }}
 {% endfor %}
 {% for functions_module in get_functions_modules(nodes) %}
@@ -21,12 +23,12 @@ import {{ functions_module }}
 {% endfor %}
 
 os.environ['TYPHOON_HOME'] = os.path.dirname(__file__)
-DAG_CONFIG = {}     # Global variable with DAG config. Will be populated in main
+DAG_ID = '{{ name }}'
 
 {% if debug_mode %}
 
 # Only meant for local debugging. Do NOT use in production
-os.environ['TYPHOON-ENV'] = '{{ environment }}'
+os.environ['TYPHOON_ENV'] = '{{ environment }}'
 
 {% endif %}
 
@@ -36,23 +38,18 @@ def {{ name }}_main(event, context):
         return handle(event, context)
 
     # Main execution
-    DAG_CONFIG['dag_id'] = '{{ name }}'
-    DAG_CONFIG['execution_date'] = dateutil.parser.parse(event['time'])
-    DAG_CONFIG['ds'] = event['time'].split('T')[0]
-    DAG_CONFIG['ds_nodash'] = event['time'].replace('-', '')
-    DAG_CONFIG['ts'] = event['time'].replace('Z', '')
-    DAG_CONFIG['etl_timestamp'] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+    dag_context = DagContext.from_date_string(event['time'])
 
     {% for source in get_sources(structure) %}
-    {{ source }}_branches()
+    {{ source }}_branches(dag_context=dag_context)
     {% endfor %}
 
 
 # Branches
 {% for node_name, node in nodes.items() %}
-@task(asynchronous={% if not dev_mode and node.get('async', True) %}True{% else %}False{% endif %}, dag_name='{{ name }}', execution_context=DAG_CONFIG)
-def {{ node_name }}_branches({% if node_name not in get_sources(structure)%}data, {% endif %}batch_num=0):
-    data_generator = {{ node_name }}_node({% if node_name not in get_sources(structure)%}data, {% endif %}batch_num)
+@task(asynchronous={% if not dev_mode and node.get('async', True) %}True{% else %}False{% endif %}, dag_name='{{ name }}')
+def {{ node_name }}_branches(dag_context: DagContext, {% if node_name not in get_sources(structure)%}config, {% endif %}batch_num: int = 0):
+    data_generator = {{ node_name }}_node(dag_context=dag_context, {% if node_name not in get_sources(structure)%}config=config, {% endif %}batch_num=batch_num)
     for batch_num, data in enumerate(data_generator or [], start=1):
         if data is SKIP_BATCH:
             print(f'Skipping batch {batch_num} for {{ node_name }}')
@@ -63,7 +60,7 @@ def {{ node_name }}_branches({% if node_name not in get_sources(structure)%}data
         {% for k, v in get_edge(edges, node_name, out_node)[1]['adapter'].items() %}
         {{ adapter.adapter_params(k, v) | indent(8, False) }}
         {% endfor %}
-        {{ out_node }}_branches(config, batch_num)
+        {{ out_node }}_branches(dag_context=dag_context, config=config, batch_num=batch_num)
 
         {% else %}
         pass        # Necessary for the generator to be exhausted since it probably has side effects
@@ -73,9 +70,10 @@ def {{ node_name }}_branches({% if node_name not in get_sources(structure)%}data
 {% endfor %}
 # Nodes
 {% for node_name, node in nodes.items() %}
-def {{ node_name }}_node({% if node_name not in get_sources(structure)%}config, {% endif %}batch_num):
+def {{ node_name }}_node(dag_context: DagContext, {% if node_name not in get_sources(structure)%}config: Dict, {% endif %}batch_num: int):
     node_function = task_logging_wrapper(
-        dag_config=DAG_CONFIG,
+        dag_id=DAG_ID,
+        dag_context=dag_context,
         task_id='{{ node_name }}',
         batch_num=batch_num,
     )({{ node['function'] | clean_function_name('functions') }})       # Wrapper to add logging
@@ -91,11 +89,26 @@ def {{ node_name }}_node({% if node_name not in get_sources(structure)%}config, 
         **config,
     )
 
+
 {% endfor %}
 {% if debug_mode %}
 if __name__ == '__main__':
+    import os
+
+    os.environ['TYPHOON_ENV'] = '{{ environment }}'
+
     example_event = {
         'time': '2019-02-05T03:00:00Z'
     }
+    example_event_task = {
+        'type': 'task',
+        'dag_name': '{{ name }}',
+        'task_name': '{{ (nodes.keys() | list)[0] }}_branches',
+        'trigger': 'dag',
+        'attempt': 1,
+        'args': [],
+        'kwargs': {'dag_context': DagContext.from_date_string('2019-02-05T03:00:00Z').to_dict()},
+    }
+
     {{ name }}_main(example_event, None)
 {% endif %}

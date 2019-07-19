@@ -1,11 +1,13 @@
 """
 This module is responsible for handling the lambda request and executing the correct task.
 """
+import json
 from importlib import util
 from pathlib import Path
 
-import dateutil.parser
+import jsonpickle
 
+from typhoon.models.dag_context import DagContext
 from typhoon.settings import typhoon_directory
 
 
@@ -15,23 +17,23 @@ class BrokenImportError(Exception):
 
 def handle(event, context):
     if event['type'] == 'task':
-        return handle_task(event)
+        return handle_task(jsonpickle.decode(json.dumps(event)))
     elif event['type'] == 'dag':
         raise NotImplementedError()
     else:
         raise NotImplementedError()
 
 
-def handle_task(context):
-    dag_name = context['dag_name']
+def handle_task(event):
+    dag_name = event['dag_name']
     dag_path = Path(typhoon_directory()) / f'{dag_name}.py'
     module = _load_module_from_path(str(dag_path), module_name=dag_name)
-    task_function = getattr(module, context['task_name'])
+    task_function = getattr(module, event['task_name'])
 
-    dag_context = context['execution_context']
-    dag_context['execution_date'] = dateutil.parser.parse(dag_context['execution_date'])
-    module.DAG_CONFIG = dag_context
-    return task_function(*context['args'], **context['kwargs'])
+    kwargs = event['kwargs'].copy()
+    kwargs['dag_context'] = DagContext.from_dict(kwargs['dag_context'])
+
+    return task_function.sync(*event['args'], **kwargs)
 
 
 def _load_module_from_path(module_path, module_name):

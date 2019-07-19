@@ -28,9 +28,19 @@ Resources:
       {% if dag.get('custom_events') %}
       {{ dag.custom_events | indent(3) }}
       {% endif %}
+      Environment:
+        Variables:
+          TYPHOON_ENV: {{ environment }}
       Policies:
         - LambdaInvokePolicy:
             FunctionName: orchestrator-test-{{ dag.name | to_camelcase }}Function
+        - DynamoDBReadPolicy:
+            TableName: {{ connections_table_name }}
+        - DynamoDBReadPolicy:
+            TableName: {{ variables_table_name }}
+        - S3CrudPolicy:
+            BucketName: typhoon-data-lake
+
   {% endfor %}
 
 Outputs:

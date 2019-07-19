@@ -32,6 +32,7 @@ def dynamodb_connection(
             'aws_access_key_id': 'dummy',
             'aws_secret_access_key': 'dummy',
             'endpoint_url': endpoint_url,
+            **extra_params,
         }
 
     if conn_type is DynamoDBConnectionType.CLIENT or conn_type == 'client':

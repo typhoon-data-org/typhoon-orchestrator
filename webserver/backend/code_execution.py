@@ -9,15 +9,15 @@ from typhoon.settings import typhoon_directory
 def _replace_special_vars(string: str):
     string = re.sub(r'\$(\d+)', r'results[\1 - 1]', string)
     string = re.sub(r'\$SOURCE', 'source_data', string)
-    string = re.sub(r'\$DAG_CONFIG\.([\w]+)', r'dag_config["""\1"""]', string)
-    string = string.replace('$DAG_CONFIG', 'dag_config')
+    string = re.sub(r'\$DAG_CONTEXT\.([\w]+)', r'dag_context["""\1"""]', string)
+    string = string.replace('$DAG_CONTEXT', 'dag_context')
     string = string.replace('$BATCH_NUM', '2')
     string = re.sub(r'\$VARIABLE(\.(\w+))', r'get_variable_contents("\g<2>")', string)
     return string
 
 
 # noinspection PyUnresolvedReferences
-def run_transformations(source_data: Any, dag_config: dict, user_transformations: List[str]):
+def run_transformations(source_data: Any, dag_context: dict, user_transformations: List[str]):
     import os
     import typhoon.contrib.transformations as typhoon
     from typhoon.variables import get_variable_contents
@@ -35,7 +35,7 @@ def run_transformations(source_data: Any, dag_config: dict, user_transformations
         custom_transformation_modules[module_name] = module
     custom_transformations = SimpleNamespace(**custom_transformation_modules)
 
-    os.environ['TYPHOON-ENV'] = 'dev'
+    os.environ['TYPHOON_ENV'] = 'dev'
 
     results = []
     for transform in map(_replace_special_vars, user_transformations):

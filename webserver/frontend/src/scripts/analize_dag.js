@@ -444,7 +444,7 @@ function A_APPLY_LINE(tokens, special_var_nums) {
     special_vars.forEach(special_var => {
       if (!is_valid_special_var(special_var, special_var_nums)) {
         push_error_msg(
-          'Invalid special variable ' + special_var + ". Must be '$SOURCE', '$DAG_CONFIG', '$HOOK', '$VARIABLE' or $BATCH_NUM",
+          'Invalid special variable ' + special_var + ". Must be '$SOURCE', '$DAG_CONTEXT', $DAG_NAME, '$HOOK', '$VARIABLE' or $BATCH_NUM",
           tk.line
         );
         throw new AnalysisException();

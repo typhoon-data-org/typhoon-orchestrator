@@ -126,8 +126,8 @@ def substitute_special(code: str, key: str) -> str:
     if '=>' in key:
         key = key.replace(' ', '').split('=>')[0]
     code = code.replace('$SOURCE', 'data')
-    code = re.sub(r'\$DAG_CONFIG(\.(\w+))', r'DAG_CONFIG["""\g<2>"""]', code)
-    code = code.replace('$DAG_CONFIG', 'DAG_CONFIG')
+    code = re.sub(r'\$dag_context(\.(\w+))', r'dag_context["""\g<2>"""]', code)
+    code = code.replace('$dag_context', 'dag_context')
     code = re.sub(r'\$(\d)+', r"{key}_\g<1>".format(key=key), code)
     code = code.replace('$BATCH_NUM', 'batch_num')
     code = re.sub(r'\$HOOK(\.(\w+))', r'get_hook("\g<2>")', code)
@@ -139,8 +139,8 @@ def clean_param(param: Union[str, int, float, List, dict]):
     if isinstance(param, (int, float)):
         return param
     elif isinstance(param, str):
-        if param.startswith('$DAG_CONFIG.'):
-            return f'DAG_CONFIG["""{param.split(".")[-1]}"""]'
+        if param.startswith('$dag_context.'):
+            return f'dag_context["""{param.split(".")[-1]}"""]'
         elif "'" in param:
             return f'"""{param}"""'
         else:

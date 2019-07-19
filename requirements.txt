@@ -4,3 +4,4 @@ jinja2
 PyYAML
 boto3
 dataclasses
+jsonpickle

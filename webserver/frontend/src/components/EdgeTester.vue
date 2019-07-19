@@ -76,7 +76,7 @@
           edge: this.edge,
           source: this.source_data,
           eval_source: this.source_value_type === 'eval',
-          dag_config: {
+          dag_context: {
             execution_date: this.$store.getters.executionDatetime,
             dag_name: this.$store.state.dagEditor.dag_name,
           },

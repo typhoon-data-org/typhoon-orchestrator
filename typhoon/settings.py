@@ -7,7 +7,7 @@ def typhoon_directory():
         return os.environ['TYPHOON_HOME']
     except KeyError:
         print('Error getting typhoon home directory. Please define TYPHOON_HOME environment variable.')
-        print(f'To define in current directory run: export TYPHOON_HOME=$(cwd)')
+        print(f'To define in current directory run: export TYPHOON_HOME=$(pwd)')
         sys.exit(-1)
 
 
@@ -36,4 +36,4 @@ def hooks_directory():
 
 
 def get_env():
-    return os.environ["TYPHOON-ENV"]
+    return os.environ["TYPHOON_ENV"]
