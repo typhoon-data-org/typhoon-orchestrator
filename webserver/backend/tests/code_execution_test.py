@@ -5,7 +5,7 @@ def test_run_transformations():
     transformations = [
         "10",
         '2 + $1',
-        '$SOURCE * $2',
+        '$BATCH * $2',
         "f'{$DAG_CONTEXT.ds}: {$3}'"
     ]
     dag_context = {'ds': '2019-03-04'}

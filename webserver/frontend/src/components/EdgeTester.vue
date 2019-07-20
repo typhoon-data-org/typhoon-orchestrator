@@ -19,7 +19,7 @@
       </v-layout>
       <v-layout row wrap>
         <v-flex md2>
-          <v-subheader>$SOURCE</v-subheader>
+          <v-subheader>$BATCH</v-subheader>
         </v-flex>
         <v-flex md7>
           <v-text-field

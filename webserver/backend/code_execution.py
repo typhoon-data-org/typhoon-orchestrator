@@ -8,7 +8,7 @@ from typhoon.settings import typhoon_directory
 
 def _replace_special_vars(string: str):
     string = re.sub(r'\$(\d+)', r'results[\1 - 1]', string)
-    string = re.sub(r'\$SOURCE', 'source_data', string)
+    string = re.sub(r'\$BATCH', 'source_data', string)
     string = re.sub(r'\$DAG_CONTEXT\.([\w]+)', r'dag_context["""\1"""]', string)
     string = string.replace('$DAG_CONTEXT', 'dag_context')
     string = string.replace('$BATCH_NUM', '2')

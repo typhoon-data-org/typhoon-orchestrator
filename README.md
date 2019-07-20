@@ -75,15 +75,15 @@ edges:
   e1:
     source: send_data
     adapter:
-      data => APPLY: transformations.data.to_bytes_buffer($SOURCE[1])
-      path => APPLY: f'/tmp/{$SOURCE[0]}'
+      data => APPLY: transformations.data.to_bytes_buffer($BATCH[1])
+      path => APPLY: f'/tmp/{$BATCH[0]}'
     destination: write_data
 ```
 
 Notice how an edge is made up of a source node, a destination node and an adapter. The adapter has to define all the necessary parameters to the destination_function by applying transformations to the source function output. This is all standard YAML except for two things:
 
 - `=> APPLY` is used to indicate that the value received is not a string, but some code that needs to be executed at runtime to produce a value.
-- `$SOURCE` is one of a limited set of special variables (all in uppercase and starting with $) that will be substituted during code generation. This one in particular refers to the output (batch) of the source function.
+- `$BATCH` is one of a limited set of special variables (all in uppercase and starting with $) that will be substituted during code generation. This one in particular refers to the output (batch) of the source function.
 
 This part will be used to generate python code roughly equivalent to:
 
@@ -108,10 +108,10 @@ edges:
     source: send_data
     adapter:
       data => APPLY:
-        - f'HEADER\n{$SOURCE.string_data\nFOOTER}'
-        - $SOURCE.encoding or 'utf-8'
+        - f'HEADER\n{$BATCH.string_data\nFOOTER}'
+        - $BATCH.encoding or 'utf-8'
         - transformations.data.to_bytes_buffer(data=$1, encoding=$2)
-      path => APPLY: f'/tmp/{$SOURCE.file_name}'
+      path => APPLY: f'/tmp/{$BATCH.file_name}'
     destination: write_data
 ```
 
@@ -171,10 +171,10 @@ edges:
   send_extraction_params:
     source: send_table_names
     adapter:
-      table_name => APPLY: $SOURCE
+      table_name => APPLY: $BATCH
       query => APPLY:
         - str("SELECT * FROM {{ table_name }} WHERE creation_date='{{ date_string }}'")
-        - typhoon.templates.render(template=$1, table_name=$SOURCE, date_string=$dag_context.ds)
+        - typhoon.templates.render(template=$1, table_name=$BATCH, date_string=$dag_context.ds)
       batch_size: 200
     destination: extract_table
 
@@ -183,11 +183,11 @@ edges:
     source: extract_table
     adapter:
       data => APPLY:
-        - typhoon.db_result.to_csv(description=$SOURCE.columns, data=$SOURCE.batch)
+        - typhoon.db_result.to_csv(description=$BATCH.columns, data=$BATCH.batch)
         - $1.encode('utf_8')
       path => APPLY:
         - str('{{system}}/{{entity}}/{{dag_cfg.ds}}/{{dag_cfg.etl_timestamp}}_{{part}}.{{ext}}')
-        - typhoon.templates.render($1, system='postgres', entity=$SOURCE.table_name, dag_cfg=$dag_context, part=$BATCH_NUM, ext='csv')
+        - typhoon.templates.render($1, system='postgres', entity=$BATCH.table_name, dag_cfg=$dag_context, part=$BATCH_NUM, ext='csv')
     destination: load_csv_s3
 ```
 
