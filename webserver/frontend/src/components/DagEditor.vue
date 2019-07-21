@@ -61,13 +61,14 @@
       <v-btn v-on:click="copyEditorContentsToClipboard" outline fab>
         <v-icon color="white">assignment</v-icon>
       </v-btn>
-      <v-checkbox v-model="disable_syntax_checking" label="Disable syntax checks"></v-checkbox>
+      <v-checkbox v-model="disable_syntax_checking" label="Disable syntax checks (alt+D)"></v-checkbox>
     </v-layout>
 
     <v-layout row wrap>
       <v-flex offset-md1 md5>
         <v-text-field
-            label="Filter edges by name"
+            label="Filter edges by name (alt+F)"
+            ref="filterEdgesTextField"
             v-model="filter_exp"
             prepend-icon="search"
         ></v-text-field>
@@ -379,7 +380,29 @@
         this.savingCode = true;
         this.$api.saveDAGCode({code: this.content}, {filename: this.currentDAGFilename})
           .then(() => this.savingCode = false)
+      },
+
+      setFocusFilterEdgesTextField: function() {
+        this.$refs.filterEdgesTextField.focus();
       }
+    },
+
+    mounted: function () {
+      window.addEventListener('keyup', (evt) => {
+        if (evt.altKey && evt.code === 'KeyS' && this.currentDAGFilename !== null) {
+          this.saveCode();
+        } else if (evt.altKey && evt.code === 'KeyR' && this.currentDAGFilename !== null) {
+          this.reloadBackend()
+        } else if (evt.altKey && evt.code === 'KeyC' && this.currentDAGFilename !== null) {
+          this.copyEditorContentsToClipboard()
+        } else if (evt.altKey && evt.code === 'KeyF' && this.currentDAGFilename !== null) {
+          this.setFocusFilterEdgesTextField();
+        } else if (evt.altKey && evt.code === 'Digit1') {
+          let show = this.$store.state.dagEditor.showSidebarDAGs;
+          this.$store.commit('setShowSidebarDAGs', !show);
+        }
+        evt.preventDefault();
+      });
     },
 
     beforeDestroy() {

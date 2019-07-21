@@ -57,7 +57,6 @@
     name: "SidebarDags",
     data () {
       return {
-        drawer: true,
         mini: false,
       }
     },
@@ -67,6 +66,14 @@
       },
       activeFilename () {
         return this.$store.state.dagEditor.currentDAGFilename;
+      },
+      drawer: {
+        get () {
+          return this.$store.state.dagEditor.showSidebarDAGs;
+        },
+        set (show) {
+          this.$store.commit('setShowSidebarDAGs', show);
+        }
       }
     },
     methods: {
@@ -88,12 +95,12 @@
       if (this.$store.state.dagEditor.savedCode !== '') {
         this.drawer = false;
       }
-      window.addEventListener('keyup', (evt) => {
-        if (evt.altKey && evt.code === 'Digit1') {
-          this.drawer = !this.drawer;
-        }
-        evt.preventDefault();
-      });
+      // window.addEventListener('keyup', (evt) => {
+      //   if (evt.altKey && evt.code === 'Digit1') {
+      //     this.drawer = !this.drawer;
+      //   }
+      //   evt.preventDefault();
+      // });
       this.$api.getDagFilenames()
         .then((result) => {
           this.$store.commit('setDagFiles', result.data);

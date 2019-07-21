@@ -18,6 +18,7 @@ export default {
     currentDocObject: null,
     dagFiles: [],
     currentDAGFilename: null,
+    showSidebarDAGs: true,
   },
   getters: {
     executionDatetime(state) {
@@ -129,6 +130,9 @@ export default {
     },
     setCurrentDAGFilename(state, filename) {
       state.currentDAGFilename = filename;
-    }
+    },
+    setShowSidebarDAGs(state, show) {
+      state.showSidebarDAGs = show;
+    },
   }
 }
