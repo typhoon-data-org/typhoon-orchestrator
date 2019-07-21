@@ -12,7 +12,21 @@
       </v-flex>
     </v-layout>
     <v-layout row wrap>
-      <v-flex xs9>
+      <v-flex>
+        <v-btn color="success" v-bind:disabled="!editingExistingDAG" v-on:click="saveCode">
+          <v-progress-circular v-if="savingCode" :size="25" indeterminate></v-progress-circular>
+          <v-icon v-else left>save</v-icon>
+          <u>s</u>ave
+        </v-btn>
+        <v-btn color="info" v-on:click="reloadBackend">
+          <v-progress-circular v-if="loadingCode" :size="25" indeterminate></v-progress-circular>
+          <v-icon v-else left>refresh</v-icon>
+          <u>r</u>eload
+        </v-btn>
+      </v-flex>
+    </v-layout>
+    <v-layout row wrap>
+      <v-flex xs10>
         <v-alert
             :value="true"
             type="warning"
@@ -34,13 +48,6 @@
         >
           All good
         </v-alert>
-      </v-flex>
-      <v-flex>
-        <v-btn color="info" v-on:click="reloadBackend">
-          <v-progress-circular v-if="loadingCode" :size="25" indeterminate></v-progress-circular>
-          <v-icon v-else left>refresh</v-icon>
-          Code
-        </v-btn>
       </v-flex>
     </v-layout>
 
@@ -173,6 +180,7 @@
       snackbar_loaded_dag: false,
       userPackagesError: false,
       loadingCode: false,
+      savingCode: false,
     }),
     computed: {
       typhoonFunctionModules() {
@@ -211,6 +219,12 @@
       },
       currentDAGFilename () {
         return this.$store.state.dagEditor.currentDAGFilename;
+      },
+      savedCode () {
+        return this.$store.state.dagEditor.savedCode
+      },
+      editingExistingDAG () {
+        return this.currentDAGFilename !== null;
       }
     },
     methods: {
@@ -238,8 +252,8 @@
           showPrintMargin: false,
         });
 
-        if (this.$store.state.dagEditor.savedCode) {
-          this.content = this.$store.state.dagEditor.savedCode;
+        if (this.savedCode) {
+          this.content = this.savedCode;
         }
 
         let parent = this;
@@ -360,6 +374,12 @@
         this.content = evt.contents;
         this.snackbar_loaded_dag = true;
       },
+
+      saveCode: function () {
+        this.savingCode = true;
+        this.$api.saveDAGCode({code: this.content}, {filename: this.currentDAGFilename})
+          .then(() => this.savingCode = false)
+      }
     },
 
     beforeDestroy() {

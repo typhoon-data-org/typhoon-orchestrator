@@ -190,3 +190,12 @@ def api_get_dag_contents():
     filename = request.args.get('filename')
     filepath = Path(typhoon_directory()) / 'dags' / filename
     return jsonify({'contents': filepath.read_text()})
+
+
+@app.route('/save-dag-code', methods=['PUT'])
+def api_save_dag_code():
+    filename = request.args.get('filename')
+    body = request.get_json()
+    filepath = Path(typhoon_directory()) / 'dags' / filename
+    filepath.write_text(body['code'])
+    return 'Ok'
