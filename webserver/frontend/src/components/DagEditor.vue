@@ -66,7 +66,7 @@
       <v-btn v-on:click="copyEditorContentsToClipboard" outline fab>
         <v-icon color="white">assignment</v-icon>
       </v-btn>
-      <v-checkbox v-model="disable_syntax_checking" label="Disable syntax checks (alt+D)"></v-checkbox>
+      <v-checkbox v-model="disable_syntax_checking" label="Disable syntax checks (alt+X)"></v-checkbox>
     </v-layout>
 
     <v-layout row wrap>
@@ -394,6 +394,10 @@
       toggleSidebarDAGs: function () {
         let show = this.$store.state.dagEditor.showSidebarDAGs;
         this.$store.commit('setShowSidebarDAGs', !show);
+      },
+
+      toggleSyntaxChecking: function () {
+        this.disable_syntax_checking = ! this.disable_syntax_checking;
       }
     },
 
@@ -407,6 +411,8 @@
           this.copyEditorContentsToClipboard()
         } else if (evt.altKey && evt.code === 'KeyF' && this.currentDAGFilename !== null) {
           this.setFocusFilterEdgesTextField();
+        } else if (evt.altKey && evt.code === 'KeyX' && this.currentDAGFilename !== null) {
+          this.toggleSyntaxChecking();
         } else if (evt.altKey && evt.code === 'Digit1') {
           this.toggleSidebarDAGs();
         }
