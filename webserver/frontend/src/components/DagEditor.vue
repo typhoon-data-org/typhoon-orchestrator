@@ -18,7 +18,7 @@
           <v-icon v-else left>save</v-icon>
           <u>s</u>ave
         </v-btn>
-        <v-btn color="info" v-on:click="reloadBackend">
+        <v-btn ref="reloadButton" color="info" v-on:click="reloadBackend">
           <v-progress-circular v-if="loadingCode" :size="25" indeterminate></v-progress-circular>
           <v-icon v-else left>refresh</v-icon>
           <u>r</u>eload
@@ -393,6 +393,10 @@
         this.$refs.filterEdgesTextField.focus();
       },
 
+      setFocusEditorContainer: function() {
+        this.$refs.reloadButton.$el.focus();
+      },
+
       toggleSidebarDAGs: function () {
         let show = this.$store.state.dagEditor.showSidebarDAGs;
         this.$store.commit('setShowSidebarDAGs', !show);
@@ -407,31 +411,30 @@
       window.addEventListener('keyup', (evt) => {
         if (evt.altKey && evt.code === 'KeyS' && this.currentDAGFilename !== null) {
           this.saveCode();
-        } else if (evt.altKey && evt.code === 'KeyR' && this.currentDAGFilename !== null) {
+        } else if (evt.altKey && evt.code === 'KeyR') {
           this.reloadBackend()
-        } else if (evt.altKey && evt.code === 'KeyC' && this.currentDAGFilename !== null) {
+        } else if (evt.altKey && evt.code === 'KeyC') {
           this.copyEditorContentsToClipboard()
-        } else if (evt.altKey && evt.code === 'KeyF' && this.currentDAGFilename !== null) {
+        } else if (evt.altKey && evt.code === 'KeyF') {
           this.setFocusFilterEdgesTextField();
-        } else if (evt.altKey && evt.code === 'KeyX' && this.currentDAGFilename !== null) {
+        } else if (evt.altKey && evt.code === 'KeyX') {
           this.toggleSyntaxChecking();
-        } else if (evt.altKey && evt.code === 'KeyD' && this.currentDAGFilename !== null) {
+        } else if (evt.altKey && evt.code === 'KeyD') {
           this.$store.commit('toggleDAGConfigDialog');
         } else if (evt.altKey && evt.code === 'Digit1') {
           this.toggleSidebarDAGs();
         } else if (evt.key === 'Escape') {
-          this.setFocusFilterEdgesTextField();
+          if (this.$store.state.dagEditor.showSidebarDAGs) {
+            this.toggleSidebarDAGs();
+          } else {
+            this.setFocusEditorContainer();
+          }
         }
         this.shortcutHints = false;
         evt.preventDefault();
       });
       window.addEventListener('keydown', (evt) => {
-        if (evt.altKey) {
-          this.shortcutHints = true;
-          // setTimeout(() => {
-          //   this.shortcutHints = false;
-          // }, 1000);
-        }
+        if (evt.altKey) this.shortcutHints = true;
       });
     },
 
