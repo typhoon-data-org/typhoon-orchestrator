@@ -27,6 +27,7 @@
           <v-icon left>insert_drive_file</v-icon>
           <div v-if="currentDAGFilename === null"><i>untitled</i></div>
           <div v-else>{{ currentDAGFilename }}</div>
+          <div v-if="shortcutHints">&nbsp alt+1</div>
         </v-btn>
       </v-flex>
     </v-layout>
@@ -66,13 +67,13 @@
       <v-btn v-on:click="copyEditorContentsToClipboard" outline fab>
         <v-icon color="white">assignment</v-icon>
       </v-btn>
-      <v-checkbox v-model="disable_syntax_checking" label="Disable syntax checks (alt+X)"></v-checkbox>
+      <v-checkbox v-model="disable_syntax_checking" :label="'Disable syntax checks' + (shortcutHints ? ' (alt+X)' : '')"></v-checkbox>
     </v-layout>
 
     <v-layout row wrap>
       <v-flex offset-md1 md5>
         <v-text-field
-            label="Filter edges by name (alt+F)"
+            :label="'Filter edges by name' + (shortcutHints ? ' (alt+F)' : '')"
             ref="filterEdgesTextField"
             v-model="filter_exp"
             prepend-icon="search"
@@ -187,6 +188,7 @@
       userPackagesError: false,
       loadingCode: false,
       savingCode: false,
+      shortcutHints: false,
     }),
     computed: {
       typhoonFunctionModules() {
@@ -413,10 +415,21 @@
           this.setFocusFilterEdgesTextField();
         } else if (evt.altKey && evt.code === 'KeyX' && this.currentDAGFilename !== null) {
           this.toggleSyntaxChecking();
+        } else if (evt.altKey && evt.code === 'KeyD' && this.currentDAGFilename !== null) {
+          this.$store.commit('toggleDAGConfigDialog');
         } else if (evt.altKey && evt.code === 'Digit1') {
           this.toggleSidebarDAGs();
         }
+        this.shortcutHints = false;
         evt.preventDefault();
+      });
+      window.addEventListener('keydown', (evt) => {
+        if (evt.altKey) {
+          this.shortcutHints = true;
+          // setTimeout(() => {
+          //   this.shortcutHints = false;
+          // }, 1000);
+        }
       });
     },
 

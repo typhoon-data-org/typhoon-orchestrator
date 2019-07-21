@@ -19,6 +19,7 @@ export default {
     dagFiles: [],
     currentDAGFilename: null,
     showSidebarDAGs: true,
+    showDAGConfigDialog: false,
   },
   getters: {
     executionDatetime(state) {
@@ -133,6 +134,12 @@ export default {
     },
     setShowSidebarDAGs(state, show) {
       state.showSidebarDAGs = show;
+    },
+    setShowDAGConfigDialog(state, show) {
+      state.showDAGConfigDialog = show;
+    },
+    toggleDAGConfigDialog(state) {
+      state.showDAGConfigDialog = !this.setShowDAGConfigDialog;
     },
   }
 }

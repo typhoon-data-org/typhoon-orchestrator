@@ -4,7 +4,7 @@
       <template v-slot:activator="{ on }">
         <v-btn color="brown" v-on="on">
           <v-icon left>extension</v-icon>
-          DAG config
+          <u>D</u>AG config
         </v-btn>
       </template>
       <v-card>
@@ -113,13 +113,21 @@
   export default {
     name: "DagConfigDialog",
     data: () => ({
-      dialog: false,
+      // dialog: false,
       // execution_date: new Date().toISOString().substr(0, 10),
       // execution_time: "00:00",
       menu: false,
       menu2: false,
     }),
     computed: {
+      dialog: {
+        get: function () {
+          return this.$store.state.dagEditor.showDAGConfigDialog;
+        },
+        set: function (value) {
+          this.$store.commit('setShowDAGConfigDialog', value);
+        }
+      },
       execution_date: {
         get: function () {
           return this.$store.state.dagEditor.execution_date;
