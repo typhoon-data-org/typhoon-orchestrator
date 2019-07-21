@@ -23,6 +23,11 @@
           <v-icon v-else left>refresh</v-icon>
           <u>r</u>eload
         </v-btn>
+        <v-btn color="brown" v-on:click="toggleSidebarDAGs">
+          <v-icon left>insert_drive_file</v-icon>
+          <div v-if="currentDAGFilename === null"><i>untitled</i></div>
+          <div v-else>{{ currentDAGFilename }}</div>
+        </v-btn>
       </v-flex>
     </v-layout>
     <v-layout row wrap>
@@ -384,6 +389,11 @@
 
       setFocusFilterEdgesTextField: function() {
         this.$refs.filterEdgesTextField.focus();
+      },
+
+      toggleSidebarDAGs: function () {
+        let show = this.$store.state.dagEditor.showSidebarDAGs;
+        this.$store.commit('setShowSidebarDAGs', !show);
       }
     },
 
@@ -398,8 +408,7 @@
         } else if (evt.altKey && evt.code === 'KeyF' && this.currentDAGFilename !== null) {
           this.setFocusFilterEdgesTextField();
         } else if (evt.altKey && evt.code === 'Digit1') {
-          let show = this.$store.state.dagEditor.showSidebarDAGs;
-          this.$store.commit('setShowSidebarDAGs', !show);
+          this.toggleSidebarDAGs();
         }
         evt.preventDefault();
       });
