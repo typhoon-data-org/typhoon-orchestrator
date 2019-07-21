@@ -126,6 +126,7 @@
         Close
       </v-btn>
     </v-snackbar>
+    <SidebarDags></SidebarDags>
   </v-container>
 </template>
 
@@ -137,10 +138,12 @@
   import DagConfigDialog from "./DagConfigDialog";
   import {EDGE_CONFIGS} from "../scripts/analize_dag";
   import DocsView from "./DocsView";
+  import SidebarDags from "./SidebarDags";
   import {get_docobject} from "../scripts/doc_helper";
 
   export default {
     components: {
+      SidebarDags,
       DocsView,
       DagConfigDialog,
       EdgeTester,

@@ -68,7 +68,7 @@ def get_function_data_in_module_path(module_path: str):
     return [_make_function_data(x) for x in get_functions_in_module_path(module_path)]
 
 
-def load_module_from_path(module_path, module_name=None):
+def load_module_from_path(module_path, module_name=None, must_exist=True):
     sys.path.append(os.path.dirname(os.path.dirname(module_path)))
     if module_name is None:
         parts = module_path.split('/')
@@ -77,8 +77,12 @@ def load_module_from_path(module_path, module_name=None):
     module = util.module_from_spec(spec)
     try:
         spec.loader.exec_module(module)
-    except (NameError, SyntaxError):
-        raise BrokenImportError
+    except (NameError, SyntaxError, FileNotFoundError):
+        if must_exist:
+            raise BrokenImportError
+        else:
+            print(f'Module {module_name} at path {module_path} does not exist')
+            return None
     return module
 
 

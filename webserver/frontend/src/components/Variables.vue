@@ -167,7 +167,7 @@
             env: 'dev'
           }
         })
-          .then((result) => {
+          .then(() => {
             this.getVariables();
           });
       },
@@ -179,7 +179,7 @@
             id: variable.id
           }
         })
-          .then((result) => {
+          .then(() => {
             this.getVariables();
           });
       },
@@ -189,7 +189,6 @@
         this.dialog = true;
       },
       deleteItem: function (item) {
-        const index = this.variables.indexOf(item);
         let confirmed = confirm('Are you sure you want to delete this variable?')
         if (confirmed) {
           this.deleteVariable(item)

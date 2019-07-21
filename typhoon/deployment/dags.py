@@ -9,19 +9,24 @@ from typhoon import settings
 
 
 def load_dags() -> Sequence:
-    dags_directory = settings.dags_directory()
     dags = []
 
-    dag_files = filter(lambda x: x.endswith('.yml'), os.listdir(dags_directory))
+    dag_files = get_dag_filenames()
     # dag_files = Path(dags_directory).rglob('*.yml')
     for dag_file in dag_files:
-        with open(os.path.join(dags_directory, dag_file), 'r') as f:
+        with open(os.path.join(settings.dags_directory(), dag_file), 'r') as f:
             dag = yaml.load(f, Loader=yaml.FullLoader)
             if dag.get('active', True):
                 dag['structure'] = build_dag_structure(dag['edges'])
                 dags.append(dag)
 
     return dags
+
+
+def get_dag_filenames():
+    dags_directory = settings.dags_directory()
+    dag_files = filter(lambda x: x.endswith('.yml'), os.listdir(dags_directory))
+    return dag_files
 
 
 def build_dag_structure(edges: dict) -> dict:

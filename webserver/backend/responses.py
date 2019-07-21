@@ -9,7 +9,7 @@ def transform_response(response):
         for i, x in enumerate(response):
             response[i] = transform_response(x)
     elif isinstance(response, bytes):
-        response = f"utf8('{response.decode('utf-8')}')"
+        response = f"b'{response.decode('utf-8')}'"
     elif isinstance(response, BytesIO):
-        response = f"utf8BytesIO('{response.getvalue().decode('utf-8')}')"
+        response = f"BytesIO(b'{response.getvalue().decode('utf-8')}')"
     return response

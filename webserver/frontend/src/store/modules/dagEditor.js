@@ -16,6 +16,7 @@ export default {
     edges: {},
     savedCode: '',
     currentDocObject: null,
+    dagFiles: [],
   },
   getters: {
     executionDatetime(state) {
@@ -121,6 +122,9 @@ export default {
     },
     setCurrentDocObject(state, docObj) {
       state.currentDocObject = docObj;
-    }
+    },
+    setDagFiles(state, dagFiles) {
+      state.dagFiles = dagFiles;
+    },
   }
 }

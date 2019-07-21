@@ -79,7 +79,7 @@
             conn_env: env
           }
         })
-          .then((result) => {
+          .then(() => {
             this.$emit('update-connections', '');
           });
       },

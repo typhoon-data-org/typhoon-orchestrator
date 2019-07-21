@@ -67,6 +67,7 @@
         } else if (docObj.type === 'typhoon_transformation') {
           return this.$store.state.dagEditor.typhoonTransformations[docObj.module][docObj.name].docstring;
         }
+        return null
       },
       return_type() {
         let docObj = this.$store.state.dagEditor.currentDocObject;
@@ -79,6 +80,7 @@
         } else if (docObj.type === 'typhoon_transformation') {
           return this.$store.state.dagEditor.typhoonTransformations[docObj.module][docObj.name].return_type;
         }
+        return null;
       },
       func_args() {
         let docObj = this.$store.state.dagEditor.currentDocObject;

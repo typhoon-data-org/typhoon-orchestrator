@@ -36,7 +36,8 @@
         </template>
 
         <v-list>
-          <v-list-tile @click="">
+          <!--<v-list-tile @click="">-->
+          <v-list-tile>
             <v-list-tile-title v-text="'Build DAGs'" @click="buildDags"></v-list-tile-title>
           </v-list-tile>
         </v-list>
@@ -109,11 +110,10 @@
           params: {
             env: 'dev'
           }
-        })
-          .then((result) => {
-            this.snackbar_message = 'Finished building DAGs';
-            this.snackbar = true;
-          });
+        }).then(() => {
+          this.snackbar_message = 'Finished building DAGs';
+          this.snackbar = true;
+        });
       }
     }
   }

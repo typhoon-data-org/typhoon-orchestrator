@@ -93,15 +93,15 @@ function get_indentation(line) {
   return Math.floor(num_spaces/2);
 }
 
-function empty_line(tokens) {
-  let i = 0;
-  let tk = tokens[i];
-  while (is_indent(tk) || is_dedent(tk)) {
-    i++;
-    tk = tokens[i];
-  }
-  return is_eol(tk);
-}
+// function empty_line(tokens) {
+//   let i = 0;
+//   let tk = tokens[i];
+//   while (is_indent(tk) || is_dedent(tk)) {
+//     i++;
+//     tk = tokens[i];
+//   }
+//   return is_eol(tk);
+// }
 
 export function get_tokens_block(line = 0) {
   let tokens = [];
@@ -279,7 +279,7 @@ export function stringify_until_eol(tokens) {
   });
 }
 
-export const SPECIAL_VARS = ['$BATCH', '$DAG_CONTEXT', '$BATCH_NUM', '$HOOK', '$VARIABLE, $DAG_NAME'];
+export const SPECIAL_VARS = ['$BATCH', '$DAG_CONTEXT', '$BATCH_NUM', '$HOOK', '$VARIABLE', '$DAG_NAME'];
 
 export function is_valid_special_var(special_var, check_nums) {
   if (SPECIAL_VARS.includes(special_var)) {
@@ -295,8 +295,7 @@ export function skip_blank_lines(tokens) {
 }
 
 export function get_indents(line) {
-  let [_, indents] = get_tokens(line);
-  return indents;
+  return get_tokens(line)[1];
 }
 
 export function copyToClipboard(str) {
@@ -306,7 +305,7 @@ export function copyToClipboard(str) {
   el.select();
   document.execCommand('copy');
   document.body.removeChild(el);
-};
+}
 
 export function skip_to_next_block(line) {
   line++;
