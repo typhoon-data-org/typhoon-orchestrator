@@ -419,6 +419,8 @@
           this.$store.commit('toggleDAGConfigDialog');
         } else if (evt.altKey && evt.code === 'Digit1') {
           this.toggleSidebarDAGs();
+        } else if (evt.key === 'Escape') {
+          this.setFocusFilterEdgesTextField();
         }
         this.shortcutHints = false;
         evt.preventDefault();
