@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from pathlib import Path
 
 from code_execution import run_transformations
 from flask import Flask, jsonify, request
@@ -182,3 +183,10 @@ def get_variable_types():
 def api_get_dag_filenames():
     dag_files = get_dag_filenames()
     return jsonify(sorted(dag_files))
+
+
+@app.route('/get-dag-contents')
+def api_get_dag_contents():
+    filename = request.args.get('filename')
+    filepath = Path(typhoon_directory()) / 'dags' / filename
+    return jsonify({'contents': filepath.read_text()})

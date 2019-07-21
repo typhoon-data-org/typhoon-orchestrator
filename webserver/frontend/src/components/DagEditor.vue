@@ -126,7 +126,20 @@
         Close
       </v-btn>
     </v-snackbar>
-    <SidebarDags></SidebarDags>
+    <v-snackbar
+        v-model="snackbar_loaded_dag"
+        :timeout="1500"
+        :top="true"
+    >
+      Loaded DAG {{ currentDAGFilename }}
+      <v-btn
+          flat
+          @click="snackbar_loaded_dag = false"
+      >
+        Close
+      </v-btn>
+    </v-snackbar>
+    <SidebarDags v-on:dag-file-selected="setDagFile"></SidebarDags>
   </v-container>
 </template>
 
@@ -157,6 +170,7 @@
       filter_exp: '',
       snackbar_clipboard: false,
       snackbar_code: false,
+      snackbar_loaded_dag: false,
       userPackagesError: false,
       loadingCode: false,
     }),
@@ -195,6 +209,9 @@
       variable_ids () {
         return this.$store.state.variables.items.map(x => x.id);
       },
+      currentDAGFilename () {
+        return this.$store.state.dagEditor.currentDAGFilename;
+      }
     },
     methods: {
       editorInit: function (editor) {
@@ -338,7 +355,13 @@
             this.$store.commit('setVariables', result.data);
           });
       },
+
+      setDagFile: function (evt) {
+        this.content = evt.contents;
+        this.snackbar_loaded_dag = true;
+      },
     },
+
     beforeDestroy() {
       this.$store.commit('setSavedCode', this.$refs.dag_editor.editor.getValue());
     }

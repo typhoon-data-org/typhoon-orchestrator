@@ -17,6 +17,7 @@ export default {
     savedCode: '',
     currentDocObject: null,
     dagFiles: [],
+    currentDAGFilename: null,
   },
   getters: {
     executionDatetime(state) {
@@ -126,5 +127,8 @@ export default {
     setDagFiles(state, dagFiles) {
       state.dagFiles = dagFiles;
     },
+    setCurrentDAGFilename(state, filename) {
+      state.currentDAGFilename = filename;
+    }
   }
 }

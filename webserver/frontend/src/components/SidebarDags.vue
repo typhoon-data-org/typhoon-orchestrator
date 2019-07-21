@@ -37,7 +37,8 @@
       <v-list-tile
           v-for="filename in dagFiles"
           :key="filename"
-          @click=""
+          @click="loadDAGFile(filename)"
+          :value="filename === activeFilename"
       >
         <v-list-tile-action>
           <v-icon>insert_drive_file</v-icon>
@@ -63,9 +64,30 @@
     computed: {
       dagFiles () {
         return this.$store.state.dagEditor.dagFiles;
+      },
+      activeFilename () {
+        return this.$store.state.dagEditor.currentDAGFilename;
+      }
+    },
+    methods: {
+      loadDAGFile: function(filename) {
+        this.$store.commit('setCurrentDAGFilename', filename);
+        this.$api.getDAGContents({filename: filename})
+          .then((result) => {
+            this.$emit('dag-file-selected', {
+              filename: filename,
+              contents: result.data.contents,
+            });
+            setTimeout(() => {
+              this.drawer = false;
+            }, 300);
+          });
       }
     },
     created: function () {
+      if (this.$store.state.dagEditor.savedCode !== '') {
+        this.drawer = false;
+      }
       window.addEventListener('keyup', (evt) => {
         if (evt.altKey && evt.code === 'Digit1') {
           this.drawer = !this.drawer;
