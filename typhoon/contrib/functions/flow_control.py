@@ -13,11 +13,9 @@ def branch(branches: Sequence[T], delay: int = 0) -> Iterable[T]:
     :param delay:
     :return:
     """
-    print('branches')
     for i, b in enumerate(branches):
         if delay and i > 0:
             sleep(delay)
-        print(b)
         yield b
 
 
@@ -29,7 +27,4 @@ def filter(data: T, filter_func: Callable[[T], bool]) -> Iterator:
     :param filter_func: A function that evaluates data and returns a boolean value
     :return:
     """
-    if filter_func(data):
-        yield data
-    else:
-        yield SKIP_BATCH
+    yield data if filter_func(data) else SKIP_BATCH
