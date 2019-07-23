@@ -111,6 +111,13 @@
             </v-container>
           </v-card>
         </v-tab-item>
+
+        <v-tab ripple>
+          Graph
+        </v-tab>
+        <v-tab-item>
+          <DAGDiagram/>
+        </v-tab-item>
       </v-tabs>
     </div>
 
@@ -167,9 +174,11 @@
   import DocsView from "./DocsView";
   import SidebarDags from "./SidebarDags";
   import {get_docobject} from "../scripts/doc_helper";
+  import DAGDiagram from "./DAGDiagram";
 
   export default {
     components: {
+      DAGDiagram,
       SidebarDags,
       DocsView,
       DagConfigDialog,
