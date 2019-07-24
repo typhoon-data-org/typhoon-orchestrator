@@ -1,5 +1,7 @@
 <template>
-  <svg id="svg" :height="height + 50" :width="width"></svg>
+  <v-card ref="container" flat>
+    <svg id="svg" :height="height + 50" :width="width" style='stroke-width: 2px; background-color: white;'></svg>
+  </v-card>
 </template>
 
 <script>
@@ -11,69 +13,120 @@
     data: () => {
       return {
         height: 500,
-        width: 1200,
+        width: 1000,
         dag: [],
       }
     },
+    // computed: {
+    //   width() {
+    //     return this.$refs.container.width();
+    //   }
+    // },
     mounted() {
-      let g = new dagreD3.graphlib.Graph().setGraph({});
-      let states = [ "CLOSED", "LISTEN", "SYN RCVD", "SYN SENT",
-        "ESTAB", "FINWAIT-1", "CLOSE WAIT", "FINWAIT-2",
-        "CLOSING", "LAST-ACK", "TIME WAIT" ];
+      let workers = {
+        "identifier": {
+          "consumers": 2,
+          "count": 20
+        },
+        "lost-and-found": {
+          "consumers": 1,
+          "count": 1,
+          "inputQueue": "identifier",
+          "inputThroughput": 50
+        },
+        "monitor": {
+          "consumers": 1,
+          "count": 0,
+          "inputQueue": "identifier",
+          "inputThroughput": 50
+        },
+        "meta-enricher": {
+          "consumers": 4,
+          "count": 9900,
+          "inputQueue": "identifier",
+          "inputThroughput": 50
+        },
+        "geo-enricher": {
+          "consumers": 2,
+          "count": 1,
+          "inputQueue": "meta-enricher",
+          "inputThroughput": 50
+        },
+        "elasticsearch-writer": {
+          "consumers": 0,
+          "count": 9900,
+          "inputQueue": "geo-enricher",
+          "inputThroughput": 50
+        }
+      };
 
-// Automatically label each of the nodes
-      states.forEach(function(state) { g.setNode(state, { label: state }); });
-
-// Set up the edges
-      g.setEdge("CLOSED",     "LISTEN",     { label: "open" });
-      g.setEdge("LISTEN",     "SYN RCVD",   { label: "rcv SYN" });
-      g.setEdge("LISTEN",     "SYN SENT",   { label: "send" });
-      g.setEdge("LISTEN",     "CLOSED",     { label: "close" });
-      g.setEdge("SYN RCVD",   "FINWAIT-1",  { label: "close" });
-      g.setEdge("SYN RCVD",   "ESTAB",      { label: "rcv ACK of SYN" });
-      g.setEdge("SYN SENT",   "SYN RCVD",   { label: "rcv SYN" });
-      g.setEdge("SYN SENT",   "ESTAB",      { label: "rcv SYN, ACK" });
-      g.setEdge("SYN SENT",   "CLOSED",     { label: "close" });
-      g.setEdge("ESTAB",      "FINWAIT-1",  { label: "close" });
-      g.setEdge("ESTAB",      "CLOSE WAIT", { label: "rcv FIN" });
-      g.setEdge("FINWAIT-1",  "FINWAIT-2",  { label: "rcv ACK of FIN" });
-      g.setEdge("FINWAIT-1",  "CLOSING",    { label: "rcv FIN" });
-      g.setEdge("CLOSE WAIT", "LAST-ACK",   { label: "close" });
-      g.setEdge("FINWAIT-2",  "TIME WAIT",  { label: "rcv FIN" });
-      g.setEdge("CLOSING",    "TIME WAIT",  { label: "rcv ACK of FIN" });
-      g.setEdge("LAST-ACK",   "CLOSED",     { label: "rcv ACK of FIN" });
-      g.setEdge("TIME WAIT",  "CLOSED",     { label: "timeout=2MSL" });
-
-// Set some general styles
-      g.nodes().forEach(function(v) {
-        let node = g.node(v);
-        node.rx = node.ry = 5;
-      });
-
-// Add some custom colors based on state
-      g.node('CLOSED').style = "fill: #f77";
-      g.node('ESTAB').style = "fill: #7f7";
-
+      // let g = new dagreD3.graphlib.Graph().setGraph({});
       let svg = d3.select("svg"),
-        inner = svg.append("g");
-
-// Set up zoom support
-      let zoom = d3.zoom().on("zoom", function() {
-        inner.attr("transform", d3.event.transform);
-      });
+        inner = svg.append("g"),
+        zoom = d3.zoom().on("zoom", function() {
+          inner.attr("transform", d3.event.transform);
+        });
       svg.call(zoom);
 
-// Create the renderer
       let render = new dagreD3.render();
 
+      let g = new dagreD3.graphlib.Graph();
+      g.setGraph({
+        nodesep: 70,
+        ranksep: 50,
+        rankdir: "LR",
+        marginx: 20,
+        marginy: 20
+      });
+
+      for (var id in workers) {
+        var worker = workers[id];
+        var className = worker.consumers ? "running" : "stopped";
+        if (worker.count > 10000) {
+          className += " warn";
+        }
+        var html = "<div>";
+        html += "<span class=status></span>";
+        html += "<span class=consumers>"+worker.consumers+"</span>";
+        html += "<span class=name>"+id+"</span>";
+        html += "<span class=queue><span class=counter>"+worker.count+"</span></span>";
+        html += "</div>";
+        g.setNode(id, {
+          labelType: "html",
+          label: html,
+          rx: 5,
+          ry: 5,
+          padding: 0,
+          class: className
+        });
+        if (worker.inputQueue) {
+          g.setEdge(worker.inputQueue, id, {
+            label: worker.inputThroughput + "/s",
+            width: 40
+          });
+        }
+      }
+      inner.call(render, g);
+      // Zoom and scale to fit
+      let graphWidth = g.graph().width + 80;
+      let graphHeight = g.graph().height + 40;
+      let width = parseInt(svg.style("width").replace(/px/, ""));
+      let height = parseInt(svg.style("height").replace(/px/, ""));
+      let zoomScale = Math.min(width / graphWidth, height / graphHeight);
+      let translateX = (width / 2) - ((graphWidth * zoomScale) / 2)
+      let translateY = (height / 2) - ((graphHeight * zoomScale) / 2);
+      // let svgZoom = isUpdate ? svg.transition().duration(500) : svg;
+      svg.call(zoom.transform, d3.zoomIdentity.translate(translateX, translateY).scale(zoomScale));
+
 // Run the renderer. This is what draws the final graph.
-      render(inner, g);
+//       render(inner, g);
+//
+// // Center the graph
+//       let initialScale = 0.75;
+//       // svg.call(zoom.transform, d3.zoomIdentity.translate((svg.attr("width") - g.graph().width * initialScale) / 2, 20).scale(initialScale));
+//       svg.call(zoom.transform, d3.zoomIdentity.translate((this.width - g.graph().width * initialScale) / 2, 20).scale(initialScale));
 
-// Center the graph
-      let initialScale = 0.75;
-      svg.call(zoom.transform, d3.zoomIdentity.translate((svg.attr("width") - g.graph().width * initialScale) / 2, 20).scale(initialScale));
-
-      svg.attr('height', g.graph().height * initialScale + 40);
+      // svg.attr('height', g.graph().height * initialScale + 40);
     }
   }
 </script>
