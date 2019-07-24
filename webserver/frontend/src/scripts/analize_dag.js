@@ -30,13 +30,20 @@ import {
   A_CRON_YEAR
 } from "./cron_checker";
 
+// For the autocompleter + edges params view
 export let NODE_NAMES=[];
 export let EDGE_CONFIGS={};
+
+// For dagres diagram
+export let EDGES = [];
+export let NODES = [];
 
 
 export function A_DAG() {
   EDGE_CONFIGS = {};
   NODE_NAMES = [];
+  EDGES = [];
+  NODES = [];
   try {
     let line = A_NAME();
     line = A_SCHEDULE_INTERVAL(line);
@@ -301,6 +308,7 @@ function A_NODE(tokens) {
   check_meta_tag(tk, 'Expected node definition');
   let node_name = tk.value;
   NODE_NAMES.push(node_name.trim());
+  NODES.push({label: node_name.trim()});
   tk = tokens.shift();
   check_not_eol(tk, "Expected ':'");
   check_type_value(tk, 'keyword', ':', "Expected ':'");
@@ -827,6 +835,7 @@ function A_EDGE(tokens) {
   tk = tokens.shift();
   check_type(tk, 'text', 'Invalid source');
   A_ID(tk, 'Invalid source identifier');
+  let source = tk.value.trim();
   tk = tokens.shift();
   check_eol(tk, 'Expected line break');
   tk = tokens.shift();
@@ -845,6 +854,12 @@ function A_EDGE(tokens) {
   tk = tokens.shift();
   check_type(tk, 'text', 'Invalid destination');
   A_ID(tk, 'Invalid destination identifier');
+  let destination = tk.value.trim();
+  EDGES.push({
+    source: source,
+    destination: destination,
+    label: edge_name,
+  });
 }
 
 function A_ID(tk, error_msg) {
