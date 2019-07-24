@@ -14,6 +14,8 @@ export default {
     execution_date: new Date().toISOString().substr(0, 10),
     execution_time: '00:00',
     edgeConfigs: {},
+    nodes: [],
+    edges: [],
     savedCode: '',
     currentDocObject: null,
     dagFiles: [],
@@ -101,6 +103,12 @@ export default {
     },
     setEdgeConfigs(state, edgeConfigs) {
       state.edgeConfigs = edgeConfigs;
+    },
+    setNodes(state, nodes) {
+      state.nodes = nodes;
+    },
+    setEdges(state, edges) {
+      state.edges = edges;
     },
     setTransformationResult(state, payload) {
       let result;

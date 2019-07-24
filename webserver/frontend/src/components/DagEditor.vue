@@ -116,7 +116,7 @@
           Graph
         </v-tab>
         <v-tab-item>
-          <DAGDiagram/>
+          <DAGDiagram :nodes="nodes" :edges="edges"/>
         </v-tab-item>
       </v-tabs>
     </div>
@@ -170,7 +170,7 @@
   import {get_completions} from "../scripts/completer";
   import EdgeTester from "./EdgeTester";
   import DagConfigDialog from "./DagConfigDialog";
-  import {EDGE_CONFIGS} from "../scripts/analize_dag";
+  import {EDGE_CONFIGS, NODES, EDGES} from "../scripts/analize_dag";
   import DocsView from "./DocsView";
   import SidebarDags from "./SidebarDags";
   import {get_docobject} from "../scripts/doc_helper";
@@ -224,6 +224,12 @@
           }
           return result;
         }
+      },
+      nodes() {
+        return this.$store.state.dagEditor.nodes;
+      },
+      edges() {
+        return this.$store.state.dagEditor.edges;
       },
       first_error() {
         return firstSyntaxError();
@@ -307,8 +313,12 @@
             this.errors = !syntactical_analysis(editor);
             if (!this.errors) {
               this.$store.commit('setEdgeConfigs', EDGE_CONFIGS);
+              this.$store.commit('setNodes', NODES);
+              this.$store.commit('setEdges', EDGES);
             } else {
               this.$store.commit('setEdgeConfigs', {});
+              this.$store.commit('setNodes', []);
+              this.$store.commit('setEdges', []);
             }
           }
         });

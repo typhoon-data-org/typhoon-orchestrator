@@ -1,6 +1,7 @@
 <template>
   <v-card class="svgContainer" flat>
-    <svg id="svgEl" :height="height + 50" :width="width"></svg>
+    <svg v-if="nodes.length > 0" id="svgEl" :height="height + 50" :width="width"></svg>
+    <h1 v-else>Errors!</h1>
   </v-card>
 </template>
 
@@ -10,27 +11,12 @@
 
   export default {
     name: "DAGDiagram",
-    // props: {
-    //   nodes: Array,
-    //   edges: Array,
-    // },
+    props: {
+      nodes: Array,
+      edges: Array,
+    },
     data: () => {
       return {
-        nodes: [
-          {label: 'send_small_tables'},
-          {label: 'send_medium_tables'},
-          {label: 'send_large_tables'},
-          {label: 'extract_data'},
-          {label: 'write_data'},
-          {label: 'notify'},
-        ],
-        edges: [
-          {source: 'send_small_tables', destination: 'extract_data', label: 'e1'},
-          {source: 'send_medium_tables', destination: 'extract_data', label: 'e2'},
-          {source: 'send_large_tables', destination: 'extract_data', label: 'e3'},
-          {source: 'extract_data', destination: 'write_data', label: 'write_snowflake'},
-          {source: 'extract_data', destination: 'notify', label: 'slack'},
-        ],
         height: 500,
         width: 1000,
       }
@@ -40,29 +26,42 @@
     //     return this.$refs.container.width();
     //   }
     // },
-    mounted() {
-      let svg = d3.select("svg"),
-        inner = svg.append("g"),
-        zoom = d3.zoom().on("zoom", function() {
-          inner.attr("transform", d3.event.transform);
+    watch: {
+      nodes: function() {
+        this.drawDAG();
+      },
+      edges: function() {
+        this.drawDAG();
+      },
+    },
+    // mounted() {
+    // },
+    methods: {
+      drawDAG: function () {
+        d3.select("svg").selectAll("*").remove();
+        let svg = d3.select("svg"),
+          inner = svg.append("g"),
+          zoom = d3.zoom().on("zoom", function () {
+            inner.attr("transform", d3.event.transform);
+          });
+        svg.call(zoom);
+
+        let render = new dagreD3.render();
+
+        let g = new dagreD3.graphlib.Graph();
+        g.setGraph({
+          nodesep: 70,
+          ranksep: 50,
+          rankdir: "LR",
+          marginx: 20,
+          marginy: 20
         });
-      svg.call(zoom);
 
-      let render = new dagreD3.render();
+        this.nodes.forEach(node => g.setNode(node.label, {label: node.label}));
+        this.edges.forEach(edge => g.setEdge(edge.source, edge.destination, {label: edge.label}));
 
-      let g = new dagreD3.graphlib.Graph();
-      g.setGraph({
-        nodesep: 70,
-        ranksep: 50,
-        rankdir: "LR",
-        marginx: 20,
-        marginy: 20
-      });
-
-      this.nodes.forEach(node => g.setNode(node.label, {label: node.label}));
-      this.edges.forEach(edge => g.setEdge(edge.source, edge.destination, {label: edge.label}));
-
-      inner.call(render, g);
+        inner.call(render, g);
+      }
     }
   }
 </script>
