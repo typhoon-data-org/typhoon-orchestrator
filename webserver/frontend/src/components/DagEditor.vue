@@ -98,8 +98,8 @@
         </v-tab>
         <v-tab-item>
           <v-card flat>
-            <div v-if="Object.entries(edges).length > 0 && edges.constructor === Object">
-              <v-container v-for="(edge, edge_name) in edges" v-bind:key="edge_name">
+            <div v-if="Object.entries(edgeConfigs).length > 0 && edgeConfigs.constructor === Object">
+              <v-container v-for="(edge, edge_name) in edgeConfigs" v-bind:key="edge_name">
                 <EdgeTester v-bind:edge_name="edge_name" v-bind:edge="edge"></EdgeTester>
               </v-container>
             </div>
@@ -212,14 +212,14 @@
       userDefinedFunctions() {
         return this.$store.state.dagEditor.userDefinedFunctions;
       },
-      edges() {
+      edgeConfigs() {
         if (self.filter_exp === '') {
-          return this.$store.state.dagEditor.edges;
+          return this.$store.state.dagEditor.edgeConfigs;
         } else {
           let result = {};
-          for (let key in this.$store.state.dagEditor.edges) {
-            if (this.$store.state.dagEditor.edges.hasOwnProperty(key) && key.includes(this.filter_exp)) {
-              result[key] = this.$store.state.dagEditor.edges[key];
+          for (let key in this.$store.state.dagEditor.edgeConfigs) {
+            if (this.$store.state.dagEditor.edgeConfigs.hasOwnProperty(key) && key.includes(this.filter_exp)) {
+              result[key] = this.$store.state.dagEditor.edgeConfigs[key];
             }
           }
           return result;
@@ -306,9 +306,9 @@
             // this.tokens = JSON.stringify(a, null, 4);
             this.errors = !syntactical_analysis(editor);
             if (!this.errors) {
-              this.$store.commit('setEdges', EDGE_CONFIGS);
+              this.$store.commit('setEdgeConfigs', EDGE_CONFIGS);
             } else {
-              this.$store.commit('setEdges', {});
+              this.$store.commit('setEdgeConfigs', {});
             }
           }
         });

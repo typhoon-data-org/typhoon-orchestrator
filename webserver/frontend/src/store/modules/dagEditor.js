@@ -13,7 +13,7 @@ export default {
     dag_name: 'example_dag',
     execution_date: new Date().toISOString().substr(0, 10),
     execution_time: '00:00',
-    edges: {},
+    edgeConfigs: {},
     savedCode: '',
     currentDocObject: null,
     dagFiles: [],
@@ -99,8 +99,8 @@ export default {
     setUserDefinedTransformations(state, transformations) {
       state.userDefinedTransformations = transformations;
     },
-    setEdges(state, edges) {
-      state.edges = edges;
+    setEdgeConfigs(state, edgeConfigs) {
+      state.edgeConfigs = edgeConfigs;
     },
     setTransformationResult(state, payload) {
       let result;
@@ -109,7 +109,7 @@ export default {
       } else {
         result = JSON.stringify(payload.result)
       }
-      Vue.set(state.edges[payload.edge_name][payload.param_name], 'transformation_result', result);
+      Vue.set(state.edgeConfigs[payload.edge_name][payload.param_name], 'transformation_result', result);
     },
     setDagName(state, name) {
       state.dag_name = name;
