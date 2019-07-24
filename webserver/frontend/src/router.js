@@ -3,6 +3,7 @@ import Router from 'vue-router'
 import Home from './views/Home.vue'
 import Connections from "./components/Connections";
 import DagEditor from "./components/DagEditor";
+import DAGDiagram from "./components/DAGDiagram";
 import Variables from "./components/Variables";
 
 Vue.use(Router)
@@ -30,6 +31,11 @@ export default new Router({
       path: '/dag-editor',
       name: 'DAG editor',
       component: DagEditor
+    },
+    {
+      path: '/dag-diagram',
+      name: 'DAG diagram',
+      component: DAGDiagram
     },
     {
       path: '/about',

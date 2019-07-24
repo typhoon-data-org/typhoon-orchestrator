@@ -1,6 +1,8 @@
 <template>
   <v-card ref="container" flat>
-    <svg id="svg" :height="height + 50" :width="width" style='stroke-width: 2px; background-color: white;'></svg>
+    <div class ="svgContainer">
+      <svg id="svgEl" :height="height + 50" :width="width"></svg>
+    </div>
   </v-card>
 </template>
 
@@ -79,6 +81,14 @@
         marginy: 20
       });
 
+      g.setNode("A", {label: "A"});
+      g.setNode("B", {label: "B"});
+      g.setNode("C", {label: "C"});
+      g.setEdge("A", "B", {label: "label"});
+      g.setEdge("A", "C", {label: "label"});
+      inner.call(render, g);
+      return;
+
       for (var id in workers) {
         var worker = workers[id];
         var className = worker.consumers ? "running" : "stopped";
@@ -118,19 +128,42 @@
       // let svgZoom = isUpdate ? svg.transition().duration(500) : svg;
       svg.call(zoom.transform, d3.zoomIdentity.translate(translateX, translateY).scale(zoomScale));
 
-// Run the renderer. This is what draws the final graph.
-//       render(inner, g);
-//
-// // Center the graph
-//       let initialScale = 0.75;
-//       // svg.call(zoom.transform, d3.zoomIdentity.translate((svg.attr("width") - g.graph().width * initialScale) / 2, 20).scale(initialScale));
-//       svg.call(zoom.transform, d3.zoomIdentity.translate((this.width - g.graph().width * initialScale) / 2, 20).scale(initialScale));
-
-      // svg.attr('height', g.graph().height * initialScale + 40);
     }
   }
 </script>
 
 <style scoped>
+*{
+  margin: 0;
+  padding: 0;
+}
+body{
+  height: 100%;
+}
+.svgContainer{
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+.svgContainer >>> #svgEl rect{
+  fill: #999;
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+.svgContainer >>> #svgEl text {
+  font-weight: 300;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serf;
+  font-size: 14px;
+}
 
+.svgContainer >>> #svgEl path{
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+.svgContainer >>> .tipsy div {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: #60b1fc;
+  margin: 0;
+}
 </style>
