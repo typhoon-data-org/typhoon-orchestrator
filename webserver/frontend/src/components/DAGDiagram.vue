@@ -1,8 +1,6 @@
 <template>
-  <v-card ref="container" flat>
-    <div class ="svgContainer">
-      <svg id="svgEl" :height="height + 50" :width="width"></svg>
-    </div>
+  <v-card class="svgContainer" flat>
+    <svg id="svgEl" :height="height + 50" :width="width"></svg>
   </v-card>
 </template>
 
@@ -35,7 +33,6 @@
         ],
         height: 500,
         width: 1000,
-        dag: [],
       }
     },
     // computed: {
@@ -62,11 +59,6 @@
         marginy: 20
       });
 
-      // g.setNode("A", {label: "A"});
-      // g.setNode("B", {label: "B"});
-      // g.setNode("C", {label: "C"});
-      // g.setEdge("A", "B", {label: "label"});
-      // g.setEdge("A", "C", {label: "label"});
       this.nodes.forEach(node => g.setNode(node.label, {label: node.label}));
       this.edges.forEach(edge => g.setEdge(edge.source, edge.destination, {label: edge.label}));
 
@@ -76,18 +68,6 @@
 </script>
 
 <style scoped>
-*{
-  margin: 0;
-  padding: 0;
-}
-/*body{*/
-  /*height: 100%;*/
-/*}*/
-.svgContainer{
-  position: absolute;
-  /*width: 100%;*/
-  /*height: 100%;*/
-}
 .svgContainer >>> #svgEl rect{
   fill: #999;
   stroke: #000;
