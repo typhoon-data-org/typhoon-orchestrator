@@ -69,7 +69,14 @@
 
         let svg = d3.select("svg"),
           inner = svg.append("g"),
-          zoom = d3.zoom().on("zoom", function () {
+          padding = 20,
+          bBox = inner.node().getBBox(),
+          width = svg.style("width").replace("px", ""),
+          initialScale = 0.75,
+          hRatio = this.height / (bBox.height + padding),
+          wRatio = width / (bBox.width + padding),
+          zoom = d3.zoom()
+            .on("zoom", function () {
             inner.attr("transform", d3.event.transform);
           });
         svg.call(zoom);
@@ -89,6 +96,15 @@
         this.edges.forEach(edge => g.setEdge(edge.source, edge.destination, {label: edge.label}));
 
         inner.call(render, g);
+
+        let transform = d3.zoomIdentity
+          .translate(
+            (svg.style("width").replace("px", "") - g.graph().width * initialScale)/2,
+            (this.height - g.graph().height * initialScale)/2
+          );
+        inner
+          .call(zoom.transform, transform)
+        // svg.attr('height', g.graph().height * initialScale + 40);
       }
     }
   }
