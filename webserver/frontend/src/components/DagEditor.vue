@@ -32,7 +32,7 @@
       </v-flex>
     </v-layout>
     <v-layout row wrap>
-      <v-flex xs10>
+      <v-flex xs12>
         <v-alert
             :value="true"
             type="warning"
@@ -59,7 +59,7 @@
 
     <v-layout row wrap>
       <v-flex xs12>
-        <editor ref="dag_editor" v-model="content" @init="editorInit" lang="yaml" theme="tomorrow_night" width="1000" height="550"></editor>
+        <editor ref="dag_editor" v-model="content" @init="editorInit" lang="yaml" theme="tomorrow_night" width="100%" height="550"></editor>
       </v-flex>
     </v-layout>
 

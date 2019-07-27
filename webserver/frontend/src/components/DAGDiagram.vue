@@ -2,7 +2,7 @@
   <v-card class="svgContainer" flat>
     <h1 v-if="syntaxError" class="text-md-center"><v-icon x-large>error_outline</v-icon> Fix syntax errors to show DAG</h1>
     <h1 v-else-if="error" class="text-md-center"><v-icon x-large>error_outline</v-icon> {{ error }}</h1>
-    <svg id="svgEl" :height="height + 50" :width="width"></svg>
+    <svg id="svgEl" :height="height + 50" width="100%"></svg>
   </v-card>
 </template>
 

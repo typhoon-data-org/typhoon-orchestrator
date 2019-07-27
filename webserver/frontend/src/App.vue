@@ -64,6 +64,7 @@
           flat
           tile
           class="lighten-1 white--text text-xs-center"
+          width="100%"
       >
         <v-card-text>
           <!--<v-btn-->

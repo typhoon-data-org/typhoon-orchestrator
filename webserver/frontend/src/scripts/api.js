@@ -6,4 +6,5 @@ export default {
   getDagFilenames: () => API.get('get-dag-filenames'),
   getDAGContents: params => API.get('get-dag-contents', {params}),
   saveDAGCode: (body, params) => API.put('save-dag-code', body, {params}),
+  runDag: params => API.get('run-dag', {params}),
 }
