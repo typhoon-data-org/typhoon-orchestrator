@@ -4,7 +4,7 @@ This module is responsible for handling the lambda request and executing the cor
 import json
 import os
 import sys
-from contextlib import contextmanager
+from contextlib import contextmanager, redirect_stdout, redirect_stderr
 from importlib import util
 from io import StringIO
 from pathlib import Path
@@ -65,17 +65,24 @@ def run_dag(dag_name, time, capture_logs: bool = False) -> Optional[str]:
 
     if capture_logs:
         # Capture stdout
-        stdout = sys.stdout
-        sys.stdout = StringIO()
-        with _sandbox_env():
+        # stdout = sys.stdout
+        stdout_buffer = StringIO()
+        # sys.stdout = stdout_buffer
+        stderr_buffer = StringIO()
+        # stderr = stderr_buffer
+        # sys.stderr =stderr_buffer
+        with _sandbox_env(), redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer):
             sys.path.append(str(dag_path.parent))
             module = _load_module_from_path(str(dag_path), module_name=f'{dag_name}.{dag_name}')
             main_function = getattr(module, f'{dag_name}_main')
             main_function({'time': time}, None)
-        log = sys.stdout.getvalue()
-        sys.stdout.close()
-        sys.stdout = stdout
-        return log
+        log = stdout_buffer.getvalue()
+        err_log = stderr_buffer.getvalue()
+        # sys.stdout = stdout
+        # stdout_buffer.close()
+        # sys.stderr = stderr
+        # stderr_buffer.close()
+        return log + '\n' + err_log
     else:
         with _sandbox_env():
             sys.path.append(str(dag_path.parent))

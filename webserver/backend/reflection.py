@@ -36,7 +36,8 @@ class BrokenImportError(object):
 def get_functions_in_module_path(module_path: str):
     module = load_module_from_path(module_path)
 
-    return getmembers(module, lambda func: isfunction(func) and getmodule(func) is None)
+    # Having the getmodule inside the lambda sometimes caused it to return an empty list when it shouldn't
+    return [func for func in getmembers(module, lambda func: isfunction(func)) if getmodule(func) is None]
 
 
 def get_function_names_in_module_path(module_path: str):
