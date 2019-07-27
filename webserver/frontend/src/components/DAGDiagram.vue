@@ -34,8 +34,6 @@
     watch: {
       nodes: {
         handler: function() {
-          if (this.nodes.length === 0) return;
-
           this.setError();
           this.drawDAG();
         },
@@ -43,8 +41,6 @@
       },
       edges: {
         handler: function() {
-          if (this.nodes.length === 0) return;
-
           this.setError();
           this.drawDAG();
         },
@@ -65,19 +61,14 @@
       drawDAG: function () {
         d3.select("svg").selectAll("*").remove();
 
-        if (this.error) return;
+        if (this.error || this.nodes.length === 0) return;
+
 
         let svg = d3.select("svg"),
           inner = svg.append("g"),
-          padding = 20,
-          bBox = inner.node().getBBox(),
-          width = svg.style("width").replace("px", ""),
-          initialScale = 0.75,
-          hRatio = this.height / (bBox.height + padding),
-          wRatio = width / (bBox.width + padding),
           zoom = d3.zoom()
             .on("zoom", function () {
-            inner.attr("transform", d3.event.transform);
+              inner.attr("transform", d3.event.transform);
           });
         svg.call(zoom);
 
@@ -97,14 +88,22 @@
 
         inner.call(render, g);
 
+        let scalingMultiplier = 0.75,
+          padding = 20,
+          graphWidth = g.graph().width,
+          graphHeight = g.graph().height,
+          width = svg.style("width").replace("px", ""),
+          hRatio = this.height / (graphHeight + padding),
+          wRatio = width / (graphWidth + padding),
+          scalingFactor = hRatio < wRatio ? hRatio * scalingMultiplier : wRatio * scalingMultiplier;
         let transform = d3.zoomIdentity
           .translate(
-            (svg.style("width").replace("px", "") - g.graph().width * initialScale)/2,
-            (this.height - g.graph().height * initialScale)/2
-          );
+            (width.replace("px", "") - graphWidth * scalingFactor)/2,
+            (this.height - g.graph().height * scalingFactor)/2
+          )
+          .scale(scalingFactor);
         inner
           .call(zoom.transform, transform)
-        // svg.attr('height', g.graph().height * initialScale + 40);
       }
     }
   }
