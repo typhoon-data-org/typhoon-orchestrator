@@ -14,6 +14,7 @@ from typhoon.connections import scan_connections, ConnectionParams, get_connecti
     get_connections_local_by_conn_id
 from typhoon.contrib.hooks import hook_factory
 from typhoon.deployment.dags import get_dag_filenames
+from typhoon.handler import run_dag
 from typhoon.settings import typhoon_directory
 from typhoon.variables import scan_variables, VariableType
 
@@ -199,3 +200,13 @@ def api_save_dag_code():
     filepath = Path(typhoon_directory()) / 'dags' / filename
     filepath.write_text(body['code'])
     return 'Ok'
+
+
+@app.route('/run-dag')
+def api_run_dag():
+    env = request.args.get('env')
+    _build_dags(target_env=env, debug=False)
+    dag_name = request.args.get('dag_name')
+    time = request.args.get('time')
+    logs = run_dag(dag_name, time, capture_logs=True)
+    return logs

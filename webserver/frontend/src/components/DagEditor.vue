@@ -29,6 +29,11 @@
           <div v-else>{{ currentDAGFilename }}</div>
           <div v-if="shortcutHints">&nbsp alt+1</div>
         </v-btn>
+        <v-btn color="error" v-bind:disabled="errors" v-on:click="runCode">
+          <v-progress-circular v-if="runningCode" :size="25" indeterminate></v-progress-circular>
+          <v-icon v-else left>play_circle_outline</v-icon>
+          run
+        </v-btn>
       </v-flex>
     </v-layout>
     <v-layout row wrap>
@@ -161,6 +166,8 @@
       </v-btn>
     </v-snackbar>
     <SidebarDags v-on:dag-file-selected="setDagFile"></SidebarDags>
+    <DagRunLog v-bind:log-text="logText" v-bind:dialog="dagRunLogDialog" v-bind:title="dag_name + ' log'"
+    v-on:closed="dagRunLogDialog = false"></DagRunLog>
   </v-container>
 </template>
 
@@ -170,6 +177,7 @@
   import {get_completions} from "../scripts/completer";
   import EdgeTester from "./EdgeTester";
   import DagConfigDialog from "./DagConfigDialog";
+  import DagRunLog from "./DagRunLog"
   import {EDGE_CONFIGS, NODES, EDGES} from "../scripts/analize_dag";
   import DocsView from "./DocsView";
   import SidebarDags from "./SidebarDags";
@@ -183,6 +191,7 @@
       DocsView,
       DagConfigDialog,
       EdgeTester,
+      DagRunLog,
       editor: require('vue2-ace-editor'),
     },
     data: () => ({
@@ -197,7 +206,10 @@
       userPackagesError: false,
       loadingCode: false,
       savingCode: false,
+      runningCode: false,
       shortcutHints: false,
+      dagRunLogDialog: false,
+      logText: "",
     }),
     computed: {
       typhoonFunctionModules() {
@@ -248,6 +260,9 @@
       },
       editingExistingDAG () {
         return this.currentDAGFilename !== null;
+      },
+      dag_name () {
+        return this.$store.state.dagEditor.dag_name;
       }
     },
     methods: {
@@ -399,6 +414,8 @@
 
       setDagFile: function (evt) {
         this.content = evt.contents;
+        let dagName = evt.filename.split('.')[0];
+        this.$store.commit('setDagName', dagName);
         this.snackbar_loaded_dag = true;
       },
 
@@ -406,6 +423,17 @@
         this.savingCode = true;
         this.$api.saveDAGCode({code: this.content}, {filename: this.currentDAGFilename})
           .then(() => this.savingCode = false)
+      },
+
+      runCode: function () {
+        this.runningCode = true;
+        let dagName = this.$store.state.dagEditor.dag_name;
+        this.$api.runDag({dag_name: dagName, time: this.$store.getters.executionDatetime, env: 'dev'})
+          .then((result) => {
+            this.runningCode = false;
+            this.logText = result.data;
+            this.dagRunLogDialog = true;
+          })
       },
 
       setFocusFilterEdgesTextField: function() {
