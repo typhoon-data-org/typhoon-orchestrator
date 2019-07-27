@@ -1,7 +1,8 @@
 <template>
   <v-card class="svgContainer" flat>
-    <svg v-if="nodes.length > 0" id="svgEl" :height="height + 50" :width="width"></svg>
-    <h1 v-else>Errors!</h1>
+    <h1 v-if="syntaxError" class="text-md-center"><v-icon x-large>error_outline</v-icon> Fix syntax errors to show DAG</h1>
+    <h1 v-else-if="error" class="text-md-center"><v-icon x-large>error_outline</v-icon> {{ error }}</h1>
+    <svg id="svgEl" :height="height + 50" :width="width"></svg>
   </v-card>
 </template>
 
@@ -19,26 +20,53 @@
       return {
         height: 500,
         width: 1000,
+        error: false,
       }
     },
-    // computed: {
-    //   width() {
-    //     return this.$refs.container.width();
-    //   }
-    // },
+    computed: {
+      // width() {
+      //   return this.$refs.container.width();
+      // }
+    syntaxError () {
+        return this.nodes.length === 0;
+      }
+    },
     watch: {
-      nodes: function() {
-        this.drawDAG();
+      nodes: {
+        handler: function() {
+          if (this.nodes.length === 0) return;
+
+          this.setError();
+          this.drawDAG();
+        },
+        deep: true
       },
-      edges: function() {
-        this.drawDAG();
+      edges: {
+        handler: function() {
+          if (this.nodes.length === 0) return;
+
+          this.setError();
+          this.drawDAG();
+        },
+        deep: true
       },
     },
     // mounted() {
     // },
     methods: {
+      setError: function () {
+        let nodeLabels = this.nodes.map(x => x.label);
+        if (new Set(nodeLabels).size !== this.nodes.length) this.error = "Nodes must have unique identifiers";
+        else if (new Set(this.edges.map(x => x.label)).size !== this.edges.length) this.error = "Edges must have unique identifiers";
+        else if (this.edges.filter(e => !nodeLabels.includes(e.source) || !nodeLabels.includes(e.destination)).length > 0)
+          this.error = "Edges contain undeclared nodes";
+        else this.error = false;
+      },
       drawDAG: function () {
         d3.select("svg").selectAll("*").remove();
+
+        if (this.error) return;
+
         let svg = d3.select("svg"),
           inner = svg.append("g"),
           zoom = d3.zoom().on("zoom", function () {
