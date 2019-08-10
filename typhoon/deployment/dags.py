@@ -46,18 +46,6 @@ def get_sources(structure: dict) -> Sequence[str]:
     return list(sources.difference(destinations))
 
 
-def get_sinks(structure: dict) -> Sequence[str]:
-    sources = set(structure.keys())
-    destinations = set(get_destinations(structure))
-    return list(destinations.difference(sources))
-
-
-def get_transformations(edges: dict, source: str, destination: str) -> Sequence[str]:
-    for _, edge in edges.items():
-        if edge['source'] == source and edge['destination'] == destination:
-            return edge['transformations']
-
-
 def get_edge(edges: dict, source: str, destination: str) -> Tuple[str, str]:
     for edge_name, edge in edges.items():
         if edge['source'] == source and edge['destination'] == destination:
@@ -74,15 +62,6 @@ def get_destinations(structure) -> Iterable[str]:
     for x in structure.values():
         for edge in x:
             yield edge
-
-
-def get_adapters_modules(edges: dict)  -> Iterable[str]:
-    modules = set()
-    for _, edge in edges.items():
-        if not edge['adapter']['function'].startswith('typhoon.'):
-            modules.add('.'.join(edge['adapter']['function'].split('.')[:-1]))
-
-    return list(modules)
 
 
 def get_transformations_modules(edges: dict) -> Iterable[str]:
@@ -171,10 +150,7 @@ templateEnv.lstrip_blocks = True
 templateEnv.keep_trailing_newline = True
 
 templateEnv.globals.update(get_sources=get_sources)
-templateEnv.globals.update(get_sinks=get_sinks)
 templateEnv.globals.update(get_destinations=get_destinations)
-templateEnv.globals.update(get_transformations=get_transformations)
-templateEnv.globals.update(get_adapters_modules=get_adapters_modules)
 templateEnv.globals.update(get_functions_modules=get_functions_modules)
 templateEnv.globals.update(get_transformations_modules=get_transformations_modules)
 templateEnv.globals.update(get_edge=get_edge)
