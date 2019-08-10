@@ -8,6 +8,12 @@ from typhoon.handler import handle
 from typhoon.models.dag_context import DagContext
 
 
+def add_sync_property(func):
+    func.sync = func
+    return func
+
+
+@add_sync_property
 def foo(a, b, dag_context: DagContext, batch_num):
     return a + b, batch_num, dag_context.execution_date
 
