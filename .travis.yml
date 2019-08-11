@@ -6,5 +6,10 @@ install:
   - pip install moto
   - pip install mock
   - export BOTO_CONFIG=/dev/null    # Otherwise importing moto fails
-script:
-  - pytest tests/unit
+jobs:
+  include:
+    - stage: test
+      name: Unit tests
+      script: pytest tests/unit
+    - script: AWS_DEFAULT_REGION="eu-west-1" pytest tests/integration/
+      name: Integration tests

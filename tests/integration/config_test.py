@@ -48,4 +48,4 @@ def test_typhoon_config(typhoon_home):
     cli_config_prod = CLIConfig(target_env='prod')
     assert cli_config_prod.aws_profile == 'prodaws'
     assert cli_config_prod.project_name == 'first_project'
-    assert cli_config_prod.s3_bucket == 'typhoon_first_project'
+    assert cli_config_prod.s3_bucket == 'typhoon-first_project'
