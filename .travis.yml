@@ -5,6 +5,6 @@ install:
   - pip install -r requirements.txt
   - pip install moto
   - pip install mock
+  - export BOTO_CONFIG=/dev/null    # Otherwise importing moto fails
 script:
-  - export BOTO_CONFIG=/dev/null
   - pytest tests/unit
