@@ -6,4 +6,5 @@ install:
   - pip install moto
   - pip install mock
 script:
+  - export BOTO_CONFIG=/dev/null
   - pytest tests/unit
