@@ -7,7 +7,12 @@ Item = Union[int, str, float, Dict, List]
 class Node(NamedTuple):
     name: str
     function: str
-    config: Item
+    asynchronous: bool = True
+    config: Item = None
+
+    def __post_init__(self):
+        if not self.config:
+            self.config = {}
 
     def as_dict(self):
         return self._asdict()
@@ -16,9 +21,8 @@ class Node(NamedTuple):
 class Edge(NamedTuple):
     name: str
     source: str     # Node id
-    adapter: Dict[Item]
+    adapter: Dict[str, Item]
     destination: str     # Node id
-    asynchronous: bool = True
 
     def as_dict(self):
         return self._asdict()
@@ -44,12 +48,12 @@ class DAG(NamedTuple):
     @staticmethod
     def from_dict_definition(dag: Dict):
         kwargs = dag.copy()
-        kwargs['nodes'] = {name: Node(name=name, **node) for name, node in dag['nodes']}
-        kwargs['edges'] = {name: Edge(name=name, **edge) for name, edge in dag['edges']}
+        kwargs['nodes'] = {name: Node(name=name, **node) for name, node in dag['nodes'].items()}
+        kwargs['edges'] = {name: Edge(name=name, **edge) for name, edge in dag['edges'].items()}
         return DAG(**kwargs)
 
     @property
-    @lru_cache(1)
+    # @lru_cache(1)
     def structure(self) -> Dict[str, List[str]]:
         """For every node all the nodes it's connected to"""
         structure = {}
@@ -62,13 +66,13 @@ class DAG(NamedTuple):
         return structure
 
     @property
-    @lru_cache(1)
+    # @lru_cache(1)
     def non_source_nodes(self) -> List[str]:
         """All nodes that are the destination of an edge"""
         return [node for x in self.structure.values() for node in x]
 
     @property
-    @lru_cache(1)
+    # @lru_cache(1)
     def sources(self) -> List[str]:
         """Nodes that are sources of the DAG"""
         sources = set(self.structure.keys())
@@ -83,3 +87,6 @@ class DAG(NamedTuple):
 
     def get_edges_for_source(self, source) -> List[Edge]:
         return [edge for edge in self.edges.values() if edge.source == source]
+
+    def out_nodes(self, source: str) -> List[str]:
+        return self.structure.get(source, ())

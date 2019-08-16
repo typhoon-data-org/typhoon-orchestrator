@@ -2,13 +2,13 @@ import os
 import re
 from collections import Sequence
 from pathlib import Path
-from typing import Union, List
+from typing import Union, List, Iterable, Dict
 
 import jinja2
 import yaml
 
 from typhoon import settings
-from typhoon.core.dags import DAG
+from typhoon.core.dags import DAG, Node
 
 
 def get_dag_filenames():
@@ -18,7 +18,7 @@ def get_dag_filenames():
     return dag_files
 
 
-def load_dags() -> Sequence[DAG]:
+def load_dags() -> Iterable[DAG]:
     dag_files = get_dag_filenames()
     for dag_file in dag_files:
         with open(os.path.join(settings.dags_directory(), dag_file), 'r') as f:
@@ -28,7 +28,9 @@ def load_dags() -> Sequence[DAG]:
 #################
 # Jinja filters #
 #################
-def get_transformations_modules(dag: DAG) -> Sequence[str]:
+def get_transformations_modules(dag: DAG) -> Iterable[str]:
+    if isinstance(dag, dict):
+        dag = DAG.from_dict_definition(dag)
     modules = set()
     for edge in dag.edges.values():
         for val in edge.adapter.values():
@@ -42,11 +44,11 @@ def get_transformations_modules(dag: DAG) -> Sequence[str]:
     return list(modules)
 
 
-def get_functions_modules(nodes: dict) -> Sequence[str]:
+def get_functions_modules(nodes: Dict[str, Node]) -> Iterable[str]:
     modules = set()
     for node in nodes.values():
-        if not node['function'].startswith('typhoon.'):
-            modules.add('.'.join(node['function'].split('.')[:-1]))
+        if not node.function.startswith('typhoon.'):
+            modules.add('.'.join(node.function.split('.')[:-1]))
 
     return list(modules)
 
@@ -114,6 +116,9 @@ templateEnv.filters.update(clean_simple_param=clean_simple_param)
 templateEnv.filters.update(substitute_special=substitute_special)
 
 
-def transpile(dag: DAG, env: str, debug_mode: bool = False):
+def transpile(dag: Union[DAG, dict], env: str, debug_mode: bool = False):
+    """Given a DAG object or a dict definition of a DAG transpile it into a python definition"""
+    if isinstance(dag, dict):
+        dag = DAG.from_dict_definition(dag)
     dag_template = templateEnv.get_template('dag_code.py.j2')
     return dag_template.render({'dag': dag, 'environment': env, 'debug_mode': debug_mode})
