@@ -40,14 +40,12 @@ import os
 from datetime import datetime
 from typing import Dict
 
-from typhoon.models.dag_context import DagContext
 import typhoon.contrib.functions as typhoon_functions
 import typhoon.contrib.transformations as typhoon_transformations
 from typhoon.contrib.hooks.hook_factory import get_hook
 from typhoon.variables import get_variable_contents
 from typhoon.handler import handle
-from typhoon.core import SKIP_BATCH, task
-from typhoon.models.dag import dag
+from typhoon.core import SKIP_BATCH, task, DagContext
 from typhoon.models.task import task_logging_wrapper
 
 import transformations.files
@@ -56,7 +54,6 @@ os.environ['TYPHOON_HOME'] = os.path.dirname(__file__)
 DAG_ID = 'example_dag'
 
 
-@dag
 def example_dag_main(event, context):
     if event.get('type'):     # Async execution
         return handle(event, context)

@@ -2,7 +2,7 @@ import functools
 
 from typhoon.core import get_typhoon_config
 from typhoon.logger import StdoutLogger, logger_factory
-from typhoon.models.dag_context import DagContext
+from typhoon.core.dags import DagContext
 from typhoon.core.settings import environment
 
 

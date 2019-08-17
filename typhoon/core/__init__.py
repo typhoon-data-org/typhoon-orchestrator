@@ -3,3 +3,4 @@ This module contains all the core functionality of the project, models and  inte
  implementation for those interfaces.
 """
 from typhoon.core.core import *
+from typhoon.core.dags import DagContext

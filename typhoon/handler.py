@@ -12,7 +12,7 @@ from typing import Optional
 
 import jsonpickle
 
-from typhoon.models.dag_context import DagContext
+from typhoon.core.dags import DagContext
 from typhoon.core.settings import typhoon_directory, out_directory
 
 

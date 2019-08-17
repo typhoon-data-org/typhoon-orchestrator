@@ -5,7 +5,7 @@ from pathlib import Path
 
 from typhoon.core import make_lambda_payload
 from typhoon.handler import handle
-from typhoon.models.dag_context import DagContext
+from typhoon.core.dags import DagContext
 
 
 def add_sync_property(func):
