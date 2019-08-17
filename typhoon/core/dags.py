@@ -90,3 +90,25 @@ class DAG(NamedTuple):
 
     def out_nodes(self, source: str) -> List[str]:
         return self.structure.get(source, ())
+
+    @property
+    def has_cycle(self):
+        white = 0
+        gray = 1
+        black = 2
+        color = {n: white for n in self.nodes.keys()}
+
+        def dfs(node):
+            color[node] = gray
+            for dest in self.structure.get(node, []):
+                if color[dest] == gray:
+                    return True
+                elif color[dest] == white and dfs(dest):
+                    return True
+            color[node] = black
+            return False
+
+        for n in self.nodes:
+            if color[n] == white and dfs(n):
+                return True
+        return False
