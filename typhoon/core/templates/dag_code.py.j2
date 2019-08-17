@@ -12,7 +12,6 @@ from typhoon.contrib.hooks.hook_factory import get_hook
 from typhoon.variables import get_variable_contents
 from typhoon.handler import handle
 from typhoon.core import SKIP_BATCH, task
-from typhoon.models.dag import dag
 from typhoon.models.task import task_logging_wrapper
 {% for transformations_module in get_transformations_modules(dag) %}
 
@@ -32,7 +31,6 @@ os.environ['TYPHOON_ENV'] = '{{ environment }}'
 
 {% endif %}
 
-@dag
 def {{ dag.name }}_main(event, context):
     if event.get('type'):     # Async execution
         return handle(event, context)
