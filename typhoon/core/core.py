@@ -1,4 +1,3 @@
-import json
 import os
 from functools import wraps
 from typing import Optional, Dict, Tuple, Any
@@ -7,7 +6,7 @@ import boto3
 import jsonpickle
 
 from typhoon.config import CLIConfig, TyphoonConfig
-from typhoon.settings import get_env
+from typhoon.core.settings import environment
 
 # Define sentinels
 SKIP_BATCH = object()
@@ -17,7 +16,7 @@ def get_typhoon_config(use_cli_config: Optional[bool] = False, target_env: Optio
     """Reads the Typhoon Config file.
     If no target_env is specified it uses the TYPHOON_ENV environment variable.
     """
-    env = target_env or get_env()
+    env = target_env or environment()
     return CLIConfig(env) if use_cli_config else TyphoonConfig(env)
 
 

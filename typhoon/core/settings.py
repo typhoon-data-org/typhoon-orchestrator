@@ -35,5 +35,5 @@ def hooks_directory():
     return os.path.join(typhoon_directory(), 'hooks')
 
 
-def get_env():
+def environment():
     return os.environ["TYPHOON_ENV"]

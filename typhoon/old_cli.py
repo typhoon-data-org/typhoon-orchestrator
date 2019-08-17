@@ -10,7 +10,7 @@ from typhoon.connections import get_connection_local, set_connection, dump_conne
 from typhoon.deployment.dags import load_dags
 from typhoon.deployment.deploy import build_dag_code, clean_out
 from typhoon.deployment.deploy import old_copy_user_defined_code, build_zappa_settings
-from typhoon.settings import out_directory
+from typhoon.core.settings import out_directory
 
 
 # noinspection PyUnusedLocal

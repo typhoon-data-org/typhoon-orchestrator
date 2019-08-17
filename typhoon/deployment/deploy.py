@@ -5,7 +5,7 @@ from typing import Union, Sequence, Optional
 
 from typhoon.deployment.dags import generate_dag_code
 from typhoon.deployment.zappa import generate_zappa_settings
-from typhoon.settings import out_directory, functions_directory, transformations_directory, \
+from typhoon.core.settings import out_directory, functions_directory, transformations_directory, \
     typhoon_directory, hooks_directory
 
 

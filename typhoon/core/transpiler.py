@@ -1,13 +1,12 @@
 import os
 import re
-from collections import Sequence
 from pathlib import Path
 from typing import Union, List, Iterable, Dict
 
 import jinja2
 import yaml
 
-from typhoon import settings
+from typhoon.core import settings
 from typhoon.core.dags import DAG, Node
 
 

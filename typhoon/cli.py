@@ -1,13 +1,12 @@
 import os
 import subprocess
 from pathlib import Path
-from shutil import copy
 
 import click
 
 from typhoon import connections
 from typhoon.deployment.deploy import deploy_dag_requirements, copy_local_typhoon, copy_user_defined_code
-from typhoon.settings import out_directory
+from typhoon.core.settings import out_directory
 
 
 @click.group()

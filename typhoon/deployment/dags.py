@@ -5,7 +5,7 @@ from typing import Sequence, Tuple, Iterable, Union, List
 import jinja2 as jinja2
 import yaml
 
-from typhoon import settings
+from typhoon.core import settings
 
 
 def load_dags() -> Sequence:

@@ -3,7 +3,7 @@ from types import SimpleNamespace
 from typing import List, Any
 
 from reflection import load_module_from_path
-from typhoon.settings import typhoon_directory
+from typhoon.core.settings import typhoon_directory
 
 
 def _replace_special_vars(string: str):

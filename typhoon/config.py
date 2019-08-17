@@ -5,7 +5,7 @@ from typing import Any, Type, Union, Optional
 
 from typhoon.aws.plumbing.dynamodb_plumbing import dynamodb_connection, DynamoDBConnectionType
 from typhoon.logger_interface import LoggingInterface
-from typhoon.settings import typhoon_directory
+from typhoon.core.settings import typhoon_directory
 
 
 class TyphoonConfigError(Exception):

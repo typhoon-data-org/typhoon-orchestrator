@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typhoon.aws.plumbing import dynamodb_plumbing
 from typhoon.aws.plumbing.dynamodb_plumbing import replace_decimals
 from typhoon.core import get_typhoon_config
-from typhoon.settings import typhoon_directory
+from typhoon.core.settings import typhoon_directory
 
 
 @dataclass

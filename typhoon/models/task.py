@@ -3,7 +3,7 @@ import functools
 from typhoon.core import get_typhoon_config
 from typhoon.logger import StdoutLogger, logger_factory
 from typhoon.models.dag_context import DagContext
-from typhoon.settings import get_env
+from typhoon.core.settings import environment
 
 
 def task_logging_wrapper(dag_id: str, dag_context: DagContext, task_id, batch_num):
@@ -20,7 +20,7 @@ def task_logging_wrapper(dag_id: str, dag_context: DagContext, task_id, batch_nu
                 ds=dag_context.ds,
                 etl_timestamp=dag_context.etl_timestamp,
                 batch_num=batch_num,
-                env=get_env(),
+                env=environment(),
             ):
                 with StdoutLogger():
                     yield from func(*args, **kwargs)

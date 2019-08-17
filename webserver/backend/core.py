@@ -15,7 +15,7 @@ from typhoon.connections import scan_connections, ConnectionParams, get_connecti
 from typhoon.contrib.hooks import hook_factory
 from typhoon.deployment.dags import get_dag_filenames
 from typhoon.handler import run_dag
-from typhoon.settings import typhoon_directory
+from typhoon.core.settings import typhoon_directory
 from typhoon.variables import scan_variables, VariableType
 
 app = Flask(__name__)

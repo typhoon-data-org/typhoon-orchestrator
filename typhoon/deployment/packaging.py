@@ -4,9 +4,9 @@ import sys
 import tempfile
 from distutils.dir_util import copy_tree
 from distutils.errors import DistutilsFileError
-from shutil import copytree, copy, make_archive, move, ignore_patterns, rmtree
+from shutil import copytree, copy, make_archive, move, rmtree
 
-from typhoon.settings import out_directory, functions_directory, transformations_directory, hooks_directory, \
+from typhoon.core.settings import out_directory, functions_directory, transformations_directory, hooks_directory, \
     typhoon_directory
 
 
