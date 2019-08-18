@@ -4,3 +4,4 @@ This module contains all the core functionality of the project, models and  inte
 """
 from typhoon.core.core import *
 from typhoon.core.dags import DagContext
+from typhoon.core.logger import setup_logging

@@ -4,6 +4,7 @@ from configparser import ConfigParser
 from typing import Any, Type, Union, Optional
 
 from typhoon.aws.plumbing.dynamodb_plumbing import dynamodb_connection, DynamoDBConnectionType
+from typhoon.core import settings
 from typhoon.logger_interface import LoggingInterface
 from typhoon.core.settings import typhoon_directory
 
@@ -34,8 +35,8 @@ class Config:
 
 class TyphoonConfig:
     """Parameters related to Typhoon Orchestrator configuration used at run-time (eg: DAG executions)"""
-    def __init__(self, env, config_path=None):
-        self.env = env
+    def __init__(self, env=None, config_path=None):
+        self.env = env or settings.environment()
         self.config_path = config_path or 'typhoonconfig.cfg'
         self.config = Config(os.path.join(typhoon_directory(), self.config_path), env)
 

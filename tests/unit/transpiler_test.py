@@ -45,7 +45,7 @@ import typhoon.contrib.transformations as typhoon_transformations
 from typhoon.contrib.hooks.hook_factory import get_hook
 from typhoon.variables import get_variable_contents
 from typhoon.handler import handle
-from typhoon.core import SKIP_BATCH, task, DagContext
+from typhoon.core import SKIP_BATCH, task, DagContext, setup_logging
 from typhoon.models.task import task_logging_wrapper
 
 import transformations.files
@@ -55,6 +55,7 @@ DAG_ID = 'example_dag'
 
 
 def example_dag_main(event, context):
+    setup_logging()
     if event.get('type'):     # Async execution
         return handle(event, context)
 
