@@ -1,0 +1,74 @@
+{
+	"title": "JSON schema for Typhoon DAG configuration files",
+	"$schema": "http://json-schema.org/draft-07/schema#",
+
+	"type": "object",
+	"required": [ "name", "schedule_interval", "nodes", "edges" ],
+
+	"properties": {
+		"name": {
+			"description": "The name of your DAG.",
+			"type": "string",
+			"maxLength": 200,
+			"minLength": 1,
+			"pattern": "\\w+"
+		},
+		"schedule_interval": {
+			"description": "Schedule or frequency on which the DAG should run",
+			"type": "string",
+			"maxLength": 200,
+			"enum": ["@hourly", "@daily", "@weekly"]
+		},
+		"active": {
+			"description": "Whether the DAG should be deployed or not",
+			"type": "boolean"
+		},
+		"nodes": {
+			"description": "Declare all the nodes in the DAG",
+			"type": "object",
+			"additionalProperties": {
+				"type": "object",
+				"properties": {
+					"function": {
+						"type": "string"
+					},
+					"config": {
+						"type": "object"
+					}
+				},
+				"required": ["function"]
+			}
+		},
+		"edges": {
+			"description": "Declare all edges connecting nodes in the DAG",
+			"type": "object",
+			"additionalProperties": {
+				"type": "object",
+				"properties": {
+					"async": {
+						"type": "boolean"
+					},
+					"source": {
+						"type": "string"
+					},
+					"adapter": {
+						"type": "object"
+					},
+					"destination": {
+						"type": "string"
+					}
+				},
+				"required": ["source", "adapter", "destination"]
+			}
+		},
+		"requirements": {
+			"description": "Python requirements needed to run the functions",
+			"type": "array",
+			"items": {
+				"type": "string"
+			},
+			"minItems": 1,
+			"uniqueItems": true
+		}
+	}
+}
