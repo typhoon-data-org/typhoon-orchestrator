@@ -4,7 +4,6 @@ from shutil import rmtree, copytree, copy
 from typing import Union, Sequence, Optional
 
 from typhoon.deployment.dags import generate_dag_code
-from typhoon.deployment.zappa import generate_zappa_settings
 from typhoon.core.settings import out_directory, functions_directory, transformations_directory, \
     typhoon_home, hooks_directory
 
@@ -53,17 +52,6 @@ def deploy_dag_requirements(dag: dict, local_typhoon: bool, typhoon_version: str
 def copy_local_typhoon(dag: dict, local_typhoon_path: str):
     dag_dir = Path(out_directory(), dag['name'], 'typhoon')
     copytree(local_typhoon_path, dag_dir)
-
-
-def build_zappa_settings(
-        dags: Sequence[dict],
-        aws_profile: str,
-        project_name: str,
-        s3_bucket: str,
-        env: str,
-):
-    zappa_settings = generate_zappa_settings(dags, aws_profile, project_name, s3_bucket, env)
-    write_to_out(f'zappa_settings.json', zappa_settings)
 
 
 def old_copy_user_defined_code():
