@@ -15,7 +15,7 @@ from typhoon.connections import scan_connections, ConnectionParams, get_connecti
 from typhoon.contrib.hooks import hook_factory
 from typhoon.deployment.dags import get_dag_filenames
 from typhoon.handler import run_dag
-from typhoon.core.settings import typhoon_directory
+from typhoon.core.settings import typhoon_home
 from typhoon.variables import scan_variables, VariableType
 
 app = Flask(__name__)
@@ -50,8 +50,8 @@ def get_typhoon_package_trees():
 @app.route('/typhoon-user-defined-modules')
 def get_user_defined_modules():
     modules = {
-        'functions': user_defined_modules(os.path.join(typhoon_directory(), 'functions')),
-        'transformations': user_defined_modules(os.path.join(typhoon_directory(), 'transformations')),
+        'functions': user_defined_modules(os.path.join(typhoon_home(), 'functions')),
+        'transformations': user_defined_modules(os.path.join(typhoon_home(), 'transformations')),
     }
     return jsonify(modules)
 
@@ -59,8 +59,8 @@ def get_user_defined_modules():
 @app.route('/typhoon-user-defined-package-trees')
 def get_typhoon_user_defined_package_trees():
     package_trees = {
-        'functions': package_tree_from_path(os.path.join(typhoon_directory(), 'functions')),
-        'transformations': package_tree_from_path(os.path.join(typhoon_directory(), 'transformations')),
+        'functions': package_tree_from_path(os.path.join(typhoon_home(), 'functions')),
+        'transformations': package_tree_from_path(os.path.join(typhoon_home(), 'transformations')),
     }
     return jsonify(package_trees)
 
@@ -146,7 +146,7 @@ def swap_connection():
 def get_connection_types():
     typhoon_conn_types = set(hook_factory.HOOK_MAPPINGS.keys())
     custom_conn_factory_module = load_module_from_path(
-        os.path.join(typhoon_directory(), 'hooks', 'hook_factory.py'), must_exist=False)
+        os.path.join(typhoon_home(), 'hooks', 'hook_factory.py'), must_exist=False)
     custom_conn_types = set(custom_conn_factory_module.HOOK_MAPPINGS.keys()) if custom_conn_factory_module else set()
     conn_types = list(typhoon_conn_types.union(custom_conn_types))
     return jsonify(sorted(conn_types))
@@ -189,7 +189,7 @@ def api_get_dag_filenames():
 @app.route('/get-dag-contents')
 def api_get_dag_contents():
     filename = request.args.get('filename')
-    filepath = Path(typhoon_directory()) / 'dags' / filename
+    filepath = Path(typhoon_home()) / 'dags' / filename
     return jsonify({'contents': filepath.read_text()})
 
 
@@ -197,7 +197,7 @@ def api_get_dag_contents():
 def api_save_dag_code():
     filename = request.args.get('filename')
     body = request.get_json()
-    filepath = Path(typhoon_directory()) / 'dags' / filename
+    filepath = Path(typhoon_home()) / 'dags' / filename
     filepath.write_text(body['code'])
     return 'Ok'
 

@@ -7,7 +7,7 @@ from distutils.errors import DistutilsFileError
 from shutil import copytree, copy, make_archive, move, rmtree
 
 from typhoon.core.settings import out_directory, functions_directory, transformations_directory, hooks_directory, \
-    typhoon_directory
+    typhoon_home
 
 
 def package_dag(
@@ -30,7 +30,7 @@ def package_dag(
         except FileNotFoundError:
             print('No hooks directory')
         try:
-            copy(os.path.join(typhoon_directory(), 'typhoonconfig.cfg'), temp_dir)
+            copy(os.path.join(typhoon_home(), 'typhoonconfig.cfg'), temp_dir)
         except FileNotFoundError:
             print('No typhoonconfig.cfg')
         copy(

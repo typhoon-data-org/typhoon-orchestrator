@@ -7,5 +7,5 @@ from typhoon.core import settings
 
 
 def setup_logging():
-    config = (Path(settings.typhoon_directory()) / 'logger_config.yml').read_text()
+    config = (Path(settings.typhoon_home()) / 'logger_config.yml').read_text()
     logging.config.dictConfig(yaml.load(config))

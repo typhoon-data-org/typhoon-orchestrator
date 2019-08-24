@@ -2,7 +2,7 @@ import os
 import sys
 
 
-def typhoon_directory():
+def typhoon_home():
     try:
         return os.environ['TYPHOON_HOME']
     except KeyError:
@@ -12,27 +12,27 @@ def typhoon_directory():
 
 
 def dags_directory():
-    return os.path.join(typhoon_directory(), 'dags')
+    return os.path.join(typhoon_home(), 'dags')
 
 
 def out_directory():
-    return os.path.join(typhoon_directory(), 'out')
+    return os.path.join(typhoon_home(), 'out')
 
 
 def functions_directory():
-    return os.path.join(typhoon_directory(), 'functions')
+    return os.path.join(typhoon_home(), 'functions')
 
 
 def adapters_directory():
-    return os.path.join(typhoon_directory(), 'adapters')
+    return os.path.join(typhoon_home(), 'adapters')
 
 
 def transformations_directory():
-    return os.path.join(typhoon_directory(), 'transformations')
+    return os.path.join(typhoon_home(), 'transformations')
 
 
 def hooks_directory():
-    return os.path.join(typhoon_directory(), 'hooks')
+    return os.path.join(typhoon_home(), 'hooks')
 
 
 def environment():

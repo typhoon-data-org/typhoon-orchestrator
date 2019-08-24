@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typhoon.aws.plumbing import dynamodb_plumbing
 from typhoon.aws.plumbing.dynamodb_plumbing import replace_decimals
 from typhoon.core import get_typhoon_config
-from typhoon.core.settings import typhoon_directory
+from typhoon.core.settings import typhoon_home
 
 
 @dataclass
@@ -48,7 +48,7 @@ class Connection:
 
 
 def get_connection_local(conn_id: str, conn_env: Optional[str]) -> ConnectionParams:
-    connections_yml = os.path.join(typhoon_directory(), 'connections.yml')
+    connections_yml = os.path.join(typhoon_home(), 'connections.yml')
     with open(connections_yml, 'r') as f:
         connections = yaml.load(f, Loader=yaml.FullLoader)
     conn_params = connections[conn_id] if not conn_env else connections[conn_id][conn_env]
@@ -56,7 +56,7 @@ def get_connection_local(conn_id: str, conn_env: Optional[str]) -> ConnectionPar
 
 
 def get_connections_local_by_conn_id(conn_id: str) -> dict:
-    connections_yml = os.path.join(typhoon_directory(), 'connections.yml')
+    connections_yml = os.path.join(typhoon_home(), 'connections.yml')
     with open(connections_yml, 'r') as f:
         connections = yaml.load(f, Loader=yaml.FullLoader)
     connections = connections[conn_id]

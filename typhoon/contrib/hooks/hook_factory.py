@@ -6,7 +6,7 @@ from typhoon.contrib.hooks.dbapi_hooks import SqliteHook, PostgresHook, Snowflak
 from typhoon.contrib.hooks.filesystem_hooks import S3Hook, LocalStorageHook
 from typhoon.contrib.hooks.hook_interface import HookInterface
 from typhoon.contrib.hooks.sqlalchemy_hook import SqlAlchemyHook
-from typhoon.core.settings import typhoon_directory
+from typhoon.core.settings import typhoon_home
 
 HOOK_MAPPINGS = {
     'sqlite': SqliteHook,
@@ -31,7 +31,7 @@ def get_hook(conn_id: str) -> HookInterface:
 def get_user_defined_hook(conn_id: str) -> HookInterface:
     spec = importlib.util.spec_from_file_location(
         'user_hooks',
-        os.path.join(typhoon_directory(), 'hooks', 'hook_factory.py'))
+        os.path.join(typhoon_home(), 'hooks', 'hook_factory.py'))
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod.get_hook(conn_id)

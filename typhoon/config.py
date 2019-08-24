@@ -6,7 +6,7 @@ from typing import Any, Type, Union, Optional
 from typhoon.aws.plumbing.dynamodb_plumbing import dynamodb_connection, DynamoDBConnectionType
 from typhoon.core import settings
 from typhoon.logger_interface import LoggingInterface
-from typhoon.core.settings import typhoon_directory
+from typhoon.core.settings import typhoon_home
 
 
 class TyphoonConfigError(Exception):
@@ -38,7 +38,7 @@ class TyphoonConfig:
     def __init__(self, env=None, config_path=None):
         self.env = env or settings.environment()
         self.config_path = config_path or 'typhoonconfig.cfg'
-        self.config = Config(os.path.join(typhoon_directory(), self.config_path), env)
+        self.config = Config(os.path.join(typhoon_home(), self.config_path), env)
 
     @property
     def logger(self) -> Type[LoggingInterface]:
@@ -141,7 +141,7 @@ class CLIConfig(TyphoonConfig):
         config_path = 'cliconfig.cfg'
         super().__init__(target_env, config_path=config_path)
         self.env = target_env
-        self.config = Config(os.path.join(typhoon_directory(), config_path), target_env)
+        self.config = Config(os.path.join(typhoon_home(), config_path), target_env)
 
     @property
     def aws_profile(self) -> Optional[str]:

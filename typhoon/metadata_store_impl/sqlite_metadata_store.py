@@ -13,7 +13,7 @@ class SQLiteMetadataStore(MetadataStoreInterface):
         self.config = config or TyphoonConfig()
         self._conn_connections = None
         self._conn_variables = None
-        self.db_path = str(Path(settings.typhoon_directory()) / f'{self.config.project_name}.db')
+        self.db_path = str(Path(settings.typhoon_home()) / f'{self.config.project_name}.db')
 
     @property
     def conn_connections(self):
