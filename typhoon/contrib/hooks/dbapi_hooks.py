@@ -2,9 +2,36 @@ from abc import ABC
 
 from typhoon.connections import get_connection_params
 from typhoon.contrib.hooks.hook_interface import HookInterface
+from type_extensions import Protocol
 
 
-class DbApiHook(HookInterface, ABC):
+class CursorProtocol(Protocol):
+    def execute(self, query: str):
+        ...
+
+    def fetchmany(self, size):
+        ...
+
+    def fetchall(self):
+        ...
+
+    def close(self):
+        ...
+
+
+class DbApiConnection(Protocol):
+    def cursor(self) -> CursorProtocol:
+        ...
+
+    def close(self):
+        ...
+
+
+class DbApiHook(HookInterface, Protocol):
+    @property
+    def connection(self) -> DbApiConnection:
+        ...
+    
     def __enter__(self):
         raise NotImplementedError
 
