@@ -3,13 +3,13 @@ from typing import Optional
 
 from typhoon.connections import Connection
 from typhoon.core import settings
-from typhoon.core.config import TyphoonConfig
 from typhoon.core.metadata_store_interface import MetadataStoreInterface
 from typhoon.variables import Variable
 
 
 class SQLiteMetadataStore(MetadataStoreInterface):
-    def __init__(self, config: Optional[TyphoonConfig] = None):
+    def __init__(self, config: Optional['TyphoonConfig'] = None):
+        from typhoon.core.config import TyphoonConfig
         from sqlitedict import SqliteDict
 
         self.config = config or TyphoonConfig()
@@ -21,7 +21,7 @@ class SQLiteMetadataStore(MetadataStoreInterface):
         self.conn_connections.close()
         self.conn_variables.close()
 
-    def migrate(self, config: TyphoonConfig):
+    def migrate(self):
         pass
 
     def get_connection(self, conn_id: str) -> Connection:

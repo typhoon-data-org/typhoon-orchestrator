@@ -1,10 +1,10 @@
+from contextlib import closing
 
 import pytest
 
 from typhoon.connections import Connection
 from typhoon.core.config import TyphoonConfig
 from typhoon.metadata_store_impl import MetadataStoreType
-from typhoon.metadata_store_impl.metadata_store_factory import metadata_store_factory
 from typhoon.variables import Variable, VariableType
 
 SAMPLE_TYPHOON_CONFIG = """
@@ -24,7 +24,7 @@ def typhoon_home(tmp_path, monkeypatch):
 def test_sqlite_metadata_store(typhoon_home):
     store_type = TyphoonConfig().metadata_store_type
     assert store_type == MetadataStoreType.sqlite
-    with metadata_store_factory(store_type) as store:
+    with closing(TyphoonConfig().metadata_store) as store:
         conn = Connection(conn_id='foo', conn_type='s3')
         store.set_connection(conn)
         assert store.get_connection('foo') == conn

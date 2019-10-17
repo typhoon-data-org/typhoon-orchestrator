@@ -5,6 +5,10 @@ from typing import Any, Union, Optional
 
 from typhoon.core import settings
 from typhoon.metadata_store_impl import MetadataStoreType
+from typhoon.metadata_store_impl.metadata_store_factory import metadata_store_factory
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from typhoon.core.metadata_store_interface import MetadataStoreInterface
 
 
 class TyphoonConfigError(Exception):
@@ -59,6 +63,11 @@ class TyphoonConfig:
         store_type = self.config.get('metadata-store-type', default='sqlite')
         return MetadataStoreType.from_string(store_type)
 
+    @property
+    def metadata_store(self) -> 'MetadataStoreInterface':
+        store_class = metadata_store_factory(self.metadata_store_type)
+        return store_class(config=self)
+
 
 class CLIConfig(TyphoonConfig):
     """
@@ -76,25 +85,25 @@ class CLIConfig(TyphoonConfig):
         """Profile used to deploy Typhoon to the specified environment"""
         return self.config.get('aws-profile')
 
-    @property
-    def dynamodb_resource(self):
-        aws_profile = self.aws_profile
-        return dynamodb_connection(
-            aws_profile=aws_profile,
-            conn_type=DynamoDBConnectionType.RESOURCE,
-            aws_region=self.dynamodb_region,
-            endpoint_url=self.dynamodb_endpoint,
-        )
+    # @property
+    # def dynamodb_resource(self):
+    #     aws_profile = self.aws_profile
+    #     return dynamodb_connection(
+    #         aws_profile=aws_profile,
+    #         conn_type=DynamoDBConnectionType.RESOURCE,
+    #         aws_region=self.dynamodb_region,
+    #         endpoint_url=self.dynamodb_endpoint,
+    #     )
 
-    @property
-    def dynamodb_client(self):
-        aws_profile = self.aws_profile
-        return dynamodb_connection(
-            aws_profile=aws_profile,
-            conn_type=DynamoDBConnectionType.CLIENT,
-            aws_region=self.dynamodb_region,
-            endpoint_url=self.dynamodb_endpoint,
-        )
+    # @property
+    # def dynamodb_client(self):
+    #     aws_profile = self.aws_profile
+    #     return dynamodb_connection(
+    #         aws_profile=aws_profile,
+    #         conn_type=DynamoDBConnectionType.CLIENT,
+    #         aws_region=self.dynamodb_region,
+    #         endpoint_url=self.dynamodb_endpoint,
+    #     )
 
     @property
     def typhoon_version(self) -> Optional[str]:

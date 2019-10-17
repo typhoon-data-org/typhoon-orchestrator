@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 
-from typhoon.config import TyphoonConfig
 from typhoon.connections import Connection
 from typhoon.variables import Variable
 
@@ -12,7 +11,7 @@ class MetadataStoreInterface(ABC):
         pass
 
     @abstractmethod
-    def migrate(self, config: TyphoonConfig):
+    def migrate(self):
         pass
 
     @abstractmethod
