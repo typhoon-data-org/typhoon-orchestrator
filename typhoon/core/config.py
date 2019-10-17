@@ -68,6 +68,14 @@ class TyphoonConfig:
         store_class = metadata_store_factory(self.metadata_store_type)
         return store_class(config=self)
 
+    @property
+    def dynamodb_region(self) -> str:
+        return self.config.get('dynamodb-region')
+
+    @property
+    def dynamodb_endpoint(self) -> str:
+        return self.config.get('dynamodb-endpoint')
+
 
 class CLIConfig(TyphoonConfig):
     """
