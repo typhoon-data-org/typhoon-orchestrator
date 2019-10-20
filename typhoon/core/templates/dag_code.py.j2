@@ -11,7 +11,6 @@ import typhoon.contrib.transformations as typhoon_transformations
 from typhoon.contrib.hooks.hook_factory import get_hook
 from typhoon.handler import handle
 from typhoon.core import SKIP_BATCH, task, DagContext, setup_logging
-from typhoon.models.task import task_logging_wrapper
 {% for transformations_module in get_transformations_modules(dag) %}
 
 import {{ transformations_module }}
@@ -70,13 +69,6 @@ def {{ node_name }}_branches(dag_context: DagContext, {% if node_name not in dag
 # Nodes
 {% for node_name, node in dag.nodes.items() %}
 def {{ node_name }}_node(dag_context: DagContext, {% if node_name not in dag.sources %}config: Dict, {% endif %}batch_num: int):
-    node_function = task_logging_wrapper(
-        dag_id=DAG_ID,
-        dag_context=dag_context,
-        task_id='{{ node_name }}',
-        batch_num=batch_num,
-    )({{ node['function'] | clean_function_name('functions') }})       # Wrapper to add logging
-
     {% if node_name in dag.sources%}
     config = {}
 
@@ -84,7 +76,7 @@ def {{ node_name }}_node(dag_context: DagContext, {% if node_name not in dag.sou
     {% for k, v in node.config.items() %}
     {{ adapter.adapter_params(k, v) | indent(4, False) }}
     {% endfor %}
-    yield from node_function(
+    yield from {{ node['function'] | clean_function_name('functions') }}(
         **config,
     )
 

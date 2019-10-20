@@ -1,5 +1,7 @@
 import importlib.util
+import inspect
 import os
+from pathlib import Path
 
 from typhoon.contrib.hooks.dbapi_hooks import SqliteHook, PostgresHook, SnowflakeHook
 from typhoon.contrib.hooks.filesystem_hooks import S3Hook, LocalStorageHook
@@ -28,9 +30,13 @@ def get_hook(conn_id: str) -> HookInterface:
 
 
 def get_user_defined_hook(conn_id: str) -> HookInterface:
-    spec = importlib.util.spec_from_file_location(
-        'user_hooks',
-        os.path.join(typhoon_home(), 'hooks', 'hook_factory.py'))
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod.get_hook(conn_id)
+    conn = TyphoonConfig().metadata_store.get_connection(conn_id)
+    hooks_files = (Path(typhoon_home()) / 'hooks').rglob('*.py')
+    for hooks_file in hooks_files:
+        spec = importlib.util.spec_from_file_location(str(hooks_file).split('.py')[0], str(hooks_file))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        for cls_name, cls in inspect.getmembers(mod, inspect.isclass):
+            conn_type = getattr(cls, 'conn_type', None)
+            if conn_type == conn.conn_type:
+                return cls(conn.get_connection_params())

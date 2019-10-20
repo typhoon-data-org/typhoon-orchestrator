@@ -13,6 +13,7 @@ from typhoon.core.glue import transpile_dag_and_store, load_dags
 from typhoon.core.settings import out_directory
 from typhoon.deployment.deploy import deploy_dag_requirements, copy_local_typhoon, copy_user_defined_code
 from typhoon.metadata_store_impl import MetadataStoreType
+from typhoon.variables import Variable, VariableType
 
 
 @click.group()
@@ -127,10 +128,20 @@ def deploy_dags(target_env, build_dependencies):
 @click.argument('conn_env')
 @click.argument('target_env')
 def set_connection(conn_id, conn_env, target_env):
-    from typhoon.core import get_typhoon_config
     conn_params = connections.get_connection_local(conn_id, conn_env)
     config = CLIConfig(target_env)
     config.metadata_store.set_connection(Connection(conn_id=conn_id, **asdict(conn_params)))
+
+
+@cli.command()
+@click.argument('variable_id')
+@click.argument('variable_type')
+@click.argument('value')
+@click.argument('target_env')
+def set_variable(variable_id, variable_type, value, target_env):
+    var = Variable(variable_id, VariableType[variable_type.upper()], value)
+    config = CLIConfig(target_env)
+    config.metadata_store.set_variable(var)
 
 
 if __name__ == '__main__':

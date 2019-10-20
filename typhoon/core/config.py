@@ -76,6 +76,14 @@ class TyphoonConfig:
     def dynamodb_endpoint(self) -> str:
         return self.config.get('dynamodb-endpoint')
 
+    @property
+    def iam_role_name(self):
+        return f'typhoon_{self.project_name}_role'
+
+    @property
+    def lambda_function_timeout(self) -> str:
+        return self.config.get('lambda-function-timeout', 50)
+
 
 class CLIConfig(TyphoonConfig):
     """
