@@ -22,6 +22,9 @@ class ConnectionParams:
         self.port = replace_decimals(self.port)
         self.extra = replace_decimals(self.extra)
 
+    def to_conn(self, conn_id: str) -> 'Connection':
+        return Connection(conn_id=conn_id, **self.__dict__)
+
 
 @dataclass
 class Connection:

@@ -1,6 +1,5 @@
 import importlib.util
 import inspect
-import os
 from pathlib import Path
 
 from typhoon.contrib.hooks.dbapi_hooks import SqliteHook, PostgresHook, SnowflakeHook

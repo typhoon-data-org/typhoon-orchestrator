@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union, List
 
 from typhoon.connections import Connection
 from typhoon.core import settings
@@ -27,13 +27,27 @@ class SQLiteMetadataStore(MetadataStoreInterface):
     def get_connection(self, conn_id: str) -> Connection:
         return self.conn_connections[conn_id]
 
+    def get_connections(self, to_dict: bool = False) -> List[Union[dict, Connection]]:
+        return [conn.__dict__ if to_dict else conn for conn in self.conn_connections.values()]
+
     def set_connection(self, conn: Connection):
         self.conn_connections[conn.conn_id] = conn
+        self.conn_connections.commit()
+
+    def delete_connection(self, conn: Union[str, Connection]):
+        del self.conn_connections[conn.conn_id if isinstance(conn, Connection) else conn]
         self.conn_connections.commit()
 
     def get_variable(self, variable_id: str) -> Variable:
         return self.conn_variables[variable_id]
 
+    def get_variables(self, to_dict: bool = False) -> List[Union[dict, Variable]]:
+        return [var.dict_contents() if to_dict else var for var in self.conn_variables.values()]
+
     def set_variable(self, variable: Variable):
         self.conn_variables[variable.id] = variable
+        self.conn_variables.commit()
+
+    def delete_variable(self, variable: Union[str, Variable]):
+        del self.conn_variables[variable.id if isinstance(variable, Variable) else variable]
         self.conn_variables.commit()

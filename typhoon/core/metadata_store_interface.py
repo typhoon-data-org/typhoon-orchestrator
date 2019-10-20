@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Union, List
 
 from typhoon.connections import Connection
 from typhoon.variables import Variable
@@ -19,7 +20,15 @@ class MetadataStoreInterface(ABC):
         pass
 
     @abstractmethod
+    def get_connections(self, to_dict: bool = False) -> List[Union[dict, Connection]]:
+        pass
+
+    @abstractmethod
     def set_connection(self, conn: Connection):
+        pass
+
+    @abstractmethod
+    def delete_connection(self, conn: Union[str, Connection]):
         pass
 
     @abstractmethod
@@ -27,5 +36,13 @@ class MetadataStoreInterface(ABC):
         pass
 
     @abstractmethod
+    def get_variables(self, to_dict: bool = False) -> List[Union[dict, Variable]]:
+        pass
+
+    @abstractmethod
     def set_variable(self, variable: Variable):
+        pass
+
+    @abstractmethod
+    def delete_variable(self, variable: Union[str, Variable]):
         pass

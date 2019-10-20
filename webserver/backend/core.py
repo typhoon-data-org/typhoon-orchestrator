@@ -1,3 +1,5 @@
+import importlib.util
+import inspect
 import os
 from datetime import datetime
 from pathlib import Path
@@ -8,15 +10,16 @@ from flask_cors import CORS
 from reflection import get_modules_in_package, package_tree, package_tree_from_path, user_defined_modules, \
     load_module_from_path
 from responses import transform_response
-from typhoon import connections, variables
+from typhoon import variables
 from typhoon.cli import _build_dags
-from typhoon.connections import scan_connections, ConnectionParams, get_connection_local, \
-    get_connections_local_by_conn_id
+from typhoon.connections import get_connection_local, \
+    get_connections_local_by_conn_id, Connection
 from typhoon.contrib.hooks import hook_factory
+from typhoon.core.config import CLIConfig
+from typhoon.core.settings import typhoon_home
 from typhoon.deployment.dags import get_dag_filenames
 from typhoon.handler import run_dag
-from typhoon.core.settings import typhoon_home
-from typhoon.variables import scan_variables, VariableType
+from typhoon.variables import VariableType
 
 app = Flask(__name__)
 CORS(app)
@@ -65,17 +68,18 @@ def get_typhoon_user_defined_package_trees():
     return jsonify(package_trees)
 
 
+# Do not remove import so it can be used in eval
+# noinspection PyUnusedLocal,PyPep8Naming
+class Obj:
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+
+
 # noinspection PyUnresolvedReferences
 @app.route('/run-transformations', methods=['POST'])
 def get_run_transformations_result():
     from pandas import DataFrame    # Do not remove import so it can be used in eval
     from mock import Mock
-
-    # Do not remove import so it can be used in eval
-    # noinspection PyUnusedLocal,PyPep8Naming
-    class Obj:
-        def __init__(self, **kwargs):
-            self.__dict__.update(kwargs)
 
     body = request.get_json()
     response = {}
@@ -103,7 +107,8 @@ def get_run_transformations_result():
 @app.route('/connections')
 def get_connections():
     env = request.args.get('env')
-    all_connections = scan_connections(env)
+    config = CLIConfig(env)
+    all_connections = config.metadata_store.get_connections(to_dict=True)
     return jsonify(all_connections)
 
 
@@ -118,16 +123,15 @@ def get_connections_envs():
 @app.route('/connection', methods=['PUT', 'DELETE'])
 def set_connection():
     env = request.args.get('env')
+    config = CLIConfig(env)
     if request.method == 'PUT':
         body = request.get_json()
-        conn_id = body.pop('conn_id')
-        conn_params = ConnectionParams(**body)
-        connections.set_connection(conn_id, conn_params, use_cli_config=False, target_env=env)
+        conn = Connection(**body)
+        config.metadata_store.set_connection(conn)
     else:   # Delete
         env = request.args.get('env')
         conn_id = request.args.get('conn_id')
-        connections.delete_connection(conn_id, use_cli_config=True, target_env=env)
-        connections.delete_connection(env, conn_id)
+        config.metadata_store.delete_connection(conn_id)
     return 'Ok'
 
 
@@ -137,17 +141,25 @@ def swap_connection():
     conn_env = request.args.get('conn_env')
     env = request.args.get('env')
 
+    config = CLIConfig(env)
     conn_params = get_connection_local(conn_id, conn_env)
-    connections.set_connection(conn_id, conn_params, use_cli_config=True, target_env=env)
+    config.metadata_store.set_connection(conn_params.to_conn(conn_id))
     return 'Ok'
 
 
 @app.route('/connection-types')
 def get_connection_types():
     typhoon_conn_types = set(hook_factory.HOOK_MAPPINGS.keys())
-    custom_conn_factory_module = load_module_from_path(
-        os.path.join(typhoon_home(), 'hooks', 'hook_factory.py'), must_exist=False)
-    custom_conn_types = set(custom_conn_factory_module.HOOK_MAPPINGS.keys()) if custom_conn_factory_module else set()
+    custom_conn_types = set()
+    hooks_files = (Path(typhoon_home()) / 'hooks').rglob('*.py')
+    for hooks_file in hooks_files:
+        spec = importlib.util.spec_from_file_location(str(hooks_file).split('.py')[0], str(hooks_file))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        for cls_name, cls in inspect.getmembers(mod, inspect.isclass):
+            conn_type = getattr(cls, 'conn_type', None)
+            if conn_type:
+                custom_conn_types.add(conn_type)
     conn_types = list(typhoon_conn_types.union(custom_conn_types))
     return jsonify(sorted(conn_types))
 
@@ -155,22 +167,24 @@ def get_connection_types():
 @app.route('/variables')
 def get_variables():
     env = request.args.get('env')
-    all_variables = scan_variables(to_dict=True, use_cli_config=True, target_env=env)
+    config = CLIConfig(env)
+    all_variables = config.metadata_store.get_variables(to_dict=True)
     return jsonify(all_variables)
 
 
 @app.route('/variable', methods=['PUT', 'DELETE'])
 def update_variable():
     env = request.args.get('env')
+    config = CLIConfig(env)
     if request.method == 'PUT':
         body = request.get_json()
         body['type'] = variables.VariableType(body['type'])
         variable = variables.Variable(**body)
-        variables.set_variable(variable=variable, use_cli_config=True, target_env=env)
+        config.metadata_store.set_variable(variable)
     else:   # Delete
         env = request.args.get('env')
         variable_id = request.args.get('id')
-        variables.delete_variable(variable_id, use_cli_config=True, target_env=env)
+        config.metadata_store.delete_variable(variable_id)
     return 'Ok'
 
 

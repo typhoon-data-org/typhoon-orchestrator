@@ -12,7 +12,7 @@ def _replace_special_vars(string: str):
     string = re.sub(r'\$DAG_CONTEXT\.([\w]+)', r'dag_context["""\1"""]', string)
     string = string.replace('$DAG_CONTEXT', 'dag_context')
     string = string.replace('$BATCH_NUM', '2')
-    string = re.sub(r'\$VARIABLE(\.(\w+))', r'get_variable_contents("\g<2>")', string)
+    string = re.sub(r'\$VARIABLE(\.(\w+))', r'TyphoonConfig().metadata_store.get_variable("\g<2>").get_contents()', string)
     return string
 
 
@@ -20,7 +20,7 @@ def _replace_special_vars(string: str):
 def run_transformations(source_data: Any, dag_context: dict, user_transformations: List[str]):
     import os
     import typhoon.contrib.transformations as typhoon
-    from typhoon.variables import get_variable_contents
+    from typhoon.core.config import TyphoonConfig
 
     custom_transformation_modules = {}
     transformations_path = os.path.join(typhoon_home(), 'transformations')
