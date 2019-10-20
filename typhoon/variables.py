@@ -2,13 +2,9 @@ import json
 from ast import literal_eval
 from enum import Enum
 from io import StringIO
-from typing import Optional
 
 import yaml
 from dataclasses import dataclass
-
-from typhoon.aws.plumbing import dynamodb_plumbing
-from typhoon.core import get_typhoon_config
 
 
 class VariableError(Exception):
@@ -57,48 +53,10 @@ class Variable:
             assert False
 
 
-def set_variable(variable: Variable, use_cli_config: bool = False, target_env: Optional[str] = None,):
-    config = get_typhoon_config(use_cli_config, target_env)
-    dynamodb_plumbing.dynamodb_put_item(
-        ddb_client=config.dynamodb_client,
-        table_name=config.variables_table_name,
-        item={
-            'id': variable.id,
-            **variable.dict_contents(),
-        }
-    )
-
-
-def get_variable(variable_id: str, use_cli_config: bool = False, target_env: Optional[str] = None,) -> Variable:
-    config = get_typhoon_config(use_cli_config, target_env)
-    item = dynamodb_plumbing.dynamodb_get_item(
-        ddb_client=config.dynamodb_client,
-        table_name=config.variables_table_name,
-        key_name='id',
-        key_value=variable_id,
-    )
-    return Variable(**item)
-
-
-def get_variable_contents(variable_id: str, use_cli_config: bool = False, target_env: Optional[str] = None,):
-    variable = get_variable(variable_id, use_cli_config, target_env)
-    return variable.get_contents()
-
-
-def delete_variable(variable_id: str, use_cli_config: bool = False, target_env: Optional[str] = None,):
-    config = get_typhoon_config(use_cli_config, target_env)
-    dynamodb_plumbing.dynamodb_delete_item(
-        ddb_client=config.dynamodb_client,
-        table_name=config.variables_table_name,
-        key_name='id',
-        key_value=variable_id,
-    )
-
-
-def scan_variables(to_dict: bool = False, use_cli_config: bool = False, target_env: Optional[str] = None):
-    config = get_typhoon_config(use_cli_config, target_env)
-    variables_raw = dynamodb_plumbing.scan_dynamodb_table(
-        ddb_resource=config.dynamodb_resource,
-        table_name=config.variables_table_name,
-    )
-    return [Variable(**var).dict_contents() if to_dict else Variable(**var) for var in variables_raw]
+# def scan_variables(to_dict: bool = False, use_cli_config: bool = False, target_env: Optional[str] = None):
+#     config = get_typhoon_config(use_cli_config, target_env)
+#     variables_raw = dynamodb_plumbing.scan_dynamodb_table(
+#         ddb_resource=config.dynamodb_resource,
+#         table_name=config.variables_table_name,
+#     )
+#     return [Variable(**var).dict_contents() if to_dict else Variable(**var) for var in variables_raw]

@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pytest
 
-from typhoon.config import TyphoonConfig
 from typhoon.connections import Connection
+from typhoon.core import TyphoonConfig
 from typhoon.metadata_store_impl.sqlite_metadata_store import SQLiteMetadataStore
 from typhoon.variables import Variable, VariableType
 

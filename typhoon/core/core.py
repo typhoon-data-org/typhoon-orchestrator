@@ -5,7 +5,7 @@ from typing import Optional, Dict, Tuple, Any
 import boto3
 import jsonpickle
 
-from typhoon.config import CLIConfig, TyphoonConfig
+from typhoon.core.config import CLIConfig, TyphoonConfig
 from typhoon.core.settings import environment
 
 # Define sentinels

@@ -12,6 +12,7 @@ from typing import Optional
 
 import jsonpickle
 
+from typhoon.core import setup_logging
 from typhoon.core.dags import DagContext
 from typhoon.core.settings import typhoon_home, out_directory
 
@@ -30,6 +31,7 @@ def handle(event, context):
 
 
 def handle_task(event):
+    setup_logging()
     dag_name = event['dag_name']
     dag_path = Path(typhoon_home()) / f'{dag_name}.py'
     module = _load_module_from_path(str(dag_path), module_name=dag_name)
