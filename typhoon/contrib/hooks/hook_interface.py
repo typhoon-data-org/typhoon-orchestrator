@@ -1,5 +1,9 @@
+from typing_extensions import Protocol
 
-class HookInterface:
+
+class HookInterface(Protocol):
+    conn_type: str
+    
     def __enter__(self):
         raise NotImplementedError
 

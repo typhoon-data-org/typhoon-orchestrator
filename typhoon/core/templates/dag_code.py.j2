@@ -5,10 +5,10 @@ import os
 from datetime import datetime
 from typing import Dict
 
+from typhoon.core.config import TyphoonConfig
 import typhoon.contrib.functions as typhoon_functions
 import typhoon.contrib.transformations as typhoon_transformations
 from typhoon.contrib.hooks.hook_factory import get_hook
-from typhoon.variables import get_variable_contents
 from typhoon.handler import handle
 from typhoon.core import SKIP_BATCH, task, DagContext, setup_logging
 from typhoon.models.task import task_logging_wrapper
@@ -20,15 +20,16 @@ import {{ transformations_module }}
 import {{ functions_module }}
 {% endfor %}
 
-os.environ['TYPHOON_HOME'] = os.path.dirname(__file__)
-DAG_ID = '{{ dag.name }}'
-
 {% if debug_mode %}
 
 # Only meant for local debugging. Do NOT use in production
 os.environ['TYPHOON_ENV'] = '{{ environment }}'
 
 {% endif %}
+os.environ['TYPHOON_HOME'] = os.path.dirname(__file__)
+DAG_ID = '{{ dag.name }}'
+TYPHOON_CONFIG = TyphoonConfig()
+
 
 def {{ dag.name }}_main(event, context):
     setup_logging()
@@ -108,5 +109,5 @@ if __name__ == '__main__':
         'kwargs': {'dag_context': DagContext.from_date_string('2019-02-05T03:00:00Z').to_dict()},
     }
 
-    {{ name }}_main(example_event, None)
+    {{ dag.name }}_main(example_event, None)
 {% endif %}

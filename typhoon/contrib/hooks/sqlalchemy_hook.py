@@ -1,6 +1,5 @@
 import jinja2
 
-from typhoon.connections import get_connection_params
 from typhoon.contrib.hooks.hook_interface import HookInterface
 
 URL_TEMPLATE = """\
@@ -10,13 +9,12 @@ URL_TEMPLATE = """\
 
 
 class SqlAlchemyHook(HookInterface):
-    def __init__(self, conn_id):
-        self.conn_id = conn_id
+    def __init__(self, conn_params):
+        self.conn_params = conn_params
 
     def __enter__(self):
         from sqlalchemy import create_engine
 
-        self.conn_params = get_connection_params(self.conn_id)
         url = jinja2.Template(URL_TEMPLATE).render(dict(
             dialect=self.conn_params.extra['dialect'],
             driver=self.conn_params.extra.get('driver'),
@@ -30,5 +28,4 @@ class SqlAlchemyHook(HookInterface):
         return self.engine
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.conn_params = None
         self.engine = None

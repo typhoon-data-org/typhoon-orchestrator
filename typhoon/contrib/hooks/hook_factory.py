@@ -1,11 +1,11 @@
 import importlib.util
 import os
 
-from typhoon.connections import get_connection_params
 from typhoon.contrib.hooks.dbapi_hooks import SqliteHook, PostgresHook, SnowflakeHook
 from typhoon.contrib.hooks.filesystem_hooks import S3Hook, LocalStorageHook
 from typhoon.contrib.hooks.hook_interface import HookInterface
 from typhoon.contrib.hooks.sqlalchemy_hook import SqlAlchemyHook
+from typhoon.core.config import TyphoonConfig
 from typhoon.core.settings import typhoon_home
 
 HOOK_MAPPINGS = {
@@ -19,11 +19,10 @@ HOOK_MAPPINGS = {
 
 
 def get_hook(conn_id: str) -> HookInterface:
-    conn_params = get_connection_params(conn_id)
-    # TODO: Can be improved, we query the database twice. Once to get the connection params and again in the hook enter
-    hook_class = HOOK_MAPPINGS.get(conn_params.conn_type)
+    conn = TyphoonConfig().metadata_store.get_connection(conn_id)
+    hook_class = HOOK_MAPPINGS.get(conn.conn_type)
     if hook_class:
-        return hook_class(conn_id)
+        return hook_class(conn.get_connection_params())
     else:
         return get_user_defined_hook(conn_id)
 

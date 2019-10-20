@@ -1,5 +1,4 @@
 from datetime import datetime
-from functools import lru_cache
 from typing import NamedTuple, List, Union, Dict
 
 import dateutil.parser
@@ -18,7 +17,9 @@ class Node(NamedTuple):
             self.config = {}
 
     def as_dict(self):
-        return self._asdict()
+        node = self._asdict()
+        node.pop('name')
+        return node
 
 
 class Edge(NamedTuple):
@@ -28,7 +29,9 @@ class Edge(NamedTuple):
     destination: str     # Node id
 
     def as_dict(self):
-        return self._asdict()
+        edge = self._asdict()
+        edge.pop('name')
+        return edge
 
 
 class DAG(NamedTuple):
@@ -96,9 +99,7 @@ class DAG(NamedTuple):
 
     @property
     def has_cycle(self):
-        white = 0
-        gray = 1
-        black = 2
+        white, gray, black = 0, 1, 2
         color = {n: white for n in self.nodes.keys()}
 
         def dfs(node):

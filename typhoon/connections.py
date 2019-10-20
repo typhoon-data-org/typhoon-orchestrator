@@ -80,40 +80,6 @@ def set_connection(
     )
 
 
-def get_connection(
-        conn_id: str,
-        use_cli_config: bool = False,
-        target_env: Optional[str] = None,
-) -> Connection:
-    # ddb_client = dynamodb_client_from_config(config)
-    # response = ddb_client.get_item(
-    #     TableName='Connections',
-    #     Key={'conn_id': {'S': conn_id}}
-    # )
-    # if 'Item' not in response:
-    #     raise ValueError(f'Connection {conn_id} is not defined')
-    # deserializer = TypeDeserializer()
-    # conn = {k: deserializer.deserialize(v) for k, v in response['Item'].items()}
-    # return Connection(**conn)
-    config = get_typhoon_config(use_cli_config, target_env)
-    item = dynamodb_plumbing.dynamodb_get_item(
-        ddb_client=config.dynamodb_client,
-        table_name=config.connections_table_name,
-        key_name='conn_id',
-        key_value=conn_id,
-    )
-    return Connection(**item)
-
-
-def get_connection_params(
-        conn_id: str,
-        use_cli_config: bool = False,
-        target_env: Optional[str] = None,
-) -> ConnectionParams:
-    conn = get_connection(conn_id, use_cli_config, target_env)
-    return conn.get_connection_params()
-
-
 def delete_connection(conn_id: str, use_cli_config: bool = False, target_env: Optional[str] = None):
     config = get_typhoon_config(use_cli_config, target_env)
     dynamodb_plumbing.dynamodb_delete_item(

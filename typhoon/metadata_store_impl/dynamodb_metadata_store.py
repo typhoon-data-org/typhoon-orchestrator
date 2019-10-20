@@ -3,7 +3,6 @@ from typing import Optional
 from typhoon.aws.plumbing import dynamodb_plumbing
 from typhoon.aws.plumbing.dynamodb_plumbing import dynamodb_connection, DynamoDBConnectionType
 from typhoon.connections import Connection
-from typhoon.core.config import CLIConfig
 from typhoon.core.metadata_store_interface import MetadataStoreInterface
 from typhoon.variables import Variable
 
@@ -16,6 +15,7 @@ class DynamodbMetadataStore(MetadataStoreInterface):
 
     @property
     def client(self):
+        from typhoon.core.config import CLIConfig
         if isinstance(self.config, CLIConfig):
             aws_profile = self.config.aws_profile
         else:
@@ -29,6 +29,7 @@ class DynamodbMetadataStore(MetadataStoreInterface):
 
     @property
     def resource(self):
+        from typhoon.core.config import CLIConfig
         if isinstance(self.config, CLIConfig):
             aws_profile = self.config.aws_profile
         else:

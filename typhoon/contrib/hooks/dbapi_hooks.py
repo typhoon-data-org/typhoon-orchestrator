@@ -1,50 +1,44 @@
-from abc import ABC
+from typing import Optional
 
-from typhoon.connections import get_connection_params
+from typing_extensions import Protocol
+
+from typhoon.connections import ConnectionParams
 from typhoon.contrib.hooks.hook_interface import HookInterface
-from type_extensions import Protocol
 
 
 class CursorProtocol(Protocol):
-    def execute(self, query: str):
-        ...
+    def execute(self, query: str): ...
 
-    def fetchmany(self, size):
-        ...
+    def fetchmany(self, size): ...
 
-    def fetchall(self):
-        ...
+    def fetchall(self): ...
 
-    def close(self):
-        ...
+    def close(self): ...
 
 
 class DbApiConnection(Protocol):
-    def cursor(self) -> CursorProtocol:
-        ...
+    def cursor(self) -> CursorProtocol: ...
 
-    def close(self):
-        ...
+    def close(self): ...
 
 
 class DbApiHook(HookInterface, Protocol):
-    @property
-    def connection(self) -> DbApiConnection:
-        ...
+    connection: Optional[DbApiConnection]
+
+    def __init__(self, conn_params: ConnectionParams): ...
     
-    def __enter__(self):
+    def __enter__(self) -> DbApiConnection:
         raise NotImplementedError
 
 
 class PostgresHook(DbApiHook):
-    def __init__(self, conn_id):
-        self.conn_id = conn_id
+    def __init__(self, conn_params):
+        self.conn_params = conn_params
         self.connection = None
 
-    def __enter__(self):
+    def __enter__(self) -> DbApiConnection:
         import psycopg2
 
-        self.conn_params = get_connection_params(self.conn_id)
         credentials = {
             'host': self.conn_params.host,
             'user': self.conn_params.login,
@@ -61,14 +55,14 @@ class PostgresHook(DbApiHook):
 
 
 class SnowflakeHook(DbApiHook):
-    def __init__(self, conn_id):
-        self.conn_id = conn_id
+    def __init__(self, conn_params):
+        self.conn_params = conn_params
 
     # noinspection PyProtectedMember
-    def __enter__(self):
+    def __enter__(self) -> DbApiConnection:
         import snowflake.connector
 
-        conn_params = get_connection_params(self.conn_id)
+        conn_params = self.conn_params
         credentials = {
             'account': conn_params.extra['account'],
             'region': conn_params.extra['region'],
@@ -87,14 +81,13 @@ class SnowflakeHook(DbApiHook):
 
 
 class SqliteHook(DbApiHook):
-    def __init__(self, conn_id):
-        self.conn_id = conn_id
+    def __init__(self, conn_params):
+        self.conn_params = conn_params
 
-    def __enter__(self):
+    def __enter__(self) -> DbApiConnection:
         import sqlite3
 
-        conn_params = get_connection_params(self.conn_id)
-        self.connection = sqlite3.connect(database=conn_params.extra['database'])
+        self.connection = sqlite3.connect(database=self.conn_params.extra['database'])
         return self.connection
 
     def __exit__(self, exc_type, exc_val, exc_tb):

@@ -1,27 +1,10 @@
-import os
 import re
 from pathlib import Path
 from typing import Union, List, Iterable, Dict
 
 import jinja2
-import yaml
 
-from typhoon.core import settings
 from typhoon.core.dags import DAG, Node
-
-
-def get_dag_filenames():
-    dags_directory = settings.dags_directory()
-    # dag_files = Path(dags_directory).rglob('*.yml')
-    dag_files = filter(lambda x: x.endswith('.yml'), os.listdir(dags_directory))
-    return dag_files
-
-
-def load_dags() -> Iterable[DAG]:
-    dag_files = get_dag_filenames()
-    for dag_file in dag_files:
-        with open(os.path.join(settings.dags_directory(), dag_file), 'r') as f:
-            yield DAG.from_dict_definition(yaml.load(f, Loader=yaml.FullLoader))
 
 
 #################
@@ -95,7 +78,7 @@ def substitute_special(code: str, key: str) -> str:
     code = re.sub(r'\$(\d)+', r"{key}_\g<1>".format(key=key), code)
     code = code.replace('$BATCH_NUM', 'batch_num')
     code = re.sub(r'\$HOOK(\.(\w+))', r'get_hook("\g<2>")', code)
-    code = re.sub(r'\$VARIABLE(\.(\w+))', r'get_variable_contents("\g<2>")', code)
+    code = re.sub(r'\$VARIABLE(\.(\w+))', r'TYPHOON_CONFIG.metadata_store.get_variable("\g<2>")', code)
     return code
 
 

@@ -1,9 +1,10 @@
 from pathlib import Path
-from typing import Sequence, Optional
+from typing import Sequence, Optional, Union
 
 import jinja2
 
 from typhoon.core import get_typhoon_config
+from typhoon.core.dags import DAG
 from typhoon.deployment.deploy import write_to_out
 
 SEARCH_PATH = Path(__file__).parent / 'templates'
@@ -22,10 +23,10 @@ def to_camelcase(s: str):
 templateEnv.filters.update(to_camelcase=to_camelcase)
 
 
-def deploy_sam_template(dags: Sequence[dict], use_cli_config: bool = False, target_env: Optional[str] = None):
+def deploy_sam_template(dags: Sequence[Union[dict, DAG]], use_cli_config: bool = False, target_env: Optional[str] = None):
     config = get_typhoon_config(use_cli_config, target_env)
     sam_template = generate_sam_template(
-        dags=dags,
+        dags=[dag.as_dict() if isinstance(dag, DAG) else dag for dag in dags],
         default_iam_role=config.iam_role_name,
         lambda_function_timeout=config.lambda_function_timeout,
         connections_table_name=config.connections_table_name,

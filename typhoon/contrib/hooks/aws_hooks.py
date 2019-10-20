@@ -1,16 +1,15 @@
 import boto3
 
-from typhoon.connections import get_connection_params
+from typhoon.connections import ConnectionParams
 from typhoon.contrib.hooks.hook_interface import HookInterface
 
 
 class AwsSessionHook(HookInterface):
-    def __init__(self, conn_id: str):
-        self.conn_id = conn_id
+    def __init__(self, conn_params: ConnectionParams):
+        self.conn_params = conn_params
         self.session = None
 
     def __enter__(self):
-        self.conn_params = get_connection_params(self.conn_id)
         profile = self.conn_params.extra.get('profile')
         if profile:
             self.session = boto3.session.Session(profile_name=profile)
@@ -26,14 +25,14 @@ class AwsSessionHook(HookInterface):
 
 
 class DynamoDbHook(HookInterface):
-    def __init__(self, conn_id: str, conn_type: str = 'client'):
-        self.conn_id = conn_id
+    def __init__(self, conn_params: ConnectionParams, conn_type: str = 'client'):
+        self.conn_params = conn_params
         self.conn_type = conn_type
 
     def __enter__(self):
         import boto3
 
-        conn_params = get_connection_params(self.conn_id)
+        conn_params = self.conn_params
         endpoint_url = None
         if conn_params.extra.get('local'):
             endpoint_url = f"http://{conn_params.login}:{conn_params.port}"

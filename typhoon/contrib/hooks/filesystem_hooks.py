@@ -5,7 +5,7 @@ import unicodedata
 from io import BytesIO
 from typing import Iterable, Union
 
-from typhoon.connections import get_connection_params
+from typhoon.connections import ConnectionParams
 from typhoon.contrib.hooks.aws_hooks import AwsSessionHook
 from typhoon.contrib.hooks.hook_interface import HookInterface
 
@@ -29,8 +29,8 @@ class FileSystemHookInterface(HookInterface):
 
 
 class S3Hook(FileSystemHookInterface, AwsSessionHook):
-    def __init__(self, conn_id: str):
-        AwsSessionHook.__init__(self, conn_id)
+    def __init__(self, conn_params: ConnectionParams):
+        AwsSessionHook.__init__(self, conn_params)
 
     def __enter__(self):
         AwsSessionHook.__enter__(self)
@@ -81,12 +81,11 @@ class S3Hook(FileSystemHookInterface, AwsSessionHook):
 
 
 class LocalStorageHook(FileSystemHookInterface):
-    def __init__(self, conn_id: str):
-        self.conn_id = conn_id
+    def __init__(self, conn_params: ConnectionParams):
+        self.conn_params = conn_params
 
     def __enter__(self):
-        conn_params = get_connection_params(self.conn_id)
-        self.base_path = conn_params.extra.get('base_path', '')
+        self.base_path = self.conn_params.extra.get('base_path', '')
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.base_path = None

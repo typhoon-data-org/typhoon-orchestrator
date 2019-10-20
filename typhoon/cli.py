@@ -3,10 +3,16 @@ import subprocess
 from pathlib import Path
 
 import click
+from dataclasses import asdict
 
 from typhoon import connections
-from typhoon.deployment.deploy import deploy_dag_requirements, copy_local_typhoon, copy_user_defined_code
+from typhoon.connections import Connection
+from typhoon.core import settings
+from typhoon.core.config import CLIConfig
+from typhoon.core.glue import transpile_dag_and_store, load_dags
 from typhoon.core.settings import out_directory
+from typhoon.deployment.deploy import deploy_dag_requirements, copy_local_typhoon, copy_user_defined_code
+from typhoon.metadata_store_impl import MetadataStoreType
 
 
 @click.group()
@@ -43,24 +49,34 @@ def build_dags(target_env, debug):
 
 
 def _build_dags(target_env, debug):
-    from typhoon.deployment.deploy import clean_out, build_dag_code
-    from typhoon.deployment.dags import load_dags
+    from typhoon.deployment.deploy import clean_out
     from typhoon.deployment.sam import deploy_sam_template
 
     clean_out()
 
-    from typhoon.core import get_typhoon_config
-    config = get_typhoon_config(use_cli_config=True, target_env=target_env)
+    config = CLIConfig(target_env)
 
-    dags = load_dags()
+    dags = load_dags(settings.dags_directory())
     deploy_sam_template(dags, use_cli_config=True, target_env=target_env)
     for dag in dags:
-        build_dag_code(dag, target_env, debug)
+        dag = dag.as_dict()
+        dag_folder = Path(settings.out_directory())/dag['name']
+        transpile_dag_and_store(dag, dag_folder/f"{dag['name']}.py", env=target_env, debug_mode=debug)
+        if debug and config.metadata_store_type == MetadataStoreType.sqlite:
+            local_store_path = Path(settings.typhoon_home()) / 'project.db'
+            if local_store_path.exists():
+                os.symlink(str(local_store_path), dag_folder / 'project.db')
+
         deploy_dag_requirements(dag, config.typhoon_version_is_local(), config.typhoon_version)
         if config.typhoon_version_is_local():
             copy_local_typhoon(dag, config.typhoon_version)
 
         copy_user_defined_code(dag)
+
+    if debug and config.metadata_store_type == MetadataStoreType.sqlite:
+        local_store_path = Path(settings.typhoon_home()) / 'project.db'
+        if local_store_path.exists():
+            os.symlink(str(local_store_path), Path(settings.out_directory())/'project.db')
 
 
 class SubprocessError(Exception):
@@ -111,13 +127,10 @@ def deploy_dags(target_env, build_dependencies):
 @click.argument('conn_env')
 @click.argument('target_env')
 def set_connection(conn_id, conn_env, target_env):
+    from typhoon.core import get_typhoon_config
     conn_params = connections.get_connection_local(conn_id, conn_env)
-    connections.set_connection(
-        conn_id=conn_id,
-        conn_params=conn_params,
-        use_cli_config=True,
-        target_env=target_env,
-    )
+    config = CLIConfig(target_env)
+    config.metadata_store.set_connection(Connection(conn_id=conn_id, **asdict(conn_params)))
 
 
 if __name__ == '__main__':
