@@ -15,11 +15,26 @@ from typhoon.deployment.deploy import deploy_dag_requirements, copy_local_typhoo
 from typhoon.metadata_store_impl import MetadataStoreType
 from typhoon.variables import Variable, VariableType
 
+ascii_art_logo = r"""
+ _________  __  __   ______   ___   ___   ______   ______   ___   __        
+/________/\/_/\/_/\ /_____/\ /__/\ /__/\ /_____/\ /_____/\ /__/\ /__/\      
+\__.::.__\/\ \ \ \ \\:::_ \ \\::\ \\  \ \\:::_ \ \\:::_ \ \\::\_\\  \ \     
+   \::\ \   \:\_\ \ \\:(_) \ \\::\/_\ .\ \\:\ \ \ \\:\ \ \ \\:. `-\  \ \    
+    \::\ \   \::::_\/ \: ___\/ \:: ___::\ \\:\ \ \ \\:\ \ \ \\:. _    \ \   
+     \::\ \    \::\ \  \ \ \    \: \ \\::\ \\:\_\ \ \\:\_\ \ \\. \`-\  \ \  
+      \__\/     \__\/   \_\/     \__\/ \::\/ \_____\/ \_____\/ \__\/ \__\/  
+"""
+
 
 @click.group()
 def cli():
     """Typhoon CLI"""
     pass
+
+
+@cli.command()
+def print_ascii():
+    print(ascii_art_logo)
 
 
 @cli.command()
@@ -61,8 +76,8 @@ def _build_dags(target_env, debug):
     deploy_sam_template(dags, use_cli_config=True, target_env=target_env)
     for dag in dags:
         dag = dag.as_dict()
-        dag_folder = Path(settings.out_directory())/dag['name']
-        transpile_dag_and_store(dag, dag_folder/f"{dag['name']}.py", env=target_env, debug_mode=debug)
+        dag_folder = Path(settings.out_directory()) / dag['name']
+        transpile_dag_and_store(dag, dag_folder / f"{dag['name']}.py", env=target_env, debug_mode=debug)
         if debug and config.metadata_store_type == MetadataStoreType.sqlite:
             local_store_path = Path(settings.typhoon_home()) / 'project.db'
             if local_store_path.exists():
@@ -77,7 +92,7 @@ def _build_dags(target_env, debug):
     if debug and config.metadata_store_type == MetadataStoreType.sqlite:
         local_store_path = Path(settings.typhoon_home()) / 'project.db'
         if local_store_path.exists():
-            os.symlink(str(local_store_path), Path(settings.out_directory())/'project.db')
+            os.symlink(str(local_store_path), Path(settings.out_directory()) / 'project.db')
 
 
 class SubprocessError(Exception):
