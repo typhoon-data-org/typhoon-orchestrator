@@ -4,7 +4,7 @@ from setuptools import setup
 
 from typhoon import __version__
 
-with open('README.md') as readme_file:
+with open(os.path.join(os.path.dirname(__file__), 'README.md')) as readme_file:
     long_description = readme_file.read()
 
 with open(os.path.join(os.path.dirname(__file__), 'requirements.txt')) as f:
@@ -19,6 +19,7 @@ postgres = ['psycopg2']
 sqlalchemy = ['sqlalchemy']
 
 all_requirements = postgres + sqlalchemy
+dev_requirements = all_requirements + ['watchdog']
 
 setup(
     name='typhoon-orchestrator',
@@ -29,6 +30,7 @@ setup(
         'all': all_requirements,
         'postgres': postgres,
         'sqlalchemy': sqlalchemy,
+        'dev': dev_requirements,
     },
     tests_require=test_required,
     test_suite='pytest',

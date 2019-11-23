@@ -1,5 +1,4 @@
 click
-botocore
 jinja2
 PyYAML
 boto3
