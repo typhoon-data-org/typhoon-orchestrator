@@ -61,18 +61,30 @@ def old_copy_user_defined_code():
     copy(os.path.join(typhoon_home(), 'typhoonconfig.cfg'), os.path.join(out_directory(), 'typhoonconfig.cfg'))
 
 
-def copy_user_defined_code(dag):
+def copy_user_defined_code(dag, symlink=False):
     dag_name = dag['name']
     try:
-        copytree(functions_directory(), os.path.join(out_directory(), dag_name, 'functions'))
+        if symlink:
+            os.symlink(functions_directory(), os.path.join(out_directory(), dag_name, 'functions'))
+        else:
+            copytree(functions_directory(), os.path.join(out_directory(), dag_name, 'functions'))
     except FileNotFoundError:
         print('No user defined functions. Skipping copy...')
     try:
-        copytree(transformations_directory(), os.path.join(out_directory(), dag_name, 'transformations'))
+        if symlink:
+            os.symlink(transformations_directory(), os.path.join(out_directory(), dag_name, 'transformations'))
+        else:
+            copytree(transformations_directory(), os.path.join(out_directory(), dag_name, 'transformations'))
     except FileNotFoundError:
         print('No user defined transformations. Skipping copy...')
     try:
-        copytree(hooks_directory(), os.path.join(out_directory(), dag_name, 'hooks'))
+        if symlink:
+            os.symlink(hooks_directory(), os.path.join(out_directory(), dag_name, 'hooks'))
+        else:
+            copytree(hooks_directory(), os.path.join(out_directory(), dag_name, 'hooks'))
     except FileNotFoundError:
         print('No user defined hooks. Skipping copy...')
-    copy(os.path.join(typhoon_home(), 'typhoonconfig.cfg'), os.path.join(out_directory(), dag_name, 'typhoonconfig.cfg'))
+    if symlink:
+        os.symlink(os.path.join(typhoon_home(), 'typhoonconfig.cfg'), os.path.join(out_directory(), dag_name, 'typhoonconfig.cfg'))
+    else:
+        copy(os.path.join(typhoon_home(), 'typhoonconfig.cfg'), os.path.join(out_directory(), dag_name, 'typhoonconfig.cfg'))

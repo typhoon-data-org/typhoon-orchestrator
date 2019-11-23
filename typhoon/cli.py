@@ -61,6 +61,7 @@ def clean(target_env):
 @click.option('--debug', default=False, is_flag=True)
 def build_dags(target_env, debug):
     """Build code for dags in $TYPHOON_HOME/out/"""
+    print(ascii_art_logo)
     _build_dags(target_env, debug)
 
 
@@ -80,14 +81,19 @@ def _build_dags(target_env, debug):
         transpile_dag_and_store(dag, dag_folder / f"{dag['name']}.py", env=target_env, debug_mode=debug)
         if debug and config.metadata_store_type == MetadataStoreType.sqlite:
             local_store_path = Path(settings.typhoon_home()) / 'project.db'
-            if local_store_path.exists():
-                os.symlink(str(local_store_path), dag_folder / 'project.db')
+            if not local_store_path.exists():
+                print(f'No sqlite store found. Creating in {local_store_path}...')
+                open(str(local_store_path), 'a').close()
+            print(f'Setting up database in {local_store_path} as symlink for persistence...')
+            os.symlink(str(local_store_path), dag_folder / 'project.db')
 
         deploy_dag_requirements(dag, config.typhoon_version_is_local(), config.typhoon_version)
         if config.typhoon_version_is_local():
             copy_local_typhoon(dag, config.typhoon_version)
 
-        copy_user_defined_code(dag)
+        if debug:
+            print('Setting up user defined code as symlink for debugging...')
+        copy_user_defined_code(dag, symlink=debug)
 
     if debug and config.metadata_store_type == MetadataStoreType.sqlite:
         local_store_path = Path(settings.typhoon_home()) / 'project.db'
