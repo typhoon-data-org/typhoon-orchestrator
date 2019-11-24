@@ -58,6 +58,16 @@ def get_undefined_connections_in_metadata_db(config: CLIConfig, conn_ids: List[s
     return undefined_connections
 
 
+def get_undefined_variables_in_metadata_db(config: CLIConfig, var_ids: List[str]):
+    undefined_variables = []
+    for var_id in var_ids:
+        try:
+            config.metadata_store.get_variable(var_id)
+        except MetadataObjectNotFound:
+            undefined_variables.append(var_id)
+    return undefined_variables
+
+
 def check_connections_yaml(config: CLIConfig, env: str):
     if not Path('connections.yml').exists():
         print(colored('• Connections YAML not found. For better version control create', 'red'), colored('connections.yml', 'grey'))
@@ -91,10 +101,29 @@ def check_connections_dags(config: CLIConfig, env: str):
                 colored('   - Connection', 'yellow'),
                 colored(conn_id, 'blue'),
                 colored('is not set. Try', 'yellow'),
-                colored(f'typhoon set-connection {conn_id} [CONN_ENV] {env}', 'grey')
+                colored(f'typhoon set-connection {conn_id} CONN_ENV {env}', 'grey')
             )
     else:
         print(colored('• All connections in the DAGs are defined in the database', 'green'))
+
+
+def check_variables_dags(config: CLIConfig, env: str):
+    all_var_ids = set()
+    for dag_file in Path(settings.dags_directory()).rglob('*.yml'):
+        var_ids = re.findall(r'\$VARIABLE\.(\w+)', dag_file.read_text())
+        all_var_ids = all_var_ids.union(var_ids)
+    undefined_variables = get_undefined_variables_in_metadata_db(config, var_ids=all_var_ids)
+    if undefined_variables:
+        print(colored('• Found variables in DAGs that are not defined in the metadata database', 'yellow'))
+        for var_id in undefined_variables:
+            print(
+                colored('   - Variable', 'yellow'),
+                colored(var_id, 'blue'),
+                colored('is not set. Try', 'yellow'),
+                colored(f'typhoon set-variable {var_id} VAR_TYPE VALUE {env}', 'grey')
+            )
+    else:
+        print(colored('• All variables in the DAGs are defined in the database', 'green'))
 
 
 @cli.command()
@@ -128,6 +157,7 @@ def status(env):
         print(colored('• Metadata database found in', 'green'), colored(config.metadata_store.uri, 'grey'))
         check_connections_yaml(config, env)
         check_connections_dags(config, env)
+        check_variables_dags(config, env)
     elif config.metadata_store_type == MetadataStoreType.sqlite:
         print(colored('• Metadata store not found for', 'yellow'), colored(config.metadata_store.uri, 'grey'))
         print(colored('   - It will be created upon use, or create by running (idempotent) command', color='blue'), colored(f'typhoon migrate {env}', 'grey'))
