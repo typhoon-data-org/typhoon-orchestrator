@@ -1,15 +1,21 @@
+import json
 import os
+import re
 import subprocess
 from pathlib import Path
+from typing import List
 
 import click
+import yaml
 from dataclasses import asdict
+from termcolor import colored
 
 from typhoon import connections
 from typhoon.connections import Connection
 from typhoon.core import settings
-from typhoon.core.config import CLIConfig
+from typhoon.core.config import CLIConfig, Config
 from typhoon.core.glue import transpile_dag_and_store, load_dags
+from typhoon.core.metadata_store_interface import MetadataObjectNotFound
 from typhoon.core.settings import out_directory
 from typhoon.deployment.deploy import deploy_dag_requirements, copy_local_typhoon, copy_user_defined_code
 from typhoon.metadata_store_impl import MetadataStoreType
@@ -32,9 +38,113 @@ def cli():
     pass
 
 
+def dags_with_changes(env) -> List[str]:
+    return ['example_dag', 'telegram_parrot']
+
+
+def get_environments(ctx, args, incomplete):
+    config_path = 'cliconfig.cfg'
+    config = Config(config_path, env='')
+    return [k for k in [x.lower() for x in config.config.keys()] if incomplete in k]
+
+
+def get_undefined_connections_in_metadata_db(config: CLIConfig, conn_ids: List[str]):
+    undefined_connections = []
+    for conn_id in conn_ids:
+        try:
+            config.metadata_store.get_connection(conn_id)
+        except MetadataObjectNotFound:
+            undefined_connections.append(conn_id)
+    return undefined_connections
+
+
+def check_connections_yaml(config: CLIConfig, env: str):
+    if not Path('connections.yml').exists():
+        print(colored('• Connections YAML not found. For better version control create', 'red'), colored('connections.yml', 'grey'))
+        print(colored('  Skipping connections YAML checks...', 'red'))
+        return
+    conn_yml = yaml.safe_load(Path('connections.yml').read_text())
+    undefined_connections = get_undefined_connections_in_metadata_db(config, conn_ids=conn_yml.keys())
+    if undefined_connections:
+        print(colored('• Found connections in YAML that are not defined in the metadata database', 'yellow'))
+        for conn_id in undefined_connections:
+            print(
+                colored('   - Connection', 'yellow'),
+                colored(conn_id, 'blue'),
+                colored('is not set. Try', 'yellow'),
+                colored(f'typhoon set-connection {conn_id} [CONN_ENV] {env}', 'grey')
+            )
+    else:
+        print(colored('• All connections in YAML are defined in the database', 'green'))
+
+
+def check_connections_dags(config: CLIConfig, env: str):
+    all_conn_ids = set()
+    for dag_file in Path(settings.dags_directory()).rglob('*.yml'):
+        conn_ids = re.findall(r'\$HOOK\.(\w+)', dag_file.read_text())
+        all_conn_ids = all_conn_ids.union(conn_ids)
+    undefined_connections = get_undefined_connections_in_metadata_db(config, conn_ids=all_conn_ids)
+    if undefined_connections:
+        print(colored('• Found connections in DAGs that are not defined in the metadata database', 'yellow'))
+        for conn_id in undefined_connections:
+            print(
+                colored('   - Connection', 'yellow'),
+                colored(conn_id, 'blue'),
+                colored('is not set. Try', 'yellow'),
+                colored(f'typhoon set-connection {conn_id} [CONN_ENV] {env}', 'grey')
+            )
+    else:
+        print(colored('• All connections in the DAGs are defined in the database', 'green'))
+
+
 @cli.command()
-def print_ascii():
-    print(ascii_art_logo)
+@click.argument('env', autocompletion=get_environments)
+def status(env):
+    print(colored(ascii_art_logo, 'cyan'))
+    if 'TYPHOON_HOME' not in os.environ.keys():
+        print(
+            colored('• Typhoon home not set... To define in current directory run', 'red'),
+            colored('To define in current directory run', 'white'),
+            colored('export TYPHOON_HOME=$(pwd)', 'grey'))
+        print(colored('Aborting checks...', 'red'))
+        return
+    else:
+        print(colored('• TYPHOON_HOME set to', 'green'), colored(os.environ['TYPHOON_HOME'], 'grey'))
+
+    if not Path('cliconfig.cfg').exists():
+        print(colored('CLI config file not found! Create one called', 'red'), colored('cliconfig.cfg', 'grey'))
+        print(colored('Aborting checks...', 'red'))
+        return
+
+    config = CLIConfig(env)
+    if config.aws_profile:
+        print(colored('• Using AWS profile', 'green'), colored(config.aws_profile, 'grey'))
+    elif config.development_mode:
+        print(colored('• Dev mode, skipping AWS profile check...', 'green'))
+    else:
+        print(colored('• No AWS profile found. Add to cliconfig.cfg...', 'red'))
+
+    if config.metadata_store.exists():
+        print(colored('• Metadata database found in', 'green'), colored(config.metadata_store.uri, 'grey'))
+        check_connections_yaml(config, env)
+        check_connections_dags(config, env)
+    elif config.metadata_store_type == MetadataStoreType.sqlite:
+        print(colored('• Metadata store not found for', 'yellow'), colored(config.metadata_store.uri, 'grey'))
+        print(colored('   - It will be created upon use, or create by running (idempotent) command', color='blue'), colored(f'typhoon migrate {env}', 'grey'))
+        print(colored('  Skipping connections and variables checks...', 'red'))
+    else:
+        print(colored('• Metadata store not found or incomplete for', 'red'), colored(config.metadata_store.uri, 'grey'))
+        print(colored('   - Fix by running (idempotent) command', color='blue'), colored(f'typhoon migrate {env}', 'grey'))
+        print(colored('  Skipping connections and variables checks...', 'red'))
+
+    changed_dags = dags_with_changes(env)
+    if changed_dags:
+        print(colored('• Unbuilt changes in DAGs...', 'red'), colored('To rebuild run', 'white'),
+              colored(f'typhoon build-dags {env} [--debug]', 'grey'))
+        for dag in changed_dags:
+            print(colored(f'   - {dag}', 'blue'))
+    else:
+        print(colored('• DAGs up to date', 'green'))
 
 
 @cli.command()
@@ -81,7 +191,7 @@ def _build_dags(target_env, debug):
         transpile_dag_and_store(dag, dag_folder / f"{dag['name']}.py", env=target_env, debug_mode=debug)
         if debug and config.metadata_store_type == MetadataStoreType.sqlite:
             local_store_path = Path(settings.typhoon_home()) / 'project.db'
-            if not local_store_path.exists():
+            if not config.metadata_store.exists():
                 print(f'No sqlite store found. Creating in {local_store_path}...')
                 open(str(local_store_path), 'a').close()
             print(f'Setting up database in {local_store_path} as symlink for persistence...')
@@ -152,6 +262,19 @@ def set_connection(conn_id, conn_env, target_env):
     conn_params = connections.get_connection_local(conn_id, conn_env)
     config = CLIConfig(target_env)
     config.metadata_store.set_connection(Connection(conn_id=conn_id, **asdict(conn_params)))
+    print(f'Connection {conn_id} set')
+
+
+@cli.command()
+@click.argument('conn_id')
+@click.argument('target_env')
+def get_connection(conn_id, target_env):
+    config = CLIConfig(target_env)
+    try:
+        conn = config.metadata_store.get_connection(conn_id)
+        print(json.dumps(conn.__dict__, indent=4))
+    except MetadataObjectNotFound:
+        print(f'Connection "{conn_id}" not found in {target_env} metadata database {config.metadata_store.uri}')
 
 
 @cli.command()

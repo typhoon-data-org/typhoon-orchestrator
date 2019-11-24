@@ -202,5 +202,14 @@ The `$HOOK` special variable creates a hook with the connection id passed after 
 Finally `$BATCH_NUM` is the last of the available special variables which denotes the current batch number, which is the same as the amount of batches that the source function has produced up to this point
 
 
+## CLI
+Typhoon comes with a rich CLI that makes it a breeze to develop, deploy and operate a typhoon project.
+
+### Bash complete
+Enable bash complete by running `eval "$(_TYPHOON_COMPLETE=source typhoon)"`
+
+### Status
+The go-to command to get an overview of the status of the project. Run `typhoon status [ENV]`.
+It reports any problems with the project and provides hints on how to solve them to get a working installation. It will also report if the DAGs are up to date.
 
 ## More coming soon...

@@ -1,13 +1,15 @@
 from typing import Optional, Union, List
 
+from typhoon.aws.exceptions import TyphoonResourceNotFoundError
 from typhoon.aws.plumbing import dynamodb_plumbing
 from typhoon.aws.plumbing.dynamodb_plumbing import dynamodb_connection, DynamoDBConnectionType
 from typhoon.connections import Connection
-from typhoon.core.metadata_store_interface import MetadataStoreInterface
+from typhoon.core.metadata_store_interface import MetadataStoreInterface, MetadataObjectNotFound
 from typhoon.variables import Variable
 
 
 class DynamodbMetadataStore(MetadataStoreInterface):
+    # noinspection PyUnresolvedReferences
     def __init__(self, config: Optional['TyphoonConfig'] = None):
         from typhoon.core.config import TyphoonConfig
 
@@ -44,16 +46,34 @@ class DynamodbMetadataStore(MetadataStoreInterface):
     def close(self):
         pass
 
+    def exists(self) -> bool:
+        for table_name in [self.config.connections_table_name, self.config.variables_table_name]:
+            if not dynamodb_plumbing.dynamodb_table_exists(
+                    ddb_client=self.client,
+                    table_name=table_name,
+            ):
+                return False
+        return True
+
+    @property
+    def uri(self) -> str:
+        return f'ddb://{self.config.dynamodb_endpoint}' \
+            if self.config.dynamodb_endpoint \
+            else f'ddb://dynamodb.{self.config.dynamodb_region}.amazonaws.com'
+
     def migrate(self):
         pass
 
     def get_connection(self, conn_id: str) -> Connection:
-        item = dynamodb_plumbing.dynamodb_get_item(
-            ddb_client=self.client,
-            table_name=self.config.connections_table_name,
-            key_name='conn_id',
-            key_value=conn_id,
-        )
+        try:
+            item = dynamodb_plumbing.dynamodb_get_item(
+                ddb_client=self.client,
+                table_name=self.config.connections_table_name,
+                key_name='conn_id',
+                key_value=conn_id,
+            )
+        except TyphoonResourceNotFoundError:
+            raise MetadataObjectNotFound(f'Connection "{conn_id}" is not set')
         return Connection(**item)
 
     def get_connections(self, to_dict: bool = False) -> List[Union[dict, Connection]]:
@@ -82,12 +102,15 @@ class DynamodbMetadataStore(MetadataStoreInterface):
         )
 
     def get_variable(self, variable_id: str) -> Variable:
-        item = dynamodb_plumbing.dynamodb_get_item(
-            ddb_client=self.client,
-            table_name=self.config.variables_table_name,
-            key_name='id',
-            key_value=variable_id,
-        )
+        try:
+            item = dynamodb_plumbing.dynamodb_get_item(
+                ddb_client=self.client,
+                table_name=self.config.variables_table_name,
+                key_name='id',
+                key_value=variable_id,
+            )
+        except MetadataObjectNotFound:
+            raise MetadataObjectNotFound(f'Variable "{variable_id}" is not set')
         return Variable(**item)
 
     def get_variables(self, to_dict: bool = False) -> List[Union[dict, Variable]]:

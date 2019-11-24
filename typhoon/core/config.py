@@ -73,7 +73,7 @@ class TyphoonConfig:
         return self.config.get('dynamodb-region')
 
     @property
-    def dynamodb_endpoint(self) -> str:
+    def dynamodb_endpoint(self) -> Optional[str]:
         return self.config.get('dynamodb-endpoint')
 
     @property
@@ -128,6 +128,10 @@ class CLIConfig(TyphoonConfig):
     def typhoon_version_is_local(self):
         version = self.typhoon_version
         return version and version != 'latest' and not re.match(r'\d\.\d\.\d', version)
+
+    @property
+    def development_mode(self) -> bool:
+        return self.config.get('development-mode', default=False)
 
 
 TyphoonConfigType = Union[TyphoonConfig, CLIConfig]

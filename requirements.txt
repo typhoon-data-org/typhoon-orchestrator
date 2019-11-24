@@ -4,3 +4,4 @@ PyYAML
 boto3
 dataclasses
 jsonpickle
+termcolor

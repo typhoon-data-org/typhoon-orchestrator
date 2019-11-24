@@ -5,10 +5,23 @@ from typhoon.connections import Connection
 from typhoon.variables import Variable
 
 
+class MetadataObjectNotFound(Exception):
+    pass
+
+
 class MetadataStoreInterface(ABC):
     """All implementations of the metadata store must override these functions"""
     @abstractmethod
     def close(self):
+        pass
+
+    @abstractmethod
+    def exists(self) -> bool:
+        pass
+
+    @property
+    @abstractmethod
+    def uri(self) -> str:
         pass
 
     @abstractmethod
@@ -17,6 +30,7 @@ class MetadataStoreInterface(ABC):
 
     @abstractmethod
     def get_connection(self, conn_id: str) -> Connection:
+        """Throws MetadataObjectNotFound"""
         pass
 
     @abstractmethod
@@ -33,6 +47,7 @@ class MetadataStoreInterface(ABC):
 
     @abstractmethod
     def get_variable(self, variable_id: str) -> Variable:
+        """Throws MetadataObjectNotFound"""
         pass
 
     @abstractmethod
