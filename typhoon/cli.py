@@ -2,6 +2,7 @@ import json
 import os
 import re
 import subprocess
+from datetime import datetime
 from pathlib import Path
 from typing import List
 
@@ -17,6 +18,7 @@ from typhoon.core.config import CLIConfig, Config
 from typhoon.core.glue import transpile_dag_and_store, load_dags
 from typhoon.core.metadata_store_interface import MetadataObjectNotFound
 from typhoon.core.settings import out_directory
+from typhoon.deployment.dags import get_dag_filenames
 from typhoon.deployment.deploy import deploy_dag_requirements, copy_local_typhoon, copy_user_defined_code
 from typhoon.metadata_store_impl import MetadataStoreType
 from typhoon.variables import Variable, VariableType
@@ -38,8 +40,22 @@ def cli():
     pass
 
 
-def dags_with_changes(env) -> List[str]:
-    return ['example_dag', 'telegram_parrot']
+def dags_with_changes() -> List[str]:
+    result = []
+    for dag_file in get_dag_filenames():
+        yaml_path = Path(settings.dags_directory()) / dag_file
+        yaml_modified_ts = datetime.fromtimestamp(yaml_path.stat().st_mtime)
+        dag_name = yaml.safe_load(yaml_path.read_text())['name']
+        transpiled_path = Path(settings.out_directory()) / dag_name / f'{dag_name}.py'
+        transpiled_created_ts = datetime.fromtimestamp(transpiled_path.stat().st_ctime)
+        if yaml_modified_ts > transpiled_created_ts:
+            result.append(dag_name)
+
+    return result
+
+
+def dags_without_deploy(env) -> List[str]:
+    return []
 
 
 def get_environments(ctx, args, incomplete):
@@ -82,7 +98,7 @@ def check_connections_yaml(config: CLIConfig, env: str):
                 colored('   - Connection', 'yellow'),
                 colored(conn_id, 'blue'),
                 colored('is not set. Try', 'yellow'),
-                colored(f'typhoon set-connection {conn_id} [CONN_ENV] {env}', 'grey')
+                colored(f'typhoon set-connection {conn_id} CONN_ENV {env}', 'grey')
             )
     else:
         print(colored('• All connections in YAML are defined in the database', 'green'))
@@ -167,14 +183,21 @@ def status(env):
         print(colored('   - Fix by running (idempotent) command', color='blue'), colored(f'typhoon migrate {env}', 'grey'))
         print(colored('  Skipping connections and variables checks...', 'red'))
 
-    changed_dags = dags_with_changes(env)
-    if changed_dags:
-        print(colored('• Unbuilt changes in DAGs...', 'red'), colored('To rebuild run', 'white'),
-              colored(f'typhoon build-dags {env} [--debug]', 'grey'))
-        for dag in changed_dags:
-            print(colored(f'   - {dag}', 'blue'))
+    if config.development_mode:
+        changed_dags = dags_with_changes()
+        if changed_dags:
+            print(colored('• Unbuilt changes in DAGs...', 'yellow'), colored('To rebuild run', 'white'),
+                  colored(f'typhoon build-dags {env} [--debug]', 'grey'))
+            for dag in changed_dags:
+                print(colored(f'   - {dag}', 'blue'))
+        else:
+            print(colored('• DAGs up to date', 'green'))
     else:
-        print(colored('• DAGs up to date', 'green'))
+        undeployed_dags = dags_without_deploy(env)
+        if undeployed_dags:
+            pass
+        else:
+            print(colored('• DAGs up to date', 'green'))
 
 
 @cli.command()
@@ -227,8 +250,8 @@ def _build_dags(target_env, debug):
             print(f'Setting up database in {local_store_path} as symlink for persistence...')
             os.symlink(str(local_store_path), dag_folder / 'project.db')
 
-        deploy_dag_requirements(dag, config.typhoon_version_is_local(), config.typhoon_version)
-        if config.typhoon_version_is_local():
+        deploy_dag_requirements(dag, config.typhoon_version_is_local, config.typhoon_version)
+        if config.typhoon_version_is_local:
             copy_local_typhoon(dag, config.typhoon_version)
 
         if debug:

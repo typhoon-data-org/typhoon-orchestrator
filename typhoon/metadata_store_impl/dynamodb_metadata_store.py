@@ -109,7 +109,7 @@ class DynamodbMetadataStore(MetadataStoreInterface):
                 key_name='id',
                 key_value=variable_id,
             )
-        except MetadataObjectNotFound:
+        except TyphoonResourceNotFoundError:
             raise MetadataObjectNotFound(f'Variable "{variable_id}" is not set')
         return Variable(**item)
 

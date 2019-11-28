@@ -125,6 +125,7 @@ class CLIConfig(TyphoonConfig):
     def typhoon_version(self) -> Optional[str]:
         return self.config.get('typhoon-version', default='latest')
 
+    @property
     def typhoon_version_is_local(self):
         version = self.typhoon_version
         return version and version != 'latest' and not re.match(r'\d\.\d\.\d', version)
