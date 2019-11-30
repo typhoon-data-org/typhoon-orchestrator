@@ -2,9 +2,10 @@ import json
 import os
 import re
 import subprocess
+import sys
 from datetime import datetime
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 import click
 import yaml
@@ -20,6 +21,7 @@ from typhoon.core.metadata_store_interface import MetadataObjectNotFound
 from typhoon.core.settings import out_directory
 from typhoon.deployment.dags import get_dag_filenames
 from typhoon.deployment.deploy import deploy_dag_requirements, copy_local_typhoon, copy_user_defined_code
+from typhoon.handler import _load_module_from_path, run_dag
 from typhoon.metadata_store_impl import MetadataStoreType
 from typhoon.variables import Variable, VariableType
 
@@ -339,6 +341,34 @@ def set_variable(variable_id, variable_type, value, target_env):
     var = Variable(variable_id, VariableType[variable_type.upper()], value)
     config = CLIConfig(target_env)
     config.metadata_store.set_variable(var)
+
+
+def get_dags(ctx, args, incomplete):
+    return [k for k in [x.name for x in load_dags(settings.dags_directory())] if incomplete in k]
+
+
+def run_local_dag(dag_name: str, execution_date: datetime, env: str):
+    dag_path = Path(settings.out_directory()) / dag_name / f'{dag_name}.py'
+    if not dag_path.exists():
+        print(f"Error: {dag_path} doesn't exist. Build DAGs")
+    os.environ['TYPHOON_ENV'] = env
+    run_dag(dag_name, str(execution_date), capture_logs=False)
+
+
+@cli.command()
+@click.argument('dag_name', autocompletion=get_dags)
+@click.argument('target_env', autocompletion=get_environments)
+@click.option('--execution-date', default=None, is_flag=True)
+def run(dag_name: str, target_env: str, execution_date: Optional[datetime]):
+    if execution_date is None:
+        execution_date = datetime.now()
+    config = CLIConfig(target_env)
+    if config.development_mode:
+        print(f'Development mode. Running {dag_name} from local build...')
+        run_local_dag(dag_name, execution_date, target_env)
+    else:
+        # Run lambda function
+        pass
 
 
 if __name__ == '__main__':
