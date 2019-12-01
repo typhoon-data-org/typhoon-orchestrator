@@ -11,7 +11,7 @@ from reflection import get_modules_in_package, package_tree, package_tree_from_p
     load_module_from_path
 from responses import transform_response
 from typhoon import variables
-from typhoon.cli import _build_dags
+from typhoon.cli import build_all_dags
 from typhoon.connections import get_connection_local, \
     get_connections_local_by_conn_id, Connection
 from typhoon.contrib.hooks import hook_factory
@@ -28,7 +28,7 @@ CORS(app)
 @app.route('/build-dags')
 def do_build_dags():
     env = request.args.get('env')
-    _build_dags(target_env=env, debug=True)
+    build_all_dags(target_env=env, debug=True)
     return 'Ok'
 
 
@@ -219,7 +219,7 @@ def api_save_dag_code():
 @app.route('/run-dag')
 def api_run_dag():
     env = request.args.get('env')
-    _build_dags(target_env=env, debug=False)
+    build_all_dags(target_env=env, debug=False)
     dag_name = request.args.get('dag_name')
     time = request.args.get('time')
     logs = run_dag(dag_name, time, capture_logs=True)

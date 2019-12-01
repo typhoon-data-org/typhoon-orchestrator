@@ -24,6 +24,7 @@ def write_to_out(filename: str, data: Union[bytes, str], directory: Optional[str
 
 
 def clean_out():
+    print('Cleaning out directory...')
     rmtree(out_directory(), ignore_errors=True)
 
 

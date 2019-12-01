@@ -24,6 +24,7 @@ from typhoon.deployment.deploy import deploy_dag_requirements, copy_local_typhoo
 from typhoon.handler import _load_module_from_path, run_dag
 from typhoon.metadata_store_impl import MetadataStoreType
 from typhoon.variables import Variable, VariableType
+from typhoon.watch import watch_changes
 
 ascii_art_logo = r"""
  _________  __  __   ______   ___   ___   ______   ______   ___   __        
@@ -227,10 +228,10 @@ def clean(target_env):
 def build_dags(target_env, debug):
     """Build code for dags in $TYPHOON_HOME/out/"""
     print(ascii_art_logo)
-    _build_dags(target_env, debug)
+    build_all_dags(target_env, debug)
 
 
-def _build_dags(target_env, debug):
+def build_all_dags(target_env, debug):
     from typhoon.deployment.deploy import clean_out
     from typhoon.deployment.sam import deploy_sam_template
 
@@ -238,6 +239,7 @@ def _build_dags(target_env, debug):
 
     config = CLIConfig(target_env)
 
+    print('Build all DAGs...')
     dags = load_dags(settings.dags_directory())
     deploy_sam_template(dags, use_cli_config=True, target_env=target_env)
     for dag in dags:
@@ -264,6 +266,8 @@ def _build_dags(target_env, debug):
         local_store_path = Path(settings.typhoon_home()) / 'project.db'
         if local_store_path.exists():
             os.symlink(str(local_store_path), Path(settings.out_directory()) / 'project.db')
+
+    print('Finished building DAGs\n')
 
 
 class SubprocessError(Exception):
@@ -292,7 +296,7 @@ def deploy_dags(target_env, build_dependencies):
 
     config = get_typhoon_config(use_cli_config=True, target_env=target_env)
 
-    _build_dags(target_env=target_env, debug=False)
+    build_all_dags(target_env=target_env, debug=False)
     if build_dependencies:
         run_in_subprocess(f'sam build --use-container', cwd=out_directory())
     build_dir = str(Path(out_directory()) / '.aws-sam' / 'build')
@@ -369,6 +373,17 @@ def run(dag_name: str, target_env: str, execution_date: Optional[datetime]):
     else:
         # Run lambda function
         pass
+
+
+@cli.command()
+@click.argument('target_env', autocompletion=get_environments)
+def watch_dags(target_env: str):
+    config = CLIConfig(target_env)
+    if not config.development_mode:
+        print('Can only watch DAGs in development mode')
+        return
+    print('Watching changes in DAGs...')
+    watch_changes(target_env)
 
 
 if __name__ == '__main__':
