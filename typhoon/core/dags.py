@@ -1,7 +1,9 @@
+import hashlib
 from datetime import datetime
 from typing import NamedTuple, List, Union, Dict
 
 import dateutil.parser
+from dataclasses import dataclass
 
 Item = Union[int, str, float, Dict, List]
 
@@ -144,3 +146,31 @@ class DagContext(NamedTuple):
     @staticmethod
     def from_dict(d: Dict) -> 'DagContext':
         return DagContext.from_date_string(d['execution_date'])
+
+
+def hash_dag_code(dag_code: str) -> str:
+    m = hashlib.sha1()
+    m.update(dag_code.encode())
+    return m.hexdigest()
+
+
+@dataclass
+class DagDeployment:
+    dag_name: str
+    deployment_date: datetime
+    dag_code: str
+
+    @property
+    def deployment_hash(self) -> str:
+        return hash_dag_code(self.dag_code)
+
+    def to_dict(self) -> dict:
+        return dict(deployment_hash=self.deployment_hash, **self.__dict__)
+
+    @staticmethod
+    def from_dict(d: dict) -> 'DagDeployment':
+        return DagDeployment(
+            dag_name=d['dag_name'],
+            deployment_date=dateutil.parser.parse(d['deployment_date']),
+            dag_code=d['dag_code'],
+        )

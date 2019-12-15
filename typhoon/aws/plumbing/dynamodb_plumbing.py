@@ -2,7 +2,9 @@ import decimal
 from enum import Enum
 from typing import Optional, Union
 
+from boto3.dynamodb.conditions import Key
 from boto3.dynamodb.types import TypeSerializer, TypeDeserializer
+from botocore.exceptions import ClientError
 
 from typhoon.aws.exceptions import TyphoonResourceNotFoundError
 from typhoon.aws.plumbing.boto3_plumbing import boto3_session
@@ -84,20 +86,16 @@ def create_dynamodb_table(
 
     if range_key:
         key_schema.append({
-            {
-                'AttributeName': range_key,
-                'KeyType': 'RANGE'
-            },
+            'AttributeName': range_key,
+            'KeyType': 'RANGE'
         })
         if isinstance(range_key, str):
             attribute_type = 'S'
         else:
             raise ValueError(f'Expected range key to be in [str]. Found: {type(range_key)}')
         attribute_definitions.append({
-            {
-                'AttributeName': attribute_type,
-                'AttributeType': 'S'
-            },
+            'AttributeName': range_key,
+            'AttributeType': attribute_type
         })
 
     table = ddb_client.create_table(
@@ -121,15 +119,36 @@ def dynamodb_put_item(ddb_client, table_name: str, item: dict):
 
 
 def dynamodb_get_item(ddb_client, table_name: str, key_name: str, key_value: str):
-    response = ddb_client.get_item(
-        TableName=table_name,
-        Key={key_name: {'S': key_value}}
-    )
+    try:
+        response = ddb_client.get_item(
+            TableName=table_name,
+            Key={key_name: {'S': key_value}}
+        )
+    except ddb_client.exceptions.ResourceNotFoundException:
+        raise TyphoonResourceNotFoundError(f'Table "{table_name}" does not exist in DynamoDB')
     if 'Item' not in response:
         raise TyphoonResourceNotFoundError(
             f'Item {key_name}="{key_value}" does not exist in DynamoDB table {table_name}')
     deserializer = TypeDeserializer()
     return {k: deserializer.deserialize(v) for k, v in response['Item'].items()}
+
+
+def dynamodb_query_item(
+        ddb_resource,
+        table_name: str,
+        partition_key_name: str,
+        partition_key_value: str,
+):
+    try:
+        table = ddb_resource.Table(table_name)
+        response = table.query(KeyConditionExpression=Key(partition_key_name).eq(partition_key_value))
+    except ClientError:
+        raise TyphoonResourceNotFoundError(f'Table "{table_name}" does not exist in DynamoDB')
+    if 'Items' not in response or not response['Items']:
+        raise TyphoonResourceNotFoundError(
+            f'Item {partition_key_name}="{partition_key_value}" does not exist in DynamoDB table {table_name}')
+    deserializer = TypeDeserializer()
+    return {k: deserializer.deserialize(v) for k, v in response['Items'][0].items()}
 
 
 def dynamodb_delete_item(ddb_client, table_name, key_name: str, key_value: str):

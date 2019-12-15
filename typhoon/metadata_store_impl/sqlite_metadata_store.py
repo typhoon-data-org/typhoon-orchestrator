@@ -3,6 +3,7 @@ from typing import Optional, Union, List
 
 from typhoon.connections import Connection
 from typhoon.core import settings
+from typhoon.core.dags import DagDeployment
 from typhoon.core.metadata_store_interface import MetadataStoreInterface, MetadataObjectNotFound
 from typhoon.variables import Variable
 
@@ -16,10 +17,12 @@ class SQLiteMetadataStore(MetadataStoreInterface):
         self.db_path = str(Path(settings.typhoon_home()) / f'{self.config.project_name}.db')
         self.conn_connections = SqliteDict(self.db_path, tablename=self.config.connections_table_name)
         self.conn_variables = SqliteDict(self.db_path, tablename=self.config.variables_table_name)
+        self.conn_dag_deployments = SqliteDict(self.db_path, tablename=self.config.dag_deployments_table_name)
 
     def close(self):
         self.conn_connections.close()
         self.conn_variables.close()
+        self.conn_dag_deployments.close()
 
     def exists(self) -> bool:
         return Path(self.db_path).exists()
@@ -62,3 +65,12 @@ class SQLiteMetadataStore(MetadataStoreInterface):
     def delete_variable(self, variable: Union[str, Variable]):
         del self.conn_variables[variable.id if isinstance(variable, Variable) else variable]
         self.conn_variables.commit()
+
+    def get_dag_deployment(self, deployment_hash: str) -> DagDeployment:
+        if deployment_hash not in self.conn_connections.keys():
+            raise MetadataObjectNotFound(f'Dag deployment "{deployment_hash}" is not set')
+        return self.conn_connections[deployment_hash]
+
+    def set_dag_deployment(self, dag_deployment: DagDeployment):
+        self.conn_dag_deployments[dag_deployment.deployment_hash] = dag_deployment
+        self.conn_dag_deployments.commit()

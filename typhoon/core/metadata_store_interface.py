@@ -1,7 +1,11 @@
 from abc import ABC, abstractmethod
+from datetime import datetime
 from typing import Union, List
 
+from typing_extensions import overload
+
 from typhoon.connections import Connection
+from typhoon.core.dags import DagDeployment, DAG
 from typhoon.variables import Variable
 
 
@@ -60,4 +64,12 @@ class MetadataStoreInterface(ABC):
 
     @abstractmethod
     def delete_variable(self, variable: Union[str, Variable]):
+        pass
+
+    @abstractmethod
+    def get_dag_deployment(self, deployment_hash: str) -> DagDeployment:
+        pass
+
+    @abstractmethod
+    def set_dag_deployment(self, dag_deployment: DagDeployment):
         pass

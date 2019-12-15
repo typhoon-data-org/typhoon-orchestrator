@@ -2,7 +2,6 @@ import json
 import os
 import re
 import subprocess
-import sys
 from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
@@ -16,12 +15,13 @@ from typhoon import connections
 from typhoon.connections import Connection
 from typhoon.core import settings
 from typhoon.core.config import CLIConfig, Config
-from typhoon.core.glue import transpile_dag_and_store, load_dags
+from typhoon.core.dags import DagDeployment
+from typhoon.core.glue import transpile_dag_and_store, load_dags, get_dags_contents
 from typhoon.core.metadata_store_interface import MetadataObjectNotFound
 from typhoon.core.settings import out_directory
 from typhoon.deployment.dags import get_dag_filenames
 from typhoon.deployment.deploy import deploy_dag_requirements, copy_local_typhoon, copy_user_defined_code
-from typhoon.handler import _load_module_from_path, run_dag
+from typhoon.handler import run_dag
 from typhoon.metadata_store_impl import MetadataStoreType
 from typhoon.variables import Variable, VariableType
 from typhoon.watch import watch_changes
@@ -58,7 +58,17 @@ def dags_with_changes() -> List[str]:
 
 
 def dags_without_deploy(env) -> List[str]:
-    return []
+    undeployed_dags = []
+    config = CLIConfig(env)
+    for dag_code in get_dags_contents(settings.dags_directory()):
+        loaded_dag = yaml.safe_load(dag_code)
+        dag_deployment = DagDeployment(loaded_dag['name'], deployment_date=datetime.utcnow(), dag_code=dag_code)
+        if loaded_dag.get('active', True):
+            try:
+                _ = config.metadata_store.get_dag_deployment(dag_deployment.deployment_hash)
+            except MetadataObjectNotFound:
+                undeployed_dags.append(dag_deployment.dag_name)
+    return undeployed_dags
 
 
 def get_environments(ctx, args, incomplete):
@@ -198,7 +208,10 @@ def status(env):
     else:
         undeployed_dags = dags_without_deploy(env)
         if undeployed_dags:
-            pass
+            print(colored('• Undeployed changes in DAGs...', 'yellow'), colored('To deploy run', 'white'),
+                  colored(f'typhoon deploy-dags {env} [--build-dependencies]', 'grey'))
+            for dag in undeployed_dags:
+                print(colored(f'   - {dag}', 'blue'))
         else:
             print(colored('• DAGs up to date', 'green'))
 
@@ -210,9 +223,8 @@ def migrate(target_env):
     from typhoon.deployment.iam import deploy_role
     deploy_role(use_cli_config=True, target_env=target_env)
 
-    from typhoon.deployment.dynamo import create_connections_table, create_variables_table
-    create_connections_table(use_cli_config=True, target_env=target_env)
-    create_variables_table(use_cli_config=True, target_env=target_env)
+    config = CLIConfig(target_env)
+    config.metadata_store.migrate()
 
 
 @cli.command()
@@ -263,9 +275,9 @@ def build_all_dags(target_env, debug):
         copy_user_defined_code(dag, symlink=debug)
 
     if debug and config.metadata_store_type == MetadataStoreType.sqlite:
-        local_store_path = Path(settings.typhoon_home()) / 'project.db'
+        local_store_path = Path(settings.typhoon_home()) / f'{config.project_name}.db'
         if local_store_path.exists():
-            os.symlink(str(local_store_path), Path(settings.out_directory()) / 'project.db')
+            os.symlink(str(local_store_path), Path(settings.out_directory()) / f'{config.project_name}.db')
 
     print('Finished building DAGs\n')
 
@@ -290,7 +302,7 @@ def run_in_subprocess(command: str, cwd: str):
 
 @cli.command()
 @click.argument('target_env')
-@click.option('--build-dependencies', default=False, is_flag=True)
+@click.option('--build-dependencies', default=False, is_flag=True, help='Build DAG dependencies in Docker container')
 def deploy_dags(target_env, build_dependencies):
     from typhoon.core import get_typhoon_config
 
@@ -311,6 +323,13 @@ def deploy_dags(target_env, build_dependencies):
         f'--region {config.deploy_region} --capabilities CAPABILITY_IAM',
         cwd=build_dir
     )
+
+    if not config.development_mode:
+        for dag_code in get_dags_contents(settings.dags_directory()):
+            loaded_dag = yaml.safe_load(dag_code)
+            if loaded_dag.get('active', True):
+                dag_deployment = DagDeployment(loaded_dag['name'], deployment_date=datetime.utcnow(), dag_code=dag_code)
+                config.metadata_store.set_dag_deployment(dag_deployment)
 
 
 @cli.command()

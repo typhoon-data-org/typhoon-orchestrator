@@ -20,10 +20,20 @@ def transpile_dag_and_store(dag: dict, output_path: Union[str, Path], env: str, 
 
 def load_dags(dags_directory: Union[str, Path]) -> List[DAG]:
     dags_directory = Path(dags_directory)
-    dags = []
 
+    dags = []
     for dag_file in dags_directory.rglob('*.yml'):
         dag = yaml.safe_load(dag_file.read_text())
         dags.append(DAG.from_dict_definition(dag))
+
+    return dags
+
+
+def get_dags_contents(dags_directory: Union[str, Path]) -> List[str]:
+    dags_directory = Path(dags_directory)
+
+    dags = []
+    for dag_file in dags_directory.rglob('*.yml'):
+        dags.append(dag_file.read_text())
 
     return dags

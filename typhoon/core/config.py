@@ -54,9 +54,56 @@ class TyphoonConfig:
         return f'typhoon_{self.project_name.lower()}_connections'
 
     @property
+    def connections_table_read_capacity_units(self) -> int:
+        """Read capacity units for DynamoDB connections table"""
+        if not self.metadata_store_type == MetadataStoreType.dynamodb:
+            raise ValueError(f'Read capacity units are only for DynamoDB metadata store, found {self.metadata_store_type}')
+        return self.config.get('connections-table-read-capacity-units', default=1)
+
+    @property
+    def connections_table_write_capacity_units(self) -> int:
+        """Write capacity units for DynamoDB connections table"""
+        if not self.metadata_store_type == MetadataStoreType.dynamodb:
+            raise ValueError(f'Write capacity units are only for DynamoDB metadata store, found {self.metadata_store_type}')
+        return self.config.get('connections-table-write-capacity-units', default=1)
+
+    @property
+    def variables_table_read_capacity_units(self) -> int:
+        """Read capacity units for DynamoDB variables table"""
+        if not self.metadata_store_type == MetadataStoreType.dynamodb:
+            raise ValueError(f'Read capacity units are only for DynamoDB metadata store, found {self.metadata_store_type}')
+        return self.config.get('variables-table-read-capacity-units', default=1)
+
+    @property
+    def variables_table_write_capacity_units(self) -> int:
+        """Write capacity units for DynamoDB variables table"""
+        if not self.metadata_store_type == MetadataStoreType.dynamodb:
+            raise ValueError(f'Write capacity units are only for DynamoDB metadata store, found {self.metadata_store_type}')
+        return self.config.get('variables-table-write-capacity-units', default=1)
+
+    @property
+    def deployments_table_read_capacity_units(self) -> int:
+        """Read capacity units for DynamoDB deployments table"""
+        if not self.metadata_store_type == MetadataStoreType.dynamodb:
+            raise ValueError(f'Read capacity units are only for DynamoDB metadata store, found {self.metadata_store_type}')
+        return self.config.get('deployments-table-read-capacity-units', default=1)
+
+    @property
+    def deployments_table_write_capacity_units(self) -> int:
+        """Write capacity units for DynamoDB deployments table"""
+        if not self.metadata_store_type == MetadataStoreType.dynamodb:
+            raise ValueError(f'Write capacity units are only for DynamoDB metadata store, found {self.metadata_store_type}')
+        return self.config.get('deployments-table-write-capacity-units', default=1)
+
+    @property
     def variables_table_name(self) -> str:
         """Name of the DynamoDB table where we will store variables (calculated from project-name)"""
         return f'typhoon_{self.project_name.lower()}_variables'
+
+    @property
+    def dag_deployments_table_name(self) -> str:
+        """Name of the DynamoDB table where we will store variables (calculated from project-name)"""
+        return f'typhoon_{self.project_name.lower()}_deployments'
 
     @property
     def metadata_store_type(self) -> MetadataStoreType:

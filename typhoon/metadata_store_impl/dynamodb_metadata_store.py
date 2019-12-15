@@ -4,6 +4,7 @@ from typhoon.aws.exceptions import TyphoonResourceNotFoundError
 from typhoon.aws.plumbing import dynamodb_plumbing
 from typhoon.aws.plumbing.dynamodb_plumbing import dynamodb_connection, DynamoDBConnectionType
 from typhoon.connections import Connection
+from typhoon.core.dags import DagDeployment
 from typhoon.core.metadata_store_interface import MetadataStoreInterface, MetadataObjectNotFound
 from typhoon.variables import Variable
 
@@ -47,7 +48,7 @@ class DynamodbMetadataStore(MetadataStoreInterface):
         pass
 
     def exists(self) -> bool:
-        for table_name in [self.config.connections_table_name, self.config.variables_table_name]:
+        for table_name in [self.config.connections_table_name, self.config.variables_table_name, self.config.dag_deployments_table_name]:
             if not dynamodb_plumbing.dynamodb_table_exists(
                     ddb_client=self.client,
                     table_name=table_name,
@@ -61,8 +62,51 @@ class DynamodbMetadataStore(MetadataStoreInterface):
             if self.config.dynamodb_endpoint \
             else f'ddb://dynamodb.{self.config.dynamodb_region}.amazonaws.com'
 
+    def _create_table_if_not_exists(
+            self,
+            table_name: str,
+            read_capacity: int,
+            write_capacity: int,
+            primary_key: str,
+            range_key: Optional[str] = None,
+    ):
+        if dynamodb_plumbing.dynamodb_table_exists(
+                ddb_client=self.client,
+                table_name=table_name,
+        ):
+            print(f'Table {table_name} exists. Skipping creation...')
+        else:
+            print(f'Creating table {table_name}...')
+            kwargs = {'range_key': range_key} if range_key else {}
+            dynamodb_plumbing.create_dynamodb_table(
+                ddb_client=self.client,
+                table_name=table_name,
+                primary_key=primary_key,
+                read_capacity_units=read_capacity,
+                write_capacity_units=write_capacity,
+                **kwargs
+            )
+
     def migrate(self):
-        pass
+        self._create_table_if_not_exists(
+            table_name=self.config.connections_table_name,
+            read_capacity=self.config.connections_table_read_capacity_units,
+            write_capacity=self.config.connections_table_write_capacity_units,
+            primary_key='conn_id',
+        )
+        self._create_table_if_not_exists(
+            table_name=self.config.variables_table_name,
+            read_capacity=self.config.variables_table_read_capacity_units,
+            write_capacity=self.config.variables_table_write_capacity_units,
+            primary_key='id',
+        )
+        self._create_table_if_not_exists(
+            table_name=self.config.dag_deployments_table_name,
+            read_capacity=self.config.deployments_table_read_capacity_units,
+            write_capacity=self.config.deployments_table_write_capacity_units,
+            primary_key='deployment_hash',
+            range_key='deployment_date',
+        )
 
     def get_connection(self, conn_id: str) -> Connection:
         try:
@@ -136,4 +180,23 @@ class DynamodbMetadataStore(MetadataStoreInterface):
             table_name=self.config.variables_table_name,
             key_name='id',
             key_value=variable.id if isinstance(variable, Variable) else variable,
+        )
+
+    def get_dag_deployment(self, deployment_hash: str) -> DagDeployment:
+        try:
+            item = dynamodb_plumbing.dynamodb_query_item(
+                ddb_resource=self.resource,
+                table_name=self.config.dag_deployments_table_name,
+                partition_key_name='deployment_hash',
+                partition_key_value=deployment_hash,
+            )
+        except TyphoonResourceNotFoundError:
+            raise MetadataObjectNotFound(f'Deployment "{deployment_hash}" is not set')
+        return DagDeployment.from_dict(item)
+
+    def set_dag_deployment(self, dag_deployment: DagDeployment):
+        dynamodb_plumbing.dynamodb_put_item(
+            ddb_client=self.client,
+            table_name=self.config.dag_deployments_table_name,
+            item=dag_deployment.to_dict(),
         )
