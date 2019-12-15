@@ -217,7 +217,7 @@ def status(env):
 
 
 @cli.command()
-@click.argument('target_env')
+@click.argument('target_env', autocompletion=get_environments)
 def migrate(target_env):
     """Add the necessary IAM roles and DynamoDB tables"""
     from typhoon.deployment.iam import deploy_role
@@ -228,14 +228,14 @@ def migrate(target_env):
 
 
 @cli.command()
-@click.argument('target_env')
+@click.argument('target_env', autocompletion=get_environments)
 def clean(target_env):
     from typhoon.deployment.iam import clean_role
     clean_role(use_cli_config=True, target_env=target_env)
 
 
 @cli.command()
-@click.argument('target_env')
+@click.argument('target_env', autocompletion=get_environments)
 @click.option('--debug', default=False, is_flag=True)
 def build_dags(target_env, debug):
     """Build code for dags in $TYPHOON_HOME/out/"""
@@ -301,7 +301,7 @@ def run_in_subprocess(command: str, cwd: str):
 
 
 @cli.command()
-@click.argument('target_env')
+@click.argument('target_env', autocompletion=get_environments)
 @click.option('--build-dependencies', default=False, is_flag=True, help='Build DAG dependencies in Docker container')
 def deploy_dags(target_env, build_dependencies):
     from typhoon.core import get_typhoon_config
@@ -335,7 +335,7 @@ def deploy_dags(target_env, build_dependencies):
 @cli.command()
 @click.argument('conn_id')
 @click.argument('conn_env')
-@click.argument('target_env')
+@click.argument('target_env', autocompletion=get_environments)
 def set_connection(conn_id, conn_env, target_env):
     conn_params = connections.get_connection_local(conn_id, conn_env)
     config = CLIConfig(target_env)
@@ -345,7 +345,7 @@ def set_connection(conn_id, conn_env, target_env):
 
 @cli.command()
 @click.argument('conn_id')
-@click.argument('target_env')
+@click.argument('target_env', autocompletion=get_environments)
 def get_connection(conn_id, target_env):
     config = CLIConfig(target_env)
     try:
@@ -359,7 +359,7 @@ def get_connection(conn_id, target_env):
 @click.argument('variable_id')
 @click.argument('variable_type')
 @click.argument('value')
-@click.argument('target_env')
+@click.argument('target_env', autocompletion=get_environments)
 def set_variable(variable_id, variable_type, value, target_env):
     var = Variable(variable_id, VariableType[variable_type.upper()], value)
     config = CLIConfig(target_env)
@@ -381,8 +381,9 @@ def run_local_dag(dag_name: str, execution_date: datetime, env: str):
 @cli.command()
 @click.argument('dag_name', autocompletion=get_dags)
 @click.argument('target_env', autocompletion=get_environments)
-@click.option('--execution-date', default=None, is_flag=True)
+@click.option('--execution-date', default=None, is_flag=True, type=click.DateTime(), help='DAG execution date as YYYY-mm-dd')
 def run(dag_name: str, target_env: str, execution_date: Optional[datetime]):
+    """Run a DAG for a specific date. Will create a metadata entry in the database (TODO: create entry)."""
     if execution_date is None:
         execution_date = datetime.now()
     config = CLIConfig(target_env)
@@ -390,13 +391,14 @@ def run(dag_name: str, target_env: str, execution_date: Optional[datetime]):
         print(f'Development mode. Running {dag_name} from local build...')
         run_local_dag(dag_name, execution_date, target_env)
     else:
-        # Run lambda function
+        # TODO: Run lambda function
         pass
 
 
 @cli.command()
 @click.argument('target_env', autocompletion=get_environments)
 def watch_dags(target_env: str):
+    """Watch changes in DAG YAMLs and build when changes are detected. Only for development mode"""
     config = CLIConfig(target_env)
     if not config.development_mode:
         print('Can only watch DAGs in development mode')
