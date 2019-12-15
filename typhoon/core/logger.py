@@ -1,4 +1,5 @@
 import logging.config
+import sys
 from pathlib import Path
 
 import yaml
@@ -11,3 +12,9 @@ def setup_logging():
     if logging_config_path.exists():
         config = logging_config_path.read_text()
         logging.config.dictConfig(yaml.load(config))
+    else:
+        logging.basicConfig(
+            stream=sys.stdout,
+            format='[%(asctime)s] {{%(filename)s:%(lineno)d}} %(levelname)s - %(message)s',
+            level=logging.INFO,
+        )
