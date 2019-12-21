@@ -16,10 +16,9 @@ from typhoon.connections import Connection
 from typhoon.core import settings
 from typhoon.core.config import CLIConfig, Config
 from typhoon.core.dags import DagDeployment
-from typhoon.core.glue import transpile_dag_and_store, load_dags, get_dags_contents
+from typhoon.core.glue import transpile_dag_and_store, load_dags, get_dags_contents, get_dag_filenames
 from typhoon.core.metadata_store_interface import MetadataObjectNotFound
 from typhoon.core.settings import out_directory
-from typhoon.deployment.dags import get_dag_filenames
 from typhoon.deployment.deploy import deploy_dag_requirements, copy_local_typhoon, copy_user_defined_code
 from typhoon.handler import run_dag
 from typhoon.metadata_store_impl import MetadataStoreType

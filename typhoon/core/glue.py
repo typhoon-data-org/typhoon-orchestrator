@@ -2,11 +2,13 @@
 of the code can be more deterministic and testable.
 This code should not be unit tested.
 """
+import os
 from pathlib import Path
 from typing import Union, List
 
 import yaml
 
+from typhoon.core import settings
 from typhoon.core.dags import DAG
 from typhoon.core.transpiler import transpile
 
@@ -37,3 +39,9 @@ def get_dags_contents(dags_directory: Union[str, Path]) -> List[str]:
         dags.append(dag_file.read_text())
 
     return dags
+
+
+def get_dag_filenames():
+    dags_directory = settings.dags_directory()
+    dag_files = filter(lambda x: x.endswith('.yml'), os.listdir(dags_directory))
+    return dag_files

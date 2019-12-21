@@ -17,7 +17,7 @@ from typhoon.connections import get_connection_local, \
 from typhoon.contrib.hooks import hook_factory
 from typhoon.core.config import CLIConfig
 from typhoon.core.settings import typhoon_home
-from typhoon.deployment.dags import get_dag_filenames
+from typhoon.core.glue import get_dag_filenames
 from typhoon.handler import run_dag
 from typhoon.variables import VariableType
 

@@ -1,9 +1,8 @@
 import os
 from pathlib import Path
 from shutil import rmtree, copytree, copy
-from typing import Union, Sequence, Optional
+from typing import Union, Optional
 
-from typhoon.deployment.dags import generate_dag_code
 from typhoon.core.settings import out_directory, functions_directory, transformations_directory, \
     typhoon_home, hooks_directory
 
@@ -26,12 +25,6 @@ def write_to_out(filename: str, data: Union[bytes, str], directory: Optional[str
 def clean_out():
     print('Cleaning out directory...')
     rmtree(out_directory(), ignore_errors=True)
-
-
-def build_dag_code(dag: dict, env: str, debug_mode: bool = False):
-    dag_code = generate_dag_code(dag, env, debug_mode)
-    dag_name = dag['name']
-    write_to_out(directory=dag_name, filename=f'{dag_name}.py', data=dag_code)
 
 
 def typhoon_requirements():
