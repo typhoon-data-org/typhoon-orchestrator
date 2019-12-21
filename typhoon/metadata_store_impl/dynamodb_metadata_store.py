@@ -1,8 +1,8 @@
 from typing import Optional, Union, List
 
+from typhoon.aws import dynamodb_helper
+from typhoon.aws.dynamodb_helper import dynamodb_connection, DynamoDBConnectionType
 from typhoon.aws.exceptions import TyphoonResourceNotFoundError
-from typhoon.aws.plumbing import dynamodb_plumbing
-from typhoon.aws.plumbing.dynamodb_plumbing import dynamodb_connection, DynamoDBConnectionType
 from typhoon.connections import Connection
 from typhoon.core.dags import DagDeployment
 from typhoon.core.metadata_store_interface import MetadataStoreInterface, MetadataObjectNotFound
@@ -49,7 +49,7 @@ class DynamodbMetadataStore(MetadataStoreInterface):
 
     def exists(self) -> bool:
         for table_name in [self.config.connections_table_name, self.config.variables_table_name, self.config.dag_deployments_table_name]:
-            if not dynamodb_plumbing.dynamodb_table_exists(
+            if not dynamodb_helper.dynamodb_table_exists(
                     ddb_client=self.client,
                     table_name=table_name,
             ):
@@ -70,7 +70,7 @@ class DynamodbMetadataStore(MetadataStoreInterface):
             primary_key: str,
             range_key: Optional[str] = None,
     ):
-        if dynamodb_plumbing.dynamodb_table_exists(
+        if dynamodb_helper.dynamodb_table_exists(
                 ddb_client=self.client,
                 table_name=table_name,
         ):
@@ -78,7 +78,7 @@ class DynamodbMetadataStore(MetadataStoreInterface):
         else:
             print(f'Creating table {table_name}...')
             kwargs = {'range_key': range_key} if range_key else {}
-            dynamodb_plumbing.create_dynamodb_table(
+            dynamodb_helper.create_dynamodb_table(
                 ddb_client=self.client,
                 table_name=table_name,
                 primary_key=primary_key,
@@ -110,7 +110,7 @@ class DynamodbMetadataStore(MetadataStoreInterface):
 
     def get_connection(self, conn_id: str) -> Connection:
         try:
-            item = dynamodb_plumbing.dynamodb_get_item(
+            item = dynamodb_helper.dynamodb_get_item(
                 ddb_client=self.client,
                 table_name=self.config.connections_table_name,
                 key_name='conn_id',
@@ -121,14 +121,14 @@ class DynamodbMetadataStore(MetadataStoreInterface):
         return Connection(**item)
 
     def get_connections(self, to_dict: bool = False) -> List[Union[dict, Connection]]:
-        connections_raw = dynamodb_plumbing.scan_dynamodb_table(
+        connections_raw = dynamodb_helper.scan_dynamodb_table(
             ddb_resource=self.resource,
             table_name=self.config.connections_table_name,
         )
         return [Connection(**conn).__dict__ if to_dict else Connection(**conn) for conn in connections_raw]
 
     def set_connection(self, conn: Connection):
-        dynamodb_plumbing.dynamodb_put_item(
+        dynamodb_helper.dynamodb_put_item(
             ddb_client=self.client,
             table_name=self.config.connections_table_name,
             item={
@@ -138,7 +138,7 @@ class DynamodbMetadataStore(MetadataStoreInterface):
         )
 
     def delete_connection(self, conn: Union[str, Connection]):
-        dynamodb_plumbing.dynamodb_delete_item(
+        dynamodb_helper.dynamodb_delete_item(
             ddb_client=self.client,
             table_name=self.config.connections_table_name,
             key_name='conn_id',
@@ -147,7 +147,7 @@ class DynamodbMetadataStore(MetadataStoreInterface):
 
     def get_variable(self, variable_id: str) -> Variable:
         try:
-            item = dynamodb_plumbing.dynamodb_get_item(
+            item = dynamodb_helper.dynamodb_get_item(
                 ddb_client=self.client,
                 table_name=self.config.variables_table_name,
                 key_name='id',
@@ -158,14 +158,14 @@ class DynamodbMetadataStore(MetadataStoreInterface):
         return Variable(**item)
 
     def get_variables(self, to_dict: bool = False) -> List[Union[dict, Variable]]:
-        variables_raw = dynamodb_plumbing.scan_dynamodb_table(
+        variables_raw = dynamodb_helper.scan_dynamodb_table(
             ddb_resource=self.resource,
             table_name=self.config.variables_table_name,
         )
         return [Variable(**var).dict_contents() if to_dict else Variable(**var) for var in variables_raw]
 
     def set_variable(self, variable: Variable):
-        dynamodb_plumbing.dynamodb_put_item(
+        dynamodb_helper.dynamodb_put_item(
             ddb_client=self.client,
             table_name=self.config.variables_table_name,
             item={
@@ -175,7 +175,7 @@ class DynamodbMetadataStore(MetadataStoreInterface):
         )
 
     def delete_variable(self, variable: Union[str, Variable]):
-        dynamodb_plumbing.dynamodb_delete_item(
+        dynamodb_helper.dynamodb_delete_item(
             ddb_client=self.client,
             table_name=self.config.variables_table_name,
             key_name='id',
@@ -184,7 +184,7 @@ class DynamodbMetadataStore(MetadataStoreInterface):
 
     def get_dag_deployment(self, deployment_hash: str) -> DagDeployment:
         try:
-            item = dynamodb_plumbing.dynamodb_query_item(
+            item = dynamodb_helper.dynamodb_query_item(
                 ddb_resource=self.resource,
                 table_name=self.config.dag_deployments_table_name,
                 partition_key_name='deployment_hash',
@@ -195,7 +195,7 @@ class DynamodbMetadataStore(MetadataStoreInterface):
         return DagDeployment.from_dict(item)
 
     def set_dag_deployment(self, dag_deployment: DagDeployment):
-        dynamodb_plumbing.dynamodb_put_item(
+        dynamodb_helper.dynamodb_put_item(
             ddb_client=self.client,
             table_name=self.config.dag_deployments_table_name,
             item=dag_deployment.to_dict(),

@@ -1,6 +1,6 @@
 from typing import Optional
 
-from typhoon.aws.plumbing import dynamodb_plumbing
+from typhoon.aws import dynamodb_helper
 from typhoon.core import get_typhoon_config
 from typhoon.core.config import TyphoonConfig
 
@@ -8,14 +8,14 @@ from typhoon.core.config import TyphoonConfig
 def create_connections_table(ddb_client, config: TyphoonConfig):
     table_name = config.connections_table_name
 
-    if dynamodb_plumbing.dynamodb_table_exists(
+    if dynamodb_helper.dynamodb_table_exists(
         ddb_client=ddb_client,
         table_name=table_name,
     ):
         print(f'Table {table_name} exists. Skipping creation...')
     else:
         print(f'Creating table {table_name}...')
-        dynamodb_plumbing.create_dynamodb_table(
+        dynamodb_helper.create_dynamodb_table(
             ddb_client=ddb_client,
             table_name=table_name,
             primary_key='conn_id',
@@ -29,14 +29,14 @@ def create_variables_table(use_cli_config: bool = False, target_env: Optional[st
     ddb_client = config.dynamodb_client
     table_name = config.variables_table_name
 
-    if dynamodb_plumbing.dynamodb_table_exists(
+    if dynamodb_helper.dynamodb_table_exists(
             ddb_client=ddb_client,
             table_name=table_name,
     ):
         print(f'Table {table_name} exists. Skipping creation...')
     else:
         print(f'Creating table {table_name}...')
-        dynamodb_plumbing.create_dynamodb_table(
+        dynamodb_helper.create_dynamodb_table(
             ddb_client=ddb_client,
             table_name=table_name,
             primary_key='id',
@@ -50,14 +50,14 @@ def create_dag_deployments_table(use_cli_config: bool = False, target_env: Optio
     ddb_client = config.dynamodb_client
     table_name = config.dag_deployments_table_name
 
-    if dynamodb_plumbing.dynamodb_table_exists(
+    if dynamodb_helper.dynamodb_table_exists(
             ddb_client=ddb_client,
             table_name=table_name,
     ):
         print(f'Table {table_name} exists. Skipping creation...')
     else:
         print(f'Creating table {table_name}...')
-        dynamodb_plumbing.create_dynamodb_table(
+        dynamodb_helper.create_dynamodb_table(
             ddb_client=ddb_client,
             table_name=table_name,
             primary_key='deployment_hash',

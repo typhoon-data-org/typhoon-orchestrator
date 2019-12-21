@@ -4,8 +4,8 @@ from typing import Optional
 
 from botocore.exceptions import ClientError
 
+from typhoon.aws.boto3_helper import boto3_session
 from typhoon.aws.exceptions import TyphoonResourceCreationError, TyphoonResourceDeletionError
-from typhoon.aws.plumbing.boto3_plumbing import boto3_session
 from typhoon.core import get_typhoon_config
 
 

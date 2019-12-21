@@ -6,8 +6,8 @@ from boto3.dynamodb.conditions import Key
 from boto3.dynamodb.types import TypeSerializer, TypeDeserializer
 from botocore.exceptions import ClientError
 
+from typhoon.aws.boto3_helper import boto3_session
 from typhoon.aws.exceptions import TyphoonResourceNotFoundError
-from typhoon.aws.plumbing.boto3_plumbing import boto3_session
 
 """Module containing low-level functions to interact with DynamoDB
 In general all functions take a dynamodb client or resource.

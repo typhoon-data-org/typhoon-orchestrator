@@ -51,12 +51,3 @@ class Variable:
             return yaml.load(StringIO(self.contents), Loader=yaml.FullLoader)
         else:
             assert False
-
-
-# def scan_variables(to_dict: bool = False, use_cli_config: bool = False, target_env: Optional[str] = None):
-#     config = get_typhoon_config(use_cli_config, target_env)
-#     variables_raw = dynamodb_plumbing.scan_dynamodb_table(
-#         ddb_resource=config.dynamodb_resource,
-#         table_name=config.variables_table_name,
-#     )
-#     return [Variable(**var).dict_contents() if to_dict else Variable(**var) for var in variables_raw]

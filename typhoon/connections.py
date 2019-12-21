@@ -4,7 +4,7 @@ from typing import Optional
 import yaml
 from dataclasses import dataclass
 
-from typhoon.aws.plumbing.dynamodb_plumbing import replace_decimals
+from typhoon.aws.dynamodb_helper import replace_decimals
 from typhoon.core.settings import typhoon_home
 
 
