@@ -20,7 +20,7 @@ Resources:
       Handler: {{ dag.name }}.{{ dag.name }}_main
       {% if dag.get('schedule_interval') %}
       Events:
-        CheckWebsiteScheduledEvent:
+        DagScheduledEvent:
           Type: Schedule
           Properties:
             Schedule: {{ dag.schedule_interval }}
