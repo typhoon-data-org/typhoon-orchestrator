@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import shutil
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -404,6 +405,16 @@ def watch_dags(target_env: str):
         return
     print('Watching changes in DAGs...')
     watch_changes(target_env)
+
+
+@cli.command()
+@click.argument('project_scaffold', default='hello_world')
+def init(project_scaffold: str):
+    project_path = Path(__file__).parent.parent / 'examples' / project_scaffold
+    dest = Path.cwd() / project_scaffold
+    print(f'Creating Typhoon Project in {dest}...')
+    shutil.copytree(str(project_path), str(dest))
+    print(f'To configure project home run: export TYPHOON_HOME={dest}')
 
 
 if __name__ == '__main__':
