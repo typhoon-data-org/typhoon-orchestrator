@@ -1,0 +1,25 @@
+name: hello_world
+schedule_interval: rate(10 minutes)
+
+nodes:
+  send_data:
+    function: typhoon.flow_control.branch
+    config:
+      branches:
+        - ['users.txt', 'John, Amy, Adam, Jane']
+        - ['animals.txt', 'dog, cat, mouse, elephant, giraffe']
+        - ['fruits.csv', 'apple,pear,apricot']
+
+  write_data:
+    function: typhoon.filesystem.write_data
+    config:
+      conn_id: $HOOK.data_lake
+
+
+edges:
+  e1:
+    source: send_data
+    adapter:
+      data => APPLY: transformations.data.to_bytes_buffer($BATCH[1])
+      path => APPLY: f'/store/{$BATCH[0]}'
+    destination: write_data

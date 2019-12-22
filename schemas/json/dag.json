@@ -24,6 +24,14 @@
 				{
 					"type": "string",
 					"pattern": "((\\*|\\?|\\d+((\\/|\\-){0,1}(\\d+))*)\\s*){5,6}"
+				},
+				{
+					"type": "string",
+					"pattern": "rate\\(\\s*1\\s+minute\\s*\\)"
+				},
+				{
+					"type": "string",
+					"pattern": "rate\\(\\s*\\d+\\s+minutes\\s*\\)"
 				}
 			]
 		},

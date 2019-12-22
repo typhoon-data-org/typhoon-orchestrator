@@ -1,11 +1,11 @@
 from typing_extensions import Protocol
 
+from typhoon.connections import ConnectionParams
+
 
 class HookInterface(Protocol):
     conn_type: str
-    
-    def __enter__(self):
-        raise NotImplementedError
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        raise NotImplementedError
+    def __init__(self, conn_params: ConnectionParams): ...
+    def __enter__(self): ...
+    def __exit__(self, exc_type, exc_val, exc_tb): ...
