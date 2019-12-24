@@ -3,11 +3,13 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
 
 import click
+import pkg_resources
 import yaml
 from dataclasses import asdict
 from termcolor import colored
@@ -410,7 +412,7 @@ def watch_dags(target_env: str):
 @cli.command()
 @click.argument('project_scaffold', default='hello_world')
 def init(project_scaffold: str):
-    project_path = Path(__file__).parent.parent / 'examples' / project_scaffold
+    project_path = Path(pkg_resources.resource_filename('typhoon', 'examples')) / project_scaffold
     dest = Path.cwd() / project_scaffold
     print(f'Creating Typhoon Project in {dest}...')
     shutil.copytree(str(project_path), str(dest))
