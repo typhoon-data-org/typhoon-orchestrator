@@ -1,6 +1,6 @@
 import os
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 from typhoon import __version__
 
@@ -24,7 +24,7 @@ dev_requirements = all_requirements + ['watchdog']
 setup(
     name='typhoon-orchestrator',
     version=__version__,
-    packages=['typhoon'],
+    packages=find_packages(),
     install_requires=required,
     extras_require={
         'all': all_requirements,

@@ -11,4 +11,4 @@ python_minor_version = sys.version_info[1]
 #     err_msg = 'This version of Python ({}.{}) is not supported!\n'.format(python_major_version, python_minor_version)
 #     raise RuntimeError(err_msg)
 
-__version__ = '0.0.2'
+__version__ = '0.0.3'
