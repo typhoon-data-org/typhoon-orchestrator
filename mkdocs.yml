@@ -1,0 +1,11 @@
+site_name: Typhoon Orchestrator
+
+repo_name: typhoon-orchestrator
+repo_url: https://github.com/biellls/typhoon-orchestrator
+
+theme:
+    name: 'material'
+
+google_analytics:
+    - 'UA-154972398-1'
+    - 'auto'
