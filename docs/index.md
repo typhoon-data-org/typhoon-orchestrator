@@ -1,7 +1,9 @@
 # Typhoon Orchestrator
 
-Asynchronous serverless workflow scheduler and orchestrator that deploys to Amazon Web Services.
 ![alt text](https://cdn.pixabay.com/photo/2015/07/27/19/49/beach-863346_1280.jpg)
+
+
+Asynchronous serverless workflow scheduler and orchestrator that deploys to Amazon Web Services.
 
 ## What does that mean exactly?
 
@@ -9,13 +11,13 @@ Some examples of exising workflow schedulers are Airflow or Luigi. Like crontab,
 
 ## Key principles
 
-- Composability: Every piece in Typhoon is designed to do one and only one thing well and be easy to reuse across DAGs.
-- Data sharing: In order to achieve reusability of components, nodes need to be able to share data **at runtime** with other nodes they're connected to (ie: there's an edge from one to the other). Here we depart from Airflow's design where all configuration data is given at DAG definition time and unless you use XCom, which is not recommended, nodes don't communicate with each other.
-- Simplicity (+ no lock-in!): Nodes are just Python functions. Test your code without importing Typhoon at all. No mocks, no set up of complex contexts. Reuse your code painlessly or migrate it away from Typhoon with ease if you ever choose to do so.
-- Easy production deployment: Use our CLI to deploy to AWS in minutes.
-- Scalable: Use it to schedule your quick scripts on AWS using just the free tier, or have hundreds of DAGs running hundreds of tasks each in parallel due to its asynchronous serverless design.
-- Separation of concerns: Nodes are Python functions that deal with arguments. DAGs have context that gets used to construct those arguments. No more mixing scheduler specific classes with business logic with retrieving information from the execution context.
-- Sleek and modern: Heavily uses Python typing, deploys to cloud, has a rich CLI and a beautiful Web UI.
+- **Composability**: Every piece in Typhoon is designed to do one and only one thing well and be easy to reuse across DAGs.
+- **Data sharing**: In order to achieve reusability of components, nodes need to be able to share data **at runtime** with other nodes they're connected to (ie: there's an edge from one to the other). Here we depart from Airflow's design where all configuration data is given at DAG definition time and unless you use XCom, which is not recommended, nodes don't communicate with each other.
+- **Simplicity (+ no lock-in!)**: Nodes are just Python functions. Test your code without importing Typhoon at all. No mocks, no set up of complex contexts. Reuse your code painlessly or migrate it away from Typhoon with ease if you ever choose to do so.
+- **Easy production deployment**: Use our CLI to deploy to AWS in minutes.
+- **Scalable**: Use it to schedule your quick scripts on AWS using just the free tier, or have hundreds of DAGs running hundreds of tasks each in parallel due to its asynchronous serverless design.
+- **Separation of concerns**: Nodes are Python functions that deal with arguments. DAGs have context that gets used to construct those arguments. No more mixing scheduler specific classes with business logic with retrieving information from the execution context.
+- **Sleek and modern**: Heavily uses Python typing, deploys to cloud, has a rich CLI and a beautiful Web UI.
 
 ## Enough talk, show me the code
 
@@ -82,7 +84,7 @@ def write_data(data: BytesIO, hook: FileSystemHookInterface, path: str) -> str:
 ```
 In addition, functions can also yield batches instead of returning, and each batch will be processed in parallel.
 
-### FAQs (actually no one asked yet but ¯\_(ツ)_/¯)
+### FAQs (actually no one asked yet but ¯\\_(ツ)_/¯)
 #### Why not use Python to define DAGs?
 
 Our goal was to cut away all boilerplate and this was not possible to do as just a Python library. In addition, we built our editor in the Web UI (not stable yet) which provides much deeper insight into the DAGs than a general purpose code editor could, as well as real-time rendering of a DAG representation and testing of expressions in adapters. You can also still use your favourite editor and get some code complete/hints by configuring our bundled JSON schema. Some additional advantages are that a YAML file is also fammiliar to many coders, readable and much easier to generate automatically.
