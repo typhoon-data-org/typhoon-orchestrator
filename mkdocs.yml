@@ -9,3 +9,12 @@ theme:
 google_analytics:
     - 'UA-154972398-1'
     - 'auto'
+
+markdown_extensions:
+  - markdown.extensions.codehilite:
+      guess_lang: false
+  - markdown_include.include:
+      base_path: docs
+  - admonition
+  - codehilite
+  - extra
