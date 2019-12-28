@@ -104,6 +104,7 @@ The tradeoff is that a little more thought needs to be put into how to construct
 ### What are the limitations of the project
 
 Right now the project is evolving fast but is still lacking some important features compared to Airflow and others.
+
 - It does not yet have monitoring capabilities. Future releases will have this but just use Cloudwatch for now.
 - It does not have an equivalent to Sensors in Airflow.
 - It does not have connection pools to limit parallelism (limit lambda concurrency for now).
