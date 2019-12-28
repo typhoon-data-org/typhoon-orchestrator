@@ -76,7 +76,7 @@ edges:
 ### Node function
 
 The write_data function would be implemented as follows:
-```
+```python
 def write_data(data: BytesIO, hook: FileSystemHookInterface, path: str) -> str:
    with hook:
        hook.write_data(data, path)
