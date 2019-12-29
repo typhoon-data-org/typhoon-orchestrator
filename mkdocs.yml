@@ -5,6 +5,9 @@ repo_url: https://github.com/biellls/typhoon-orchestrator
 
 theme:
     name: 'material'
+    palette:
+      primary: 'brown'
+    logo: 'img/typhoon.png'
 
 google_analytics:
     - 'UA-154972398-1'
