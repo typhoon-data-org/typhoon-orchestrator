@@ -52,6 +52,8 @@ def dags_with_changes() -> List[str]:
         yaml_modified_ts = datetime.fromtimestamp(yaml_path.stat().st_mtime)
         dag_name = yaml.safe_load(yaml_path.read_text())['name']
         transpiled_path = Path(settings.out_directory()) / dag_name / f'{dag_name}.py'
+        if not transpiled_path.exists():
+            continue
         transpiled_created_ts = datetime.fromtimestamp(transpiled_path.stat().st_ctime)
         if yaml_modified_ts > transpiled_created_ts:
             result.append(dag_name)
