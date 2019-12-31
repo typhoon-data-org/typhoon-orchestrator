@@ -1,6 +1,6 @@
 # Typhoon Orchestrator
 
-![alt text](https://cdn.pixabay.com/photo/2015/07/27/19/49/beach-863346_1280.jpg)
+![alt text](img/typhoon_sea.jpg)
 
 
 Asynchronous serverless workflow scheduler and orchestrator that deploys to Amazon Web Services.

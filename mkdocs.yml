@@ -7,11 +7,15 @@ theme:
     name: 'material'
     palette:
       primary: 'brown'
-    logo: 'img/typhoon.png'
+    logo: 'img/typhoon_solo_inverted2.png'
 
 google_analytics:
     - 'UA-154972398-1'
     - 'auto'
+
+nav:
+  - Typhoon Orchestrator: 'index.md'
+  - Getting Started: 'getting-started.md'
 
 markdown_extensions:
   - markdown.extensions.codehilite:
