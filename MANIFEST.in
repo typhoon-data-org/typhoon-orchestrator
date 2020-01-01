@@ -1,2 +1,3 @@
 recursive-include typhoon/examples *
 recursive-include typhoon/core/templates *
+recursive-include typhoon/deployment/templates *

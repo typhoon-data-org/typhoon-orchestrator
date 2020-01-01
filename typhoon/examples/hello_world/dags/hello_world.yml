@@ -13,7 +13,7 @@ nodes:
   write_data:
     function: typhoon.filesystem.write_data
     config:
-      conn_id: $HOOK.data_lake
+      hook => APPLY: $HOOK.data_lake
 
 
 edges:

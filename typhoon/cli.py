@@ -263,12 +263,12 @@ def build_all_dags(target_env, debug):
         dag_folder = Path(settings.out_directory()) / dag['name']
         transpile_dag_and_store(dag, dag_folder / f"{dag['name']}.py", env=target_env, debug_mode=debug)
         if debug and config.metadata_store_type == MetadataStoreType.sqlite:
-            local_store_path = Path(settings.typhoon_home()) / 'project.db'
+            local_store_path = Path(settings.typhoon_home()) / f'{config.project_name}.db'
             if not config.metadata_store.exists():
                 print(f'No sqlite store found. Creating in {local_store_path}...')
                 open(str(local_store_path), 'a').close()
             print(f'Setting up database in {local_store_path} as symlink for persistence...')
-            os.symlink(str(local_store_path), dag_folder / 'project.db')
+            os.symlink(str(local_store_path), dag_folder / f'{config.project_name}.db')
 
         deploy_dag_requirements(dag, config.typhoon_version_is_local, config.typhoon_version)
         if config.typhoon_version_is_local:
