@@ -259,7 +259,7 @@ def build_all_dags(target_env, debug):
     dags = load_dags(settings.dags_directory())
     deploy_sam_template(dags, use_cli_config=True, target_env=target_env)
     for dag in dags:
-        dag = dag.as_dict()
+        dag = dag.dict()
         dag_folder = Path(settings.out_directory()) / dag['name']
         transpile_dag_and_store(dag, dag_folder / f"{dag['name']}.py", env=target_env, debug_mode=debug)
         if debug and config.metadata_store_type == MetadataStoreType.sqlite:
