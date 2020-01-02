@@ -5,3 +5,5 @@ boto3
 dataclasses
 jsonpickle
 typing_extensions
+python-dateutil
+pydantic
