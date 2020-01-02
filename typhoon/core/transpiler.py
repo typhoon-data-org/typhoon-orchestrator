@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Union, List, Iterable, Dict
 
 import jinja2
+import pkg_resources
 
 from typhoon.core.dags import DAG, Node
 
@@ -82,7 +83,7 @@ def substitute_special(code: str, key: str) -> str:
     return code
 
 
-SEARCH_PATH = Path(__file__).parent / 'templates'
+SEARCH_PATH = Path(pkg_resources.resource_filename('typhoon', 'core')) / 'templates'
 templateLoader = jinja2.FileSystemLoader(searchpath=str(SEARCH_PATH))
 templateEnv = jinja2.Environment(loader=templateLoader)
 

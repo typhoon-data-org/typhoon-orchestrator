@@ -2,12 +2,13 @@ from pathlib import Path
 from typing import Sequence, Optional, Union
 
 import jinja2
+import pkg_resources
 
 from typhoon.core import get_typhoon_config
 from typhoon.core.dags import DAG
 from typhoon.deployment.deploy import write_to_out
 
-SEARCH_PATH = Path(__file__).parent / 'templates'
+SEARCH_PATH = Path(pkg_resources.resource_filename('typhoon', 'deployment')) / 'templates'
 templateLoader = jinja2.FileSystemLoader(searchpath=str(SEARCH_PATH))
 templateEnv = jinja2.Environment(loader=templateLoader)
 

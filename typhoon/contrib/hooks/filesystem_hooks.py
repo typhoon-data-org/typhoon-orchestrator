@@ -91,7 +91,8 @@ class LocalStorageHook(FileSystemHookInterface):
         self.base_path = None
 
     def _file_path(self, path):
-        return os.path.join(self.base_path, self._slugify_path(path))
+        slugified_path = self._slugify_path(path)
+        return os.path.join(self.base_path, slugified_path if not slugified_path.startswith('/') else slugified_path[1:])
 
     @staticmethod
     def _slugify(value: str):
