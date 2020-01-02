@@ -1,7 +1,6 @@
 import json
 from ast import literal_eval
 from enum import Enum
-from io import StringIO
 
 import yaml
 from dataclasses import dataclass
@@ -11,7 +10,7 @@ class VariableError(Exception):
     pass
 
 
-class VariableType(Enum):
+class VariableType(str, Enum):
     STRING = 'string'
     JINJA = 'jinja'
     NUMBER = 'number'
@@ -48,6 +47,6 @@ class Variable:
         elif self.type is VariableType.JSON:
             return json.loads(self.contents)
         elif self.type is VariableType.YAML:
-            return yaml.load(StringIO(self.contents), Loader=yaml.FullLoader)
+            return yaml.safe_load(self.contents)
         else:
             assert False
