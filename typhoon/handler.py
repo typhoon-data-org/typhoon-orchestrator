@@ -38,7 +38,7 @@ def handle_task(event):
     task_function = getattr(module, event['task_name'])
 
     kwargs = event['kwargs'].copy()
-    kwargs['dag_context'] = DagContext.from_dict(kwargs['dag_context'])
+    kwargs['dag_context'] = DagContext.parse_obj(kwargs['dag_context'])
 
     return task_function.sync(*event['args'], **kwargs)
 

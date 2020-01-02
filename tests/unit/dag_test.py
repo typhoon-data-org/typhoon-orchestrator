@@ -66,5 +66,5 @@ simple_dag_with_cycles = {
 
 @pytest.mark.parametrize('dag_dict,has_cycle', [(simple_dag_without_cycles, False), (simple_dag_with_cycles, True)])
 def test_has_cycle(dag_dict, has_cycle):
-    dag = DAG.from_dict_definition(dag_dict)
+    dag = DAG.parse_obj(dag_dict)
     assert dag.has_cycle == has_cycle

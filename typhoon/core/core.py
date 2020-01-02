@@ -64,7 +64,7 @@ def task(
 
 def make_lambda_payload(dag_name: str, task_name: str, args: Tuple[Any, ...], kwargs: Dict):
     kwargs_encoded_context = kwargs.copy()
-    kwargs_encoded_context['dag_context'] = kwargs_encoded_context['dag_context'].to_dict()
+    kwargs_encoded_context['dag_context'] = kwargs_encoded_context['dag_context'].dict()
     payload_dict = {
         'type': 'task',
         'dag_name': dag_name,
