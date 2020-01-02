@@ -1,6 +1,6 @@
 # Typhoon Orchestrator
 
-![alt text](https://cdn.pixabay.com/photo/2015/07/27/19/49/beach-863346_1280.jpg)
+![alt text](docs/img/typhoon_sea.jpg)
 
 Typhoon is a task orchestrator and workfow manager used to create asynchronous data pipelines that can be deployed to AWS Lambda/Fargate to be completely serverless.
 
@@ -25,10 +25,10 @@ Typhoon is inspired by Airflow but departs from it in key ways. The most importa
  With Typhoon we share the same philosophy outlined in that article and take it a step further. We believe that while Object Oriented Programming certainly has its value (and we use it where it makes sense, like implementing Hooks for instance) a functional approach brings greater value for data processing where we just care about manipulating data and have no desire to abstract from it in any way. Where you would define an operator class in Airflow, this is replaced directly with functions in Typhoon.
  
  ```python
-def write_data(data: BytesIO, hook: FileSystemHookInterface, path: str) -> Iterable[str]:
+def write_data(data: BytesIO, hook: FileSystemHookInterface, path: str) -> str:
     with hook:
         hook.write_data(data, path)
-    yield path
+    return path
 ```
 
 The above code is all that's needed to create a function that can be used to define a task, and is a great example of what we discussed earlier. This code is pure python, and has no Typhoon specific code. Notice how this is inherently more testable and reusable than the alternative approach.
