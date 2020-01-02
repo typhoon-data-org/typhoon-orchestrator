@@ -23,10 +23,6 @@ def functions_directory():
     return os.path.join(typhoon_home(), 'functions')
 
 
-def adapters_directory():
-    return os.path.join(typhoon_home(), 'adapters')
-
-
 def transformations_directory():
     return os.path.join(typhoon_home(), 'transformations')
 
