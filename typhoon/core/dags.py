@@ -1,67 +1,72 @@
 import hashlib
+import re
 from datetime import datetime
-from typing import NamedTuple, List, Union, Dict
+from enum import Enum
+from typing import List, Union, Dict
 
-import dateutil.parser
-from dataclasses import dataclass
+from pydantic import BaseModel, validator, Field, root_validator
 
+Identifier = Field(..., regex=r'\w+')
 Item = Union[int, str, float, Dict, List]
 
 
-class Node(NamedTuple):
-    name: str
-    function: str
+class SpecialCronString(str, Enum):
+    daily = '@daily'
+    weekly = '@weekly'
+    monthly = '@monthly'
+    yearly = '@yearly'
+
+
+class Node(BaseModel):
+    function: str = Field(..., regex=r'(typhoon\.\w+\.\w+|functions\.\w+\.\w+)')
     asynchronous: bool = True
-    config: Item = None
+    config: Dict[str, Item] = Field(default={})
 
-    def __post_init__(self):
-        if not self.config:
-            self.config = {}
-
-    def as_dict(self):
-        node = self._asdict()
-        node.pop('name')
-        return node
+    @validator('config')
+    def validate_config_keys(cls, v):
+        for k in v.keys():
+            if not re.match(r'\w+(\s*=>\s*APPLY)?', k):
+                raise ValueError(f'Config key "{k}" does not match pattern. Must be identifier with optional => APPLY')
+        return v
 
 
-class Edge(NamedTuple):
-    name: str
-    source: str     # Node id
+class Edge(BaseModel):
+    source: str = Identifier     # Node id
     adapter: Dict[str, Item]
-    destination: str     # Node id
+    destination: str = Identifier     # Node id
 
-    def as_dict(self):
-        edge = self._asdict()
-        edge.pop('name')
-        return edge
+    @validator('adapter')
+    def validate_adapter_keys(cls, v):
+        for k in v.keys():
+            if not re.match(r'\w+(\s*=>\s*APPLY)?', k):
+                raise ValueError(f'Config key "{k}" does not match pattern. Must be identifier with optional => APPLY')
+        return v
 
 
-class DAG(NamedTuple):
-    name: str
-    schedule_interval: str
+class DAG(BaseModel):
+    name: str = Identifier
+    schedule_interval: str = Field(
+        ...,
+        regex='(' + '@daily|@weekly|@monthly|@yearly|' +
+              r'((\*|\?|\d+((\/|\-){0,1}(\d+))*)\s*){5,6}' + '|' +
+              r'rate\(\s*1\s+minute\s*\)' + '|' +
+              r'rate\(\s*\d+\s+minutes\s*\)' + ')'
+    )
     nodes: Dict[str, Node]
     edges: Dict[str, Edge]
     active: bool = True
 
-    def __post_init__(self):
-        # Validate schedule interval
-        pass
-
-    def as_dict(self) -> Dict:
-        dag = self._asdict()
-        dag['nodes'] = {k: v.as_dict() for k, v in self.nodes.items()}
-        dag['edges'] = {k: v.as_dict() for k, v in self.edges.items()}
-        return dag
-
-    @staticmethod
-    def from_dict_definition(dag: Dict):
-        kwargs = dag.copy()
-        kwargs['nodes'] = {name: Node(name=name, **node) for name, node in dag['nodes'].items()}
-        kwargs['edges'] = {name: Edge(name=name, **edge) for name, edge in dag['edges'].items()}
-        return DAG(**kwargs)
+    @root_validator
+    def validate_undefined_nodes_in_edges(cls, values):
+        node_names = values['nodes'].keys()
+        for edge_name, edge in values['edges'].items():
+            if edge.source not in node_names:
+                raise ValueError(f'Source for edge "{edge_name}" is not defined: "{edge.source}"')
+            if edge.destination not in node_names:
+                raise ValueError(f'Destination for edge "{edge_name}" is not defined: "{edge.destination}"')
+        return values
 
     @property
-    # @lru_cache(1)
     def structure(self) -> Dict[str, List[str]]:
         """For every node all the nodes it's connected to"""
         structure = {}
@@ -74,13 +79,11 @@ class DAG(NamedTuple):
         return structure
 
     @property
-    # @lru_cache(1)
     def non_source_nodes(self) -> List[str]:
         """All nodes that are the destination of an edge"""
         return [node for x in self.structure.values() for node in x]
 
     @property
-    # @lru_cache(1)
     def sources(self) -> List[str]:
         """Nodes that are sources of the DAG"""
         sources = set(self.structure.keys())
@@ -120,32 +123,21 @@ class DAG(NamedTuple):
         return False
 
 
-class DagContext(NamedTuple):
+class DagContext(BaseModel):
     execution_date: datetime
-    ds: str
-    ds_nodash: str
-    ts: str
-    etl_timestamp: str
+    etl_timestamp: datetime = Field(default=datetime.now())
 
-    @staticmethod
-    def from_date_string(date_string) -> 'DagContext':
-        execution_date = dateutil.parser.parse(date_string)
-        return DagContext(
-            execution_date=execution_date,
-            ds=execution_date.strftime('%Y-%m-%d'),
-            ds_nodash=execution_date.strftime('%Y-%m-%d').replace('-', ''),
-            ts=execution_date.strftime('%Y-%m-%dT%H:%M:%S'),
-            etl_timestamp=datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
-        )
+    @property
+    def ds(self) -> str:
+        return self.execution_date.strftime('%Y-%m-%d')
 
-    def to_dict(self) -> Dict:
-        d = self._asdict()
-        d['execution_date'] = str(d['execution_date'])
-        return d
+    @property
+    def ds_nodash(self) -> str:
+        return self.execution_date.strftime('%Y%m%d')
 
-    @staticmethod
-    def from_dict(d: Dict) -> 'DagContext':
-        return DagContext.from_date_string(d['execution_date'])
+    @property
+    def ts(self) -> str:
+        return self.execution_date.strftime('%Y-%m-%dT%H:%M:%S')
 
 
 def hash_dag_code(dag_code: str) -> str:
@@ -154,8 +146,7 @@ def hash_dag_code(dag_code: str) -> str:
     return m.hexdigest()
 
 
-@dataclass
-class DagDeployment:
+class DagDeployment(BaseModel):
     dag_name: str
     deployment_date: datetime
     dag_code: str
@@ -163,14 +154,3 @@ class DagDeployment:
     @property
     def deployment_hash(self) -> str:
         return hash_dag_code(self.dag_code)
-
-    def to_dict(self) -> dict:
-        return dict(deployment_hash=self.deployment_hash, **self.__dict__)
-
-    @staticmethod
-    def from_dict(d: dict) -> 'DagDeployment':
-        return DagDeployment(
-            dag_name=d['dag_name'],
-            deployment_date=dateutil.parser.parse(d['deployment_date']),
-            dag_code=d['dag_code'],
-        )

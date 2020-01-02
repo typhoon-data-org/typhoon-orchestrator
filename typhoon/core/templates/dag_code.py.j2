@@ -36,7 +36,7 @@ def {{ dag.name }}_main(event, context):
         return handle(event, context)
 
     # Main execution
-    dag_context = DagContext.from_date_string(event['time'])
+    dag_context = DagContext(execution_date=event['time'])
 
     {% for source in dag.sources %}
     {{ source }}_branches(dag_context=dag_context)
@@ -98,7 +98,7 @@ if __name__ == '__main__':
         'trigger': 'dag',
         'attempt': 1,
         'args': [],
-        'kwargs': {'dag_context': DagContext.from_date_string('2019-02-05T03:00:00Z').to_dict()},
+        'kwargs': {'dag_context': DagContext(execution_date='2019-02-05T03:00:00Z').dict()},
     }
 
     {{ dag.name }}_main(example_event, None)

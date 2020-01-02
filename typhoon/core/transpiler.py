@@ -12,7 +12,7 @@ from typhoon.core.dags import DAG, Node
 #################
 def get_transformations_modules(dag: DAG) -> Iterable[str]:
     if isinstance(dag, dict):
-        dag = DAG.from_dict_definition(dag)
+        dag = DAG.parse_obj(dag)
     modules = set()
     for edge in dag.edges.values():
         for val in edge.adapter.values():
@@ -101,6 +101,6 @@ templateEnv.filters.update(substitute_special=substitute_special)
 def transpile(dag: Union[DAG, dict], env: str, debug_mode: bool = False):
     """Given a DAG object or a dict definition of a DAG transpile it into a python definition"""
     if isinstance(dag, dict):
-        dag = DAG.from_dict_definition(dag)
+        dag = DAG.parse_obj(dag)
     dag_template = templateEnv.get_template('dag_code.py.j2')
     return dag_template.render({'dag': dag, 'environment': env, 'debug_mode': debug_mode})

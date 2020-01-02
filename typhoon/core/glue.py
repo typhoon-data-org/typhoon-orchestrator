@@ -26,7 +26,7 @@ def load_dags(dags_directory: Union[str, Path]) -> List[DAG]:
     dags = []
     for dag_file in dags_directory.rglob('*.yml'):
         dag = yaml.safe_load(dag_file.read_text())
-        dags.append(DAG.from_dict_definition(dag))
+        dags.append(DAG.parse_obj(dag))
 
     return dags
 

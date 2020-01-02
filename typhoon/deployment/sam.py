@@ -26,7 +26,7 @@ templateEnv.filters.update(to_camelcase=to_camelcase)
 def deploy_sam_template(dags: Sequence[Union[dict, DAG]], use_cli_config: bool = False, target_env: Optional[str] = None):
     config = get_typhoon_config(use_cli_config, target_env)
     sam_template = generate_sam_template(
-        dags=[dag.as_dict() if isinstance(dag, DAG) else dag for dag in dags],
+        dags=[dag.dict() if isinstance(dag, DAG) else dag for dag in dags],
         default_iam_role=config.iam_role_name,
         lambda_function_timeout=config.lambda_function_timeout,
         connections_table_name=config.connections_table_name,

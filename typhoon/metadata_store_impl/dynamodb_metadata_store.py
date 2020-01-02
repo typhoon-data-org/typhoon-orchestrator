@@ -192,11 +192,11 @@ class DynamodbMetadataStore(MetadataStoreInterface):
             )
         except TyphoonResourceNotFoundError:
             raise MetadataObjectNotFound(f'Deployment "{deployment_hash}" is not set')
-        return DagDeployment.from_dict(item)
+        return DagDeployment.parse_obj(item)
 
     def set_dag_deployment(self, dag_deployment: DagDeployment):
         dynamodb_helper.dynamodb_put_item(
             ddb_client=self.client,
             table_name=self.config.dag_deployments_table_name,
-            item=dag_deployment.to_dict(),
+            item=dag_deployment.dict(),
         )
