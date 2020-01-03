@@ -1,22 +1,19 @@
 import os
 import shutil
 import subprocess
-from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
 import click
 import pkg_resources
-import yaml
 from termcolor import colored
 
 from typhoon import local_config
 from typhoon.cli_helpers.cli_completion import get_remote_names, get_dag_names
 from typhoon.cli_helpers.status import dags_with_changes, dags_without_deploy, check_connections_yaml, \
     check_connections_dags, check_variables_dags
-from typhoon.core.dags import DAG
 from typhoon.core.settings import Settings, EnvVarName
-from typhoon.deployment.packaging import build_all_dags, build_dag
+from typhoon.deployment.packaging import build_all_dags
 from typhoon.local_config import EXAMPLE_CONFIG
 from typhoon.metadata_store_impl.sqlite_metadata_store import SQLiteMetadataStore
 from typhoon.remotes import Remotes
