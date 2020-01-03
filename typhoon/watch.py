@@ -1,4 +1,5 @@
 import time
+from typing import Optional
 
 from watchdog.events import PatternMatchingEventHandler, FileSystemEventHandler
 from watchdog.observers import Observer
@@ -27,10 +28,10 @@ def on_moved(event):
     build_all_dags(remote=None)
 
 
-def setup_event_handler() -> FileSystemEventHandler:
+def setup_event_handler(patterns: Optional[str] = None) -> FileSystemEventHandler:
     event_handler = PatternMatchingEventHandler(
         ignore_directories=True,
-        patterns="*.yml",
+        patterns=patterns or "*.yml",
         case_sensitive=True,
     )
     # event_handler.on_created = on_created
@@ -58,8 +59,7 @@ def start_observer(observer: Observer):
         observer.join()
 
 
-def watch_changes():
-    """This is only for development, therefore as a precondition target_env must be set to local development"""
-    event_handler = setup_event_handler()
+def watch_changes(patterns: Optional[str] = None):
+    event_handler = setup_event_handler(patterns)
     observer = setup_observer(event_handler)
     start_observer(observer)

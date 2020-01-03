@@ -4,7 +4,7 @@ This code should not be unit tested.
 """
 import os
 from pathlib import Path
-from typing import Union, List
+from typing import Union, List, Tuple
 
 import yaml
 
@@ -13,18 +13,18 @@ from typhoon.core.settings import Settings
 from typhoon.core.transpiler import transpile
 
 
-def transpile_dag_and_store(dag: dict, output_path: Union[str, Path], remote: str):
+def transpile_dag_and_store(dag: dict, output_path: Union[str, Path], debug_mode: bool):
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    dag_code = transpile(dag, remote, debug_mode=remote is not None)
+    dag_code = transpile(dag, debug_mode=debug_mode)
     Path(output_path).write_text(dag_code)
 
 
-def load_dags() -> List[DAG]:
+def load_dags() -> List[Tuple[DAG, str]]:
     dags = []
     for dag_file in Settings.dags_directory.rglob('*.yml'):
         dag = yaml.safe_load(dag_file.read_text())
-        dags.append(DAG.parse_obj(dag))
+        dags.append((DAG.parse_obj(dag), dag_file.read_text()))
 
     return dags
 

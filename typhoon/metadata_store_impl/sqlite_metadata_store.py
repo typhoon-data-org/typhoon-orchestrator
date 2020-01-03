@@ -65,6 +65,9 @@ class SQLiteMetadataStore(MetadataStoreInterface):
             raise MetadataObjectNotFound(f'Dag deployment "{deployment_hash}" is not set')
         return self.conn_connections[deployment_hash]
 
+    def get_dag_deployments(self, to_dict: bool = False) -> List[Union[dict, DagDeployment]]:
+        return [x.dict() if to_dict else x for x in self.conn_dag_deployments.values()]
+
     def set_dag_deployment(self, dag_deployment: DagDeployment):
         self.conn_dag_deployments[dag_deployment.deployment_hash] = dag_deployment
         self.conn_dag_deployments.commit()

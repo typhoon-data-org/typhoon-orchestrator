@@ -173,6 +173,13 @@ class DynamodbMetadataStore(MetadataStoreInterface):
             raise MetadataObjectNotFound(f'Deployment "{deployment_hash}" is not set')
         return DagDeployment.parse_obj(item)
 
+    def get_dag_deployments(self, to_dict: bool = False) -> List[Union[dict, DagDeployment]]:
+        dag_deployments_raw = dynamodb_helper.scan_dynamodb_table(
+            ddb_resource=self.resource,
+            table_name=Settings.dag_deployments_table_name,
+        )
+        return [DagDeployment.parse_obj(x).dict() if to_dict else DagDeployment.parse_obj(x) for x in dag_deployments_raw]
+
     def set_dag_deployment(self, dag_deployment: DagDeployment):
         dynamodb_helper.dynamodb_put_item(
             ddb_client=self.client,

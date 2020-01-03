@@ -63,5 +63,9 @@ class MetadataStoreInterface(ABC):
         pass
 
     @abstractmethod
+    def get_dag_deployments(self, to_dict: bool = False) -> List[Union[dict, DagDeployment]]:
+        pass
+
+    @abstractmethod
     def set_dag_deployment(self, dag_deployment: DagDeployment):
         pass

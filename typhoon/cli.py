@@ -1,19 +1,22 @@
 import os
 import shutil
 import subprocess
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
 import click
 import pkg_resources
+import yaml
 from termcolor import colored
 
 from typhoon import local_config
-from typhoon.cli_helpers.cli_completion import get_remote_names
+from typhoon.cli_helpers.cli_completion import get_remote_names, get_dag_names
 from typhoon.cli_helpers.status import dags_with_changes, dags_without_deploy, check_connections_yaml, \
     check_connections_dags, check_variables_dags
+from typhoon.core.dags import DAG
 from typhoon.core.settings import Settings, EnvVarName
-from typhoon.deployment.packaging import build_all_dags
+from typhoon.deployment.packaging import build_all_dags, build_dag
 from typhoon.local_config import EXAMPLE_CONFIG
 from typhoon.metadata_store_impl.sqlite_metadata_store import SQLiteMetadataStore
 from typhoon.remotes import Remotes
@@ -116,7 +119,7 @@ def status(remote: Optional[str]):
 
 @cli.group(name='remote')
 def cli_remote():
-    """Manage typhoon remotes"""
+    """Manage Typhoon remotes"""
     pass
 
 
@@ -164,15 +167,59 @@ def migrate(remote: str):
     Settings.metadata_store(aws_profile=Remotes.aws_profile(remote)).migrate()
 
 
-@cli.command()
-@click.option('--watch', is_flag=True, default=False, help='Listen for changes in DAG YAML files and rebuild')
-def build_dags(watch: bool):
+@cli.group(name='dag')
+def cli_dags():
+    """Manage Typhoon DAGs"""
+    pass
+
+
+@cli_dags.command(name='ls')
+@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
+@click.option('-l', '--long', is_flag=True, default=False)
+def list_dags(remote: Optional[str], long: bool):
+    if remote:
+        Settings.metadata_db_url = Remotes.metadata_db_url(remote)
+        if Remotes.use_name_as_suffix(remote):
+            Settings.metadata_suffix = remote
+    if long:
+        print('DAG_NAME\tDEPLOYMENT_DATE')
+    for dag_deployment in Settings.metadata_store(Remotes.aws_profile(remote)).get_dag_deployments():
+        if long:
+            print(f'{dag_deployment.dag_name}\t{dag_deployment.deployment_date.isoformat()}')
+        else:
+            print(dag_deployment.dag_name)
+
+
+@cli_dags.command(name='build')
+@click.argument('dag_name', autocompletion=get_dag_names, required=False, default=None)
+@click.option('--all', 'all_', is_flag=True, default=False, help='Build all DAGs (mutually exclusive with DAG_NAME)')
+def build_dags(dag_name: Optional[str], all_: bool):
     """Build code for dags in $TYPHOON_HOME/out/"""
-    print(ascii_art_logo)
-    if watch:
+    if dag_name and all_:
+        raise click.UsageError(f'Illegal usage: DAG_NAME is mutually exclusive with --all')
+    elif dag_name is None and not all_:
+        raise click.UsageError(f'Illegal usage: Need either DAG_NAME or --all')
+    if all_:
+        build_all_dags(remote=None)
+    else:
+        build_all_dags(remote=None, matching=dag_name)
+
+
+@cli_dags.command(name='watch')
+@click.argument('dag_name', autocompletion=get_dag_names, required=False, default=None)
+@click.option('--all', 'all_', is_flag=True, default=False, help='Build all DAGs (mutually exclusive with DAG_NAME)')
+def watch_dags(dag_name: Optional[str], all_: bool):
+    """Watch DAGs and build code for dags in $TYPHOON_HOME/out/"""
+    if dag_name and all_:
+        raise click.UsageError(f'Illegal usage: DAG_NAME is mutually exclusive with --all')
+    elif dag_name is None and not all_:
+        raise click.UsageError(f'Illegal usage: Need either DAG_NAME or --all')
+    if all_:
+        print('Watching all DAGs for changes...')
         watch_changes()
     else:
-        build_all_dags(remote=None)
+        print(f'Watching DAG {dag_name} for changes...')
+        watch_changes(patterns=f'{dag_name}.yml')
 
 
 @cli.command()

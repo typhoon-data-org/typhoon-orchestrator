@@ -1,7 +1,9 @@
 import os
+import re
 import subprocess
 import sys
 import tempfile
+from datetime import datetime
 from distutils.dir_util import copy_tree
 from distutils.errors import DistutilsFileError
 from pathlib import Path
@@ -9,8 +11,9 @@ from shutil import copytree, copy, make_archive, move, rmtree
 from typing import Optional
 
 import pkg_resources
-from typhoon.core.glue import load_dags, transpile_dag_and_store
 
+from typhoon.core.dags import DagDeployment, DAG
+from typhoon.core.glue import load_dags, transpile_dag_and_store
 from typhoon.core.settings import Settings
 from typhoon.deployment.deploy import deploy_dag_requirements, copy_local_typhoon, copy_user_defined_code
 
@@ -106,29 +109,42 @@ def get_current_venv():
     return venv
 
 
-def build_all_dags(remote: Optional[str]):
+def build_all_dags(remote: Optional[str], matching: Optional[str] = None):
     from typhoon.deployment.deploy import clean_out
     from typhoon.deployment.sam import deploy_sam_template
 
     clean_out()
 
     print('Build all DAGs...')
+    deployment_date = datetime.now()
     dags = load_dags()
-    deploy_sam_template(dags, remote=remote)
-    for dag in dags:
-        dag = dag.dict()
-        dag_folder = Settings.out_directory / dag['name']
-        transpile_dag_and_store(dag, dag_folder / f"{dag['name']}.py", remote=remote)
-
-        deploy_dag_requirements(dag, typhoon_version_is_local(), Settings.typhoon_version)
-        if typhoon_version_is_local():
-            print('Typhoon package is in editable mode. Copying to lambda package...')
-            copy_local_typhoon(dag, local_typhoon_path())
-        if not remote:
-            print('Setting up user defined code as symlink for debugging...')
-        copy_user_defined_code(dag, symlink=remote is None)
+    deploy_sam_template([dag for dag, _ in dags], remote=remote)
+    for dag, dag_code in dags:
+        if not matching or re.match(matching, dag.name):
+            build_dag(dag, dag_code, deployment_date, remote)
 
     print('Finished building DAGs\n')
+
+
+def build_dag(dag: DAG, dag_code: str, deployment_date: datetime, remote: Optional[str]):
+    dag = dag.dict()
+    dag_folder = Settings.out_directory / dag['name']
+    transpile_dag_and_store(dag, dag_folder / f"{dag['name']}.py", debug_mode=remote is not None)
+    deploy_dag_requirements(dag, typhoon_version_is_local(), Settings.typhoon_version)
+    if typhoon_version_is_local():
+        print('Typhoon package is in editable mode. Copying to lambda package...')
+        copy_local_typhoon(dag, local_typhoon_path())
+    if not remote:
+        print('Setting up user defined code as symlink for debugging...')
+    copy_user_defined_code(dag, symlink=remote is None)
+    if remote is None:
+        Settings.metadata_store(aws_profile=None).set_dag_deployment(
+            DagDeployment(
+                dag_name=dag['name'],
+                deployment_date=deployment_date,
+                dag_code=dag_code,
+            )
+        )
 
 
 def dist_is_editable(dist) -> bool:
