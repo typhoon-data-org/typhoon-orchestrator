@@ -65,6 +65,8 @@ def status(remote: Optional[str]):
     """Information on project status"""
     if remote:
         Settings.metadata_db_url = Remotes.metadata_db_url(remote)
+        if Remotes.use_name_as_suffix(remote):
+            Settings.metadata_suffix = remote
 
     print(colored(ascii_art_logo, 'cyan'))
     if not Settings.typhoon_home:
@@ -154,6 +156,11 @@ def remote_add(remote: str):
 @click.argument('remote', autocompletion=get_remote_names)
 def migrate(remote: str):
     """Create the necessary metadata tables"""
+    if remote:
+        Settings.metadata_db_url = Remotes.metadata_db_url(remote)
+        if Remotes.use_name_as_suffix(remote):
+            Settings.metadata_suffix = remote
+    print(f'Migrating {Settings.metadata_db_url}...')
     Settings.metadata_store(aws_profile=Remotes.aws_profile(remote)).migrate()
 
 
