@@ -49,7 +49,7 @@ def cli():
 
 
 @cli.command()
-@click.argument('project_name', default='hello_world')
+@click.argument('project_name')
 def init(project_name: str):
     """Create a new Typhoon project"""
     example_project_path = Path(pkg_resources.resource_filename('typhoon', 'examples')) / 'hello_world'
@@ -166,6 +166,20 @@ def build_dags(watch: bool):
         watch_changes()
     else:
         build_all_dags(remote=None)
+
+
+@cli.command()
+@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
+def metadata_info(remote: Optional[str]):
+    """Info on metadata connection and table names"""
+    if remote:
+        Settings.metadata_db_url = Remotes.metadata_db_url(remote)
+        if Remotes.use_name_as_suffix(remote):
+            Settings.metadata_suffix = remote
+    print(f'Metadata database URL:\t{Settings.metadata_db_url}')
+    print(f'Connections table name:\t{Settings.connections_table_name}')
+    print(f'Variables table name:\t{Settings.variables_table_name}')
+    print(f'DAG deployments table name:\t{Settings.dag_deployments_table_name}')
 
 
 class SubprocessError(Exception):
