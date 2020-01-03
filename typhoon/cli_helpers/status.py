@@ -6,7 +6,6 @@ from typing import List, Optional
 import yaml
 from termcolor import colored
 
-from typhoon.core.config import CLIConfig
 from typhoon.core.dags import DagDeployment
 from typhoon.core.glue import get_dag_filenames, get_dags_contents
 from typhoon.core.metadata_store_interface import MetadataObjectNotFound
