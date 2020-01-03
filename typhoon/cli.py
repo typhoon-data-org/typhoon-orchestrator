@@ -1,33 +1,25 @@
-import json
 import os
-import re
 import shutil
 import subprocess
-from datetime import datetime
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 import click
 import pkg_resources
-import yaml
-from dataclasses import asdict
 from termcolor import colored
 
-from typhoon import connections, local_config
-from typhoon.connections import Connection
+from typhoon import local_config
+from typhoon.cli_helpers.cli_completion import get_remote_names
+from typhoon.cli_helpers.status import dags_with_changes, dags_without_deploy, check_connections_yaml, \
+    check_connections_dags, check_variables_dags
 from typhoon.core.config import CLIConfig
-from typhoon.core.dags import DagDeployment
-from typhoon.core.glue import transpile_dag_and_store, load_dags, get_dags_contents, get_dag_filenames
-from typhoon.core.metadata_store_interface import MetadataObjectNotFound
+from typhoon.core.glue import transpile_dag_and_store, load_dags
 from typhoon.core.settings import Settings, EnvVarName
 from typhoon.deployment.deploy import deploy_dag_requirements, copy_local_typhoon, copy_user_defined_code
-from typhoon.handler import run_dag
 from typhoon.local_config import EXAMPLE_CONFIG
 from typhoon.metadata_store_impl import MetadataStoreType
 from typhoon.metadata_store_impl.sqlite_metadata_store import SQLiteMetadataStore
 from typhoon.remotes import Remotes
-from typhoon.variables import Variable, VariableType
-from typhoon.watch import watch_changes
 
 ascii_art_logo = r"""
  _________  __  __   ______   ___   ___   ______   ______   ___   __        
@@ -40,19 +32,10 @@ ascii_art_logo = r"""
 """
 
 
-def _find_typhoon_home_in_cwd_or_parents() -> Optional[Path]:
-    current_path = Path.cwd()
-    while current_path != Path('/'):
-        if 'typhoon.cfg' in [x.name for x in current_path.iterdir()]:
-            return current_path
-        current_path = current_path.parent
-    return None
-
-
 @click.group()
 def cli():
     """Typhoon CLI"""
-    home = _find_typhoon_home_in_cwd_or_parents()
+    home = local_config.find_typhoon_home_in_cwd_or_parents()
     if not home:
         print('Did not find typhoon in current directory or any of its parent directories')
         if Settings.typhoon_home:
@@ -77,124 +60,12 @@ def init(project_name: str):
     print(f'Project created in {dest}')
 
 
-def dags_with_changes() -> List[str]:
-    result = []
-    for dag_file in get_dag_filenames():
-        yaml_path = Path(Settings.dags_directory) / dag_file
-        yaml_modified_ts = datetime.fromtimestamp(yaml_path.stat().st_mtime)
-        dag_name = yaml.safe_load(yaml_path.read_text())['name']
-        transpiled_path = Path(Settings.out_directory) / dag_name / f'{dag_name}.py'
-        if not transpiled_path.exists():
-            continue
-        transpiled_created_ts = datetime.fromtimestamp(transpiled_path.stat().st_ctime)
-        if yaml_modified_ts > transpiled_created_ts:
-            result.append(dag_name)
-
-    return result
-
-
-def dags_without_deploy(env) -> List[str]:
-    undeployed_dags = []
-    config = CLIConfig(env)
-    for dag_code in get_dags_contents(Settings.dags_directory):
-        loaded_dag = yaml.safe_load(dag_code)
-        dag_deployment = DagDeployment(dag_name=loaded_dag['name'], deployment_date=datetime.utcnow(), dag_code=dag_code)
-        if loaded_dag.get('active', True):
-            try:
-                _ = config.metadata_store.get_dag_deployment(dag_deployment.deployment_hash)
-            except MetadataObjectNotFound:
-                undeployed_dags.append(dag_deployment.dag_name)
-    return undeployed_dags
-
-
-def get_undefined_connections_in_metadata_db(remote: Optional[str], conn_ids: List[str]):
-    undefined_connections = []
-    for conn_id in conn_ids:
-        try:
-            Settings.metadata_store(Remotes.aws_profile(remote)).get_connection(conn_id)
-        except MetadataObjectNotFound:
-            undefined_connections.append(conn_id)
-    return undefined_connections
-
-
-def get_undefined_variables_in_metadata_db(remote: Optional[str], var_ids: List[str]):
-    undefined_variables = []
-    for var_id in var_ids:
-        try:
-            Settings.metadata_store(Remotes.aws_profile(remote)).get_variable(var_id)
-        except MetadataObjectNotFound:
-            undefined_variables.append(var_id)
-    return undefined_variables
-
-
-def check_connections_yaml(remote: Optional[str]):
-    if not Path('connections.yml').exists():
-        print(colored('• Connections YAML not found. For better version control create', 'red'), colored('connections.yml', 'grey'))
-        print(colored('  Skipping connections YAML checks...', 'red'))
-        return
-    conn_yml = yaml.safe_load(Path('connections.yml').read_text())
-    undefined_connections = get_undefined_connections_in_metadata_db(remote, conn_ids=conn_yml.keys())
-    if undefined_connections:
-        print(colored('• Found connections in YAML that are not defined in the metadata database', 'yellow'))
-        for conn_id in undefined_connections:
-            print(
-                colored('   - Connection', 'yellow'),
-                colored(conn_id, 'blue'),
-                colored('is not set. Try', 'yellow'),
-                colored(f'typhoon set-connection {conn_id} CONN_ENV {remote}', 'grey')
-            )
-    else:
-        print(colored('• All connections in YAML are defined in the database', 'green'))
-
-
-def check_connections_dags(remote: Optional[str]):
-    all_conn_ids = set()
-    for dag_file in Path(Settings.dags_directory).rglob('*.yml'):
-        conn_ids = re.findall(r'\$HOOK\.(\w+)', dag_file.read_text())
-        all_conn_ids = all_conn_ids.union(conn_ids)
-    undefined_connections = get_undefined_connections_in_metadata_db(remote, conn_ids=all_conn_ids)
-    if undefined_connections:
-        print(colored('• Found connections in DAGs that are not defined in the metadata database', 'yellow'))
-        for conn_id in undefined_connections:
-            print(
-                colored('   - Connection', 'yellow'),
-                colored(conn_id, 'blue'),
-                colored('is not set. Try', 'yellow'),
-                colored(f'typhoon set-connection {conn_id} CONN_ENV {remote}', 'grey')
-            )
-    else:
-        print(colored('• All connections in the DAGs are defined in the database', 'green'))
-
-
-def check_variables_dags(remote: Optional[str]):
-    all_var_ids = set()
-    for dag_file in Path(Settings.dags_directory).rglob('*.yml'):
-        var_ids = re.findall(r'\$VARIABLE\.(\w+)', dag_file.read_text())
-        all_var_ids = all_var_ids.union(var_ids)
-    undefined_variables = get_undefined_variables_in_metadata_db(remote, var_ids=all_var_ids)
-    if undefined_variables:
-        print(colored('• Found variables in DAGs that are not defined in the metadata database', 'yellow'))
-        for var_id in undefined_variables:
-            print(
-                colored('   - Variable', 'yellow'),
-                colored(var_id, 'blue'),
-                colored('is not set. Try', 'yellow'),
-                colored(f'typhoon set-variable {var_id} VAR_TYPE VALUE {remote}', 'grey')
-            )
-    else:
-        print(colored('• All variables in the DAGs are defined in the database', 'green'))
-
-
-def get_remote_names(ctx, args, incomplete) -> List[str]:
-    return [x for x in Remotes.remote_names if incomplete in x]
-
-
 @cli.command()
 @click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
 def status(remote: Optional[str]):
     print(colored(ascii_art_logo, 'cyan'))
     if not Settings.typhoon_home:
-        print(f'FATAL: typhoon home not found...')
+        print(colored(f'FATAL: typhoon home not found...', 'red'))
         return
     else:
         print(colored('• Typhoon home defined as', 'green'), colored(Settings.typhoon_home, 'grey'))
@@ -236,6 +107,37 @@ def status(remote: Optional[str]):
                 print(colored(f'   - {dag}', 'blue'))
         else:
             print(colored('• DAGs up to date', 'green'))
+
+
+@cli.group(name='remote')
+def cli_remote():
+    pass
+
+
+@cli_remote.command(name='add')
+@click.argument('remote')       # No autocomplete because the remote is new
+@click.option('--aws-profile')
+@click.option('--metadata-db-url')
+@click.option('--use-name-as-suffix', is_flag=True, default=False)
+def remote_add(remote: str, aws_profile: str, metadata_db_url: str, use_name_as_suffix: bool):
+    """Add a remote for deployments and management"""
+    Remotes.add_remote(remote, aws_profile, metadata_db_url, use_name_as_suffix)
+    print(f'Added remote {remote}')
+
+
+@cli_remote.command(name='ls')
+@click.option('-l', '--long', is_flag=True, default=False)
+def remote_list(long: bool):
+    """List configured Typhoon remotes"""
+    if long:
+        print('REMOTE_NAME\tAWS_PROFILE\tUSE_NAME_AS_SUFFIX\tMETADATA_DB_URL')
+    for remote in Remotes.remote_names:
+        if remote == 'DEFAULT':
+            continue
+        if long:
+            print(f'{remote}\t{Remotes.aws_profile(remote)}\t{Remotes.use_name_as_suffix(remote)}\t{Remotes.metadata_db_url(remote)}')
+        else:
+            print(remote)
 
 
 @cli.command()

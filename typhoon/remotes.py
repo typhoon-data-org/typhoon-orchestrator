@@ -1,14 +1,20 @@
 from configparser import ConfigParser
 from typing import List, Optional
 
+from click import Path
+
 from typhoon.core.settings import Settings
 
 
 class _Remotes:
     @property
+    def remotes_config_path(self) -> Path:
+        return Settings.typhoon_home/'.typhoonremotes'
+
+    @property
     def remotes_config(self) -> ConfigParser:
         config = ConfigParser()
-        config.read(str(Settings.typhoon_home/'.typhoonremotes'))
+        config.read(str(self.remotes_config_path))
         return config
 
     @property
@@ -22,7 +28,16 @@ class _Remotes:
         return self.remotes_config[remote]['metadata-db-url']
 
     def use_name_as_suffix(self, remote: str) -> bool:
-        return self.remotes_config[remote]['use-name-as-suffix']
+        return self.remotes_config[remote].getboolean('use-name-as-suffix')
+
+    def add_remote(self, remote: str, aws_profile: str, metadata_db_url: str, use_name_as_suffix: bool):
+        config = self.remotes_config
+        config[remote] = {}
+        config[remote]['aws-profile'] = aws_profile
+        config[remote]['metadata-db-url'] = metadata_db_url
+        config[remote]['use-name-as-suffix'] = str(use_name_as_suffix).lower()  # HACK: Because configparser can only set strings
+        with open(self.remotes_config_path, 'w') as f:
+            config.write(f)
 
 
 Remotes = _Remotes()
