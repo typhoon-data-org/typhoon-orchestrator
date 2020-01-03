@@ -1,6 +1,7 @@
 import os
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -153,50 +154,54 @@ def migrate(remote: str):
     Settings.metadata_store(aws_profile=Remotes.aws_profile(remote)).migrate()
 
 
-# @cli.command()
-# @click.argument('target_env', autocompletion=get_environments)
-# @click.option('--debug', default=False, is_flag=True)
-# def build_dags(target_env, debug):
-#     """Build code for dags in $TYPHOON_HOME/out/"""
-#     print(ascii_art_logo)
-#     build_all_dags(target_env, debug)
+@cli.command()
+def build_dags():
+    """Build code for dags in $TYPHOON_HOME/out/"""
+    print(ascii_art_logo)
+    build_all_dags(remote=None)
 
 
-def build_all_dags(target_env, debug):
+def dist_is_editable(dist) -> bool:
+    """Is distribution an editable install?"""
+    for path_item in sys.path:
+        egg_link = os.path.join(path_item, dist.project_name + '.egg-link')
+        if os.path.isfile(egg_link):
+            return True
+    return False
+
+
+def typhoon_version_is_local() -> bool:
+    typhoon_dist = [dist for dist in pkg_resources.working_set if dist.key == 'typhoon-orchestrator'][0]
+    return dist_is_editable(typhoon_dist)
+
+
+def local_typhoon_path() -> str:
+    import typhoon
+    import inspect
+    return str(Path(inspect.getfile(typhoon)).parent)
+
+
+def build_all_dags(remote: Optional[str]):
     from typhoon.deployment.deploy import clean_out
     from typhoon.deployment.sam import deploy_sam_template
 
     clean_out()
 
-    config = CLIConfig(target_env)
-
     print('Build all DAGs...')
-    dags = load_dags(Settings.dags_directory)
-    deploy_sam_template(dags, use_cli_config=True, target_env=target_env)
+    dags = load_dags()
+    deploy_sam_template(dags, remote=remote)
     for dag in dags:
         dag = dag.dict()
         dag_folder = Settings.out_directory / dag['name']
-        transpile_dag_and_store(dag, dag_folder / f"{dag['name']}.py", env=target_env, debug_mode=debug)
-        if debug and config.metadata_store_type == MetadataStoreType.sqlite:
-            local_store_path = Settings.typhoon_home / f'{config.project_name}.db'
-            if not config.metadata_store.exists():
-                print(f'No sqlite store found. Creating in {local_store_path}...')
-                open(str(local_store_path), 'a').close()
-            print(f'Setting up database in {local_store_path} as symlink for persistence...')
-            os.symlink(str(local_store_path), dag_folder / f'{config.project_name}.db')
+        transpile_dag_and_store(dag, dag_folder / f"{dag['name']}.py", remote=remote)
 
-        deploy_dag_requirements(dag, config.typhoon_version_is_local, config.typhoon_version)
-        if config.typhoon_version_is_local:
-            copy_local_typhoon(dag, config.typhoon_version)
-
-        if debug:
+        deploy_dag_requirements(dag, typhoon_version_is_local(), Settings.typhoon_version)
+        if typhoon_version_is_local():
+            print('Typhoon package is in editable mode. Copying to lambda package...')
+            copy_local_typhoon(dag, local_typhoon_path())
+        if not remote:
             print('Setting up user defined code as symlink for debugging...')
-        copy_user_defined_code(dag, symlink=debug)
-
-    if debug and config.metadata_store_type == MetadataStoreType.sqlite:
-        local_store_path = Settings.typhoon_home / f'{config.project_name}.db'
-        if local_store_path.exists():
-            os.symlink(str(local_store_path), Settings.out_directory / f'{config.project_name}.db')
+        copy_user_defined_code(dag, symlink=remote is None)
 
     print('Finished building DAGs\n')
 

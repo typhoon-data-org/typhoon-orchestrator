@@ -13,10 +13,10 @@ from typhoon.core.settings import Settings
 from typhoon.core.transpiler import transpile
 
 
-def transpile_dag_and_store(dag: dict, output_path: Union[str, Path], env: str, debug_mode: bool = False):
+def transpile_dag_and_store(dag: dict, output_path: Union[str, Path], remote: str):
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    dag_code = transpile(dag, env, debug_mode)
+    dag_code = transpile(dag, remote, debug_mode=remote is not None)
     Path(output_path).write_text(dag_code)
 
 

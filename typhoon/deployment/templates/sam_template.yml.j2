@@ -48,3 +48,4 @@ Outputs:
   {{ dag.name | to_camelcase }}Function:
     Description: "Hello World Lambda Function ARN"
     Value: !GetAtt {{ dag.name | to_camelcase }}Function.Arn
+  {% endfor %}

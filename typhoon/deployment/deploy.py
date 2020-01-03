@@ -9,7 +9,7 @@ from typhoon.core.settings import Settings
 def write_to_out(filename: str, data: Union[bytes, str], directory: Optional[str] = None):
     if directory:
         path = Settings.out_directory / directory / filename
-        os.makedirs(str(Settings.out_directory, directory), exist_ok=True)
+        os.makedirs(str(Settings.out_directory / directory), exist_ok=True)
     else:
         path = Settings.out_directory / filename
         os.makedirs(str(Settings.out_directory), exist_ok=True)

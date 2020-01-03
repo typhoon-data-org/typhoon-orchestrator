@@ -17,6 +17,7 @@ def _join_underscores(*args) -> str:
 class EnvVarName(str, Enum):
     PROJECT_HOME = 'TYPHOON_HOME'
     PROJECT_NAME = 'TYPHOON_PROJECT_NAME'
+    PROJECT_VERSION = 'TYPHOON_VERSION'
     METADATA_DB_URL = 'TYPHOON_METADATA_DB_URL'
     METADATA_SUFFIX = 'TYPHOON_METADATA_SUFFIX'
 
@@ -29,6 +30,14 @@ class _Settings:
     @typhoon_home.setter
     def typhoon_home(self, value: Union[str, Path]):
         os.environ[EnvVarName.PROJECT_HOME] = str(value)
+
+    @property
+    def typhoon_version(self) -> Path:
+        return Path(os.environ[EnvVarName.PROJECT_VERSION]) if EnvVarName.PROJECT_VERSION in os.environ.keys() else 'latest'
+
+    @typhoon_version.setter
+    def typhoon_version(self, value: Union[str, Path]):
+        os.environ[EnvVarName.PROJECT_VERSION] = str(value)
 
     @property
     def project_name(self) -> str:

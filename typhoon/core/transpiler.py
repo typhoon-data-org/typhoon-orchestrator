@@ -99,9 +99,9 @@ templateEnv.filters.update(clean_simple_param=clean_simple_param)
 templateEnv.filters.update(substitute_special=substitute_special)
 
 
-def transpile(dag: Union[DAG, dict], env: str, debug_mode: bool = False):
+def transpile(dag: Union[DAG, dict], remote: str, debug_mode: bool = False):
     """Given a DAG object or a dict definition of a DAG transpile it into a python definition"""
     if isinstance(dag, dict):
         dag = DAG.parse_obj(dag)
     dag_template = templateEnv.get_template('dag_code.py.j2')
-    return dag_template.render({'dag': dag, 'environment': env, 'debug_mode': debug_mode})
+    return dag_template.render({'dag': dag, 'environment': remote, 'debug_mode': debug_mode})
