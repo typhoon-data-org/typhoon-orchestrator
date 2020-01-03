@@ -252,6 +252,7 @@ def cli_connection():
 @click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
 @click.option('-l', '--long', is_flag=True, default=False)
 def list_connections(remote: Optional[str], long: bool):
+    """List connections in the metadata store"""
     if remote:
         Settings.metadata_db_url = Remotes.metadata_db_url(remote)
         if Remotes.use_name_as_suffix(remote):
@@ -270,6 +271,7 @@ def list_connections(remote: Optional[str], long: bool):
 @click.option('--conn-id', autocompletion=get_conn_ids)
 @click.option('--conn-env', autocompletion=get_conn_envs)
 def add_connection(remote: Optional[str], conn_id: str, conn_env: str):
+    """Add connection to the metadata store"""
     if remote:
         Settings.metadata_db_url = Remotes.metadata_db_url(remote)
         if Remotes.use_name_as_suffix(remote):
@@ -284,6 +286,7 @@ def add_connection(remote: Optional[str], conn_id: str, conn_env: str):
 @click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
 @click.option('--conn-id', autocompletion=get_conn_ids)
 def remove_connection(remote: Optional[str], conn_id: str):
+    """Remove connection from the metadata store"""
     if remote:
         Settings.metadata_db_url = Remotes.metadata_db_url(remote)
         if Remotes.use_name_as_suffix(remote):
