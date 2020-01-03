@@ -48,7 +48,3 @@ Outputs:
   {{ dag.name | to_camelcase }}Function:
     Description: "Hello World Lambda Function ARN"
     Value: !GetAtt {{ dag.name | to_camelcase }}Function.Arn
-  {{ dag.name | to_camelcase }}IamRole:
-    Description: "IAM Role for {{ dag.name }} function"
-    Value: {{ dag.get('iam_role') or default_iam_role }}
-  {% endfor %}

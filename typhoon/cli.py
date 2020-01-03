@@ -149,18 +149,8 @@ def remote_add(remote: str):
 @cli.command()
 @click.argument('remote', autocompletion=get_remote_names)
 def migrate(remote: str):
-    """Add the necessary IAM roles and DynamoDB tables"""
-    from typhoon.deployment.iam import deploy_role
-    deploy_role(use_cli_config=True, target_env=target_env)
-
+    """Create the necessary metadata tables"""
     Settings.metadata_store(aws_profile=Remotes.aws_profile(remote)).migrate()
-
-
-@cli.command()
-@click.argument('remote', autocompletion=get_remote_names)
-def clean(target_env):
-    from typhoon.deployment.iam import clean_role
-    clean_role(use_cli_config=True, target_env=target_env)
 
 
 # @cli.command()

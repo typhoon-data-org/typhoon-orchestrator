@@ -6,8 +6,7 @@ from distutils.dir_util import copy_tree
 from distutils.errors import DistutilsFileError
 from shutil import copytree, copy, make_archive, move, rmtree
 
-from typhoon.core.settings import out_directory, functions_directory, transformations_directory, hooks_directory, \
-    typhoon_home
+from typhoon.core.settings import Settings
 
 
 def package_dag(
@@ -18,23 +17,23 @@ def package_dag(
         _copy_venv_site_packages(temp_dir, venv_path)
         # add_handler(temp_dir)
         try:
-            copytree(functions_directory(), os.path.join(temp_dir, 'functions'))
+            copytree(str(Settings.functions_directory), os.path.join(temp_dir, 'functions'))
         except FileNotFoundError:
             print('No functions directory')
         try:
-            copytree(transformations_directory(), os.path.join(temp_dir, 'transformations'))
+            copytree(str(Settings.transformations_directory), os.path.join(temp_dir, 'transformations'))
         except FileNotFoundError:
             print('No transformations directory')
         try:
-            copytree(hooks_directory(), os.path.join(temp_dir, 'hooks'))
+            copytree(str(Settings.hooks_directory), os.path.join(temp_dir, 'hooks'))
         except FileNotFoundError:
             print('No hooks directory')
         try:
-            copy(os.path.join(typhoon_home(), 'typhoonconfig.cfg'), temp_dir)
+            copy(os.path.join(str(Settings.typhoon_home), 'typhoonconfig.cfg'), temp_dir)
         except FileNotFoundError:
             print('No typhoonconfig.cfg')
         copy(
-            src=os.path.join(out_directory(), f'{dag_name}.py'),
+            src=os.path.join(str(Settings.out_directory), f'{dag_name}.py'),
             dst=temp_dir,
         )
 
@@ -43,7 +42,7 @@ def package_dag(
             format='zip',
             root_dir=temp_dir,
         )
-        move(f'{dag_name}.zip', os.path.join(out_directory()))
+        move(f'{dag_name}.zip', os.path.join(str(Settings.out_directory)))
 
 
 def _copy_venv_site_packages(temp_dir: str, venv_path: str):
