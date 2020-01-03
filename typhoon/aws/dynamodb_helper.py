@@ -1,4 +1,5 @@
 import decimal
+import re
 from enum import Enum
 from typing import Optional, Union
 
@@ -29,6 +30,7 @@ def dynamodb_connection(
     session = boto3_session(aws_profile)
     aws_region = aws_region or getattr(session, 'region_name', None)
     extra_params = {'region_name': aws_region} if aws_region else {}
+    endpoint_url = endpoint_url if not re.match(r'dynamodb\.[\w-]+\.amazonaws\.com', endpoint_url) else None
     if endpoint_url:
         extra_params = {
             'aws_access_key_id': 'dummy',

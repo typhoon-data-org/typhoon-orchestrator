@@ -30,15 +30,15 @@ def dags_with_changes() -> List[str]:
     return result
 
 
-def dags_without_deploy(env) -> List[str]:
+def dags_without_deploy(remote: Optional[str]) -> List[str]:
     undeployed_dags = []
-    config = CLIConfig(env)
     for dag_code in get_dags_contents(Settings.dags_directory):
         loaded_dag = yaml.safe_load(dag_code)
         dag_deployment = DagDeployment(dag_name=loaded_dag['name'], deployment_date=datetime.utcnow(), dag_code=dag_code)
+        metadata_store = Settings.metadata_store(Remotes.aws_profile(remote))
         if loaded_dag.get('active', True):
             try:
-                _ = config.metadata_store.get_dag_deployment(dag_deployment.deployment_hash)
+                _ = metadata_store.get_dag_deployment(dag_deployment.deployment_hash)
             except MetadataObjectNotFound:
                 undeployed_dags.append(dag_deployment.dag_name)
     return undeployed_dags

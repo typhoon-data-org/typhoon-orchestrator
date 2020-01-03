@@ -64,6 +64,9 @@ def init(project_name: str):
 @cli.command()
 @click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
 def status(remote: Optional[str]):
+    if remote:
+        Settings.metadata_db_url = Remotes.metadata_db_url(remote)
+
     print(colored(ascii_art_logo, 'cyan'))
     if not Settings.typhoon_home:
         print(colored(f'FATAL: typhoon home not found...', 'red'))
