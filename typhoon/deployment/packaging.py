@@ -4,9 +4,15 @@ import sys
 import tempfile
 from distutils.dir_util import copy_tree
 from distutils.errors import DistutilsFileError
+from pathlib import Path
 from shutil import copytree, copy, make_archive, move, rmtree
+from typing import Optional
+
+import pkg_resources
+from typhoon.core.glue import load_dags, transpile_dag_and_store
 
 from typhoon.core.settings import Settings
+from typhoon.deployment.deploy import deploy_dag_requirements, copy_local_typhoon, copy_user_defined_code
 
 
 def package_dag(
@@ -98,3 +104,48 @@ def get_current_venv():
     else:  # pragma: no cover
         return None
     return venv
+
+
+def build_all_dags(remote: Optional[str]):
+    from typhoon.deployment.deploy import clean_out
+    from typhoon.deployment.sam import deploy_sam_template
+
+    clean_out()
+
+    print('Build all DAGs...')
+    dags = load_dags()
+    deploy_sam_template(dags, remote=remote)
+    for dag in dags:
+        dag = dag.dict()
+        dag_folder = Settings.out_directory / dag['name']
+        transpile_dag_and_store(dag, dag_folder / f"{dag['name']}.py", remote=remote)
+
+        deploy_dag_requirements(dag, typhoon_version_is_local(), Settings.typhoon_version)
+        if typhoon_version_is_local():
+            print('Typhoon package is in editable mode. Copying to lambda package...')
+            copy_local_typhoon(dag, local_typhoon_path())
+        if not remote:
+            print('Setting up user defined code as symlink for debugging...')
+        copy_user_defined_code(dag, symlink=remote is None)
+
+    print('Finished building DAGs\n')
+
+
+def dist_is_editable(dist) -> bool:
+    """Is distribution an editable install?"""
+    for path_item in sys.path:
+        egg_link = os.path.join(path_item, dist.project_name + '.egg-link')
+        if os.path.isfile(egg_link):
+            return True
+    return False
+
+
+def typhoon_version_is_local() -> bool:
+    typhoon_dist = [dist for dist in pkg_resources.working_set if dist.key == 'typhoon-orchestrator'][0]
+    return dist_is_editable(typhoon_dist)
+
+
+def local_typhoon_path() -> str:
+    import typhoon
+    import inspect
+    return str(Path(inspect.getfile(typhoon)).parent)

@@ -11,7 +11,7 @@ from reflection import get_modules_in_package, package_tree, package_tree_from_p
     load_module_from_path
 from responses import transform_response
 from typhoon import variables
-from typhoon.cli import build_all_dags
+from typhoon.deployment.packaging import build_all_dags
 from typhoon.connections import get_connection_local, \
     get_connections_local_by_conn_id, Connection
 from typhoon.contrib.hooks import hook_factory
