@@ -132,12 +132,18 @@ def remote_list(long: bool):
     if long:
         print('REMOTE_NAME\tAWS_PROFILE\tUSE_NAME_AS_SUFFIX\tMETADATA_DB_URL')
     for remote in Remotes.remote_names:
-        if remote == 'DEFAULT':
-            continue
         if long:
             print(f'{remote}\t{Remotes.aws_profile(remote)}\t{Remotes.use_name_as_suffix(remote)}\t{Remotes.metadata_db_url(remote)}')
         else:
             print(remote)
+
+
+@cli_remote.command(name='rm')
+@click.argument('remote', autocompletion=get_remote_names)       # No autocomplete because the remote is new
+def remote_add(remote: str):
+    """Remove remote"""
+    Remotes.remove_remote(remote)
+    print(f'Removed remote {remote}')
 
 
 @cli.command()

@@ -19,7 +19,7 @@ class _Remotes:
 
     @property
     def remote_names(self) -> List[str]:
-        return list(self.remotes_config.keys())
+        return [remote for remote in self.remotes_config.keys() if remote != 'DEFAULT']
 
     def aws_profile(self, remote: Optional[str]) -> str:
         return self.remotes_config[remote]['aws-profile'] if remote else None
@@ -36,6 +36,12 @@ class _Remotes:
         config[remote]['aws-profile'] = aws_profile
         config[remote]['metadata-db-url'] = metadata_db_url
         config[remote]['use-name-as-suffix'] = str(use_name_as_suffix).lower()  # HACK: Because configparser can only set strings
+        with open(self.remotes_config_path, 'w') as f:
+            config.write(f)
+
+    def remove_remote(self, remote: str):
+        config = self.remotes_config
+        del config[remote]
         with open(self.remotes_config_path, 'w') as f:
             config.write(f)
 
