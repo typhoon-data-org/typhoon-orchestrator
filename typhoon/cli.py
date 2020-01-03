@@ -155,7 +155,13 @@ def remote_add(remote: str):
     print(f'Removed remote {remote}')
 
 
-@cli.command()
+@cli.group(name='metadata')
+def cli_metadata():
+    """Manage Typhoon metadata"""
+    pass
+
+
+@cli_metadata.command()
 @click.argument('remote', autocompletion=get_remote_names)
 def migrate(remote: str):
     """Create the necessary metadata tables"""
@@ -165,6 +171,21 @@ def migrate(remote: str):
             Settings.metadata_suffix = remote
     print(f'Migrating {Settings.metadata_db_url}...')
     Settings.metadata_store(aws_profile=Remotes.aws_profile(remote)).migrate()
+
+
+@cli_metadata.command(name='info')
+@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
+def metadata_info(remote: Optional[str]):
+    """Info on metadata connection and table names"""
+    if remote:
+        Settings.metadata_db_url = Remotes.metadata_db_url(remote)
+        if Remotes.use_name_as_suffix(remote):
+            Settings.metadata_suffix = remote
+    print(ascii_art_logo)
+    print(f'Metadata database URL:\t{Settings.metadata_db_url}')
+    print(f'Connections table name:\t{Settings.connections_table_name}')
+    print(f'Variables table name:\t{Settings.variables_table_name}')
+    print(f'DAG deployments table name:\t{Settings.dag_deployments_table_name}')
 
 
 @cli.group(name='dag')
@@ -220,20 +241,6 @@ def watch_dags(dag_name: Optional[str], all_: bool):
     else:
         print(f'Watching DAG {dag_name} for changes...')
         watch_changes(patterns=f'{dag_name}.yml')
-
-
-@cli.command()
-@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
-def metadata_info(remote: Optional[str]):
-    """Info on metadata connection and table names"""
-    if remote:
-        Settings.metadata_db_url = Remotes.metadata_db_url(remote)
-        if Remotes.use_name_as_suffix(remote):
-            Settings.metadata_suffix = remote
-    print(f'Metadata database URL:\t{Settings.metadata_db_url}')
-    print(f'Connections table name:\t{Settings.connections_table_name}')
-    print(f'Variables table name:\t{Settings.variables_table_name}')
-    print(f'DAG deployments table name:\t{Settings.dag_deployments_table_name}')
 
 
 class SubprocessError(Exception):
