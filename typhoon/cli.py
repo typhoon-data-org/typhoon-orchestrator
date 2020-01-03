@@ -6,12 +6,14 @@ from typing import Optional
 
 import click
 import pkg_resources
+from dataclasses import asdict
 from termcolor import colored
 
-from typhoon import local_config
-from typhoon.cli_helpers.cli_completion import get_remote_names, get_dag_names
+from typhoon import local_config, connections
+from typhoon.cli_helpers.cli_completion import get_remote_names, get_dag_names, get_conn_envs, get_conn_ids
 from typhoon.cli_helpers.status import dags_with_changes, dags_without_deploy, check_connections_yaml, \
     check_connections_dags, check_variables_dags
+from typhoon.connections import Connection
 from typhoon.core.settings import Settings, EnvVarName
 from typhoon.deployment.packaging import build_all_dags
 from typhoon.local_config import EXAMPLE_CONFIG
@@ -238,6 +240,57 @@ def watch_dags(dag_name: Optional[str], all_: bool):
     else:
         print(f'Watching DAG {dag_name} for changes...')
         watch_changes(patterns=f'{dag_name}.yml')
+
+
+@cli.group(name='connection')
+def cli_connection():
+    """Manage Typhoon connections"""
+    pass
+
+
+@cli_connection.command(name='ls')
+@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
+@click.option('-l', '--long', is_flag=True, default=False)
+def list_connections(remote: Optional[str], long: bool):
+    if remote:
+        Settings.metadata_db_url = Remotes.metadata_db_url(remote)
+        if Remotes.use_name_as_suffix(remote):
+            Settings.metadata_suffix = remote
+    if long:
+        print('CONN_ID\tTYPE\tHOST\tPORT\tSCHEMA')
+    for conn in Settings.metadata_store(Remotes.aws_profile(remote)).get_connections():
+        if long:
+            print(f'{conn.conn_id}\t{conn.conn_type}\t{conn.host}\t{conn.port}\t{conn.schema}')
+        else:
+            print(conn.conn_id)
+
+
+@cli_connection.command(name='add')
+@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
+@click.option('--conn-id', autocompletion=get_conn_ids)
+@click.option('--conn-env', autocompletion=get_conn_envs)
+def add_connection(remote: Optional[str], conn_id: str, conn_env: str):
+    if remote:
+        Settings.metadata_db_url = Remotes.metadata_db_url(remote)
+        if Remotes.use_name_as_suffix(remote):
+            Settings.metadata_suffix = remote
+    metadata_store = Settings.metadata_store(Remotes.aws_profile(remote))
+    conn_params = connections.get_connection_local(conn_id, conn_env)
+    metadata_store.set_connection(Connection(conn_id=conn_id, **asdict(conn_params)))
+    print(f'Connection {conn_id} added')
+
+
+@cli_connection.command(name='rm')
+@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
+@click.option('--conn-id', autocompletion=get_conn_ids)
+def remove_connection(remote: Optional[str], conn_id: str):
+    if remote:
+        Settings.metadata_db_url = Remotes.metadata_db_url(remote)
+        if Remotes.use_name_as_suffix(remote):
+            Settings.metadata_suffix = remote
+    metadata_store = Settings.metadata_store(Remotes.aws_profile(remote))
+    metadata_store.delete_connection(conn_id)
+    print(f'Connection {conn_id} deleted')
 
 
 class SubprocessError(Exception):
