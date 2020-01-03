@@ -1,19 +1,18 @@
 import os
 from pathlib import Path
-from shutil import rmtree, copytree, copy
+from shutil import rmtree, copytree
 from typing import Union, Optional
 
-from typhoon.core.settings import out_directory, functions_directory, transformations_directory, \
-    typhoon_home, hooks_directory
+from typhoon.core.settings import Settings
 
 
 def write_to_out(filename: str, data: Union[bytes, str], directory: Optional[str] = None):
     if directory:
-        path = Path(out_directory()) / directory / filename
-        os.makedirs(os.path.join(out_directory(), directory), exist_ok=True)
+        path = Settings.out_directory / directory / filename
+        os.makedirs(str(Settings.out_directory, directory), exist_ok=True)
     else:
-        path = Path(out_directory()) / filename
-        os.makedirs(out_directory(), exist_ok=True)
+        path = Settings.out_directory / filename
+        os.makedirs(str(Settings.out_directory), exist_ok=True)
 
     print(f'Writing file to {path}')
     if isinstance(data, str):
@@ -24,7 +23,7 @@ def write_to_out(filename: str, data: Union[bytes, str], directory: Optional[str
 
 def clean_out():
     print('Cleaning out directory...')
-    rmtree(out_directory(), ignore_errors=True)
+    rmtree(str(Settings.out_directory), ignore_errors=True)
 
 
 def typhoon_requirements():
@@ -44,41 +43,36 @@ def deploy_dag_requirements(dag: dict, local_typhoon: bool, typhoon_version: str
 
 
 def copy_local_typhoon(dag: dict, local_typhoon_path: str):
-    dag_dir = Path(out_directory(), dag['name'], 'typhoon')
-    copytree(local_typhoon_path, dag_dir)
+    dag_dir = Settings.out_directory / dag['name'] / 'typhoon'
+    copytree(local_typhoon_path, str(dag_dir))
 
 
 def old_copy_user_defined_code():
-    copytree(functions_directory(), os.path.join(out_directory(), 'functions'))
-    copytree(transformations_directory(), os.path.join(out_directory(), 'transformations'))
-    copytree(hooks_directory(), os.path.join(out_directory(), 'hooks'))
-    copy(os.path.join(typhoon_home(), 'typhoonconfig.cfg'), os.path.join(out_directory(), 'typhoonconfig.cfg'))
+    copytree(str(Settings.functions_directory), str(Settings.out_directory / 'functions'))
+    copytree(str(Settings.transformations_directory), str(Settings.out_directory / 'transformations'))
+    copytree(Settings.hooks_directory, str(Settings.out_directory / 'hooks'))
 
 
 def copy_user_defined_code(dag, symlink=False):
     dag_name = dag['name']
     try:
         if symlink:
-            os.symlink(functions_directory(), os.path.join(out_directory(), dag_name, 'functions'))
+            os.symlink(str(Settings.functions_directory), str(Settings.out_directory / dag_name / 'functions'))
         else:
-            copytree(functions_directory(), os.path.join(out_directory(), dag_name, 'functions'))
+            copytree(str(Settings.functions_directory), str(Settings.out_directory / dag_name / 'functions'))
     except FileNotFoundError:
         print('No user defined functions. Skipping copy...')
     try:
         if symlink:
-            os.symlink(transformations_directory(), os.path.join(out_directory(), dag_name, 'transformations'))
+            os.symlink(str(Settings.transformations_directory), str(Settings.out_directory / dag_name / 'transformations'))
         else:
-            copytree(transformations_directory(), os.path.join(out_directory(), dag_name, 'transformations'))
+            copytree(str(Settings.transformations_directory), str(Settings.out_directory / dag_name / 'transformations'))
     except FileNotFoundError:
         print('No user defined transformations. Skipping copy...')
     try:
         if symlink:
-            os.symlink(hooks_directory(), os.path.join(out_directory(), dag_name, 'hooks'))
+            os.symlink(str(Settings.hooks_directory), str(Settings.out_directory / dag_name / 'hooks'))
         else:
-            copytree(hooks_directory(), os.path.join(out_directory(), dag_name, 'hooks'))
+            copytree(str(Settings.hooks_directory), str(Settings.out_directory / dag_name / 'hooks'))
     except FileNotFoundError:
         print('No user defined hooks. Skipping copy...')
-    if symlink:
-        os.symlink(os.path.join(typhoon_home(), 'typhoonconfig.cfg'), os.path.join(out_directory(), dag_name, 'typhoonconfig.cfg'))
-    else:
-        copy(os.path.join(typhoon_home(), 'typhoonconfig.cfg'), os.path.join(out_directory(), dag_name, 'typhoonconfig.cfg'))

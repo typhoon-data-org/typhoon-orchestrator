@@ -1,11 +1,8 @@
 from abc import ABC, abstractmethod
-from datetime import datetime
 from typing import Union, List
 
-from typing_extensions import overload
-
 from typhoon.connections import Connection
-from typhoon.core.dags import DagDeployment, DAG
+from typhoon.core.dags import DagDeployment
 from typhoon.variables import Variable
 
 
@@ -21,11 +18,6 @@ class MetadataStoreInterface(ABC):
 
     @abstractmethod
     def exists(self) -> bool:
-        pass
-
-    @property
-    @abstractmethod
-    def uri(self) -> str:
         pass
 
     @abstractmethod

@@ -1,23 +1,21 @@
 from pathlib import Path
-from typing import Optional, Union, List
+from typing import Union, List
 
 from typhoon.connections import Connection
-from typhoon.core import settings
 from typhoon.core.dags import DagDeployment
 from typhoon.core.metadata_store_interface import MetadataStoreInterface, MetadataObjectNotFound
+from typhoon.core.settings import Settings
 from typhoon.variables import Variable
 
 
 class SQLiteMetadataStore(MetadataStoreInterface):
-    def __init__(self, config: Optional['TyphoonConfig'] = None):
-        from typhoon.core.config import TyphoonConfig
+    def __init__(self, db_path: str):
         from sqlitedict import SqliteDict
 
-        self.config = config or TyphoonConfig()
-        self.db_path = str(Path(settings.typhoon_home()) / f'{self.config.project_name}.db')
-        self.conn_connections = SqliteDict(self.db_path, tablename=self.config.connections_table_name)
-        self.conn_variables = SqliteDict(self.db_path, tablename=self.config.variables_table_name)
-        self.conn_dag_deployments = SqliteDict(self.db_path, tablename=self.config.dag_deployments_table_name)
+        self.db_path = db_path
+        self.conn_connections = SqliteDict(self.db_path, tablename=Settings.connections_table_name)
+        self.conn_variables = SqliteDict(self.db_path, tablename=Settings.variables_table_name)
+        self.conn_dag_deployments = SqliteDict(self.db_path, tablename=Settings.dag_deployments_table_name)
 
     def close(self):
         self.conn_connections.close()
@@ -26,10 +24,6 @@ class SQLiteMetadataStore(MetadataStoreInterface):
 
     def exists(self) -> bool:
         return Path(self.db_path).exists()
-
-    @property
-    def uri(self) -> str:
-        return f'sqlite://{self.db_path}'
 
     def migrate(self):
         open(str(self.db_path), 'a').close()
