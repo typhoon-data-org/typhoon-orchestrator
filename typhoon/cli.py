@@ -11,7 +11,8 @@ from tabulate import tabulate
 from termcolor import colored
 
 from typhoon import local_config, connections
-from typhoon.cli_helpers.cli_completion import get_remote_names, get_dag_names, get_conn_envs, get_conn_ids
+from typhoon.cli_helpers.cli_completion import get_remote_names, get_dag_names, get_conn_envs, get_conn_ids, \
+    get_var_types
 from typhoon.cli_helpers.status import dags_with_changes, dags_without_deploy, check_connections_yaml, \
     check_connections_dags, check_variables_dags
 from typhoon.connections import Connection
@@ -20,6 +21,7 @@ from typhoon.deployment.packaging import build_all_dags
 from typhoon.local_config import EXAMPLE_CONFIG
 from typhoon.metadata_store_impl.sqlite_metadata_store import SQLiteMetadataStore
 from typhoon.remotes import Remotes
+from typhoon.variables import Variable, VariableType
 from typhoon.watch import watch_changes
 
 ascii_art_logo = r"""
@@ -306,6 +308,71 @@ def remove_connection(remote: Optional[str], conn_id: str):
     metadata_store = Settings.metadata_store(Remotes.aws_profile(remote))
     metadata_store.delete_connection(conn_id)
     print(f'Connection {conn_id} deleted')
+
+
+@cli.group(name='variable')
+def cli_variable():
+    """Manage Typhoon variables"""
+    pass
+
+
+@cli_variable.command(name='ls')
+@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
+@click.option('-l', '--long', is_flag=True, default=False)
+def list_variables(remote: Optional[str], long: bool):
+    """List variables in the metadata store"""
+    def var_contents(var: Variable) -> str:
+        if var.type == VariableType.NUMBER:
+            return var.contents
+        else:
+            return f'"{var.contents}"' if len(var.contents) < max_len_var else f'"{var.contents[:max_len_var]}"...'
+    if remote:
+        Settings.metadata_db_url = Remotes.metadata_db_url(remote)
+        if Remotes.use_name_as_suffix(remote):
+            Settings.metadata_suffix = remote
+    metadata_store = Settings.metadata_store(Remotes.aws_profile(remote))
+    if long:
+        max_len_var = 40
+        header = ['VAR_ID', 'TYPE', 'CONTENT']
+        table_body = [
+            [var.id, var.type, var_contents(var)]
+            for var in metadata_store.get_variables()
+        ]
+        print(tabulate(table_body, header, 'plain'))
+    else:
+        for var in metadata_store.get_variables():
+            print(var.id)
+
+
+@cli_variable.command(name='add')
+@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
+@click.option('--var-id')
+@click.option('--var-type', autocompletion=get_var_types)
+@click.option('--contents')
+def add_variable(remote: Optional[str], var_id: str, var_type: str, contents):
+    """Add variable to the metadata store"""
+    if remote:
+        Settings.metadata_db_url = Remotes.metadata_db_url(remote)
+        if Remotes.use_name_as_suffix(remote):
+            Settings.metadata_suffix = remote
+    metadata_store = Settings.metadata_store(Remotes.aws_profile(remote))
+    var = Variable(var_id, VariableType[var_type.upper()], contents)
+    metadata_store.set_variable(var)
+    print(f'Variable {var_id} added')
+
+
+@cli_variable.command(name='rm')
+@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
+@click.option('--var-id')
+def remove_variable(remote: Optional[str], var_id: str):
+    """Remove connection from the metadata store"""
+    if remote:
+        Settings.metadata_db_url = Remotes.metadata_db_url(remote)
+        if Remotes.use_name_as_suffix(remote):
+            Settings.metadata_suffix = remote
+    metadata_store = Settings.metadata_store(Remotes.aws_profile(remote))
+    metadata_store.delete_variable(var_id)
+    print(f'Variable {var_id} deleted')
 
 
 class SubprocessError(Exception):

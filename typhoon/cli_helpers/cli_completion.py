@@ -4,6 +4,7 @@ import yaml
 
 from typhoon.core.settings import Settings
 from typhoon.remotes import Remotes
+from typhoon.variables import VariableType
 
 
 def get_remote_names(ctx, args, incomplete) -> List[str]:
@@ -26,3 +27,7 @@ def get_conn_envs(ctx, args, incomplete) -> List[str]:
     conn_id_index = args.index('--conn-id') + 1
     conn_id = args[conn_id_index]
     return [x for x in connections.get(conn_id, {}).keys() if incomplete in x]
+
+
+def get_var_types(ctx, args, incomplete) -> List[str]:
+    return [x.lower() for x in VariableType if incomplete in x.lower()]
