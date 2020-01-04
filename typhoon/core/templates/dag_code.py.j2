@@ -2,6 +2,7 @@
 # DAG name: {{ dag.name }}
 # Schedule interval = {{ dag.schedule_interval }}
 import os
+import types
 from datetime import datetime
 from typing import Dict
 
@@ -68,9 +69,13 @@ def {{ node_name }}_node(dag_context: DagContext, {% if node_name not in dag.sou
     {% for k, v in node.config.items() %}
     {{ adapter.adapter_params(k, v) | indent(4, False) }}
     {% endfor %}
-    yield from {{ node['function'] | clean_function_name('functions') }}(
+    out = {{ node['function'] | clean_function_name('functions') }}(
         **config,
     )
+    if isinstance(out, types.GeneratorType):
+        yield from out
+    else:
+        yield out
 
 
 {% endfor %}

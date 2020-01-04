@@ -117,7 +117,7 @@ def build_all_dags(remote: Optional[str], matching: Optional[str] = None):
 
     print('Build all DAGs...')
     deployment_date = datetime.now()
-    dags = load_dags()
+    dags = load_dags(ignore_errors=True)
     deploy_sam_template([dag for dag, _ in dags], remote=remote)
     for dag, dag_code in dags:
         if not matching or re.match(matching, dag.name):

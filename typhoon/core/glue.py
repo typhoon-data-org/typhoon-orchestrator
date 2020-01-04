@@ -4,9 +4,10 @@ This code should not be unit tested.
 """
 import os
 from pathlib import Path
-from typing import Union, List, Tuple
+from typing import Union, List, Tuple, Dict
 
 import yaml
+from pydantic import ValidationError
 
 from typhoon.core.dags import DAG
 from typhoon.core.settings import Settings
@@ -20,13 +21,36 @@ def transpile_dag_and_store(dag: dict, output_path: Union[str, Path], debug_mode
     Path(output_path).write_text(dag_code)
 
 
-def load_dags() -> List[Tuple[DAG, str]]:
+def load_dags(ignore_errors: bool = False) -> List[Tuple[DAG, str]]:
     dags = []
     for dag_file in Settings.dags_directory.rglob('*.yml'):
-        dag = yaml.safe_load(dag_file.read_text())
-        dags.append((DAG.parse_obj(dag), dag_file.read_text()))
+        if ignore_errors:
+            try:
+                dag = DAG.parse_obj(
+                    yaml.safe_load(dag_file.read_text())
+                )
+            except ValidationError:
+                continue
+        else:
+            dag = DAG.parse_obj(
+                yaml.safe_load(dag_file.read_text())
+            )
+        dags.append((dag, dag_file.read_text()))
 
     return dags
+
+
+def get_dag_errors() -> Dict[str, List[dict]]:
+    result = {}
+    for dag_file in Settings.dags_directory.rglob('*.yml'):
+        try:
+            DAG.parse_obj(
+                yaml.safe_load(dag_file.read_text())
+            )
+        except ValidationError as e:
+            result[dag_file.name.split('.yml')[0]] = e.errors()
+
+    return result
 
 
 def get_dags_contents(dags_directory: Union[str, Path]) -> List[str]:

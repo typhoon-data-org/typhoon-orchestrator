@@ -13,7 +13,7 @@ def get_remote_names(ctx, args, incomplete) -> List[str]:
 
 
 def get_dag_names(ctx, args, incomplete) -> List[str]:
-    return [dag.name for dag, _ in load_dags()]
+    return [dag.name for dag, _ in load_dags(ignore_errors=True)]
 
 
 def get_conn_ids(ctx, args, incomplete) -> List[str]:

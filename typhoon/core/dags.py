@@ -58,6 +58,8 @@ class DAG(BaseModel):
 
     @root_validator
     def validate_undefined_nodes_in_edges(cls, values):
+        if 'nodes' not in values.keys():
+            return values       # Nodes did not pass upstream validations
         node_names = values['nodes'].keys()
         for edge_name, edge in values['edges'].items():
             if edge.source not in node_names:

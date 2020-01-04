@@ -1,6 +1,7 @@
 import os
 import shutil
 import subprocess
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -17,6 +18,7 @@ from typhoon.cli_helpers.cli_completion import get_remote_names, get_dag_names, 
 from typhoon.cli_helpers.status import dags_with_changes, dags_without_deploy, check_connections_yaml, \
     check_connections_dags, check_variables_dags
 from typhoon.connections import Connection
+from typhoon.core.glue import get_dag_errors
 from typhoon.core.settings import Settings, EnvVarName
 from typhoon.deployment.packaging import build_all_dags
 from typhoon.handler import run_dag
@@ -217,9 +219,21 @@ def list_dags(remote: Optional[str], long: bool):
             for x in metadata_store.get_dag_deployments()
         ]
         print(tabulate(table_body, header, 'plain'))
+        if not remote:
+            dag_errors = get_dag_errors()
+            if dag_errors:
+                header = ['DAG_NAME', 'ERROR LOCATION', 'ERROR MESSAGE']
+                table_body = [
+                    [dag_name, error[0]['loc'], error[0]['msg']]
+                    for dag_name, error in dag_errors.items()
+                ]
+                print(colored(tabulate(table_body, header, 'plain'), 'red'), file=sys.stderr)
     else:
         for dag_deployment in metadata_store.get_dag_deployments():
             print(dag_deployment.dag_name)
+        if not remote:
+            for dag_name, _ in get_dag_errors().items():
+                print(colored(dag_name, 'red'), file=sys.stderr)
 
 
 @cli_dags.command(name='build')
@@ -234,6 +248,16 @@ def build_dags(dag_name: Optional[str], all_: bool):
     if all_:
         build_all_dags(remote=None)
     else:
+        dag_errors = get_dag_errors().get(dag_name)
+        if dag_errors:
+            print(f'FATAL: DAG {dag_name} has errors', file=sys.stderr)
+            header = ['ERROR_LOCATION', 'ERROR_MESSAGE']
+            table_body = [
+                [error['loc'], error['msg']]
+                for error in dag_errors
+            ]
+            print(tabulate(table_body, header, 'plain'), file=sys.stderr)
+            sys.exit(-1)
         build_all_dags(remote=None, matching=dag_name)
 
 
@@ -258,7 +282,10 @@ def run_local_dag(dag_name: str, execution_date: datetime):
     dag_path = Settings.out_directory / dag_name / f'{dag_name}.py'
     if not dag_path.exists():
         print(f"Error: {dag_path} doesn't exist. Build DAGs")
-    run_dag(dag_name, str(execution_date), capture_logs=False)
+    try:
+        run_dag(dag_name, str(execution_date), capture_logs=False)
+    except FileNotFoundError:
+        print(f'DAG {dag_name} could not be built')
 
 
 @cli_dags.command(name='run')
@@ -275,6 +302,17 @@ def cli_run_dag(remote: Optional[str], dag_name: str, execution_date: Optional[d
         execution_date = datetime.now()
     if remote is None:
         print(f'Running {dag_name} from local build...')
+        dag_errors = get_dag_errors().get(dag_name)
+        if dag_errors:
+            print(f'FATAL: DAG {dag_name} has errors', file=sys.stderr)
+            header = ['ERROR_LOCATION', 'ERROR_MESSAGE']
+            table_body = [
+                [error['loc'], error['msg']]
+                for error in dag_errors
+            ]
+            print(tabulate(table_body, header, 'plain'), file=sys.stderr)
+            sys.exit(-1)
+
         build_all_dags(remote=None, matching=dag_name)
         # Sets the env variable for metadata store to the sqlite in CWD if not set, because the CWD will be different at
         # runtime
