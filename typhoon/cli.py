@@ -7,6 +7,7 @@ from typing import Optional
 import click
 import pkg_resources
 from dataclasses import asdict
+from tabulate import tabulate
 from termcolor import colored
 
 from typhoon import local_config, connections
@@ -138,11 +139,14 @@ def remote_add(remote: str, aws_profile: str, metadata_db_url: str, use_name_as_
 def remote_list(long: bool):
     """List configured Typhoon remotes"""
     if long:
-        print('REMOTE_NAME\tAWS_PROFILE\tUSE_NAME_AS_SUFFIX\tMETADATA_DB_URL')
-    for remote in Remotes.remote_names:
-        if long:
-            print(f'{remote}\t{Remotes.aws_profile(remote)}\t{Remotes.use_name_as_suffix(remote)}\t{Remotes.metadata_db_url(remote)}')
-        else:
+        header = ['REMOTE_NAME', 'AWS_PROFILE', 'USE_NAME_AS_SUFFIX', 'METADATA_DB_URL']
+        table_body = [
+            [remote, Remotes.aws_profile(remote), Remotes.use_name_as_suffix(remote), Remotes.metadata_db_url(remote)]
+            for remote in Remotes.remote_names
+        ]
+        print(tabulate(table_body, header, 'plain'))
+    else:
+        for remote in Remotes.remote_names:
             print(remote)
 
 
@@ -201,12 +205,16 @@ def list_dags(remote: Optional[str], long: bool):
         Settings.metadata_db_url = Remotes.metadata_db_url(remote)
         if Remotes.use_name_as_suffix(remote):
             Settings.metadata_suffix = remote
+    metadata_store = Settings.metadata_store(Remotes.aws_profile(remote))
     if long:
-        print('DAG_NAME\tDEPLOYMENT_DATE')
-    for dag_deployment in Settings.metadata_store(Remotes.aws_profile(remote)).get_dag_deployments():
-        if long:
-            print(f'{dag_deployment.dag_name}\t{dag_deployment.deployment_date.isoformat()}')
-        else:
+        header = ['DAG_NAME', 'DEPLOYMENT_DATE']
+        table_body = [
+            [x.dag_name, x.deployment_date.isoformat()]
+            for x in metadata_store.get_dag_deployments()
+        ]
+        print(tabulate(table_body, header, 'plain'))
+    else:
+        for dag_deployment in metadata_store.get_dag_deployments():
             print(dag_deployment.dag_name)
 
 
@@ -257,12 +265,16 @@ def list_connections(remote: Optional[str], long: bool):
         Settings.metadata_db_url = Remotes.metadata_db_url(remote)
         if Remotes.use_name_as_suffix(remote):
             Settings.metadata_suffix = remote
+    metadata_store = Settings.metadata_store(Remotes.aws_profile(remote))
     if long:
-        print('CONN_ID\tTYPE\tHOST\tPORT\tSCHEMA')
-    for conn in Settings.metadata_store(Remotes.aws_profile(remote)).get_connections():
-        if long:
-            print(f'{conn.conn_id}\t{conn.conn_type}\t{conn.host}\t{conn.port}\t{conn.schema}')
-        else:
+        header = ['CONN_ID', 'TYPE', 'HOST', 'PORT', 'SCHEMA']
+        table_body = [
+            [conn.conn_id, conn.conn_type, conn.host, conn.port, conn.schema]
+            for conn in metadata_store.get_connections()
+        ]
+        print(tabulate(table_body, header, 'plain'))
+    else:
+        for conn in metadata_store.get_connections():
             print(conn.conn_id)
 
 

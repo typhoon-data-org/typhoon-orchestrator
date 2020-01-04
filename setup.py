@@ -19,7 +19,7 @@ postgres = ['psycopg2']
 sqlalchemy = ['sqlalchemy']
 
 all_requirements = postgres + sqlalchemy
-dev_requirements = all_requirements + ['termcolor', 'watchdog']
+dev_requirements = all_requirements + ['termcolor', 'watchdog', 'tabulate']
 
 setup(
     name='typhoon-orchestrator',
