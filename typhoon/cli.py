@@ -1,6 +1,7 @@
 import os
 import shutil
 import subprocess
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -18,6 +19,7 @@ from typhoon.cli_helpers.status import dags_with_changes, dags_without_deploy, c
 from typhoon.connections import Connection
 from typhoon.core.settings import Settings, EnvVarName
 from typhoon.deployment.packaging import build_all_dags
+from typhoon.handler import run_dag
 from typhoon.local_config import EXAMPLE_CONFIG
 from typhoon.metadata_store_impl.sqlite_metadata_store import SQLiteMetadataStore
 from typhoon.remotes import Remotes
@@ -252,6 +254,37 @@ def watch_dags(dag_name: Optional[str], all_: bool):
         watch_changes(patterns=f'{dag_name}.yml')
 
 
+def run_local_dag(dag_name: str, execution_date: datetime):
+    dag_path = Settings.out_directory / dag_name / f'{dag_name}.py'
+    if not dag_path.exists():
+        print(f"Error: {dag_path} doesn't exist. Build DAGs")
+    run_dag(dag_name, str(execution_date), capture_logs=False)
+
+
+@cli_dags.command(name='run')
+@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
+@click.option('--dag-name', autocompletion=get_dag_names)
+@click.option('--execution-date', default=None, is_flag=True, type=click.DateTime(), help='DAG execution date as YYYY-mm-dd')
+def cli_run_dag(remote: Optional[str], dag_name: str, execution_date: Optional[datetime]):
+    """Run a DAG for a specific date. Will create a metadata entry in the database (TODO: create entry)."""
+    if remote:
+        Settings.metadata_db_url = Remotes.metadata_db_url(remote)
+        if Remotes.use_name_as_suffix(remote):
+            Settings.metadata_suffix = remote
+    if execution_date is None:
+        execution_date = datetime.now()
+    if remote is None:
+        print(f'Running {dag_name} from local build...')
+        build_all_dags(remote=None, matching=dag_name)
+        # Sets the env variable for metadata store to the sqlite in CWD if not set, because the CWD will be different at
+        # runtime
+        Settings.metadata_db_url = Settings.metadata_db_url
+        run_local_dag(dag_name, execution_date)
+    else:
+        # TODO: Run lambda function
+        pass
+
+
 @cli.group(name='connection')
 def cli_connection():
     """Manage Typhoon connections"""
@@ -423,70 +456,6 @@ def run_in_subprocess(command: str, cwd: str):
 #             if loaded_dag.get('active', True):
 #                 dag_deployment = DagDeployment(loaded_dag['name'], deployment_date=datetime.utcnow(), dag_code=dag_code)
 #                 config.metadata_store.set_dag_deployment(dag_deployment)
-#
-#
-# @cli.command()
-# @click.argument('conn_id')
-# @click.argument('conn_env')
-# @click.argument('target_env', autocompletion=get_environments)
-# def set_connection(conn_id, conn_env, target_env):
-#     conn_params = connections.get_connection_local(conn_id, conn_env)
-#     config = CLIConfig(target_env)
-#     config.metadata_store.set_connection(Connection(conn_id=conn_id, **asdict(conn_params)))
-#     print(f'Connection {conn_id} set')
-#
-#
-# @cli.command()
-# @click.argument('conn_id')
-# @click.argument('target_env', autocompletion=get_environments)
-# def get_connection(conn_id, target_env):
-#     config = CLIConfig(target_env)
-#     try:
-#         conn = config.metadata_store.get_connection(conn_id)
-#         print(json.dumps(conn.__dict__, indent=4))
-#     except MetadataObjectNotFound:
-#         print(f'Connection "{conn_id}" not found in {target_env} metadata database {config.metadata_store.uri}')
-#
-#
-# @cli.command()
-# @click.argument('variable_id')
-# @click.argument('variable_type')
-# @click.argument('value')
-# @click.argument('target_env', autocompletion=get_environments)
-# def set_variable(variable_id, variable_type, value, target_env):
-#     var = Variable(variable_id, VariableType[variable_type.upper()], value)
-#     config = CLIConfig(target_env)
-#     config.metadata_store.set_variable(var)
-#
-#
-# def get_dags(ctx, args, incomplete):
-#     return [k for k in [x.name for x in load_dags(settings.dags_directory())] if incomplete in k]
-#
-#
-# def run_local_dag(dag_name: str, execution_date: datetime, env: str):
-#     dag_path = Path(settings.out_directory()) / dag_name / f'{dag_name}.py'
-#     if not dag_path.exists():
-#         print(f"Error: {dag_path} doesn't exist. Build DAGs")
-#     os.environ['TYPHOON_ENV'] = env
-#     run_dag(dag_name, str(execution_date), capture_logs=False)
-#
-#
-# @cli.command()
-# @click.argument('dag_name', autocompletion=get_dags)
-# @click.argument('target_env', autocompletion=get_environments)
-# @click.option('--execution-date', default=None, is_flag=True, type=click.DateTime(), help='DAG execution date as YYYY-mm-dd')
-# def run(dag_name: str, target_env: str, execution_date: Optional[datetime]):
-#     """Run a DAG for a specific date. Will create a metadata entry in the database (TODO: create entry)."""
-#     if execution_date is None:
-#         execution_date = datetime.now()
-#     config = CLIConfig(target_env)
-#     if config.development_mode:
-#         print(f'Development mode. Running {dag_name} from local build...')
-#         run_local_dag(dag_name, execution_date, target_env)
-#     else:
-#         # TODO: Run lambda function
-#         pass
-
 
 if __name__ == '__main__':
     cli()

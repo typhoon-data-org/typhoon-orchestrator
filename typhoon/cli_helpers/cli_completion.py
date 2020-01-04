@@ -2,6 +2,7 @@ from typing import List
 
 import yaml
 
+from typhoon.core.glue import load_dags
 from typhoon.core.settings import Settings
 from typhoon.remotes import Remotes
 from typhoon.variables import VariableType
@@ -12,7 +13,7 @@ def get_remote_names(ctx, args, incomplete) -> List[str]:
 
 
 def get_dag_names(ctx, args, incomplete) -> List[str]:
-    return [x.dag_name for x in Settings.metadata_store(aws_profile=None).get_dag_deployments() if incomplete in x.dag_name]
+    return [dag.name for dag, _ in load_dags()]
 
 
 def get_conn_ids(ctx, args, incomplete) -> List[str]:

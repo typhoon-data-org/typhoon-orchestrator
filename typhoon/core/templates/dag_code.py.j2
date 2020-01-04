@@ -5,7 +5,6 @@ import os
 from datetime import datetime
 from typing import Dict
 
-from typhoon.core.config import TyphoonConfig
 import typhoon.contrib.functions as typhoon_functions
 import typhoon.contrib.transformations as typhoon_transformations
 from typhoon.contrib.hooks.hook_factory import get_hook
@@ -19,15 +18,8 @@ import {{ transformations_module }}
 import {{ functions_module }}
 {% endfor %}
 
-{% if debug_mode %}
-
-# Only meant for local debugging. Do NOT use in production
-os.environ['TYPHOON_ENV'] = '{{ environment }}'
-
-{% endif %}
 os.environ['TYPHOON_HOME'] = os.path.dirname(__file__)
 DAG_ID = '{{ dag.name }}'
-TYPHOON_CONFIG = TyphoonConfig()
 
 
 def {{ dag.name }}_main(event, context):
@@ -85,8 +77,6 @@ def {{ node_name }}_node(dag_context: DagContext, {% if node_name not in dag.sou
 {% if debug_mode %}
 if __name__ == '__main__':
     import os
-
-    os.environ['TYPHOON_ENV'] = '{{ environment }}'
 
     example_event = {
         'time': '2019-02-05T03:00:00Z'

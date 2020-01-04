@@ -1,13 +1,11 @@
 import importlib.util
 import inspect
-from pathlib import Path
 
 from typhoon.contrib.hooks.dbapi_hooks import SqliteHook, PostgresHook, SnowflakeHook
 from typhoon.contrib.hooks.filesystem_hooks import S3Hook, LocalStorageHook
 from typhoon.contrib.hooks.hook_interface import HookInterface
 from typhoon.contrib.hooks.sqlalchemy_hook import SqlAlchemyHook
-from typhoon.core.config import TyphoonConfig
-from typhoon.core.settings import typhoon_home
+from typhoon.core.settings import Settings
 
 HOOK_MAPPINGS = {
     'sqlite': SqliteHook,
@@ -20,7 +18,9 @@ HOOK_MAPPINGS = {
 
 
 def get_hook(conn_id: str) -> HookInterface:
-    conn = TyphoonConfig().metadata_store.get_connection(conn_id)
+    metadata_store = Settings.metadata_store()
+    print(Settings.metadata_db_url)
+    conn = metadata_store.get_connection(conn_id)
     hook_class = HOOK_MAPPINGS.get(conn.conn_type)
     if hook_class:
         return hook_class(conn.get_connection_params())
@@ -29,8 +29,9 @@ def get_hook(conn_id: str) -> HookInterface:
 
 
 def get_user_defined_hook(conn_id: str) -> HookInterface:
-    conn = TyphoonConfig().metadata_store.get_connection(conn_id)
-    hooks_files = (Path(typhoon_home()) / 'hooks').rglob('*.py')
+    metadata_store = Settings.metadata_store()
+    conn = metadata_store.get_connection(conn_id)
+    hooks_files = (Settings.typhoon_home / 'hooks').rglob('*.py')
     for hooks_file in hooks_files:
         spec = importlib.util.spec_from_file_location(str(hooks_file).split('.py')[0], str(hooks_file))
         mod = importlib.util.module_from_spec(spec)
