@@ -40,6 +40,17 @@ ascii_art_logo = r"""
 """
 
 
+def set_settings_from_remote(remote: str):
+    if remote:
+        if remote not in Remotes.remotes_config.keys():
+            print(f'Remote {remote} is not defined in .typhoonremotes. Found : {list(Remotes.remotes_config.keys())}',
+                  file=sys.stderr)
+            sys.exit(-1)
+        Settings.metadata_db_url = Remotes.metadata_db_url(remote)
+        if Remotes.use_name_as_suffix(remote):
+            Settings.metadata_suffix = remote
+
+
 @click.group()
 def cli():
     """Typhoon CLI"""
@@ -74,10 +85,7 @@ def init(project_name: str):
 @click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
 def status(remote: Optional[str]):
     """Information on project status"""
-    if remote:
-        Settings.metadata_db_url = Remotes.metadata_db_url(remote)
-        if Remotes.use_name_as_suffix(remote):
-            Settings.metadata_suffix = remote
+    set_settings_from_remote(remote)
 
     print(colored(ascii_art_logo, 'cyan'))
     if not Settings.typhoon_home:
@@ -176,10 +184,7 @@ def cli_metadata():
 @click.argument('remote', autocompletion=get_remote_names)
 def migrate(remote: str):
     """Create the necessary metadata tables"""
-    if remote:
-        Settings.metadata_db_url = Remotes.metadata_db_url(remote)
-        if Remotes.use_name_as_suffix(remote):
-            Settings.metadata_suffix = remote
+    set_settings_from_remote(remote)
     print(f'Migrating {Settings.metadata_db_url}...')
     Settings.metadata_store(aws_profile=Remotes.aws_profile(remote)).migrate()
 
@@ -188,10 +193,7 @@ def migrate(remote: str):
 @click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
 def metadata_info(remote: Optional[str]):
     """Info on metadata connection and table names"""
-    if remote:
-        Settings.metadata_db_url = Remotes.metadata_db_url(remote)
-        if Remotes.use_name_as_suffix(remote):
-            Settings.metadata_suffix = remote
+    set_settings_from_remote(remote)
     print(ascii_art_logo)
     print(f'Metadata database URL:\t{Settings.metadata_db_url}')
     print(f'Connections table name:\t{Settings.connections_table_name}')
@@ -209,10 +211,7 @@ def cli_dags():
 @click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
 @click.option('-l', '--long', is_flag=True, default=False)
 def list_dags(remote: Optional[str], long: bool):
-    if remote:
-        Settings.metadata_db_url = Remotes.metadata_db_url(remote)
-        if Remotes.use_name_as_suffix(remote):
-            Settings.metadata_suffix = remote
+    set_settings_from_remote(remote)
     metadata_store = Settings.metadata_store(Remotes.aws_profile(remote))
     if long:
         header = ['DAG_NAME', 'DEPLOYMENT_DATE']
@@ -296,10 +295,7 @@ def run_local_dag(dag_name: str, execution_date: datetime):
 @click.option('--execution-date', default=None, is_flag=True, type=click.DateTime(), help='DAG execution date as YYYY-mm-dd')
 def cli_run_dag(remote: Optional[str], dag_name: str, execution_date: Optional[datetime]):
     """Run a DAG for a specific date. Will create a metadata entry in the database (TODO: create entry)."""
-    if remote:
-        Settings.metadata_db_url = Remotes.metadata_db_url(remote)
-        if Remotes.use_name_as_suffix(remote):
-            Settings.metadata_suffix = remote
+    set_settings_from_remote(remote)
     if execution_date is None:
         execution_date = datetime.now()
     if remote is None:
@@ -336,10 +332,7 @@ def cli_connection():
 @click.option('-l', '--long', is_flag=True, default=False)
 def list_connections(remote: Optional[str], long: bool):
     """List connections in the metadata store"""
-    if remote:
-        Settings.metadata_db_url = Remotes.metadata_db_url(remote)
-        if Remotes.use_name_as_suffix(remote):
-            Settings.metadata_suffix = remote
+    set_settings_from_remote(remote)
     metadata_store = Settings.metadata_store(Remotes.aws_profile(remote))
     if long:
         header = ['CONN_ID', 'TYPE', 'HOST', 'PORT', 'SCHEMA']
@@ -359,10 +352,7 @@ def list_connections(remote: Optional[str], long: bool):
 @click.option('--conn-env', autocompletion=get_conn_envs)
 def add_connection(remote: Optional[str], conn_id: str, conn_env: str):
     """Add connection to the metadata store"""
-    if remote:
-        Settings.metadata_db_url = Remotes.metadata_db_url(remote)
-        if Remotes.use_name_as_suffix(remote):
-            Settings.metadata_suffix = remote
+    set_settings_from_remote(remote)
     metadata_store = Settings.metadata_store(Remotes.aws_profile(remote))
     conn_params = connections.get_connection_local(conn_id, conn_env)
     metadata_store.set_connection(Connection(conn_id=conn_id, **asdict(conn_params)))
@@ -374,10 +364,7 @@ def add_connection(remote: Optional[str], conn_id: str, conn_env: str):
 @click.option('--conn-id', autocompletion=get_conn_ids)
 def remove_connection(remote: Optional[str], conn_id: str):
     """Remove connection from the metadata store"""
-    if remote:
-        Settings.metadata_db_url = Remotes.metadata_db_url(remote)
-        if Remotes.use_name_as_suffix(remote):
-            Settings.metadata_suffix = remote
+    set_settings_from_remote(remote)
     metadata_store = Settings.metadata_store(Remotes.aws_profile(remote))
     metadata_store.delete_connection(conn_id)
     print(f'Connection {conn_id} deleted')
@@ -399,10 +386,7 @@ def list_variables(remote: Optional[str], long: bool):
             return var.contents
         else:
             return f'"{var.contents}"' if len(var.contents) < max_len_var else f'"{var.contents[:max_len_var]}"...'
-    if remote:
-        Settings.metadata_db_url = Remotes.metadata_db_url(remote)
-        if Remotes.use_name_as_suffix(remote):
-            Settings.metadata_suffix = remote
+    set_settings_from_remote(remote)
     metadata_store = Settings.metadata_store(Remotes.aws_profile(remote))
     if long:
         max_len_var = 40
@@ -424,10 +408,7 @@ def list_variables(remote: Optional[str], long: bool):
 @click.option('--contents')
 def add_variable(remote: Optional[str], var_id: str, var_type: str, contents):
     """Add variable to the metadata store"""
-    if remote:
-        Settings.metadata_db_url = Remotes.metadata_db_url(remote)
-        if Remotes.use_name_as_suffix(remote):
-            Settings.metadata_suffix = remote
+    set_settings_from_remote(remote)
     metadata_store = Settings.metadata_store(Remotes.aws_profile(remote))
     var = Variable(var_id, VariableType[var_type.upper()], contents)
     metadata_store.set_variable(var)
@@ -439,10 +420,7 @@ def add_variable(remote: Optional[str], var_id: str, var_type: str, contents):
 @click.option('--var-id')
 def remove_variable(remote: Optional[str], var_id: str):
     """Remove connection from the metadata store"""
-    if remote:
-        Settings.metadata_db_url = Remotes.metadata_db_url(remote)
-        if Remotes.use_name_as_suffix(remote):
-            Settings.metadata_suffix = remote
+    set_settings_from_remote(remote)
     metadata_store = Settings.metadata_store(Remotes.aws_profile(remote))
     metadata_store.delete_variable(var_id)
     print(f'Variable {var_id} deleted')
