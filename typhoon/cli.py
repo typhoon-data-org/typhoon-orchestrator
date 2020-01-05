@@ -15,7 +15,7 @@ from termcolor import colored
 
 from typhoon import local_config, connections
 from typhoon.cli_helpers.cli_completion import get_remote_names, get_dag_names, get_conn_envs, get_conn_ids, \
-    get_var_types, get_node_names
+    get_var_types, get_node_names, get_edge_names
 from typhoon.cli_helpers.status import dags_with_changes, dags_without_deploy, check_connections_yaml, \
     check_connections_dags, check_variables_dags
 from typhoon.connections import Connection
@@ -24,6 +24,7 @@ from typhoon.core.glue import get_dag_errors, load_dag
 from typhoon.core.settings import Settings, EnvVarName
 from typhoon.deployment.packaging import build_all_dags
 from typhoon.handler import run_dag
+from typhoon.introspection.introspect_transformations import run_transformations, TransformationResult
 from typhoon.local_config import EXAMPLE_CONFIG
 from typhoon.metadata_store_impl.sqlite_metadata_store import SQLiteMetadataStore
 from typhoon.remotes import Remotes
@@ -363,7 +364,7 @@ def list_nodes(remote: Optional[str], dag_name: str, long: bool):
         ]
         print(tabulate(table_body, header, 'plain'))
     else:
-        for node_name, node in dag.nodes.items():
+        for node_name, _ in dag.nodes.items():
             print(node_name)
 
 
@@ -380,6 +381,70 @@ def node_info(remote: Optional[str], dag_name: str, node_name: str):
         print(f'FATAL: No nodes found matching the name "{node_name}" in dag {dag_name}', file=sys.stderr)
         sys.exit(-1)
     print(yaml.dump(dag.nodes[node_name].dict(), default_flow_style=False, sort_keys=False))
+
+
+@cli_dags.group(name='edge')
+def cli_edges():
+    """Manage Typhoon DAG edges"""
+    pass
+
+
+@cli_edges.command(name='ls')
+@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
+@click.option('--dag-name', autocompletion=get_dag_names, required=True)
+@click.option('-l', '--long', is_flag=True, default=False)
+def list_edges(remote: Optional[str], dag_name: str, long: bool):
+    """List edges for DAG"""
+    set_settings_from_remote(remote)
+    dag = _get_dag(remote, dag_name)
+    if long:
+        header = ['EDGE_NAME', 'SOURCE', 'DESTINATION']
+        table_body = [
+            [edge_name, edge.source, edge.destination]
+            for edge_name, edge in dag.edges.items()
+        ]
+        print(tabulate(table_body, header, 'plain'))
+    else:
+        for edge_name, _ in dag.edges.items():
+            print(edge_name)
+
+
+@cli_edges.command(name='info')
+@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
+@click.option('--dag-name', autocompletion=get_dag_names)
+@click.option('--edge-name', autocompletion=get_edge_names)
+def edge_info(remote: Optional[str], dag_name: str, edge_name: str):
+    """Show edge definition"""
+    print(ascii_art_logo)
+    set_settings_from_remote(remote)
+    dag = _get_dag(remote, dag_name)
+    if edge_name not in dag.edges.keys():
+        print(f'FATAL: No edges found matching the name "{edge_name}" in dag {dag_name}', file=sys.stderr)
+        sys.exit(-1)
+    print(yaml.dump(dag.edges[edge_name].dict(), default_flow_style=False, sort_keys=False))
+
+
+@cli_edges.command(name='test')
+@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
+@click.option('--dag-name', autocompletion=get_dag_names)
+@click.option('--edge-name', autocompletion=get_edge_names)
+@click.option('--input', 'input_', help='Input batch to node transformations')
+@click.option('--eval', 'eval_', is_flag=True, default=False, help='If true evaluate the input string')
+def edge_test(remote: Optional[str], dag_name: str, edge_name: str, input_, eval_: bool):
+    """Show node definition"""
+    set_settings_from_remote(remote)
+    dag = _get_dag(remote, dag_name)
+    if edge_name not in dag.edges.keys():
+        print(f'FATAL: No edges found matching the name "{edge_name}" in dag {dag_name}', file=sys.stderr)
+        sys.exit(-1)
+    if eval_:
+        input_ = eval(input_)
+    transformation_results = run_transformations(dag.edges[edge_name], input_)
+    for result in transformation_results:
+        if isinstance(result, TransformationResult):
+            print(f'{result.config_item}: {result.pretty_result}')
+        else:
+            print(f'{result.config_item}: Error {result.error_type} {result.message}', file=sys.stderr)
 
 
 @cli.group(name='connection')

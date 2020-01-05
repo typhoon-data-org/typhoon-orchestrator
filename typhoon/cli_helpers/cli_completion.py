@@ -26,6 +26,16 @@ def get_node_names(ctx, args, incomplete) -> List[str]:
     return [x for x in dag.nodes.keys() if incomplete in x]
 
 
+def get_edge_names(ctx, args, incomplete) -> List[str]:
+    dag_name_index = args.index('--dag-name') + 1
+    dag_name = args[dag_name_index]
+    result = load_dag(dag_name, ignore_errors=True)
+    if result is None:
+        return []
+    dag, _ = result
+    return [x for x in dag.edges.keys() if incomplete in x]
+
+
 def get_conn_ids(ctx, args, incomplete) -> List[str]:
     connections_yml = Settings.typhoon_home / 'connections.yml'
     connections = yaml.safe_load(connections_yml.read_text())
