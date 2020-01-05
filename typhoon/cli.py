@@ -8,18 +8,19 @@ from typing import Optional
 
 import click
 import pkg_resources
+import yaml
 from dataclasses import asdict
 from tabulate import tabulate
 from termcolor import colored
 
 from typhoon import local_config, connections
 from typhoon.cli_helpers.cli_completion import get_remote_names, get_dag_names, get_conn_envs, get_conn_ids, \
-    get_var_types
+    get_var_types, get_node_names
 from typhoon.cli_helpers.status import dags_with_changes, dags_without_deploy, check_connections_yaml, \
     check_connections_dags, check_variables_dags
 from typhoon.connections import Connection
 from typhoon.core.dags import DAG
-from typhoon.core.glue import get_dag_errors
+from typhoon.core.glue import get_dag_errors, load_dag
 from typhoon.core.settings import Settings, EnvVarName
 from typhoon.deployment.packaging import build_all_dags
 from typhoon.handler import run_dag
@@ -319,6 +320,66 @@ def cli_run_dag(remote: Optional[str], dag_name: str, execution_date: Optional[d
     else:
         # TODO: Run lambda function
         pass
+
+
+@cli_dags.group(name='node')
+def cli_nodes():
+    """Manage Typhoon DAG nodes"""
+    pass
+
+
+def _get_dag(remote: str, dag_name: str) -> DAG:
+    if remote is None:
+        result = load_dag(dag_name, ignore_errors=True)
+        if not result:
+            print(f'FATAL: No dags found matching the name "{dag_name}"', file=sys.stderr)
+            sys.exit(-1)
+        dag, _ = result
+    else:
+        metadata_db = Settings.metadata_store(Remotes.aws_profile(remote))
+        dag_deployments = metadata_db.get_dag_deployments()
+        matching_dag_deployments = [x for x in dag_deployments if x.dag_name == dag_name]
+        if not matching_dag_deployments:
+            print(f'FATAL: No dags found matching the name "{dag_name}"', file=sys.stderr)
+            sys.exit(-1)
+        latest_dag_deployment = max(*matching_dag_deployments, key=lambda x: x.deployment_date)
+        dag = DAG.parse_obj(yaml.safe_load(latest_dag_deployment.dag_code))
+    return dag
+
+
+@cli_nodes.command(name='ls')
+@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
+@click.option('--dag-name', autocompletion=get_dag_names)
+@click.option('-l', '--long', is_flag=True, default=False)
+def list_nodes(remote: Optional[str], dag_name: str, long: bool):
+    """List nodes for DAG"""
+    set_settings_from_remote(remote)
+    dag = _get_dag(remote, dag_name)
+    if long:
+        header = ['NODE_NAME', 'FUNCTION', 'ASYNCHRONOUS']
+        table_body = [
+            [node_name, node.function, node.asynchronous]
+            for node_name, node in dag.nodes.items()
+        ]
+        print(tabulate(table_body, header, 'plain'))
+    else:
+        for node_name, node in dag.nodes.items():
+            print(node_name)
+
+
+@cli_nodes.command(name='info')
+@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
+@click.option('--dag-name', autocompletion=get_dag_names)
+@click.option('--node-name', autocompletion=get_node_names)
+def node_info(remote: Optional[str], dag_name: str, node_name: str):
+    """Show node definition"""
+    print(ascii_art_logo)
+    set_settings_from_remote(remote)
+    dag = _get_dag(remote, dag_name)
+    if node_name not in dag.nodes.keys():
+        print(f'FATAL: No nodes found matching the name "{node_name}" in dag {dag_name}', file=sys.stderr)
+        sys.exit(-1)
+    print(yaml.dump(dag.nodes[node_name].dict(), default_flow_style=False, sort_keys=False))
 
 
 @cli.group(name='connection')

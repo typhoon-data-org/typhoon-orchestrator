@@ -2,7 +2,7 @@ from typing import List
 
 import yaml
 
-from typhoon.core.glue import load_dags
+from typhoon.core.glue import load_dags, load_dag
 from typhoon.core.settings import Settings
 from typhoon.remotes import Remotes
 from typhoon.variables import VariableType
@@ -14,6 +14,16 @@ def get_remote_names(ctx, args, incomplete) -> List[str]:
 
 def get_dag_names(ctx, args, incomplete) -> List[str]:
     return [dag.name for dag, _ in load_dags(ignore_errors=True)]
+
+
+def get_node_names(ctx, args, incomplete) -> List[str]:
+    dag_name_index = args.index('--dag-name') + 1
+    dag_name = args[dag_name_index]
+    result = load_dag(dag_name, ignore_errors=True)
+    if result is None:
+        return []
+    dag, _ = result
+    return [x for x in dag.nodes.keys() if incomplete in x]
 
 
 def get_conn_ids(ctx, args, incomplete) -> List[str]:

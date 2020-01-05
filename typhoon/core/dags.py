@@ -2,7 +2,7 @@ import hashlib
 import re
 from datetime import datetime
 from enum import Enum
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Any
 
 from pydantic import BaseModel, validator, Field, root_validator
 
@@ -20,7 +20,7 @@ class SpecialCronString(str, Enum):
 class Node(BaseModel):
     function: str = Field(..., regex=r'(typhoon\.\w+\.\w+|functions\.\w+\.\w+)')
     asynchronous: bool = True
-    config: Dict[str, Item] = Field(default={})
+    config: Dict[str, Any] = Field(default={})
 
     @validator('config')
     def validate_config_keys(cls, v):

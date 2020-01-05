@@ -4,7 +4,7 @@ This code should not be unit tested.
 """
 import os
 from pathlib import Path
-from typing import Union, List, Tuple, Dict
+from typing import Union, List, Tuple, Dict, Optional
 
 import yaml
 from pydantic import ValidationError
@@ -38,6 +38,13 @@ def load_dags(ignore_errors: bool = False) -> List[Tuple[DAG, str]]:
         dags.append((dag, dag_file.read_text()))
 
     return dags
+
+
+def load_dag(dag_name: str, ignore_errors: bool = False) -> Optional[DAG]:
+    dags = load_dags(ignore_errors)
+    matching_dags = [(dag, code) for dag, code in dags if dag.name == dag_name]
+    assert len(matching_dags) <= 1, f'Found {len(matching_dags)} dags with name "{dag_name}"'
+    return matching_dags[0] if len(matching_dags) == 1 else None
 
 
 def get_dag_errors() -> Dict[str, List[dict]]:
