@@ -8,8 +8,12 @@ from typing import Optional
 
 import click
 import pkg_resources
+import pygments
 import yaml
 from dataclasses import asdict
+from pygments.formatters.terminal256 import Terminal256Formatter
+from pygments.lexers.data import YamlLexer
+from pygments.lexers.python import PythonLexer
 from tabulate import tabulate
 from termcolor import colored
 
@@ -374,13 +378,19 @@ def list_nodes(remote: Optional[str], dag_name: str, long: bool):
 @click.option('--node-name', autocompletion=get_node_names)
 def node_info(remote: Optional[str], dag_name: str, node_name: str):
     """Show node definition"""
-    print(ascii_art_logo)
+    print(colored(ascii_art_logo, 'cyan'))
     set_settings_from_remote(remote)
     dag = _get_dag(remote, dag_name)
     if node_name not in dag.nodes.keys():
         print(f'FATAL: No nodes found matching the name "{node_name}" in dag {dag_name}', file=sys.stderr)
         sys.exit(-1)
-    print(yaml.dump(dag.nodes[node_name].dict(), default_flow_style=False, sort_keys=False))
+    print(
+        pygments.highlight(
+            code=yaml.dump(dag.nodes[node_name].dict(), default_flow_style=False, sort_keys=False),
+            lexer=YamlLexer(),
+            formatter=Terminal256Formatter()
+        )
+    )
 
 
 @cli_dags.group(name='edge')
@@ -415,13 +425,19 @@ def list_edges(remote: Optional[str], dag_name: str, long: bool):
 @click.option('--edge-name', autocompletion=get_edge_names)
 def edge_info(remote: Optional[str], dag_name: str, edge_name: str):
     """Show edge definition"""
-    print(ascii_art_logo)
+    print(colored(ascii_art_logo, 'cyan'))
     set_settings_from_remote(remote)
     dag = _get_dag(remote, dag_name)
     if edge_name not in dag.edges.keys():
         print(f'FATAL: No edges found matching the name "{edge_name}" in dag {dag_name}', file=sys.stderr)
         sys.exit(-1)
-    print(yaml.dump(dag.edges[edge_name].dict(), default_flow_style=False, sort_keys=False))
+    print(
+        pygments.highlight(
+            code=yaml.dump(dag.edges[edge_name].dict(), default_flow_style=False, sort_keys=False),
+            lexer=YamlLexer(),
+            formatter=Terminal256Formatter()
+        )
+    )
 
 
 @cli_edges.command(name='test')
@@ -442,7 +458,12 @@ def edge_test(remote: Optional[str], dag_name: str, edge_name: str, input_, eval
     transformation_results = run_transformations(dag.edges[edge_name], input_)
     for result in transformation_results:
         if isinstance(result, TransformationResult):
-            print(f'{result.config_item}: {result.pretty_result}')
+            highlighted_result = pygments.highlight(
+                    code=result.pretty_result,
+                    lexer=PythonLexer(),
+                    formatter=Terminal256Formatter()
+                )
+            print(colored(f'{result.config_item}:', 'green'), highlighted_result, end='')
         else:
             print(f'{result.config_item}: Error {result.error_type} {result.message}', file=sys.stderr)
 
