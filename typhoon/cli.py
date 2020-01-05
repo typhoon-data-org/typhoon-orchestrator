@@ -18,6 +18,7 @@ from typhoon.cli_helpers.cli_completion import get_remote_names, get_dag_names, 
 from typhoon.cli_helpers.status import dags_with_changes, dags_without_deploy, check_connections_yaml, \
     check_connections_dags, check_variables_dags
 from typhoon.connections import Connection
+from typhoon.core.dags import DAG
 from typhoon.core.glue import get_dag_errors
 from typhoon.core.settings import Settings, EnvVarName
 from typhoon.deployment.packaging import build_all_dags
@@ -65,6 +66,7 @@ def init(project_name: str):
     dest = Path.cwd() / project_name
     shutil.copytree(str(example_project_path), str(dest))
     (dest / 'typhoon.cfg').write_text(EXAMPLE_CONFIG.format(project_name=project_name))
+    (dest / 'dag_schema.json').write_text(DAG.schema_json(indent=2))
     print(f'Project created in {dest}')
 
 
