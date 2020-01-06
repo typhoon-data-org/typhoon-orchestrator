@@ -3,7 +3,7 @@ from types import SimpleNamespace
 from typing import List, Any
 
 from reflection import load_module_from_path
-from typhoon.core.settings import typhoon_home
+from typhoon.core.settings import Settings
 
 
 def _replace_special_vars(string: str):
@@ -20,10 +20,9 @@ def _replace_special_vars(string: str):
 def run_transformations(source_data: Any, dag_context: dict, user_transformations: List[str]):
     import os
     import typhoon.contrib.transformations as typhoon
-    from typhoon.core.config import TyphoonConfig
 
     custom_transformation_modules = {}
-    transformations_path = os.path.join(typhoon_home(), 'transformations')
+    transformations_path = str(Settings.transformations_directory)
     for filename in os.listdir(transformations_path):
         if filename == '__init__.py' or not filename.endswith('.py'):
             continue

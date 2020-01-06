@@ -1,24 +1,22 @@
 import importlib.util
 import inspect
-import os
 from datetime import datetime
-from pathlib import Path
 
-from code_execution import run_transformations
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from reflection import get_modules_in_package, package_tree, package_tree_from_path, user_defined_modules, \
-    load_module_from_path
+
+from code_execution import run_transformations
+from reflection import get_modules_in_package, package_tree, package_tree_from_path, user_defined_modules
 from responses import transform_response
 from typhoon import variables
-from typhoon.deployment.packaging import build_all_dags
 from typhoon.connections import get_connection_local, \
     get_connections_local_by_conn_id, Connection
 from typhoon.contrib.hooks import hook_factory
-from typhoon.core.config import CLIConfig
-from typhoon.core.settings import typhoon_home
 from typhoon.core.glue import get_dag_filenames
+from typhoon.core.settings import Settings
+from typhoon.deployment.packaging import build_all_dags
 from typhoon.handler import run_dag
+from typhoon.remotes import Remotes
 from typhoon.variables import VariableType
 
 app = Flask(__name__)
@@ -27,8 +25,8 @@ CORS(app)
 
 @app.route('/build-dags')
 def do_build_dags():
-    env = request.args.get('env')
-    build_all_dags(target_env=env, debug=True)
+    # TODO: Remove env from args
+    build_all_dags(remote=None)
     return 'Ok'
 
 
@@ -53,8 +51,8 @@ def get_typhoon_package_trees():
 @app.route('/typhoon-user-defined-modules')
 def get_user_defined_modules():
     modules = {
-        'functions': user_defined_modules(os.path.join(typhoon_home(), 'functions')),
-        'transformations': user_defined_modules(os.path.join(typhoon_home(), 'transformations')),
+        'functions': user_defined_modules(str(Settings.typhoon_home / 'functions')),
+        'transformations': user_defined_modules(str(Settings.typhoon_home / 'transformations')),
     }
     return jsonify(modules)
 
@@ -62,8 +60,8 @@ def get_user_defined_modules():
 @app.route('/typhoon-user-defined-package-trees')
 def get_typhoon_user_defined_package_trees():
     package_trees = {
-        'functions': package_tree_from_path(os.path.join(typhoon_home(), 'functions')),
-        'transformations': package_tree_from_path(os.path.join(typhoon_home(), 'transformations')),
+        'functions': package_tree_from_path(str(Settings.typhoon_home / 'functions')),
+        'transformations': package_tree_from_path(str(Settings.typhoon_home / 'transformations')),
     }
     return jsonify(package_trees)
 
@@ -106,9 +104,9 @@ def get_run_transformations_result():
 
 @app.route('/connections')
 def get_connections():
-    env = request.args.get('env')
-    config = CLIConfig(env)
-    all_connections = config.metadata_store.get_connections(to_dict=True)
+    remote = request.args.get('env')
+    remote = None
+    all_connections = Settings.metadata_store(Remotes.aws_profile(remote)).get_connections(to_dict=True)
     return jsonify(all_connections)
 
 
@@ -122,16 +120,16 @@ def get_connections_envs():
 
 @app.route('/connection', methods=['PUT', 'DELETE'])
 def set_connection():
-    env = request.args.get('env')
-    config = CLIConfig(env)
+    remote = request.args.get('env')
+    remote = None
     if request.method == 'PUT':
         body = request.get_json()
         conn = Connection(**body)
-        config.metadata_store.set_connection(conn)
+        Settings.metadata_store(Remotes.aws_profile(remote)).set_connection(conn)
     else:   # Delete
         env = request.args.get('env')
         conn_id = request.args.get('conn_id')
-        config.metadata_store.delete_connection(conn_id)
+        Settings.metadata_store(Remotes.aws_profile(remote)).delete_connection(conn_id)
     return 'Ok'
 
 
@@ -139,11 +137,11 @@ def set_connection():
 def swap_connection():
     conn_id = request.args.get('conn_id')
     conn_env = request.args.get('conn_env')
-    env = request.args.get('env')
+    remote = request.args.get('env')
+    remote = None
 
-    config = CLIConfig(env)
     conn_params = get_connection_local(conn_id, conn_env)
-    config.metadata_store.set_connection(conn_params.to_conn(conn_id))
+    Settings.metadata_store(Remotes.aws_profile(remote)).set_connection(conn_params.to_conn(conn_id))
     return 'Ok'
 
 
@@ -151,7 +149,7 @@ def swap_connection():
 def get_connection_types():
     typhoon_conn_types = set(hook_factory.HOOK_MAPPINGS.keys())
     custom_conn_types = set()
-    hooks_files = (Path(typhoon_home()) / 'hooks').rglob('*.py')
+    hooks_files = (Settings.typhoon_home / 'hooks').rglob('*.py')
     for hooks_file in hooks_files:
         spec = importlib.util.spec_from_file_location(str(hooks_file).split('.py')[0], str(hooks_file))
         mod = importlib.util.module_from_spec(spec)
@@ -166,31 +164,32 @@ def get_connection_types():
 
 @app.route('/variables')
 def get_variables():
-    env = request.args.get('env')
-    config = CLIConfig(env)
-    all_variables = config.metadata_store.get_variables(to_dict=True)
+    remote = request.args.get('env')
+    remote = None
+    all_variables = Settings.metadata_store(Remotes.aws_profile(remote)).get_variables(to_dict=True)
     return jsonify(all_variables)
 
 
 @app.route('/variable', methods=['PUT', 'DELETE'])
 def update_variable():
-    env = request.args.get('env')
-    config = CLIConfig(env)
+    remote = request.args.get('env')
+    remote = None
     if request.method == 'PUT':
         body = request.get_json()
         body['type'] = variables.VariableType(body['type'])
         variable = variables.Variable(**body)
-        config.metadata_store.set_variable(variable)
+        Settings.metadata_store(Remotes.aws_profile(remote)).set_variable(variable)
     else:   # Delete
-        env = request.args.get('env')
+        remote = request.args.get('env')
+        remote = None
         variable_id = request.args.get('id')
-        config.metadata_store.delete_variable(variable_id)
+        Settings.metadata_store(Remotes.aws_profile(remote)).delete_variable(variable_id)
     return 'Ok'
 
 
 @app.route('/variable-types')
 def get_variable_types():
-    typhoon_var_types = [x.value for x in VariableType]
+    typhoon_var_types = [x for x in VariableType]
     return jsonify(sorted(typhoon_var_types))
 
 
@@ -203,7 +202,7 @@ def api_get_dag_filenames():
 @app.route('/get-dag-contents')
 def api_get_dag_contents():
     filename = request.args.get('filename')
-    filepath = Path(typhoon_home()) / 'dags' / filename
+    filepath = Settings.typhoon_home / 'dags' / filename
     return jsonify({'contents': filepath.read_text()})
 
 
@@ -211,15 +210,16 @@ def api_get_dag_contents():
 def api_save_dag_code():
     filename = request.args.get('filename')
     body = request.get_json()
-    filepath = Path(typhoon_home()) / 'dags' / filename
+    filepath = Settings.typhoon_home / 'dags' / filename
     filepath.write_text(body['code'])
     return 'Ok'
 
 
 @app.route('/run-dag')
 def api_run_dag():
-    env = request.args.get('env')
-    build_all_dags(target_env=env, debug=False)
+    remote = request.args.get('env')
+    remote = None
+    build_all_dags(remote=remote)
     dag_name = request.args.get('dag_name')
     time = request.args.get('time')
     logs = run_dag(dag_name, time, capture_logs=True)

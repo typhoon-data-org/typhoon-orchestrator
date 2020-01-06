@@ -7,17 +7,41 @@ Asynchronous serverless workflow scheduler and orchestrator that deploys to Amaz
 
 ## What does that mean exactly?
 
-Some examples of exising workflow schedulers are Airflow or Luigi. Like crontab, they launch tasks on a set schedule, but they can define task dependencies in the form of a directed acyclic graph (DAG). Unlike the previous examples Typhoon deploys to AWS cloud for easy deployment and infinitely scalable workflows.
+Some examples of existing workflow schedulers are Airflow or Luigi. Like crontab, they launch tasks on a set schedule, but they can define task dependencies in the form of a directed acyclic graph (DAG). Unlike the previous examples Typhoon deploys to AWS cloud for easy deployment and infinitely scalable workflows.
 
 ## Key principles
 
 - **Composability**: Every piece in Typhoon is designed to do one and only one thing well and be easy to reuse across DAGs.
 - **Data sharing**: In order to achieve reusability of components, nodes need to be able to share data **at runtime** with other nodes they're connected to (ie: there's an edge from one to the other). Here we depart from Airflow's design where all configuration data is given at DAG definition time and unless you use XCom, which is not recommended, nodes don't communicate with each other.
 - **Simplicity (+ no lock-in!)**: Nodes are just Python functions. Test your code without importing Typhoon at all. No mocks, no set up of complex contexts. Reuse your code painlessly or migrate it away from Typhoon with ease if you ever choose to do so.
+```python
+def write_to_path(data: str, path: str) -> str:
+    """Node function that writes a string to a specified path"""
+    with os.open(path, 'w') as f:
+        f.write(data)
+    return path
+```
 - **Easy production deployment**: Use our CLI to deploy to AWS in minutes.
-- **Scalable**: Use it to schedule your quick scripts on AWS using just the free tier, or have hundreds of DAGs running hundreds of tasks each in parallel due to its asynchronous serverless design.
-- **Separation of concerns**: Nodes are Python functions that deal with arguments. DAGs have context that gets used to construct those arguments. No more mixing scheduler specific classes with business logic with retrieving information from the execution context.
-- **Sleek and modern**: Heavily uses Python typing, deploys to cloud, has a rich CLI and a beautiful Web UI.
+```bash
+# Add a remote for deployment (you only need to do it once)
+typhoon remote add prod --aws-profile my-aws --metadata-db-url dynamodb:Host=dynamodb.us-west-1.amazonaws.com;Region=us-west-1
+# Create all the necessary tables in the metadata database (only need to do it once but it's idempotent)
+typhoon metadata migrate prod
+# Deploy all DAGs to our test remote
+typhoon dag push prod --all
+```
+- **Scalable**: Use it to schedule your quick scripts on Amazon Web Services using just the AWS free tier, or have thousands of DAGs at the same time running hundreds of tasks each in parallel due to its asynchronous serverless design.
+- **Separation of concerns**: Nodes are Python functions that deal with arguments. DAGs have an execution context that can be used to construct those arguments. No more mixing scheduler specific classes with business logic with retrieving information from the execution context.
+- **Rich CLI**: Inspired by other great command line interfaces, it will be instantly familiar to *nix and git users. Intelligent bash/zsh completion.
+```bash
+typhoon init test_project
+typhoon status
+typhoon dag ls -l
+typhoon dag push test --dag-name example_dag
+```
+- **Sleek and modern**: Heavily uses Python typing, deploys to cloud, has a rich CLI and a beautiful (but experimental) Web UI.
+
+![alt text](img/TyphoonWebMain.gif)
 
 ## Enough talk, show me the code
 
@@ -44,6 +68,7 @@ nodes:
       hook: $HOOK.test_db
 
   load_csv_s3:
+    async: false        # The table may be large, it doesn't make sense to serialize each batch and send asynchronously
     function: typhoon.filesystem.write_data
     config:
       hook: $HOOK.s3_data_lake
@@ -61,7 +86,6 @@ edges:
     destination: extract_table
 
   table_to_s3:
-    async: false        # The table may be large, it doesn't make sense to serialize each batch and send asynchronously
     source: extract_table
     adapter:
       data => APPLY:

@@ -77,7 +77,7 @@ def check_connections_yaml(remote: Optional[str]):
                 colored('   - Connection', 'yellow'),
                 colored(conn_id, 'blue'),
                 colored('is not set. Try', 'yellow'),
-                colored(f'typhoon set-connection {conn_id} CONN_ENV {remote}', 'grey')
+                colored(f'typhoon connection add{" " + remote if remote else ""} --conn-id {conn_id} --conn-env CONN_ENV', 'grey')
             )
     else:
         print(colored('• All connections in YAML are defined in the database', 'green'))
@@ -96,7 +96,7 @@ def check_connections_dags(remote: Optional[str]):
                 colored('   - Connection', 'yellow'),
                 colored(conn_id, 'blue'),
                 colored('is not set. Try', 'yellow'),
-                colored(f'typhoon set-connection {conn_id} CONN_ENV {remote}', 'grey')
+                colored(f'typhoon connection add{" " + remote if remote else ""} --conn-id {conn_id} --conn-env CONN_ENV', 'grey')
             )
     else:
         print(colored('• All connections in the DAGs are defined in the database', 'green'))
@@ -115,7 +115,7 @@ def check_variables_dags(remote: Optional[str]):
                 colored('   - Variable', 'yellow'),
                 colored(var_id, 'blue'),
                 colored('is not set. Try', 'yellow'),
-                colored(f'typhoon set-variable {var_id} VAR_TYPE VALUE {remote}', 'grey')
+                colored(f'typhoon set-variable{" " + remote if remote else ""} --var-id {var_id} --var-type VAR_TYPE --contents VALUE {remote}', 'grey')
             )
     else:
         print(colored('• All variables in the DAGs are defined in the database', 'green'))

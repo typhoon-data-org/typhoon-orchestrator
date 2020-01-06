@@ -116,14 +116,14 @@ def status(remote: Optional[str]):
         print(colored('• Metadata store not found or incomplete for', 'red'), colored(Settings.metadata_db_url, 'grey'))
         print(
             colored('   - Fix by running (idempotent) command', color='blue'),
-            colored(f'typhoon migrate{" " + remote if remote else ""}', 'grey'))
+            colored(f'typhoon metadata migrate{" " + remote if remote else ""}', 'grey'))
         print(colored('  Skipping connections and variables checks...', 'red'))
 
     if not remote:
         changed_dags = dags_with_changes()
         if changed_dags:
             print(colored('• Unbuilt changes in DAGs...', 'yellow'), colored('To rebuild run', 'white'),
-                  colored(f'typhoon build-dags {remote} [--debug]', 'grey'))
+                  colored(f'typhoon dag build{" " + remote if remote else ""} --all [--debug]', 'grey'))
             for dag in changed_dags:
                 print(colored(f'   - {dag}', 'blue'))
         else:
@@ -132,7 +132,7 @@ def status(remote: Optional[str]):
         undeployed_dags = dags_without_deploy(remote)
         if undeployed_dags:
             print(colored('• Undeployed changes in DAGs...', 'yellow'), colored('To deploy run', 'white'),
-                  colored(f'typhoon deploy-dags {remote} [--build-dependencies]', 'grey'))
+                  colored(f'typhoon dag push {remote} --all [--build-dependencies]', 'grey'))
             for dag in undeployed_dags:
                 print(colored(f'   - {dag}', 'blue'))
         else:
