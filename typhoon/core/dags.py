@@ -6,6 +6,7 @@ from typing import List, Union, Dict, Any
 
 from pydantic import BaseModel, validator, Field, root_validator
 
+IDENTIFIER_REGEX = r'\w+'
 Identifier = Field(..., regex=r'\w+')
 Item = Union[int, str, float, Dict, List]
 
@@ -18,8 +19,21 @@ class SpecialCronString(str, Enum):
 
 
 class Node(BaseModel):
-    function: str = Field(..., regex=r'(typhoon\.\w+\.\w+|functions\.\w+\.\w+)')
-    asynchronous: bool = True
+    function: str = Field(
+        ...,
+        regex=r'(typhoon\.\w+\.\w+|functions\.\w+\.\w+)',
+        description="""Python function that will get called when the node runs.
+                    If it is a built-in typhoon function it will have the following structure:
+                      typhoon.[MODULE_NAME].[FUNCTION_NAME]
+                    Whereas if it is a user defined function it will have the following structure:
+                      functions.[MODULE_NAME].[FUNCTION_NAME]"""
+    )
+    asynchronous: bool = Field(
+        True,
+        description="""If set to TRUE it will run the function in a different lambda instance.
+                    This is useful when you want to increase parallelism. There is currently no framework cap on
+                    parallelism though so if that is an issue set it to FALSE so it will run the batches one by one."""
+    )
     config: Dict[str, Any] = Field(default={})
 
     @validator('config')
@@ -31,9 +45,12 @@ class Node(BaseModel):
 
 
 class Edge(BaseModel):
-    source: str = Identifier     # Node id
-    adapter: Dict[str, Item]
-    destination: str = Identifier     # Node id
+    source: str = Field(..., regex=IDENTIFIER_REGEX, description='ID of source node')
+    adapter: Dict[str, Item] = Field(
+        ...,
+        description='Adapts the output of the source node to the input of the destination node'
+    )
+    destination: str = Field(..., regex=IDENTIFIER_REGEX, description='ID of destination node')
 
     @validator('adapter')
     def validate_adapter_keys(cls, v):
@@ -44,17 +61,18 @@ class Edge(BaseModel):
 
 
 class DAG(BaseModel):
-    name: str = Identifier
+    name: str = Field(..., regex=IDENTIFIER_REGEX, description='Name of your DAG')
     schedule_interval: str = Field(
         ...,
         regex='(' + '@daily|@weekly|@monthly|@yearly|' +
               r'((\*|\?|\d+((\/|\-){0,1}(\d+))*)\s*){5,6}' + '|' +
               r'rate\(\s*1\s+minute\s*\)' + '|' +
-              r'rate\(\s*\d+\s+minutes\s*\)' + ')'
+              r'rate\(\s*\d+\s+minutes\s*\)' + ')',
+        description='Schedule or frequency on which the DAG should run'
     )
     nodes: Dict[str, Node]
     edges: Dict[str, Edge]
-    active: bool = True
+    active: bool = Field(True, description='Whether to deploy the DAG or not')
 
     @root_validator
     def validate_undefined_nodes_in_edges(cls, values):
