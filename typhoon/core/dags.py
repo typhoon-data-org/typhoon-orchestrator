@@ -64,7 +64,7 @@ class DAG(BaseModel):
     name: str = Field(..., regex=IDENTIFIER_REGEX, description='Name of your DAG')
     schedule_interval: str = Field(
         ...,
-        regex='(' + '@daily|@weekly|@monthly|@yearly|' +
+        regex='(' + '@hourly|@daily|@weekly|@monthly|@yearly|' +
               r'((\*|\?|\d+((\/|\-){0,1}(\d+))*)\s*){5,6}' + '|' +
               r'rate\(\s*1\s+minute\s*\)' + '|' +
               r'rate\(\s*\d+\s+minutes\s*\)' + ')',
@@ -76,7 +76,7 @@ class DAG(BaseModel):
 
     @root_validator
     def validate_undefined_nodes_in_edges(cls, values):
-        if 'nodes' not in values.keys():
+        if 'nodes' not in values.keys() or 'edges' not in values.keys():
             return values       # Nodes did not pass upstream validations
         node_names = values['nodes'].keys()
         for edge_name, edge in values['edges'].items():

@@ -74,8 +74,8 @@ def substitute_special(code: str, key: str) -> str:
     if '=>' in key:
         key = key.replace(' ', '').split('=>')[0]
     code = code.replace('$BATCH', 'data')
-    code = re.sub(r'\$dag_context(\.(\w+))', r'dag_context["""\g<2>"""]', code)
-    code = code.replace('$dag_context', 'dag_context')
+    code = re.sub(r'\$DAG_CONTEXT(\.(\w+))', r'dag_context.\g<2>', code)
+    code = code.replace('$DAG_CONTEXT', 'dag_context')
     code = re.sub(r'\$(\d)+', r"{key}_\g<1>".format(key=key), code)
     code = code.replace('$BATCH_NUM', 'batch_num')
     code = re.sub(r'\$HOOK(\.(\w+))', r'get_hook("\g<2>")', code)

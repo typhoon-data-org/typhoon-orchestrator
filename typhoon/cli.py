@@ -23,6 +23,7 @@ from typhoon.cli_helpers.cli_completion import get_remote_names, get_dag_names, 
 from typhoon.cli_helpers.status import dags_with_changes, dags_without_deploy, check_connections_yaml, \
     check_connections_dags, check_variables_dags
 from typhoon.connections import Connection
+from typhoon.core import DagContext
 from typhoon.core.dags import DAG
 from typhoon.core.glue import get_dag_errors, load_dag
 from typhoon.core.settings import Settings, EnvVarName
@@ -445,8 +446,9 @@ def edge_info(remote: Optional[str], dag_name: str, edge_name: str):
 @click.option('--dag-name', autocompletion=get_dag_names)
 @click.option('--edge-name', autocompletion=get_edge_names)
 @click.option('--input', 'input_', help='Input batch to node transformations')
+@click.option('--execution-date', type=click.DateTime(), default=None, help='Input batch to node transformations')
 @click.option('--eval', 'eval_', is_flag=True, default=False, help='If true evaluate the input string')
-def edge_test(remote: Optional[str], dag_name: str, edge_name: str, input_, eval_: bool):
+def edge_test(remote: Optional[str], dag_name: str, edge_name: str, input_, execution_date: datetime, eval_: bool):
     """Show node definition"""
     set_settings_from_remote(remote)
     dag = _get_dag(remote, dag_name)
@@ -455,7 +457,10 @@ def edge_test(remote: Optional[str], dag_name: str, edge_name: str, input_, eval
         sys.exit(-1)
     if eval_:
         input_ = eval(input_)
-    transformation_results = run_transformations(dag.edges[edge_name], input_)
+    transformation_results = run_transformations(
+        dag.edges[edge_name],
+        input_,
+        DagContext(execution_date=execution_date or datetime.now()))
     for result in transformation_results:
         if isinstance(result, TransformationResult):
             highlighted_result = pygments.highlight(
@@ -589,6 +594,16 @@ def run_in_subprocess(command: str, cwd: str):
         print(stdout)
         raise SubprocessError(f'Error executing in console: {stdout}')
     print(stdout)
+
+
+@cli.command()
+def webserver():
+    subprocess.Popen(
+        ["npm", "run", "serve"],
+        cwd=str(Path(__file__).parent.parent/'webserver/typhoon_webserver/frontend'))
+    sys.path.append(str(Path(__file__).parent.parent/'webserver/typhoon_webserver/backend/'))
+    from core import app
+    app.run()
 
 
 # @cli.command()

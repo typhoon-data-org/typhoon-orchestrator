@@ -5,6 +5,7 @@ from typing import List, Any, Union
 
 from dataclasses import dataclass
 
+from typhoon.core import DagContext
 from typhoon.core.dags import Edge
 from typhoon.core.settings import Settings
 
@@ -21,7 +22,7 @@ class TransformationResult:
         elif isinstance(self.result, str):
             return f"'{self.result}'"
         else:
-            return self.result
+            return str(self.result)
 
 
 @dataclass
@@ -34,7 +35,7 @@ class ErrorTransformationResult:
 def _replace_special_vars(string: str):
     string = re.sub(r'\$(\d+)', r'transformation_results[\1 - 1]', string)
     string = re.sub(r'\$BATCH', 'input_data', string)
-    string = re.sub(r'\$DAG_CONTEXT\.([\w]+)', r'dag_context["""\1"""]', string)
+    string = re.sub(r'\$DAG_CONTEXT\.([\w]+)', r'dag_context.\1', string)
     string = string.replace('$DAG_CONTEXT', 'dag_context')
     string = string.replace('$BATCH_NUM', '2')
     string = re.sub(r'\$VARIABLE(\.(\w+))', r'TyphoonConfig().metadata_store.get_variable("\g<2>").get_contents()', string)
@@ -45,7 +46,7 @@ def get_user_defined_transformation_modules(transform: str) -> List[str]:
     return re.findall(r'transformations\.(\w+)\.\w+', transform)
 
 
-def run_transformations(edge: Edge, input_data: Any) -> List[Union[TransformationResult, ErrorTransformationResult]]:
+def run_transformations(edge: Edge, input_data: Any, dag_context: DagContext) -> List[Union[TransformationResult, ErrorTransformationResult]]:
     sys.path.append(str(Settings.typhoon_home))
 
     results = []

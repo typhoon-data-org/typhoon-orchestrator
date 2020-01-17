@@ -6,6 +6,8 @@ Typhoon is a task orchestrator and workfow manager used to create asynchronous d
 
 **This project is in pre-alpha and subject to fast changes**
 
+[Read the Docs](https://biellls.github.io/typhoon-orchestrator/)
+
 ## Principles
 
 Typhoon is inspired by Airflow but departs from it in key ways. The most important being that unlike Airflow where tasks are isolated, data is passed from parent node to child nodes. Another important consideration is that the data is passed in batches with the option to process each batch in a new lambda instance for unlimited parallelism. Throughout this document we will constantly refer to Airflow, not because we are trying to criticise it, but because it is the tool to beat at the moment and as such the best measuring stick there is. We have used Airflow to great success and drew heavily from it in some ways.
