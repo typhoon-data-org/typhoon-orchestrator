@@ -338,7 +338,7 @@ def dag_definition(dag_name: str):
         sys.exit(-1)
     elif len(matching_dags) > 1:
         print(f'FATAL: Expected one matching DAG for {dag_name}.yml. Found {len(matching_dags)}', file=sys.stderr)
-    out = pygments.highlight(
+    out = colored(ascii_art_logo, 'cyan') + '\n' + pygments.highlight(
         code=matching_dags[0].read_text(),
         lexer=YamlLexer(),
         formatter=Terminal256Formatter()
@@ -391,11 +391,11 @@ def list_nodes(remote: Optional[str], dag_name: str, long: bool):
             print(node_name)
 
 
-@cli_nodes.command(name='info')
+@cli_nodes.command(name='definition')
 @click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
 @click.option('--dag-name', autocompletion=get_dag_names)
 @click.option('--node-name', autocompletion=get_node_names)
-def node_info(remote: Optional[str], dag_name: str, node_name: str):
+def node_definition(remote: Optional[str], dag_name: str, node_name: str):
     """Show node definition"""
     print(colored(ascii_art_logo, 'cyan'))
     set_settings_from_remote(remote)
@@ -438,11 +438,11 @@ def list_edges(remote: Optional[str], dag_name: str, long: bool):
             print(edge_name)
 
 
-@cli_edges.command(name='info')
+@cli_edges.command(name='definition')
 @click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
 @click.option('--dag-name', autocompletion=get_dag_names)
 @click.option('--edge-name', autocompletion=get_edge_names)
-def edge_info(remote: Optional[str], dag_name: str, edge_name: str):
+def edge_definition(remote: Optional[str], dag_name: str, edge_name: str):
     """Show edge definition"""
     print(colored(ascii_art_logo, 'cyan'))
     set_settings_from_remote(remote)
