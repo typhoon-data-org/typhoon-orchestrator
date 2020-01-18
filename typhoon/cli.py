@@ -1,4 +1,5 @@
 import os
+import pydoc
 import shutil
 import subprocess
 import sys
@@ -328,6 +329,23 @@ def cli_run_dag(remote: Optional[str], dag_name: str, execution_date: Optional[d
         pass
 
 
+@cli_dags.command(name='definition')
+@click.option('--dag-name', autocompletion=get_dag_names)
+def dag_definition(dag_name: str):
+    matching_dags = list(Settings.dags_directory.rglob(f'*{dag_name}.yml'))
+    if not matching_dags:
+        print(f'FATAL: No DAGs found matching {dag_name}.yml', file=sys.stderr)
+        sys.exit(-1)
+    elif len(matching_dags) > 1:
+        print(f'FATAL: Expected one matching DAG for {dag_name}.yml. Found {len(matching_dags)}', file=sys.stderr)
+    out = pygments.highlight(
+        code=matching_dags[0].read_text(),
+        lexer=YamlLexer(),
+        formatter=Terminal256Formatter()
+    )
+    pydoc.pager(out)
+
+
 @cli_dags.group(name='node')
 def cli_nodes():
     """Manage Typhoon DAG nodes"""
@@ -520,6 +538,16 @@ def remove_connection(remote: Optional[str], conn_id: str):
     metadata_store = Settings.metadata_store(Remotes.aws_profile(remote))
     metadata_store.delete_connection(conn_id)
     print(f'Connection {conn_id} deleted')
+
+
+@cli_connection.command(name='definition')
+def connections_definition():
+    out = pygments.highlight(
+        code=(Settings.typhoon_home / 'connections.yml').read_text(),
+        lexer=YamlLexer(),
+        formatter=Terminal256Formatter()
+    )
+    pydoc.pager(out)
 
 
 @cli.group(name='variable')
