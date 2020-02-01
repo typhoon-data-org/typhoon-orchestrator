@@ -7,24 +7,24 @@ simple_dag_without_cycles = {
     'schedule_interval': '@daily',
     'nodes': {
         'a': {
-            'function': 'foo'
+            'function': 'typhoon.example.foo'
         },
         'b': {
-            'function': 'bar'
+            'function': 'typhoon.example.bar'
         },
         'c': {
-            'function': 'baz'
+            'function': 'typhoon.example.baz'
         }
     },
     'edges': {
         'e1': {
             'source': 'a',
-            'adapter': None,
+            'adapter': {},
             'destination': 'c'
         },
         'e2': {
             'source': 'b',
-            'adapter': None,
+            'adapter': {},
             'destination': 'c'
         },
     }
@@ -35,29 +35,29 @@ simple_dag_with_cycles = {
     'schedule_interval': '@daily',
     'nodes': {
         'a': {
-            'function': 'foo'
+            'function': 'typhoon.example.foo'
         },
         'b': {
-            'function': 'bar'
+            'function': 'typhoon.example.bar'
         },
         'c': {
-            'function': 'baz'
+            'function': 'typhoon.example.baz'
         }
     },
     'edges': {
         'e1': {
             'source': 'a',
-            'adapter': None,
+            'adapter': {},
             'destination': 'b'
         },
         'e2': {
             'source': 'b',
-            'adapter': None,
+            'adapter': {},
             'destination': 'c'
         },
         'e3': {
             'source': 'c',
-            'adapter': None,
+            'adapter': {},
             'destination': 'a'
         }
     }
