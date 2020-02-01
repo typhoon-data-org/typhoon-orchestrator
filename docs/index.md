@@ -125,6 +125,21 @@ As with everything, different designs have different tradeoffs. The tradeoff wit
 
 The tradeoff is that a little more thought needs to be put into how to construct a DAG from existing parts and making them fit together. The upside is that each part is likely to already exist to be well tested so it should cut down development complexity and time. In the future we may allow the definition of "components" which encapsulate a group of nodes and edges, making it easy to reuse the same pattern in different DAGs.
 
+#### Anything else I should know if I'm coming from Airflow?
+
+Yes, the biggest difference is that edges in Typhoon have a different meaning than in Airflow. In airflow edges mean a dependency between two tasks. The second will not start until the first one finishes. On the other hand, in Typhoon they signify a flow of data between nodes. Let's look at this with an example:
+
+```mermaid
+graph LR
+    subgraph DAG
+    A --> C
+    B --> C
+    end
+```
+
+- In Airflow this means that task C executes only when both task A and task B have finished executing.
+- In typhoon this means that whenever task A or B produce a batch, task C will execute with that batch as input.
+
 ### What are the limitations of the project
 
 Right now the project is evolving fast but is still lacking some important features compared to Airflow and others.
