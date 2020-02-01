@@ -1,7 +1,16 @@
 from io import BytesIO
-from typing import Iterable
+from typing import Iterable, NamedTuple
 
 from typhoon.contrib.hooks.filesystem_hooks import FileSystemHookInterface
+
+
+class ReadDataResponse(NamedTuple):
+    data: bytes
+    path: str
+
+
+def read_data(hook: FileSystemHookInterface, path: str) -> ReadDataResponse:
+    return ReadDataResponse(data=hook.read_data(path), path=path)
 
 
 def write_data(data: BytesIO, hook: FileSystemHookInterface, path: str) -> Iterable[str]:

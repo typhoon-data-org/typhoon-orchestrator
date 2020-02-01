@@ -1,4 +1,4 @@
-# DAG Development
+# DAG Development Tutorial
 
 Let's start from scratch with a very basic DAG. Every hour we will read all the files under the directory `/tmp/typhoon/landing/`, count the number of words and write that number in a SQLite database. The SQLite table we write to will have the following shape:
 

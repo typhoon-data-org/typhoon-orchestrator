@@ -16,7 +16,9 @@ google_analytics:
 nav:
   - Overview: 'index.md'
   - Getting Started: 'getting-started.md'
-  - DAG Development: 'dag-development.md'
+  - DAG Development:
+    - Tutorial: 'dag-development-tutorial.md'
+    - Improving the tutorial DAG: 'dag-development-improving.md'
 
 markdown_extensions:
   - markdown.extensions.codehilite:

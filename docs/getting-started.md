@@ -119,7 +119,7 @@ typhoon status
 ## DAG
 
 ### DAG code
-We can check an example DAG in `dags/hello_world.yml`.
+We can check an example DAG in `dags/hello_world.yml`. You can also check it with the CLI by running `typhoon dag definition --dag-name hello_world`.
 
 !!! tip
     To get some editor completion and hints you can configure the JSON schema in `dag_schema.json` as the schema for the DAG YAML file. This can be done in VS Code with the [Red Hat YAML extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml) or in [PyCharm natively](https://www.jetbrains.com/help/pycharm/json.html).

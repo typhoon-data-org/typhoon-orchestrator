@@ -344,6 +344,7 @@ def dag_definition(dag_name: str):
         formatter=Terminal256Formatter()
     )
     pydoc.pager(out)
+    print(matching_dags[0])
 
 
 @cli_dags.group(name='node')
@@ -583,9 +584,9 @@ def list_variables(remote: Optional[str], long: bool):
 
 @cli_variable.command(name='add')
 @click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
-@click.option('--var-id')
-@click.option('--var-type', autocompletion=get_var_types)
-@click.option('--contents')
+@click.option('--var-id', required=True)
+@click.option('--var-type', autocompletion=get_var_types, help=f'One of {get_var_types(None, None, "")}')
+@click.option('--contents', prompt=True, help='Value for the variable. Can be piped from STDIN or prompted if empty.')
 def add_variable(remote: Optional[str], var_id: str, var_type: str, contents):
     """Add variable to the metadata store"""
     set_settings_from_remote(remote)

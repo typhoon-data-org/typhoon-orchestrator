@@ -109,7 +109,7 @@ class LocalStorageHook(FileSystemHookInterface):
         return '/'.join([self._slugify(x) for x in path.split('/')])
 
     def list_directory(self, path: str) -> Iterable[str]:
-        return os.listdir(self._file_path(path))
+        return [os.path.relpath(p, self.base_path) for p in os.listdir(self._file_path(path))]
 
     def write_data(self, data: Union[BytesIO, str], path: str):
         if isinstance(data, str):

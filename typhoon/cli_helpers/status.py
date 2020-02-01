@@ -115,7 +115,7 @@ def check_variables_dags(remote: Optional[str]):
                 colored('   - Variable', 'yellow'),
                 colored(var_id, 'blue'),
                 colored('is not set. Try', 'yellow'),
-                colored(f'typhoon set-variable{" " + remote if remote else ""} --var-id {var_id} --var-type VAR_TYPE --contents VALUE {remote}', 'grey')
+                colored(f'typhoon variable add {" " + remote if remote else ""} --var-id {var_id} --var-type VAR_TYPE --contents VALUE', 'grey')
             )
     else:
         print(colored('• All variables in the DAGs are defined in the database', 'green'))
