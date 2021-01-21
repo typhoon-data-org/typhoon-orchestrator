@@ -8,6 +8,10 @@ from typhoon.remotes import Remotes
 from typhoon.variables import VariableType
 
 
+def get_deploy_targets(ctx, args, incomplete) -> List[str]:
+    return [x for x in ['airflow', 'typhoon'] if incomplete in x]
+
+
 def get_remote_names(ctx, args, incomplete) -> List[str]:
     return [x for x in Remotes.remote_names if incomplete in x]
 

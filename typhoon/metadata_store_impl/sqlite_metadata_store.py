@@ -9,12 +9,13 @@ from typhoon.variables import Variable
 
 
 class SQLiteMetadataStore(MetadataStoreInterface):
-    def __init__(self, db_path: str):
+    def __init__(self, db_path: str, no_conns_and_vars=False):
         from sqlitedict import SqliteDict
 
         self.db_path = db_path
-        self.conn_connections = SqliteDict(self.db_path, tablename=Settings.connections_table_name)
-        self.conn_variables = SqliteDict(self.db_path, tablename=Settings.variables_table_name)
+        if not no_conns_and_vars:
+            self.conn_connections = SqliteDict(self.db_path, tablename=Settings.connections_table_name)
+            self.conn_variables = SqliteDict(self.db_path, tablename=Settings.variables_table_name)
         self.conn_dag_deployments = SqliteDict(self.db_path, tablename=Settings.dag_deployments_table_name)
 
     def close(self):

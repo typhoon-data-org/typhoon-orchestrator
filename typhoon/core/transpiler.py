@@ -70,16 +70,19 @@ def clean_param(param: Union[str, int, float, List, dict]):
         ValueError(f'Parameter {param} is not a recognised type: {type(param)}')
 
 
-def substitute_special(code: str, key: str) -> str:
+def substitute_special(code: str, key: str, target: str = 'typhoon') -> str:
     if '=>' in key:
         key = key.replace(' ', '').split('=>')[0]
-    code = code.replace('$BATCH', 'data')
+    code = code.replace('$BATCH', 'data' if target == 'typhoon' else 'batch')
     code = re.sub(r'\$DAG_CONTEXT(\.(\w+))', r'dag_context.\g<2>', code)
     code = code.replace('$DAG_CONTEXT', 'dag_context')
     code = re.sub(r'\$(\d)+', r"{key}_\g<1>".format(key=key), code)
     code = code.replace('$BATCH_NUM', 'batch_num')
     code = re.sub(r'\$HOOK(\.(\w+))', r'get_hook("\g<2>")', code)
-    code = re.sub(r'\$VARIABLE(\.(\w+))', r'TYPHOON_CONFIG.metadata_store.get_variable("\g<2>").get_contents()', code)
+    if target == 'typhoon':
+        code = re.sub(r'\$VARIABLE(\.(\w+))', r'TYPHOON_CONFIG.metadata_store.get_variable("\g<2>").get_contents()', code)
+    else:
+        code = re.sub(r'\$VARIABLE(\.(\w+))', r'Variable.get("\g<2>")', code)
     return code
 
 

@@ -23,3 +23,11 @@ edges:
       data => APPLY: transformations.data.to_bytes_buffer($BATCH[1])
       path => APPLY: f'/store/{$BATCH[0]}'
     destination: write_data
+
+tests:
+  e1:
+    input => APPLY: ('abc', 'hello')
+    execution_date: 2011-01-12
+    output:
+      data => APPLY: BytesIO('hello')
+      path: "/store/abc"

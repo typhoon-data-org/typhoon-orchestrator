@@ -5,6 +5,9 @@ from pathlib import Path
 from typing import Union, Optional
 
 from typing import TYPE_CHECKING
+
+from pydantic import BaseSettings, Field
+
 if TYPE_CHECKING:
     from typhoon.core.metadata_store_interface import MetadataStoreInterface
 
@@ -20,61 +23,56 @@ class EnvVarName(str, Enum):
     PROJECT_VERSION = 'TYPHOON_VERSION'
     METADATA_DB_URL = 'TYPHOON_METADATA_DB_URL'
     METADATA_SUFFIX = 'TYPHOON_METADATA_SUFFIX'
+    DEPLOY_TARGET = 'TYPHOON_DEPLOY_TARGET'
+    FERNET_KEY = 'TYPHOON_FERNET_KEY'
 
 
-class _Settings:
+class TyphoonSettingsFile(BaseSettings):
+    typhoon_home: Path = Field(default=None, env=EnvVarName.PROJECT_HOME)
+    typhoon_version: str = Field(default='latest', env=EnvVarName.PROJECT_VERSION)
+    project_name: str = Field(default='project', env=EnvVarName.PROJECT_NAME)
+    metadata_db_url_: str = Field(default=None, env=EnvVarName.METADATA_DB_URL)
+    metadata_suffix: str = Field(default='', env=EnvVarName.METADATA_SUFFIX)
+    deploy_target: str = Field(default='typhoon', env=EnvVarName.DEPLOY_TARGET)
+    fernet_key: str = Field(default=None, env=EnvVarName.FERNET_KEY)
+
+    # class Config:
+    #     env_file = 'typhoon.cfg'
+
+
+class TyphoonSettings:
+    def __init__(self, _env_file: str = None):
+        self._settings = TyphoonSettingsFile(_env_file=_env_file).dict()
+
+    def set(self, _env_file: str = None):
+        self._settings = TyphoonSettingsFile(_env_file=_env_file).dict()
+
+    def __getattr__(self, item):
+        return self._settings[item]
+
+    def export_vars(self):
+        if self.typhoon_home:
+            os.environ[EnvVarName.PROJECT_HOME] = str(self.typhoon_home)
+        if self.typhoon_version:
+            os.environ[EnvVarName.PROJECT_VERSION] = self.typhoon_version
+        if self.project_name:
+            os.environ[EnvVarName.PROJECT_NAME] = self.project_name
+        if self.metadata_db_url_:
+            os.environ[EnvVarName.METADATA_DB_URL] = self.metadata_db_url_
+        if self.metadata_suffix:
+            os.environ[EnvVarName.METADATA_SUFFIX] = self.metadata_suffix
+        if self.deploy_target:
+            os.environ[EnvVarName.DEPLOY_TARGET] = self.deploy_target
+        if self.fernet_key:
+            os.environ[EnvVarName.FERNET_KEY] = self.fernet_key
+
     @property
-    def typhoon_home(self) -> Path:
-        return Path(os.environ[EnvVarName.PROJECT_HOME]) if EnvVarName.PROJECT_HOME in os.environ.keys() else None
-
-    @typhoon_home.setter
-    def typhoon_home(self, value: Union[str, Path]):
-        os.environ[EnvVarName.PROJECT_HOME] = str(value)
-
-    @property
-    def typhoon_version(self) -> Path:
-        return Path(os.environ[EnvVarName.PROJECT_VERSION]) if EnvVarName.PROJECT_VERSION in os.environ.keys() else 'latest'
-
-    @typhoon_version.setter
-    def typhoon_version(self, value: Union[str, Path]):
-        os.environ[EnvVarName.PROJECT_VERSION] = str(value)
-
-    @property
-    def project_name(self) -> str:
-        return os.environ[EnvVarName.PROJECT_NAME]
-
-    @project_name.setter
-    def project_name(self, value: str):
-        os.environ[EnvVarName.PROJECT_NAME] = value
+    def default_sqlite_path(self) -> str:
+        return f'sqlite:{str(self.typhoon_home / self.project_name)}.db'
 
     @property
     def metadata_db_url(self):
-        default_url = f'sqlite:{str(self.typhoon_home/self.project_name)}.db'
-        return os.environ.get(EnvVarName.METADATA_DB_URL, default_url)
-
-    @metadata_db_url.setter
-    def metadata_db_url(self, value: str):
-        os.environ[EnvVarName.METADATA_DB_URL] = value
-
-    def metadata_store(self, aws_profile: Optional[str] = None) -> 'MetadataStoreInterface':
-        if self.metadata_db_url.startswith('sqlite'):
-            from typhoon.metadata_store_impl.sqlite_metadata_store import SQLiteMetadataStore
-            db_path = self.metadata_db_url.split(':')[1]
-            return SQLiteMetadataStore(db_path=db_path)
-        elif self.metadata_db_url.startswith('dynamodb'):
-            from typhoon.metadata_store_impl.dynamodb_metadata_store import DynamodbMetadataStore
-            host, region = re.match(r'dynamodb:Host=([^;]+);Region=([\w-]+)', self.metadata_db_url).groups()
-            return DynamodbMetadataStore(host=host, region=region, aws_profile=aws_profile)
-        else:
-            ValueError(f'Metadata store type [{self.metadata_db_url.split(":")[0]}] not recognised')
-
-    @property
-    def metadata_suffix(self):
-        return os.environ.get(EnvVarName.METADATA_SUFFIX)
-
-    @metadata_suffix.setter
-    def metadata_suffix(self, value: str):
-        os.environ[EnvVarName.METADATA_SUFFIX] = value
+        return self.metadata_db_url_ or self.default_sqlite_path
 
     @property
     def dags_directory(self) -> Path:
@@ -108,5 +106,25 @@ class _Settings:
     def dag_deployments_table_name(self) -> str:
         return _join_underscores('typhoon', self.project_name, 'deployments', self.metadata_suffix)
 
+    def metadata_store(self, aws_profile: Optional[str] = None) -> 'MetadataStoreInterface':
+        if self.deploy_target == 'airflow':
+            from typhoon.metadata_store_impl.airflow_metadata_store import AirflowMetadataStore
+            return AirflowMetadataStore(None)   # Todo: Use remote path
+        elif self.metadata_db_url.startswith('sqlite'):
+            from typhoon.metadata_store_impl.sqlite_metadata_store import SQLiteMetadataStore
+            db_path = self.metadata_db_url.split(':')[1]
+            return SQLiteMetadataStore(db_path=db_path)
+        elif self.metadata_db_url.startswith('dynamodb'):
+            from typhoon.metadata_store_impl.dynamodb_metadata_store import DynamodbMetadataStore
+            host, region = re.match(r'dynamodb:Host=([^;]+);Region=([\w-]+)', self.metadata_db_url).groups()
+            return DynamodbMetadataStore(host=host, region=region, aws_profile=aws_profile)
+        else:
+            ValueError(f'Metadata store type [{self.metadata_db_url.split(":")[0]}] not recognised')
 
-Settings = _Settings()
+
+Settings = TyphoonSettings()
+
+
+def set_settings_from_file(settings_file: Path):
+    Settings.set(_env_file=str(settings_file))
+    Settings.export_vars()

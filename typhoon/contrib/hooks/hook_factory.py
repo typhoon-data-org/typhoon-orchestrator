@@ -19,7 +19,7 @@ HOOK_MAPPINGS = {
 
 def get_hook(conn_id: str) -> HookInterface:
     metadata_store = Settings.metadata_store()
-    print(Settings.metadata_db_url)
+    # print(Settings.metadata_db_url)
     conn = metadata_store.get_connection(conn_id)
     hook_class = HOOK_MAPPINGS.get(conn.conn_type)
     if hook_class:

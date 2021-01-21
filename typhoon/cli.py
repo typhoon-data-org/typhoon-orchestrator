@@ -20,14 +20,14 @@ from termcolor import colored
 
 from typhoon import local_config, connections
 from typhoon.cli_helpers.cli_completion import get_remote_names, get_dag_names, get_conn_envs, get_conn_ids, \
-    get_var_types, get_node_names, get_edge_names
+    get_var_types, get_node_names, get_edge_names, get_deploy_targets
 from typhoon.cli_helpers.status import dags_with_changes, dags_without_deploy, check_connections_yaml, \
     check_connections_dags, check_variables_dags
 from typhoon.connections import Connection
 from typhoon.core import DagContext
 from typhoon.core.dags import DAG
 from typhoon.core.glue import get_dag_errors, load_dag
-from typhoon.core.settings import Settings, EnvVarName
+from typhoon.core.settings import Settings, EnvVarName, set_settings_from_file
 from typhoon.deployment.packaging import build_all_dags
 from typhoon.handler import run_dag
 from typhoon.introspection.introspect_transformations import run_transformations, TransformationResult
@@ -62,29 +62,32 @@ def set_settings_from_remote(remote: str):
 @click.group()
 def cli():
     """Typhoon CLI"""
-    home = local_config.find_typhoon_home_in_cwd_or_parents()
-    if not home:
-        print('Did not find typhoon in current directory or any of its parent directories')
-        if Settings.typhoon_home:
-            print(f'${EnvVarName.PROJECT_HOME} defined to "{Settings.typhoon_home}"')
-        else:
-            return
-    else:
-        Settings.typhoon_home = home
-    try:
-        Settings.project_name = local_config.project_name()
-    except KeyError:
+    if Settings.typhoon_home:
+        print(f'${EnvVarName.PROJECT_HOME} defined from env variable to "{Settings.typhoon_home}"')
+        return
+
+    typhoon_config_file = local_config.find_typhoon_cfg_in_cwd_or_parents()
+    if not typhoon_config_file:
+        print('Did not find typhoon.cfg in current directory or any of its parent directories')
+        return
+    os.environ[EnvVarName.PROJECT_HOME] = str(typhoon_config_file.parent)
+    set_settings_from_file(typhoon_config_file)
+    if not Settings.project_name:
         print(f'Project name not set in "{Settings.typhoon_home}/typhoon.cfg "')
 
 
 @cli.command()
 @click.argument('project_name')
-def init(project_name: str):
+@click.option('--deploy-target', autocompletion=get_deploy_targets, required=False, default='typhoon')
+def init(project_name: str, deploy_target: str):
     """Create a new Typhoon project"""
     example_project_path = Path(pkg_resources.resource_filename('typhoon', 'examples')) / 'hello_world'
-    dest = Path.cwd() / project_name
+    if deploy_target == 'airflow':
+        dest = Path.cwd() / 'typhoon_extension'
+    else:
+        dest = Path.cwd() / project_name
     shutil.copytree(str(example_project_path), str(dest))
-    (dest / 'typhoon.cfg').write_text(EXAMPLE_CONFIG.format(project_name=project_name))
+    (dest / 'typhoon.cfg').write_text(EXAMPLE_CONFIG.format(project_name=project_name, deploy_target=deploy_target))
     (dest / 'dag_schema.json').write_text(DAG.schema_json(indent=2))
     print(f'Project created in {dest}')
 
@@ -532,7 +535,7 @@ def add_connection(remote: Optional[str], conn_id: str, conn_env: str):
 
 @cli_connection.command(name='rm')
 @click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
-@click.option('--conn-id', autocompletion=get_conn_ids)
+@click.option('--conn-id', autocompletion=get_conn_ids, required=True)
 def remove_connection(remote: Optional[str], conn_id: str):
     """Remove connection from the metadata store"""
     set_settings_from_remote(remote)
@@ -543,6 +546,7 @@ def remove_connection(remote: Optional[str], conn_id: str):
 
 @cli_connection.command(name='definition')
 def connections_definition():
+    """Connection definition in connections.yml"""
     out = pygments.highlight(
         code=(Settings.typhoon_home / 'connections.yml').read_text(),
         lexer=YamlLexer(),

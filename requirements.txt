@@ -7,3 +7,7 @@ jsonpickle
 typing_extensions
 python-dateutil
 pydantic
+fs
+fs-s3fs
+pydantic[dotenv]
+croniter

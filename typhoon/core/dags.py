@@ -116,7 +116,13 @@ class DAG(BaseModel):
                 return edge
         assert False
 
-    def get_edges_for_source(self, source) -> List[Edge]:
+    def get_edge_name(self, source: str, destination: str) -> str:
+        for edge_name, edge in self.edges.items():
+            if edge.source == source and edge.destination == destination:
+                return edge_name
+        assert False
+
+    def get_edges_for_source(self, source: str) -> List[Edge]:
         return [edge for edge in self.edges.values() if edge.source == source]
 
     def out_nodes(self, source: str) -> List[str]:
