@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Union, Optional, List
 
 from dataclasses import dataclass
+from typing_extensions import TypedDict
 
 from typhoon.core.dags import DAG, Edge, Node
 from typhoon.core.templated import Templated
@@ -13,15 +14,24 @@ from typhoon.deployment.targets.airflow.airflow_cron import aws_schedule_to_airf
 @dataclass
 class AirflowDag(Templated):
     template = '''
-    import json
     import datetime
+    import json
+    import os
+    import types
+    from pathlib import Path
     
+    import pendulum
     from airflow import DAG
+    from airflow.models import TaskInstance
     {% if airflow_version == 2 %}
     from airflow.operators.python import PythonOperator
     {% else %}
     from airflow.operators.python_operator import PythonOperator
     {% endif %}
+    
+    TYPHOON_HOME = Path(__file__).parent.parent.parent/'typhoon_extension'
+    os.environ['TYPHOON_HOME'] = str(TYPHOON_HOME)
+    
     
     import typhoon.contrib.functions as typhoon_functions
     import typhoon.contrib.transformations as typhoon_transformations
@@ -30,15 +40,14 @@ class AirflowDag(Templated):
     {{ typhoon_imports }}
     
     
-    # Source tasks
-    {% for source_task in source_tasks %}
-    {{ source_task }}
+    # Nodes
+    {% for node in nodes %}
+    {{ node }}
     
     
     {% endfor %}
-    # Edge tasks
-    {% for edge_task in edge_tasks %}
-    {{ edge_task }}
+    {% for synchronous_edge in synchronous_edges %}
+    {{ synchronous_edge }}
     
     
     {% endfor %}
@@ -46,29 +55,47 @@ class AirflowDag(Templated):
         dag_id='{{ dag.name }}',
         default_args={'owner': '{{ owner }}'},
         schedule_interval='{{ cron_expression }}',
-        start_date=datetime.now() - {{ delta }}
+        start_date=datetime.datetime.now() - {{ delta }}
     ) as dag:
-        # Sources
-        {% for source in dag.sources %}
-        {{ source }} = PythonOperator(
-            task_id='{{ source }}',
-            python_callable={{ source }}_source,
-            provide_context=True,
-        )
-        dag >> {{ source }}
-        
-        {% endfor %}
-        # Edges
         {% for dependency in edge_dependencies %}
+        {% if dependency.input is none %}
+        # Source task {{ dependency.task_id }}
+        def {{ dependency.task_id }}_task(**context):
+            output = {{ dependency.task_function }}({}, 1, **context)
+            context['ti'].xcom_push('result', json.dumps(list(output)))
+        {% else %}
+        # noinspection DuplicatedCode
+        def {{ dependency.task_id }}_task(**context):
+            source_task_id = '{{ dependency.input.task_id }}'
+            data = json.loads(context['ti'].xcom_pull(task_ids=source_task_id, key='result'))
+            result = []
+            for batch_num, batch in enumerate(data, 1):
+                adapter_config = {}
+                {% for adapter in dependency.rendered_adapters %}
+                {{ adapter | indent(12, False) }}
+                {% endfor %}
+                result + list({{ dependency.task_function }}(adapter_config, batch_num, **context))
+            context['ti'].xcom_push('result', json.dumps(list(result)))
+        {% endif %}
         {{ dependency.task_id }} = PythonOperator(
             task_id='{{ dependency.task_id }}',
-            python_callable={{ dependency.task_function }},
-            op_kwargs={'tid': '{{ dependency.input }}'},
+            python_callable={{ dependency.task_id }}_task,
             provide_context=True,
         )
-        {{ dependency.input }} >> {{ dependency.task_id }}
+        {% if dependency.input is none %}
+        dag >> {{ dependency.task_id }}
+        {% else %}
+        {{ dependency.input.task_id }} >> {{ dependency.task_id }}
+        {% endif %}
         
         {% endfor %}
+        if __name__ == '__main__':
+            d = pendulum.datetime.now()
+            {% for dependency in edge_dependencies %}
+            ti = TaskInstance({{ dependency.task_id }}, d)
+            ti.run(ignore_all_deps=True, test_mode=True)
+            
+            {% endfor %}
     '''
     dag: Union[DAG, dict]
     owner: str = 'typhoon'
@@ -96,6 +123,11 @@ class AirflowDag(Templated):
         return f'{functions_modules}\n\n{transformations_modules}' if transformations_modules else functions_modules
 
     @property
+    def nodes(self):
+        for node_name, node in self.dag.nodes.items():
+            yield NodeTask(node_name, node)
+
+    @property
     def source_tasks(self):
         for name, node in self.dag.nodes.items():
             if name not in self.dag.sources:
@@ -108,23 +140,105 @@ class AirflowDag(Templated):
             yield AirflowTask(dag=self.dag, edge_name=name).render()
 
     @property
+    def synchronous_edges(self):
+        for edge_name, edge in self.dag.edges.items():
+            if not self.dag.nodes[edge.source].asynchronous:
+                yield SynchronousEdge(edge_name, edge).render()
+
+    @property
     def edge_dependencies(self):
         dependencies = []
 
-        def find_dependencies(inp: Optional[str], labels: List[str], node: str):
-            for edge in self.dag.get_edges_for_source(node):
-                task_id = '__'.join([f'{edge.destination}__{edge.source}'] + labels)
-                dependencies.append({
-                    'task_id': task_id,
-                    'task_function': self.dag.get_edge_name(edge.source, edge.destination),
-                    'input': inp,
-                })
-                find_dependencies(inp=task_id, labels=labels+[node], node=edge.destination)
+        class Inp(TypedDict):
+            node_id: str
+            node_name: str
+
+        def find_dependencies(inp: Optional[Inp], labels: List[str], node_name: str, prev: str = None):
+            node = self.dag.nodes[node_name]
+            if not node.asynchronous:
+                for edge_name in self.dag.get_edges_for_source(node_name):
+                    edge = self.dag.edges[edge_name]
+                    find_dependencies(inp, labels, edge.destination, prev=node_name)
+                return
+            # Asynchronous
+            if (prev is None and inp is None) or self.dag.nodes[prev or inp['node_name']].asynchronous:
+                task_id = '__'.join([node_name] + labels)
+                task_function = f'{node_name}_node'
+                is_async = True
+            else:   # Async false
+                source_node = prev or inp['node_name']
+                edge_name = self.dag.get_edge_name(source_node, node_name)
+                task_id = '__'.join([f'{edge_name}'] + labels)
+                task_function = f'{self.dag.get_edge_name(source_node, node_name)}_sync_edge'
+                is_async = False
+            rendered_adapters = []
+            if inp is not None:
+                inbound_edge = self.dag.get_edge(inp['node_name'], prev or node_name)
+                for k, v in inbound_edge.adapter.items():
+                    rendered_adapters.append(Adapter(k, v, 'adapter_config').render())
+            dependencies.append({
+                'task_id': task_id,
+                'task_function': task_function,
+                'input': inp,
+                'is_async': is_async,
+                'rendered_adapters': rendered_adapters,
+            })
+            for edge_name in self.dag.get_edges_for_source(node_name):
+                edge = self.dag.edges[edge_name]
+                find_dependencies(inp={'node_name': node_name, 'task_id': task_id}, labels=labels+[node_name], node_name=edge.destination)
 
         for source in self.dag.sources:
-            find_dependencies(source, [], source)
+            find_dependencies(None, [], source)
 
         return dependencies
+
+
+@dataclass
+class NodeTask(Templated):
+    template = '''
+    def {{ node_name }}_node(adapter_config: dict, batch_num, **context):
+            config = {**adapter_config} 
+            {% for adapter in rendered_adapters %}
+            {{ adapter | indent(8, False) }}
+            {% endfor %}
+            out = {{ node.function | clean_function_name('functions') }}(**config)
+            if isinstance(out, types.GeneratorType):
+                yield from out
+            else:
+                yield out
+    '''
+    node_name: str
+    node: Node
+
+    @property
+    def rendered_adapters(self):
+        for k, v in self.node.config.items():
+            yield Adapter(k, v).render()
+
+    @staticmethod
+    def clean_function_name(function_name, function_type):
+        return clean_function_name(function_name, function_type)
+
+
+@dataclass
+class SynchronousEdge(Templated):
+    template = '''
+    def {{ edge_name }}_sync_edge(adapter_config: dict, batch_num, **context):
+        config = {**adapter_config}
+        source_data = {{ edge.source }}_node(adapter_config, batch_num, **context)
+        for batch_num_dest, batch in enumerate(source_data or [], start=1):
+            {% for adapter in rendered_adapters %}
+            {{ adapter | indent(8, False) }}
+            {% endfor %}
+            yield from {{ edge.destination }}_node(dest_config, batch_num_dest, **context)
+    '''
+    edge_name: str
+    edge: Edge
+
+    @property
+    def rendered_adapters(self):
+        for k, v in self.edge.adapter.items():
+            yield Adapter(k, v).render()
 
 
 @dataclass
@@ -132,19 +246,20 @@ class Adapter(Templated):
     template = '''
     # Parameter {{ key }}
     {% if '=>APPLY' not in key | replace(' ', '') %}
-    config['{{ key }}'] = {{ value | clean_simple_param }}
+    {{ config_name }}['{{ key }}'] = {{ value | clean_simple_param }}
     {% else %}
     {% set transforms = value if value is iterable and value is not string else [value] %}
     {% for transform in transforms %}
     {{ key.replace(' ', '').split('=>')[0] }}_{{ loop.index }} = {{ transform | substitute_special(key) | clean_function_name('transformations') }}
     {% if loop.last %}
-    config['{{ key.replace(' ', '').split('=>')[0] }}'] = {{ key.replace(' ', '').split('=>')[0] }}_{{ loop.index }}
+    {{ config_name }}['{{ key.replace(' ', '').split('=>')[0] }}'] = {{ key.replace(' ', '').split('=>')[0] }}_{{ loop.index }}
     {% endif %}
     {% endfor %}
     {% endif %}
     '''
     key: str
     value: str
+    config_name: str = 'config'
 
     @staticmethod
     def clean_simple_param(x):
@@ -235,50 +350,67 @@ if __name__ == '__main__':
     import yaml
 
     dag_source = """
-name: telegram_parrot
-schedule_interval: 'rate(10 minutes)'
-
+name: test_ftp
+schedule_interval: rate(2 hours)
 nodes:
-  aaa:
-    function: functions.testing.echo
+  one:
+    function: typhoon.filesystem.list_directory
     config:
-      x: aaa
+      hook => APPLY: $HOOK.ftp
+      path: dump/
+      
+  two:
+    function: typhoon.filesystem.list_directory
+    config:
+      hook => APPLY: $HOOK.ftp2
+      path: dump/
 
-  bbb:
-    function: functions.testing.echo
+  read:
+    function: typhoon.filesystem.read_data
+    asynchronous: false
     config:
-      x: bbb
+      hook => APPLY: $HOOK.ftp
 
-  keep_mine:
-    function: typhoon.flow_control.filter
+  s3_upload:
+    function: typhoon.filesystem.write_data
     config:
-      filter_func => APPLY: 'lambda x: x.sender_id == 260655064'
+      hook => APPLY: $HOOK.data_lake
 
-  reply:
-    function: functions.telegram.send_message_chat
+  copy_snowflake:
+    function: typhoon.filesystem.write_data
     config:
-      hook => APPLY: $HOOK.reminder_bot
+      hook => APPLY: $HOOK.snowflake
 
 edges:
-  all_aaa:
-    source: aaa
+  file_paths_one:
+    source: one
+    destination: read
     adapter:
-      data => APPLY: $BATCH
-    destination: keep_mine
-    
-  all_bbb:
-    source: bbb
-    adapter:
-      data => APPLY: $BATCH
-    destination: keep_mine
+      path => APPLY: $BATCH
+      abc => '/tmp/' + $BATCH
 
-  my_messages_to_reply:
-    source: keep_mine
+  file_paths_two:
+    source: two
+    destination: read
     adapter:
-      chat_id => APPLY: $BATCH.sender_id
-      message => APPLY:
-        - typhoon.templates.render(template=$VARIABLE.parrot_message, message=$BATCH.text)
-    destination: reply
+      path => APPLY: $BATCH
+
+  ftp_file_to_s3:
+    source: read
+    destination: s3_upload
+    adapter:
+      data => APPLY: $BATCH.data
+      path => APPLY:
+        - transformations.os.filename($BATCH.path)
+        - f'data/{$1}'
+
+  to_snowflake:
+    source: s3_upload
+    destination: copy_snowflake
+    adapter:
+      table: 'abc'
+      stage_name: 'my_stage'
+      s3_path => APPLY: $BATCH
     """
 
     # test_dag = DAG(

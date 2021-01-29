@@ -41,7 +41,17 @@ class TyphoonSettingsFile(BaseSettings):
 
 
 class TyphoonSettings:
+    typhoon_home: Path
+    typhoon_version: str
+    project_name: str
+    metadata_db_url_: str
+    metadata_suffix: str
+    deploy_target: str
+    fernet_key: str
+
     def __init__(self, _env_file: str = None):
+        if _env_file is None and os.environ.get(EnvVarName.PROJECT_HOME):
+            _env_file = Path(os.environ.get(EnvVarName.PROJECT_HOME)) / 'typhoon.cfg'
         self._settings = TyphoonSettingsFile(_env_file=_env_file).dict()
 
     def set(self, _env_file: str = None):

@@ -29,6 +29,7 @@ from typhoon.core.dags import DAG
 from typhoon.core.glue import get_dag_errors, load_dag
 from typhoon.core.settings import Settings, EnvVarName, set_settings_from_file
 from typhoon.deployment.packaging import build_all_dags
+from typhoon.deployment.targets.airflow.airflow_build import build_all_dags_airflow
 from typhoon.handler import run_dag
 from typhoon.introspection.introspect_transformations import run_transformations, TransformationResult
 from typhoon.local_config import EXAMPLE_CONFIG
@@ -258,7 +259,16 @@ def build_dags(dag_name: Optional[str], all_: bool):
     elif dag_name is None and not all_:
         raise click.UsageError(f'Illegal usage: Need either DAG_NAME or --all')
     if all_:
-        build_all_dags(remote=None)
+        dag_errors = get_dag_errors()
+        if dag_errors:
+            print(f'Found errors in the following DAGs:')
+            for dag_name in dag_errors.keys():
+                print(f'  - {dag_name}\trun typhoon dag build {dag_name}')
+
+        if Settings.deploy_target == 'typhoon':
+            build_all_dags(remote=None)
+        else:
+            build_all_dags_airflow(remote=None)
     else:
         dag_errors = get_dag_errors().get(dag_name)
         if dag_errors:
@@ -270,7 +280,10 @@ def build_dags(dag_name: Optional[str], all_: bool):
             ]
             print(tabulate(table_body, header, 'plain'), file=sys.stderr)
             sys.exit(-1)
-        build_all_dags(remote=None, matching=dag_name)
+        if Settings.deploy_target == 'typhoon':
+            build_all_dags(remote=None, matching=dag_name)
+        else:
+            build_all_dags_airflow(remote=None, matching=dag_name)
 
 
 @cli_dags.command(name='watch')

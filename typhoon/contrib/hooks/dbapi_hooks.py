@@ -92,3 +92,40 @@ class SqliteHook(DbApiHook):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.connection.close()
+
+
+class EchoDb(DbApiConnection):
+    """Just prints every query that is executed"""
+    def __init__(self):
+        pass
+
+    def cursor(self) -> 'EchoDb':
+        return self
+
+    def execute(self, query: str):
+        print('Executing query:')
+        print(query)
+
+    def fetchall(self):
+        print('Fetch all')
+        return []
+
+    def fetchmany(self, size: int):
+        print(f'Fetch many size {size}')
+        return []
+
+    def close(self):
+        pass
+
+
+class EchoDbHook(DbApiHook):
+    """Just prints every query that is executed"""
+    def __init__(self, conn_params):
+        self.conn_params = conn_params
+
+    def __enter__(self) -> DbApiConnection:
+        self.connection = EchoDb()
+        return self.connection
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.connection.close()

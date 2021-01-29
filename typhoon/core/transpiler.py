@@ -21,8 +21,10 @@ def get_transformations_modules(dag: DAG) -> Iterable[str]:
                 modules.add('.'.join(val.split('.')[:-1]))
             elif isinstance(val, list):
                 for x in val:
-                    if isinstance(x, str) and x.startswith('transformations.') and not x.startswith('typhoon.'):
-                        modules.add('.'.join(x.split('.')[:-1]))
+                    if not isinstance(x, str):
+                        continue
+                    mods = re.findall(r'(transformations\.\w+)\.\w+', x)
+                    modules = modules.union(mods)
 
     return list(modules)
 

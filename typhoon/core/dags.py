@@ -67,7 +67,10 @@ class DAG(BaseModel):
         regex='(' + '@hourly|@daily|@weekly|@monthly|@yearly|' +
               r'((\*|\?|\d+((\/|\-){0,1}(\d+))*)\s*){5,6}' + '|' +
               r'rate\(\s*1\s+minute\s*\)' + '|' +
-              r'rate\(\s*\d+\s+minutes\s*\)' + ')',
+              r'rate\(\s*\d+\s+minutes\s*\)' + '|' +
+              r'rate\(\s1*\d+\s+hour\s*\)' + '|' +
+              r'rate\(\s*\d+\s+hours\s*\)' + '|' +
+              ')',
         description='Schedule or frequency on which the DAG should run'
     )
     nodes: Dict[str, Node]
@@ -122,8 +125,8 @@ class DAG(BaseModel):
                 return edge_name
         assert False
 
-    def get_edges_for_source(self, source: str) -> List[Edge]:
-        return [edge for edge in self.edges.values() if edge.source == source]
+    def get_edges_for_source(self, source: str) -> List[str]:
+        return [edge_name for edge_name, edge in self.edges.items() if edge.source == source]
 
     def out_nodes(self, source: str) -> List[str]:
         return self.structure.get(source, ())

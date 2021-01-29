@@ -9,7 +9,7 @@ from typhoon.contrib.hooks.aws_hooks import AwsSessionHook
 from typhoon.contrib.hooks.hook_interface import HookInterface
 
 
-class FileSystemHookInterface(Protocol, HookInterface):
+class FileSystemHookInterface(HookInterface, Protocol):
     conn: FS
 
     def __enter__(self) -> FS:
@@ -51,7 +51,7 @@ class LocalStorageHook(FileSystemHookInterface):
 
     def __enter__(self) -> OSFS:
         self.base_path = self.conn_params.extra.get('base_path', '')
-        self.conn = OSFS(root_path=self.base_path, create=True)
+        self.conn = OSFS(root_path=self.base_path, create=self.conn_params.extra.get('create', True))
         return self.conn
 
     def __exit__(self, exc_type, exc_val, exc_tb):

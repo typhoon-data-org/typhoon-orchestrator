@@ -32,6 +32,7 @@ class AirflowDb:
     sql_alchemy_conn: str = None
 
     def __init__(self, sql_alchemy_conn: str):
+        print(f'Opening airflow database {sql_alchemy_conn}')
         self.sql_alchemy_conn = sql_alchemy_conn
 
     def set_connection(
@@ -59,7 +60,6 @@ class AirflowDb:
         assert repr(settings.engine.url) == self.sql_alchemy_conn
         session = settings.Session()
         conn = session.query(Connection).filter(Connection.conn_id == conn_id).first()
-        session.commit()
         return conn
 
     def delete_connection(self, conn_id: str):

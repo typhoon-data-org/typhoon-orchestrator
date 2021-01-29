@@ -19,6 +19,7 @@ def read_data(hook: FileSystemHookInterface, path: Union[Path, str]) -> ReadData
     :param path: File path relative to base directory
     """
     with hook as conn:
+        print(f'Reading from {path}')
         return ReadDataResponse(data=conn.readbytes(str(path)), path=path)
 
 
@@ -33,6 +34,7 @@ def write_data(data: Union[bytes, BytesIO], hook: FileSystemHookInterface, path:
         data = BytesIO.getvalue()
     path = str(path)
     with hook as conn:
+        print(f'Writing to {path}')
         conn.writebytes(path, data)
     yield path
 
@@ -44,7 +46,8 @@ def list_directory(hook: FileSystemHookInterface, path: Union[Path, str]) -> Ite
     :param path: Directory relative path
     """
     with hook as conn:
-        yield from conn.listdir(str(path))
+        print(f'Listing directory {path}')
+        yield from [str(Path(path) / f) for f in conn.listdir(str(path))]
 
 
 def copy(source_hook: FileSystemHookInterface, source_path: str, destination_hook: FileSystemHookInterface, destination_path: str):
@@ -52,4 +55,5 @@ def copy(source_hook: FileSystemHookInterface, source_path: str, destination_hoo
     Copy a file from a source filesystem to a destination filesystem
     """
     with source_hook as source_conn, destination_hook as dest_conn:
+        print(f'Copy {source_path} to {destination_path}')
         copy_fs(source_conn.opendir(source_path), dest_conn.opendir(destination_path))

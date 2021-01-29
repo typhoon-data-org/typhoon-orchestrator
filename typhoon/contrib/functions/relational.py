@@ -4,6 +4,7 @@ from itertools import count
 from typing import Optional, NamedTuple, Sequence, Generator
 
 import jinja2
+import pandas as pd
 
 from typhoon.contrib.hooks.dbapi_hooks import DbApiHook
 
@@ -65,6 +66,14 @@ def execute_query(
                     batch=batch,
                     batch_num=batch_num,
                 )
+
+
+def read_sql(hook: DbApiHook, query: str, batch_size: Optional[int] = None, metadata: dict = None):
+    with hook as conn:
+        if batch_size is None:
+            return pd.read_sql(query, conn), metadata
+        for chunk in pd.read_sql(query, conn, chunksize=batch_size):
+            yield chunk, metadata
 
 
 # def df_write(df: DataFrame, hook: SqlAlchemyHook, table_name: str, schema: str = None):

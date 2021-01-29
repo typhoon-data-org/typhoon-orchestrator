@@ -1,8 +1,8 @@
 import importlib.util
 import inspect
 
-from typhoon.contrib.hooks.dbapi_hooks import SqliteHook, PostgresHook, SnowflakeHook
-from typhoon.contrib.hooks.filesystem_hooks import S3Hook, LocalStorageHook
+from typhoon.contrib.hooks.dbapi_hooks import SqliteHook, PostgresHook, SnowflakeHook, EchoDbHook
+from typhoon.contrib.hooks.filesystem_hooks import S3Hook, LocalStorageHook, FTPHook
 from typhoon.contrib.hooks.hook_interface import HookInterface
 from typhoon.contrib.hooks.sqlalchemy_hook import SqlAlchemyHook
 from typhoon.core.settings import Settings
@@ -11,7 +11,9 @@ HOOK_MAPPINGS = {
     'sqlite': SqliteHook,
     'postgres': PostgresHook,
     'snowflake': SnowflakeHook,
+    'echodb': EchoDbHook,
     's3': S3Hook,
+    'ftp': FTPHook,
     'local_storage': LocalStorageHook,
     'sqlalchemy': SqlAlchemyHook,
 }
