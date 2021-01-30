@@ -7,6 +7,7 @@ from typing import Union, Optional
 from typing import TYPE_CHECKING
 
 from pydantic import BaseSettings, Field
+from typhoon import local_config
 
 if TYPE_CHECKING:
     from typhoon.core.metadata_store_interface import MetadataStoreInterface
@@ -132,9 +133,21 @@ class TyphoonSettings:
             ValueError(f'Metadata store type [{self.metadata_db_url.split(":")[0]}] not recognised')
 
 
-Settings = TyphoonSettings()
-
-
 def set_settings_from_file(settings_file: Path):
     Settings.set(_env_file=str(settings_file))
     Settings.export_vars()
+
+
+Settings = TyphoonSettings()
+
+if Settings.typhoon_home:
+    print(f'${EnvVarName.PROJECT_HOME} defined from env variable to "{Settings.typhoon_home}"')
+else:
+    typhoon_config_file = local_config.find_typhoon_cfg_in_cwd_or_parents()
+    if not typhoon_config_file:
+        print('Did not find typhoon.cfg in current directory or any of its parent directories')
+    else:
+        os.environ[EnvVarName.PROJECT_HOME] = str(typhoon_config_file.parent)
+        set_settings_from_file(typhoon_config_file)
+        if not Settings.project_name:
+            print(f'Project name not set in "{Settings.typhoon_home}/typhoon.cfg "')

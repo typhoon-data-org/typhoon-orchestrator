@@ -129,7 +129,7 @@ def build_all_dags(remote: Optional[str], matching: Optional[str] = None):
 def build_dag(dag: DAG, dag_code: str, deployment_date: datetime, remote: Optional[str]):
     dag = dag.dict()
     dag_folder = Settings.out_directory / dag['name']
-    transpile_dag_and_store(dag, dag_folder / f"{dag['name']}.py", debug_mode=remote is not None)
+    transpile_dag_and_store(dag, dag_folder / f"{dag['name']}.py", debug_mode=remote is None)
     deploy_dag_requirements(dag, typhoon_version_is_local(), Settings.typhoon_version)
     if typhoon_version_is_local():
         print('Typhoon package is in editable mode. Copying to lambda package...')

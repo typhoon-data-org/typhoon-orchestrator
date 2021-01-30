@@ -18,7 +18,7 @@ from pygments.lexers.python import PythonLexer
 from tabulate import tabulate
 from termcolor import colored
 
-from typhoon import local_config, connections
+from typhoon import connections
 from typhoon.cli_helpers.cli_completion import get_remote_names, get_dag_names, get_conn_envs, get_conn_ids, \
     get_var_types, get_node_names, get_edge_names, get_deploy_targets
 from typhoon.cli_helpers.status import dags_with_changes, dags_without_deploy, check_connections_yaml, \
@@ -63,18 +63,7 @@ def set_settings_from_remote(remote: str):
 @click.group()
 def cli():
     """Typhoon CLI"""
-    if Settings.typhoon_home:
-        print(f'${EnvVarName.PROJECT_HOME} defined from env variable to "{Settings.typhoon_home}"')
-        return
-
-    typhoon_config_file = local_config.find_typhoon_cfg_in_cwd_or_parents()
-    if not typhoon_config_file:
-        print('Did not find typhoon.cfg in current directory or any of its parent directories')
-        return
-    os.environ[EnvVarName.PROJECT_HOME] = str(typhoon_config_file.parent)
-    set_settings_from_file(typhoon_config_file)
-    if not Settings.project_name:
-        print(f'Project name not set in "{Settings.typhoon_home}/typhoon.cfg "')
+    pass
 
 
 @cli.command()
@@ -644,12 +633,15 @@ def run_in_subprocess(command: str, cwd: str):
 
 @cli.command()
 def webserver():
-    subprocess.Popen(
+    frontend = subprocess.Popen(
         ["npm", "run", "serve"],
         cwd=str(Path(__file__).parent.parent/'webserver/typhoon_webserver/frontend'))
-    sys.path.append(str(Path(__file__).parent.parent/'webserver/typhoon_webserver/backend/'))
-    from core import app
-    app.run()
+    try:
+        sys.path.append(str(Path(__file__).parent.parent / 'webserver/typhoon_webserver/backend/'))
+        from core import app
+        app.run()
+    finally:
+        frontend.kill()
 
 
 # @cli.command()

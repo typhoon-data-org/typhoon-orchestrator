@@ -71,6 +71,8 @@ class AirflowMetadataStore(MetadataStoreInterface):
                         schema=af_conn.schema,
                         extra=af_conn.extra_dejson,
                     )
+                    if to_dict:
+                        conn = conn.__dict__
                     result.append(conn)
         return result
 
@@ -103,6 +105,8 @@ class AirflowMetadataStore(MetadataStoreInterface):
                 if af_var.key.startswith('typhoon#'):
                     contents = json.loads(af_var.val)
                     var = Variable(id=contents['id'], type=VariableType(contents['type']), contents=contents['contents'])
+                    if to_dict:
+                        var = var.dict_contents()
                     result.append(var)
         return result
 
