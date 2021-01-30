@@ -85,6 +85,11 @@ class TyphoonSettings:
     def metadata_db_url(self):
         return self.metadata_db_url_ or self.default_sqlite_path
 
+    @metadata_db_url.setter
+    def metadata_db_url(self, value: str):
+        self.metadata_db_url_ = value
+        os.environ[EnvVarName.METADATA_DB_URL] = value
+
     @property
     def dags_directory(self) -> Path:
         return Path(self.typhoon_home)/'dags'
