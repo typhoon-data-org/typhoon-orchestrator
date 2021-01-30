@@ -12,7 +12,7 @@ class ReadDataResponse(NamedTuple):
     path: str
 
 
-def read_data(hook: FileSystemHookInterface, path: Union[Path, str]) -> ReadDataResponse:
+def read_data(hook: FileSystemHookInterface, path: Union[Path, str] = '/') -> ReadDataResponse:
     """
     Reads the data from a file given its relative path and returns a named tuple with the shape (data: bytes, path: str)
     :param hook: FileSystem Hook
