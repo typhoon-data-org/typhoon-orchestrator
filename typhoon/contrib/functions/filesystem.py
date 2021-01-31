@@ -41,7 +41,7 @@ def write_data(data: Union[str, bytes, BytesIO], hook: FileSystemHookInterface, 
     yield path
 
 
-def list_directory(hook: FileSystemHookInterface, path: Union[Path, str]) -> Iterable[str]:
+def list_directory(hook: FileSystemHookInterface, path: Union[Path, str] = '/') -> Iterable[str]:
     """
     List all the files in a given directory relative to base path
     :param hook: FileSystem Hook
@@ -59,3 +59,16 @@ def copy(source_hook: FileSystemHookInterface, source_path: str, destination_hoo
     with source_hook as source_conn, destination_hook as dest_conn:
         print(f'Copy {source_path} to {destination_path}')
         copy_fs(source_conn.opendir(source_path), dest_conn.opendir(destination_path))
+
+
+def glob(hook: FileSystemHookInterface, pattern: str, path: Union[Path, str] = '/', exclude_dirs: List[str]) -> Iterable[str]:
+    """
+    List all the files in a given directory matching the glob pattern
+    :param hook: Filesystem hook
+    :param pattern: Glob pattern e.g. '*.csv' or '"**/*.py"'
+    :param path: Optional directory path
+    :param exclude_dirs: An optional list of patterns to exclude when searching e.g. ["*.git"]
+    """
+    with hook as conn:
+        for match in conn.glob(pattern, path=path):
+            yield match.path

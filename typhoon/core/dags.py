@@ -183,3 +183,51 @@ class DagDeployment(BaseModel):
     @property
     def deployment_hash(self) -> str:
         return hash_dag_code(self.dag_code)
+
+
+class DAGDefinitionV2(BaseModel):
+    name: str = Field(..., regex=IDENTIFIER_REGEX, description='Name of your DAG')
+    schedule_interval: str = Field(
+        ...,
+        regex='(' + '@hourly|@daily|@weekly|@monthly|@yearly|' +
+              r'((\*|\?|\d+((\/|\-){0,1}(\d+))*)\s*){5,6}' + '|' +
+              r'rate\(\s*1\s+minute\s*\)' + '|' +
+              r'rate\(\s*\d+\s+minutes\s*\)' + '|' +
+              r'rate\(\s1*\d+\s+hour\s*\)' + '|' +
+              r'rate\(\s*\d+\s+hours\s*\)' + '|' +
+              ')',
+        description='Schedule or frequency on which the DAG should run'
+    )
+    tasks: Dict[str, NodeDefinitionV2]
+    active: bool = Field(True, description='Whether to deploy the DAG or not')
+
+
+class NodeDefinitionV2(BaseModel):
+    function: str = Field(
+        ...,
+        regex=r'(typhoon\.\w+\.\w+|functions\.\w+\.\w+)',
+        description="""Python function that will get called when the task runs.
+                    If it is a built-in typhoon function it will have the following structure:
+                      typhoon.[MODULE_NAME].[FUNCTION_NAME]
+                    Whereas if it is a user defined function it will have the following structure:
+                      functions.[MODULE_NAME].[FUNCTION_NAME]"""
+    )
+    asynchronous: bool = Field(
+        True,
+        description="""If set to TRUE it will run the function in a different lambda instance.
+                    This is useful when you want to increase parallelism. There is currently no framework cap on
+                    parallelism though so if that is an issue set it to FALSE so it will run the batches one by one."""
+    )
+    input: Union[str, List[str], None] = Field(
+        default=None,
+        description='Task or tasks that will send their output as input to the current node'
+    )
+    args: Dict[str, Any] = Field(default={})
+
+    @validator('config')
+    def validate_config_keys(cls, v):
+        for k in v.keys():
+            if not re.match(r'\w+(\s*=>\s*APPLY)?', k):
+                raise ValueError(
+                    f'Config key "{k}" does not match pattern. Must be identifier with optional => APPLY')
+        return v
