@@ -70,5 +70,5 @@ def glob(hook: FileSystemHookInterface, pattern: str, path: Union[Path, str] = '
     :param exclude_dirs: An optional list of patterns to exclude when searching e.g. ["*.git"]
     """
     with hook as conn:
-        for match in conn.glob(pattern, path=path):
+        for match in conn.glob(pattern, path=path, exclude_dirs=exclude_dirs):
             yield match.path
