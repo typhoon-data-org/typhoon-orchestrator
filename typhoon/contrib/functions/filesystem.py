@@ -23,7 +23,7 @@ def read_data(hook: FileSystemHookInterface, path: Union[Path, str]) -> ReadData
         return ReadDataResponse(data=conn.readbytes(str(path)), path=path)
 
 
-def write_data(data: Union[bytes, BytesIO], hook: FileSystemHookInterface, path: Union[Path, str]) -> Iterable[str]:
+def write_data(data: Union[str, bytes, BytesIO], hook: FileSystemHookInterface, path: Union[Path, str]) -> Iterable[str]:
     """
     Write the given data to the path specified.
     :param data: Bytes buffer
@@ -32,6 +32,8 @@ def write_data(data: Union[bytes, BytesIO], hook: FileSystemHookInterface, path:
     """
     if isinstance(data, BytesIO):
         data = BytesIO.getvalue()
+    elif isinstance(data, str):
+        data = data.encode()
     path = str(path)
     with hook as conn:
         print(f'Writing to {path}')
