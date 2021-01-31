@@ -1,6 +1,6 @@
 from io import BytesIO
 from pathlib import Path
-from typing import Iterable, NamedTuple, Union
+from typing import Iterable, NamedTuple, Union, List, Optional
 
 from fs.copy import copy_fs
 
@@ -61,7 +61,7 @@ def copy(source_hook: FileSystemHookInterface, source_path: str, destination_hoo
         copy_fs(source_conn.opendir(source_path), dest_conn.opendir(destination_path))
 
 
-def glob(hook: FileSystemHookInterface, pattern: str, path: Union[Path, str] = '/', exclude_dirs: List[str]) -> Iterable[str]:
+def glob(hook: FileSystemHookInterface, pattern: str, path: Union[Path, str] = '/', exclude_dirs: Optional[List[str]] = None) -> Iterable[str]:
     """
     List all the files in a given directory matching the glob pattern
     :param hook: Filesystem hook
