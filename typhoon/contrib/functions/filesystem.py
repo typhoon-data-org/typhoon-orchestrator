@@ -31,7 +31,7 @@ def write_data(data: Union[str, bytes, BytesIO], hook: FileSystemHookInterface, 
     :param path: Path where the data should be written
     """
     if isinstance(data, BytesIO):
-        data = BytesIO.getvalue()
+        data = data.getvalue()
     elif isinstance(data, str):
         data = data.encode()
     path = str(path)
