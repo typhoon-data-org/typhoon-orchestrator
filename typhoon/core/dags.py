@@ -2,7 +2,7 @@ import hashlib
 import re
 from datetime import datetime
 from enum import Enum
-from typing import List, Union, Dict, Any
+from typing import List, Union, Dict, Any, Optional
 
 from pydantic import BaseModel, validator, Field, root_validator
 
@@ -185,6 +185,51 @@ class DagDeployment(BaseModel):
         return hash_dag_code(self.dag_code)
 
 
+class NodeDefinitionV2(BaseModel):
+    input: Union[str, List[str], None] = Field(
+        default=None,
+        description='Task or tasks that will send their output as input to the current node'
+    )
+    function: str = Field(
+        ...,
+        regex=r'(typhoon\.\w+\.\w+|functions\.\w+\.\w+)',
+        description="""Python function that will get called when the task runs.
+                    If it is a built-in typhoon function it will have the following structure:
+                      typhoon.[MODULE_NAME].[FUNCTION_NAME]
+                    Whereas if it is a user defined function it will have the following structure:
+                      functions.[MODULE_NAME].[FUNCTION_NAME]"""
+    )
+    asynchronous: bool = Field(
+        default=True,
+        description="""If set to TRUE it will run the function in a different lambda instance.
+                    This is useful when you want to increase parallelism. There is currently no framework cap on
+                    parallelism though so if that is an issue set it to FALSE so it will run the batches one by one."""
+    )
+    args: Dict[str, Any] = Field(default={})
+
+    @validator('args')
+    def validate_args_keys(cls, v):
+        for k in v.keys():
+            if not re.match(r'\w+(\s*=>\s*APPLY)?', k):
+                raise ValueError(
+                    f'Config key "{k}" does not match pattern. Must be identifier with optional => APPLY')
+        return v
+
+    def make_config(self) -> dict:
+        result = {}
+        for k, v in self.args.items():
+            if not is_apply(k) or not uses_batch(v):
+                result[k] = v
+        return result
+
+    def make_adapter(self) -> dict:
+        result = {}
+        for k, v in self.args.items():
+            if is_apply(k) and uses_batch(v):
+                result[k] = v
+        return result
+
+
 class DAGDefinitionV2(BaseModel):
     name: str = Field(..., regex=IDENTIFIER_REGEX, description='Name of your DAG')
     schedule_interval: str = Field(
@@ -198,36 +243,84 @@ class DAGDefinitionV2(BaseModel):
               ')',
         description='Schedule or frequency on which the DAG should run'
     )
-    tasks: Dict[str, NodeDefinitionV2]
     active: bool = Field(True, description='Whether to deploy the DAG or not')
+    tasks: Dict[str, NodeDefinitionV2]
+    # tests: Optional[Test]
+
+    def make_dag(self) -> DAG:
+        nodes = {
+            task_name: Node(
+                function=task.function,
+                asynchronous=task.asynchronous,
+                config=task.make_config()
+            )
+            for task_name, task in self.tasks.items()
+        }
+        edges = {}
+        edge_id = 1
+        for task_name, task in self.tasks.items():
+            if task.input:
+                inp = task.input if isinstance(task.input, list) else [task.input]
+                for source_task_id in inp:
+                    edges[f'e{edge_id}'] = Edge(
+                        source=source_task_id,
+                        destination=task_name,
+                        adapter=task.make_adapter(),
+                    )
+                    edge_id += 1
+
+        return DAG(
+            name=self.name,
+            schedule_interval=self.schedule_interval,
+            active=self.active,
+            nodes=nodes,
+            edges=edges,
+        )
 
 
-class NodeDefinitionV2(BaseModel):
-    function: str = Field(
-        ...,
-        regex=r'(typhoon\.\w+\.\w+|functions\.\w+\.\w+)',
-        description="""Python function that will get called when the task runs.
-                    If it is a built-in typhoon function it will have the following structure:
-                      typhoon.[MODULE_NAME].[FUNCTION_NAME]
-                    Whereas if it is a user defined function it will have the following structure:
-                      functions.[MODULE_NAME].[FUNCTION_NAME]"""
-    )
-    asynchronous: bool = Field(
-        True,
-        description="""If set to TRUE it will run the function in a different lambda instance.
-                    This is useful when you want to increase parallelism. There is currently no framework cap on
-                    parallelism though so if that is an issue set it to FALSE so it will run the batches one by one."""
-    )
-    input: Union[str, List[str], None] = Field(
-        default=None,
-        description='Task or tasks that will send their output as input to the current node'
-    )
-    args: Dict[str, Any] = Field(default={})
+def is_apply(k):
+    return k.endswith(' => APPLY')
 
-    @validator('config')
-    def validate_config_keys(cls, v):
-        for k in v.keys():
-            if not re.match(r'\w+(\s*=>\s*APPLY)?', k):
-                raise ValueError(
-                    f'Config key "{k}" does not match pattern. Must be identifier with optional => APPLY')
-        return v
+
+def uses_batch(item):
+    if isinstance(item, str):
+        return '$BATCH' in item
+    elif isinstance(item, list):
+        return any(uses_batch(x) for x in item)
+    elif isinstance(item, dict):
+        return any(uses_batch(v) for k, v in item.items())
+    assert False
+
+
+if __name__ == '__main__':
+    import yaml
+    dag_v2 = """
+name: example_v2
+schedule_interval: "@hourly"
+
+tasks:
+    tables:
+        function: typhoon.flow_control.branch
+        args:
+            branches:
+                - sheep
+                - dog
+    
+    extract:
+        input: tables
+        function: typhoon.relational.query
+        asynchronous: False
+        args:
+            sql => APPLY: f'select * from {$BATCH}'
+            hook => APPLY: $HOOKS.oracle_db
+            batch_size: 500
+    
+    load:
+        input: extract
+        function: typhoon.filesystem.write_data
+        args:
+            hook => APPLY: $HOOKS.data_lake
+            data => APPLY: typhoon.transformations.write_csv($BATCH.data)
+            path => APPLY: f'{$BATCH.table_name}/part{$BATCH_NUM}.csv'
+    """
+    print(yaml.safe_dump(DAGDefinitionV2.parse_obj(yaml.safe_load(dag_v2)).make_dag().dict(), sort_keys=False))

@@ -51,8 +51,8 @@ def generate_sam_template(
         variables_table_name: str,
         target_env: str,
 ):
-    zappa_settings_template = templateEnv.get_template('sam_template.yml.j2')
-    return zappa_settings_template.render({
+    sam_template = templateEnv.get_template('sam_template.yml.j2')
+    return sam_template.render({
         'dags': dags,
         'lambda_function_timeout': lambda_function_timeout,
         'connections_table_name': connections_table_name,

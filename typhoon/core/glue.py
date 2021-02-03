@@ -9,7 +9,7 @@ from typing import Union, List, Tuple, Dict, Optional
 import yaml
 from pydantic import ValidationError
 
-from typhoon.core.dags import DAG
+from typhoon.core.dags import DAG, DAGDefinitionV2
 from typhoon.core.settings import Settings
 from typhoon.core.transpiler import transpile
 
@@ -26,15 +26,15 @@ def load_dags(ignore_errors: bool = False) -> List[Tuple[DAG, str]]:
     for dag_file in Settings.dags_directory.rglob('*.yml'):
         if ignore_errors:
             try:
-                dag = DAG.parse_obj(
+                dag = DAGDefinitionV2.parse_obj(
                     yaml.safe_load(dag_file.read_text())
-                )
+                ).make_dag()
             except ValidationError:
                 continue
         else:
-            dag = DAG.parse_obj(
+            dag = DAGDefinitionV2.parse_obj(
                 yaml.safe_load(dag_file.read_text())
-            )
+            ).make_dag()
         dags.append((dag, dag_file.read_text()))
 
     return dags
@@ -51,9 +51,9 @@ def get_dag_errors() -> Dict[str, List[dict]]:
     result = {}
     for dag_file in Settings.dags_directory.rglob('*.yml'):
         try:
-            DAG.parse_obj(
+            DAGDefinitionV2.parse_obj(
                 yaml.safe_load(dag_file.read_text())
-            )
+            ).make_dag()
         except ValidationError as e:
             result[dag_file.name.split('.yml')[0]] = e.errors()
 

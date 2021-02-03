@@ -253,6 +253,7 @@ def build_dags(dag_name: Optional[str], all_: bool):
             print(f'Found errors in the following DAGs:')
             for dag_name in dag_errors.keys():
                 print(f'  - {dag_name}\trun typhoon dag build {dag_name}')
+            sys.exit(-1)
 
         if Settings.deploy_target == 'typhoon':
             build_all_dags(remote=None)
