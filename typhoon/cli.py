@@ -468,9 +468,9 @@ def edge_definition(remote: Optional[str], dag_name: str, edge_name: str):
 
 @cli_edges.command(name='test')
 @click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
-@click.option('--dag-name', autocompletion=get_dag_names)
-@click.option('--edge-name', autocompletion=get_edge_names)
-@click.option('--input', 'input_', help='Input batch to node transformations')
+@click.option('--dag-name', autocompletion=get_dag_names, required=True)
+@click.option('--edge-name', autocompletion=get_edge_names, required=True)
+@click.option('--input', 'input_', help='Input batch to node transformations', required=True)
 @click.option('--execution-date', type=click.DateTime(), default=None, help='Input batch to node transformations')
 @click.option('--eval', 'eval_', is_flag=True, default=False, help='If true evaluate the input string')
 def edge_test(remote: Optional[str], dag_name: str, edge_name: str, input_, execution_date: datetime, eval_: bool):
