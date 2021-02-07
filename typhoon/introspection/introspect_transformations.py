@@ -46,11 +46,11 @@ def get_user_defined_transformation_modules(transform: str) -> List[str]:
     return re.findall(r'transformations\.(\w+)\.\w+', transform)
 
 
-def run_transformations(edge: Edge, input_data: Any, dag_context: DagContext) -> List[Union[TransformationResult, ErrorTransformationResult]]:
+def run_transformations(args: dict, input_data: Any, dag_context: DagContext) -> List[Union[TransformationResult, ErrorTransformationResult]]:
     sys.path.append(str(Settings.typhoon_home))
 
     results = []
-    for config_item, raw_transformations in edge.adapter.items():
+    for config_item, raw_transformations in args.items():
         if not isinstance(raw_transformations, list):
             raw_transformations = [raw_transformations]
         transformation_results = []
