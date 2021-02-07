@@ -19,6 +19,10 @@ import {{ transformations_module }}
 import {{ functions_module }}
 {% endfor %}
 
+
+from typhoon_extension.out.pickup_data_to_sql.typhoon.core.settings import Settings
+
+
 os.environ['TYPHOON_HOME'] = os.path.dirname(__file__)
 DAG_ID = '{{ dag.name }}'
 
