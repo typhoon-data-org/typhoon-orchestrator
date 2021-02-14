@@ -10,7 +10,117 @@ from pydantic import BaseModel, validator, Field, root_validator
 
 IDENTIFIER_REGEX = r'\w+'
 Identifier = Field(..., regex=r'\w+')
-Item = Union[int, str, float, Dict, List]
+
+
+@dataclass
+class Py:
+    value: str
+    key: Optional[str] = None
+
+    def transpile(self) -> str:
+        code = self.value
+        code = code.replace('$BATCH_NUM', 'batch_num')
+        code = code.replace('$BATCH', 'batch')
+        code = re.sub(r'\$DAG_CONTEXT(\.(\w+))', r'dag_context.\g<2>', code)
+        code = code.replace('$DAG_CONTEXT', 'dag_context')
+        if self.key is not None:
+            code = re.sub(r'\$(\d)+', r"{key}_\g<1>".format(key=self.key), code)
+        code = re.sub(r'\$HOOK(\.(\w+))', r'get_hook("\g<2>")', code)
+        code = re.sub(r'\$VARIABLE(\.(\w+))', r'Settings.metadata_store().get_variable("\g<2>").get_contents()', code)
+        return code
+
+    @staticmethod
+    def construct(loader: yaml.Loader, node: yaml.Node):
+        return construct_custom_class(Py, loader, node)
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v):
+        if not isinstance(v, Py):
+            raise TypeError(f'Expected Py object, found {v}')
+        if not isinstance(v.value, str):
+            raise TypeError(f'string required, found {v.value}')
+        return v
+
+    def __str__(self):
+        """If a key is set, unquoted string. Otherwise print Py(...)"""
+        return self.transpile()
+
+    def __repr__(self):
+        return str(self)
+
+
+def construct_custom_class(cls, loader: yaml.Loader, node: yaml.Node):
+    result = cls.__new__(cls)
+    yield result
+    if isinstance(node, yaml.ScalarNode):
+        value = loader.construct_scalar(node)
+    elif isinstance(node, yaml.SequenceNode):
+        value = loader.construct_sequence(node)
+    elif isinstance(node, yaml.MappingNode):
+        value = loader.construct_mapping(node)
+    else:
+        assert False
+    result.__init__(value)
+
+
+def construct_hook(loader: yaml.Loader, node: yaml.Node) -> Py:
+    conn_name = loader.construct_yaml_str(node)
+    if not re.match(r'\w+', conn_name):
+        raise ValueError(f'Error constructing hook. Expected connection name, found {conn_name}')
+    return Py(f'$HOOK.{conn_name}')
+
+
+def construct_variable(loader: yaml.Loader, node: yaml.Node) -> Py:
+    var_id = loader.construct_yaml_str(node)
+    if not re.match(r'\w+', var_id):
+        raise ValueError(f'Error constructing variable. Expected variable id, found {var_id}')
+    return Py(f'$VARIABLE.{var_id}')
+
+
+@dataclass
+class MultiStep:
+    value: list
+    key: Optional[str] = None
+
+    @staticmethod
+    def construct(loader: yaml.Loader, node: yaml.Node):
+        return construct_custom_class(MultiStep, loader, node)
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v):
+        if not isinstance(v, MultiStep):
+            raise TypeError(f'Expected MultiStep object, found {v}')
+        if not isinstance(v.value, list):
+            raise TypeError(f'list required, found {v.value}')
+        return v
+
+    def transpile(self) -> str:
+        steps = []
+        for i, x in enumerate(self.value):
+            if isinstance(x, Py):
+                x.key = self.key
+            steps.append(f'{self.key}_{i + 1} = {x}')
+        return '\n'.join(steps) + '\n' + f"config['{self.key}'] = {self.key}_{len(steps)}"
+
+    def __str__(self):
+        if not isinstance(self.value, list) or self.key is None:
+            return f'MultiStep({self.value.__repr__()})'
+        else:
+            return self.transpile()
+
+    def __repr__(self):
+        return str(self)
+
+
+Item = Union[int, str, float, Dict, List, Py, MultiStep]
 
 
 class SpecialCronString(str, Enum):
@@ -199,114 +309,6 @@ class DagDeployment(BaseModel):
 #             run_transformations(args, input_data)
 
 
-@dataclass
-class Py:
-    value: str
-    key: Optional[str] = None
-
-    def transpile(self) -> str:
-        code = self.value
-        code = code.replace('$BATCH_NUM', 'batch_num')
-        code = code.replace('$BATCH', 'batch')
-        code = re.sub(r'\$DAG_CONTEXT(\.(\w+))', r'dag_context.\g<2>', code)
-        code = code.replace('$DAG_CONTEXT', 'dag_context')
-        if self.key is not None:
-            code = re.sub(r'\$(\d)+', r"{key}_\g<1>".format(key=self.key), code)
-        code = re.sub(r'\$HOOK(\.(\w+))', r'get_hook("\g<2>")', code)
-        code = re.sub(r'\$VARIABLE(\.(\w+))', r'Settings.metadata_store().get_variable("\g<2>").get_contents()', code)
-        return code
-
-    @staticmethod
-    def construct(loader: yaml.Loader, node: yaml.Node):
-        return construct_custom_class(Py, loader, node)
-
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v):
-        if not isinstance(v, Py):
-            raise TypeError(f'Expected Py object, found {v}')
-        if not isinstance(v.value, str):
-            raise TypeError(f'string required, found {v.value}')
-        return v
-
-    def __str__(self):
-        """If a key is set, unquoted string. Otherwise print Py(...)"""
-        return self.transpile()
-
-    def __repr__(self):
-        return str(self)
-
-
-def construct_custom_class(cls, loader: yaml.Loader, node: yaml.Node):
-    result = cls.__new__(cls)
-    yield result
-    if isinstance(node, yaml.ScalarNode):
-        value = loader.construct_scalar(node)
-    elif isinstance(node, yaml.SequenceNode):
-        value = loader.construct_sequence(node)
-    elif isinstance(node, yaml.MappingNode):
-        value = loader.construct_mapping(node)
-    else:
-        assert False
-    result.__init__(value)
-
-
-def construct_hook(loader: yaml.Loader, node: yaml.Node) -> Py:
-    conn_name = loader.construct_yaml_str(node)
-    if not re.match(r'\w+', conn_name):
-        raise ValueError(f'Error constructing hook. Expected connection name, found {conn_name}')
-    return Py(f'$HOOK.{conn_name}')
-
-
-def construct_variable(loader: yaml.Loader, node: yaml.Node) -> Py:
-    var_id = loader.construct_yaml_str(node)
-    if not re.match(r'\w+', var_id):
-        raise ValueError(f'Error constructing variable. Expected variable id, found {var_id}')
-    return Py(f'$VARIABLE.{var_id}')
-
-
-@dataclass
-class MultiStep:
-    value: list
-    key: Optional[str] = None
-
-    @staticmethod
-    def construct(loader: yaml.Loader, node: yaml.Node):
-        return construct_custom_class(MultiStep, loader, node)
-
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v):
-        if not isinstance(v, MultiStep):
-            raise TypeError(f'Expected MultiStep object, found {v}')
-        if not isinstance(v.value, list):
-            raise TypeError(f'list required, found {v.value}')
-        return v
-
-    def transpile(self) -> str:
-        steps = []
-        for i, x in enumerate(self.value):
-            if isinstance(x, Py):
-                x.key = self.key
-            steps.append(f'{self.key}_{i + 1} = {x}')
-        return '\n'.join(steps) + '\n' + f"config['{self.key}'] = {self.key}_{len(steps)}"
-
-    def __str__(self):
-        if not isinstance(self.value, list) or self.key is None:
-            return f'MultiStep({self.value.__repr__()})'
-        else:
-            return self.transpile()
-
-    def __repr__(self):
-        return str(self)
-
-
 def add_yaml_constructors():
     yaml.add_constructor('!Py', Py.construct)
     yaml.add_constructor('!Hook', construct_hook)
@@ -347,14 +349,14 @@ class TaskDefinition(BaseModel):
     def make_config(self) -> dict:
         result = {}
         for k, v in self.args.items():
-            if not is_apply(k) or not uses_batch(v):
+            if not uses_batch(v):
                 result[k] = v
         return result
 
     def make_adapter(self) -> dict:
         result = {}
         for k, v in self.args.items():
-            if is_apply(k) and uses_batch(v):
+            if uses_batch(v):
                 result[k] = v
         return result
 
@@ -407,21 +409,22 @@ class DAGDefinitionV2(BaseModel):
         )
 
 
-def is_apply(k):
-    return k.endswith(' => APPLY')
-
-
 def uses_batch(item):
-    if isinstance(item, str):
-        return '$BATCH' in item
+    if isinstance(item, Py):
+        return '$BATCH' in item.value
+    if isinstance(item, MultiStep):
+        return uses_batch(item.value)
     elif isinstance(item, list):
         return any(uses_batch(x) for x in item)
     elif isinstance(item, dict):
         return any(uses_batch(v) for k, v in item.items())
-    assert False
+    elif isinstance(item, (str, float, int)):
+        return False
+    assert False, f'Found type {type(item)} with value {item}'
 
 
 if __name__ == '__main__':
+    add_yaml_constructors()
     dag_v2 = """
 name: example_v2
 schedule_interval: "@hourly"
@@ -439,16 +442,16 @@ tasks:
         function: typhoon.relational.query
         asynchronous: False
         args:
-            sql => APPLY: f'select * from {$BATCH}'
-            hook => APPLY: $HOOKS.oracle_db
+            sql: !Py f'select * from {$BATCH}'
+            hook: !Py $HOOKS.oracle_db
             batch_size: 500
     
     load:
         input: extract
         function: typhoon.filesystem.write_data
         args:
-            hook => APPLY: $HOOKS.data_lake
-            data => APPLY: typhoon.transformations.write_csv($BATCH.data)
-            path => APPLY: f'{$BATCH.table_name}/part{$BATCH_NUM}.csv'
+            hook: !Py $HOOKS.data_lake
+            data: !Py typhoon.transformations.write_csv($BATCH.data)
+            path: !Py f'{$BATCH.table_name}/part{$BATCH_NUM}.csv'
     """
-    print(yaml.safe_dump(DAGDefinitionV2.parse_obj(yaml.safe_load(dag_v2)).make_dag().dict(), sort_keys=False))
+    print(yaml.dump(DAGDefinitionV2.parse_obj(yaml.load(dag_v2, yaml.FullLoader)).make_dag().dict(), Dumper=yaml.Dumper, sort_keys=False))
