@@ -1,12 +1,16 @@
 import hashlib
+import os
 import re
 from datetime import datetime
 from enum import Enum
+from types import SimpleNamespace
 from typing import List, Union, Dict, Any, Optional
 
 import yaml
 from dataclasses import dataclass
 from pydantic import BaseModel, validator, Field, root_validator
+from reflection import load_module_from_path
+from typhoon.core.settings import Settings
 
 IDENTIFIER_REGEX = r'\w+'
 Identifier = Field(..., regex=r'\w+')
@@ -103,10 +107,18 @@ class MultiStep:
         return v
 
     def transpile(self) -> str:
+        def add_key(item):
+            if isinstance(item, Py):
+                item.key = self.key
+            elif isinstance(item, list):
+                return [add_key(x) for x in item]
+            elif isinstance(item, dict):
+                return {k: add_key(v) for k, v in item.items()}
+            else:
+                return item
         steps = []
         for i, x in enumerate(self.value):
-            if isinstance(x, Py):
-                x.key = self.key
+            add_key(x)
             steps.append(f'{self.key}_{i + 1} = {x}')
         return '\n'.join(steps) + '\n' + f"config['{self.key}'] = {self.key}_{len(steps)}"
 
@@ -359,6 +371,79 @@ class TaskDefinition(BaseModel):
             if uses_batch(v):
                 result[k] = v
         return result
+
+    @staticmethod
+    def load_custom_transformations_namespace() -> object:
+        if not Settings.typhoon_home:
+            return None
+        custom_transformation_modules = {}
+        transformations_path = str(Settings.transformations_directory)
+        for filename in os.listdir(transformations_path):
+            if filename == '__init__.py' or not filename.endswith('.py'):
+                continue
+            module_name = filename[:-3]
+            module = load_module_from_path(
+                module_path=os.path.join(transformations_path, filename),
+                module_name=module_name,
+            )
+            custom_transformation_modules[module_name] = module
+        custom_transformations = SimpleNamespace(**custom_transformation_modules)
+        return custom_transformations
+
+    # noinspection PyUnresolvedReferences
+    def execute_adapter(self, batch: Any, dag_context: DagContext)\
+            -> Dict[str, Any]:
+        adapter = self.make_adapter()
+        custom_transformations_ns = self.load_custom_transformations_namespace()
+
+        import typhoon.contrib.transformations as typhoon
+        custom_locals = locals()
+        custom_locals['transformations'] = custom_transformations_ns
+        custom_locals['typhoon'] = typhoon
+        custom_locals['batch'] = batch
+        custom_locals['dag_context'] = dag_context
+
+        os.environ['TYPHOON_ENV'] = 'dev'
+
+        results = {}
+        for k, v in adapter.items():
+            results[k] = evaluate_item(custom_locals, v)
+
+        return results
+
+
+def evaluate_item(custom_locals, item) -> Any:
+    if isinstance(item, Py):
+        code = item.transpile()
+        try:
+            result = eval(code, {}, custom_locals)
+        except Exception as e:
+            result = {'__error__': f'{type(e).__name__}: {str(e)}'}
+        return result
+    elif isinstance(item, MultiStep):
+        custom_locals_copy = custom_locals.copy()
+        sentinel = object()
+        result = None
+        for code_line in item.transpile().split('\n'):
+            left, right = code_line.split('=')
+            name = left.strip()
+            code = right.strip()
+            try:
+                result = eval(code, {}, custom_locals_copy)
+            except Exception as e:
+                return {'__error__': f'{type(e).__name__}: {str(e)}'}
+            if 'config[' in name:
+                return result
+            else:
+                custom_locals_copy[name] = result
+        assert result is not sentinel
+        return result
+    elif isinstance(item, list):
+        return [evaluate_item(custom_locals, x) for x in item]
+    elif isinstance(item, dict):
+        return {k: evaluate_item(custom_locals, v) for k, v in item.items()}
+    else:
+        return item
 
 
 class DAGDefinitionV2(BaseModel):
