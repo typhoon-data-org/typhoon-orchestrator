@@ -450,7 +450,11 @@ def task_test(remote: Optional[str], dag_name: str, task_name: str, input_, exec
         print(f'FATAL: No tasks found matching the name "{task_name}" in dag {dag_name}', file=sys.stderr)
         sys.exit(-1)
     if eval_:
-        input_ = eval(input_)
+        try:
+            input_ = eval(input_)
+        except Exception as e:
+            print(f'FATAL: Got an error while trying to evaluate input: "{e}"', file=sys.stderr)
+            sys.exit(-1)
     transformation_results = run_transformations(
         dag.tasks[task_name].make_adapter(),
         input_,

@@ -79,24 +79,3 @@ def run_transformations(args: dict, input_data: Any, dag_context: DagContext) ->
             )
 
     return results
-
-
-if __name__ == '__main__':
-    Settings.typhoon_home = '/Users/biellls/Desktop/typhoon/hello_world'
-    x = run_transformations(
-        edge=Edge(
-            source='a',
-            adapter={
-                'path => APPLY': "f'/store/{$BATCH[0]}'",
-                'data => APPLY': 'transformations.data.to_bytes_buffer($BATCH[1])',
-                'a => APPLY': [
-                    '33',
-                    '$1 + 10',
-                    "f'Result: {$2}'"
-                ]
-            },
-            destination='b'
-        ),
-        input_data=['a.txt', 'some text data']
-    )
-    print(x)

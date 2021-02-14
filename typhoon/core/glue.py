@@ -11,7 +11,7 @@ from pydantic import ValidationError
 
 from typhoon.core.dags import DAG, DAGDefinitionV2
 from typhoon.core.settings import Settings
-from typhoon.core.transpiler import transpile
+from typhoon.core.transpiler_old import transpile
 
 
 def transpile_dag_and_store(dag: dict, output_path: Union[str, Path], debug_mode: bool):

@@ -4,6 +4,8 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Union, Dict, Any, Optional
 
+import yaml
+from dataclasses import dataclass
 from pydantic import BaseModel, validator, Field, root_validator
 
 IDENTIFIER_REGEX = r'\w+'
@@ -185,7 +187,134 @@ class DagDeployment(BaseModel):
         return hash_dag_code(self.dag_code)
 
 
-class NodeDefinitionV2(BaseModel):
+# TestResult = Union[True, str, Exception]
+
+
+# class TestCase(BaseModel):
+#     batch: Any = Field(..., description='Sample batch')
+#     expected: Dict[str, Any] = Field(..., description='Expected result')
+#
+#     def assert_test(self, args, input_data) -> List[TestResult]:
+#         for k, v in self.expected.items():
+#             run_transformations(args, input_data)
+
+
+@dataclass
+class Py:
+    value: str
+    key: Optional[str] = None
+
+    def transpile(self) -> str:
+        code = self.value
+        code = code.replace('$BATCH_NUM', 'batch_num')
+        code = code.replace('$BATCH', 'batch')
+        code = re.sub(r'\$DAG_CONTEXT(\.(\w+))', r'dag_context.\g<2>', code)
+        code = code.replace('$DAG_CONTEXT', 'dag_context')
+        if self.key is not None:
+            code = re.sub(r'\$(\d)+', r"{key}_\g<1>".format(key=self.key), code)
+        code = re.sub(r'\$HOOK(\.(\w+))', r'get_hook("\g<2>")', code)
+        code = re.sub(r'\$VARIABLE(\.(\w+))', r'Settings.metadata_store().get_variable("\g<2>").get_contents()', code)
+        return code
+
+    @staticmethod
+    def construct(loader: yaml.Loader, node: yaml.Node):
+        return construct_custom_class(Py, loader, node)
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v):
+        if not isinstance(v, Py):
+            raise TypeError(f'Expected Py object, found {v}')
+        if not isinstance(v.value, str):
+            raise TypeError(f'string required, found {v.value}')
+        return v
+
+    def __str__(self):
+        """If a key is set, unquoted string. Otherwise print Py(...)"""
+        return self.transpile()
+
+    def __repr__(self):
+        return str(self)
+
+
+def construct_custom_class(cls, loader: yaml.Loader, node: yaml.Node):
+    result = cls.__new__(cls)
+    yield result
+    if isinstance(node, yaml.ScalarNode):
+        value = loader.construct_scalar(node)
+    elif isinstance(node, yaml.SequenceNode):
+        value = loader.construct_sequence(node)
+    elif isinstance(node, yaml.MappingNode):
+        value = loader.construct_mapping(node)
+    else:
+        assert False
+    result.__init__(value)
+
+
+def construct_hook(loader: yaml.Loader, node: yaml.Node) -> Py:
+    conn_name = loader.construct_yaml_str(node)
+    if not re.match(r'\w+', conn_name):
+        raise ValueError(f'Error constructing hook. Expected connection name, found {conn_name}')
+    return Py(f'$HOOK.{conn_name}')
+
+
+def construct_variable(loader: yaml.Loader, node: yaml.Node) -> Py:
+    var_id = loader.construct_yaml_str(node)
+    if not re.match(r'\w+', var_id):
+        raise ValueError(f'Error constructing variable. Expected variable id, found {var_id}')
+    return Py(f'$VARIABLE.{var_id}')
+
+
+@dataclass
+class MultiStep:
+    value: list
+    key: Optional[str] = None
+
+    @staticmethod
+    def construct(loader: yaml.Loader, node: yaml.Node):
+        return construct_custom_class(MultiStep, loader, node)
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v):
+        if not isinstance(v, MultiStep):
+            raise TypeError(f'Expected MultiStep object, found {v}')
+        if not isinstance(v.value, list):
+            raise TypeError(f'list required, found {v.value}')
+        return v
+
+    def transpile(self) -> str:
+        steps = []
+        for i, x in enumerate(self.value):
+            if isinstance(x, Py):
+                x.key = self.key
+            steps.append(f'{self.key}_{i + 1} = {x}')
+        return '\n'.join(steps) + '\n' + f"config['{self.key}'] = {self.key}_{len(steps)}"
+
+    def __str__(self):
+        if not isinstance(self.value, list) or self.key is None:
+            return f'MultiStep({self.value.__repr__()})'
+        else:
+            return self.transpile()
+
+    def __repr__(self):
+        return str(self)
+
+
+def add_yaml_constructors():
+    yaml.add_constructor('!Py', Py.construct)
+    yaml.add_constructor('!Hook', construct_hook)
+    yaml.add_constructor('!Var', construct_variable)
+    yaml.add_constructor('!MultiStep', MultiStep.construct)
+
+
+class TaskDefinition(BaseModel):
     input: Union[str, List[str], None] = Field(
         default=None,
         description='Task or tasks that will send their output as input to the current node'
@@ -208,12 +337,12 @@ class NodeDefinitionV2(BaseModel):
     args: Dict[str, Any] = Field(default={})
 
     @validator('args')
-    def validate_args_keys(cls, v):
-        for k in v.keys():
-            if not re.match(r'\w+(\s*=>\s*APPLY)?', k):
-                raise ValueError(
-                    f'Config key "{k}" does not match pattern. Must be identifier with optional => APPLY')
-        return v
+    def validate_args_keys(cls, val):
+        # Decorate MultiStep with key name if necessary
+        for k, v in val.items():
+            if isinstance(v, MultiStep):
+                v.key = k
+        return val
 
     def make_config(self) -> dict:
         result = {}
@@ -244,7 +373,7 @@ class DAGDefinitionV2(BaseModel):
         description='Schedule or frequency on which the DAG should run'
     )
     active: bool = Field(True, description='Whether to deploy the DAG or not')
-    tasks: Dict[str, NodeDefinitionV2]
+    tasks: Dict[str, TaskDefinition]
     # tests: Optional[Test]
 
     def make_dag(self) -> DAG:
@@ -293,7 +422,6 @@ def uses_batch(item):
 
 
 if __name__ == '__main__':
-    import yaml
     dag_v2 = """
 name: example_v2
 schedule_interval: "@hourly"
