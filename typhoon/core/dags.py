@@ -392,11 +392,9 @@ class TaskDefinition(BaseModel):
             custom_transformations_ns = None
 
         import typhoon.contrib.transformations as typhoon
-        import pandas as pd
         custom_locals = locals()
         custom_locals['transformations'] = custom_transformations_ns
         custom_locals['typhoon'] = typhoon
-        custom_locals['pd'] = pd
         custom_locals['batch'] = batch
         custom_locals['batch_num'] = batch_num
         custom_locals['dag_context'] = dag_context

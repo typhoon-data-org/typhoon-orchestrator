@@ -451,8 +451,9 @@ def task_sample(remote: Optional[str], dag_name: str, task_name: str, batch, bat
         print(f'FATAL: No tasks found matching the name "{task_name}" in dag {dag_name}', file=sys.stderr)
         sys.exit(-1)
     if eval_:
+        import pandas as pd
         try:
-            batch = eval(batch)
+            batch = eval(batch, {'pd': pd})
         except Exception as e:
             print(f'FATAL: Got an error while trying to evaluate input: "{e}"', file=sys.stderr)
             sys.exit(-1)
