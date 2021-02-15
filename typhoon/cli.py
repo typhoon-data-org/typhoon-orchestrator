@@ -25,7 +25,7 @@ from typhoon.cli_helpers.status import dags_with_changes, dags_without_deploy, c
     check_connections_dags, check_variables_dags
 from typhoon.connections import Connection
 from typhoon.core import DagContext
-from typhoon.core.dags import DAG, DAGDefinitionV2
+from typhoon.core.dags import DAG, DAGDefinitionV2, ArgEvaluationError
 from typhoon.core.glue import get_dag_errors, load_dag, load_dag_definition
 from typhoon.core.settings import Settings, EnvVarName, set_settings_from_file
 from typhoon.deployment.packaging import build_all_dags
@@ -435,14 +435,15 @@ def cli_tasks():
     pass
 
 
-@cli_tasks.command(name='test')
+@cli_tasks.command(name='sample')
 @click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
 @click.option('--dag-name', autocompletion=get_dag_names, required=True)
 @click.option('--task-name', autocompletion=get_edge_names, required=True)
-@click.option('--input', 'input_', help='Input batch to node transformations', required=True)
+@click.option('--batch', help='Input batch to node transformations', required=True)
+@click.option('--batch-num', help='Batch number', type=int, required=False, default=1)
 @click.option('--execution-date', type=click.DateTime(), default=None, help='Input batch to node transformations')
 @click.option('--eval', 'eval_', is_flag=True, default=False, help='If true evaluate the input string')
-def task_test(remote: Optional[str], dag_name: str, task_name: str, input_, execution_date: datetime, eval_: bool):
+def task_sample(remote: Optional[str], dag_name: str, task_name: str, batch, batch_num, execution_date: datetime, eval_: bool):
     """Test transformations for task"""
     set_settings_from_remote(remote)
     dag = _get_dag_definition(remote, dag_name)
@@ -451,24 +452,25 @@ def task_test(remote: Optional[str], dag_name: str, task_name: str, input_, exec
         sys.exit(-1)
     if eval_:
         try:
-            input_ = eval(input_)
+            batch = eval(batch)
         except Exception as e:
             print(f'FATAL: Got an error while trying to evaluate input: "{e}"', file=sys.stderr)
             sys.exit(-1)
-    transformation_results = run_transformations(
-        dag.tasks[task_name].make_adapter(),
-        input_,
-        DagContext(execution_date=execution_date or datetime.now()))
-    for result in transformation_results:
-        if isinstance(result, TransformationResult):
+    transformation_results = dag.tasks[task_name].execute_adapter(
+        batch,
+        DagContext(execution_date=execution_date or datetime.now()),
+        batch_num,
+    )
+    for config_item, result in transformation_results.items():
+        if isinstance(result, ArgEvaluationError):
+            print(f'{config_item}: Error {result.error_type} {result.message}', file=sys.stderr)
+        else:
             highlighted_result = pygments.highlight(
-                code=result.pretty_result,
+                code=TransformationResult(config_item, result).pretty_result,
                 lexer=PythonLexer(),
                 formatter=Terminal256Formatter()
             )
-            print(colored(f'{result.config_item}:', 'green'), highlighted_result, end='')
-        else:
-            print(f'{result.config_item}: Error {result.error_type} {result.message}', file=sys.stderr)
+            print(colored(f'{config_item}:', 'green'), highlighted_result, end='')
 
 
 @cli_dags.group(name='edge')

@@ -374,8 +374,6 @@ class TaskDefinition(BaseModel):
 
     @staticmethod
     def load_custom_transformations_namespace() -> object:
-        if not Settings.typhoon_home:
-            return None
         custom_transformation_modules = {}
         transformations_path = str(Settings.transformations_directory)
         for filename in os.listdir(transformations_path):
@@ -391,16 +389,20 @@ class TaskDefinition(BaseModel):
         return custom_transformations
 
     # noinspection PyUnresolvedReferences
-    def execute_adapter(self, batch: Any, dag_context: DagContext)\
+    def execute_adapter(self, batch: Any, dag_context: DagContext, batch_num=1, no_custom_transformations=False)\
             -> Dict[str, Any]:
         adapter = self.make_adapter()
-        custom_transformations_ns = self.load_custom_transformations_namespace()
+        if not no_custom_transformations:
+            custom_transformations_ns = self.load_custom_transformations_namespace()
+        else:
+            custom_transformations_ns = None
 
         import typhoon.contrib.transformations as typhoon
         custom_locals = locals()
         custom_locals['transformations'] = custom_transformations_ns
         custom_locals['typhoon'] = typhoon
         custom_locals['batch'] = batch
+        custom_locals['batch_num'] = batch_num
         custom_locals['dag_context'] = dag_context
 
         os.environ['TYPHOON_ENV'] = 'dev'
@@ -412,13 +414,19 @@ class TaskDefinition(BaseModel):
         return results
 
 
+@dataclass
+class ArgEvaluationError:
+    error_type: str
+    message: str
+
+
 def evaluate_item(custom_locals, item) -> Any:
     if isinstance(item, Py):
         code = item.transpile()
         try:
             result = eval(code, {}, custom_locals)
         except Exception as e:
-            result = {'__error__': f'{type(e).__name__}: {str(e)}'}
+            result = ArgEvaluationError(type(e).__name__, str(e))
         return result
     elif isinstance(item, MultiStep):
         custom_locals_copy = custom_locals.copy()
@@ -431,7 +439,7 @@ def evaluate_item(custom_locals, item) -> Any:
             try:
                 result = eval(code, {}, custom_locals_copy)
             except Exception as e:
-                return {'__error__': f'{type(e).__name__}: {str(e)}'}
+                result = ArgEvaluationError(type(e).__name__, str(e))
             if 'config[' in name:
                 return result
             else:

@@ -9,7 +9,7 @@ from typing import Union, List, Tuple, Dict, Optional
 import yaml
 from pydantic import ValidationError
 
-from typhoon.core.dags import DAG, DAGDefinitionV2
+from typhoon.core.dags import DAG, DAGDefinitionV2, add_yaml_constructors
 from typhoon.core.settings import Settings
 from typhoon.core.transpiler_old import transpile
 
@@ -26,12 +26,13 @@ def load_dags(ignore_errors: bool = False) -> List[Tuple[DAG, str]]:
 
 
 def load_dag_definitions(ignore_errors: bool = False) -> List[Tuple[DAGDefinitionV2, str]]:
+    add_yaml_constructors()
     dags = []
     for dag_file in Settings.dags_directory.rglob('*.yml'):
         if ignore_errors:
             try:
                 dag = DAGDefinitionV2.parse_obj(
-                    yaml.safe_load(dag_file.read_text())
+                    yaml.load(dag_file.read_text(), yaml.FullLoader)
                 )
             except ValidationError:
                 continue
@@ -59,6 +60,7 @@ def load_dag_definition(dag_name: str, ignore_errors: bool = False) -> Optional[
 
 
 def get_dag_errors() -> Dict[str, List[dict]]:
+    add_yaml_constructors()
     result = {}
     for dag_file in Settings.dags_directory.rglob('*.yml'):
         try:
