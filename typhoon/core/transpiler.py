@@ -30,7 +30,7 @@ class TyphoonFileTemplate(Templated):
     {% endfor %}
     
     
-    from typhoon_extension.out.pickup_data_to_sql.typhoon.core.settings import Settings
+    from typhoon.core.settings import Settings
     
     
     os.environ['TYPHOON_HOME'] = os.path.dirname(__file__)
