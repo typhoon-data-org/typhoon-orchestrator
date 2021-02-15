@@ -9,7 +9,6 @@ from typing import List, Union, Dict, Any, Optional
 import yaml
 from dataclasses import dataclass
 from pydantic import BaseModel, validator, Field, root_validator
-from reflection import load_module_from_path
 from typhoon.core.settings import Settings
 
 IDENTIFIER_REGEX = r'\w+'
@@ -309,16 +308,11 @@ class DagDeployment(BaseModel):
         return hash_dag_code(self.dag_code)
 
 
-# TestResult = Union[True, str, Exception]
 
 
-# class TestCase(BaseModel):
-#     batch: Any = Field(..., description='Sample batch')
-#     expected: Dict[str, Any] = Field(..., description='Expected result')
-#
-#     def assert_test(self, args, input_data) -> List[TestResult]:
-#         for k, v in self.expected.items():
-#             run_transformations(args, input_data)
+class TestCase(BaseModel):
+    batch: Any = Field(..., description='Sample batch')
+    expected: Dict[str, Any] = Field(..., description='Expected result')
 
 
 def add_yaml_constructors():
@@ -414,6 +408,31 @@ class TaskDefinition(BaseModel):
         return results
 
 
+class BrokenImportError(object):
+    pass
+
+
+def load_module_from_path(module_path, module_name=None, must_exist=True):
+    import sys
+    from importlib import util
+
+    sys.path.append(os.path.dirname(os.path.dirname(module_path)))
+    if module_name is None:
+        parts = module_path.split('/')
+        module_name = parts[-2] + '.' + parts[-1].strip('.py')
+    spec = util.spec_from_file_location(module_name, module_path)
+    module = util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(module)
+    except (NameError, SyntaxError, FileNotFoundError):
+        if must_exist:
+            raise BrokenImportError
+        else:
+            print(f'Module {module_name} at path {module_path} does not exist')
+            return None
+    return module
+
+
 @dataclass
 class ArgEvaluationError:
     error_type: str
@@ -469,7 +488,7 @@ class DAGDefinitionV2(BaseModel):
     )
     active: bool = Field(True, description='Whether to deploy the DAG or not')
     tasks: Dict[str, TaskDefinition]
-    # tests: Optional[Test]
+    tests: Optional[Dict[str, TestCase]]
 
     def make_dag(self) -> DAG:
         nodes = {
@@ -500,6 +519,13 @@ class DAGDefinitionV2(BaseModel):
             nodes=nodes,
             edges=edges,
         )
+
+    def assert_tests(self, task_name, batch, batch_num, dag_context):
+        task = self.tasks[task_name]
+        test_case = self.tests[task_name]
+        execute_results = task.execute_adapter(batch, dag_context, batch_num)
+        for k, v in test_case.expected.items():
+            assert v == execute_results[k]
 
 
 def uses_batch(item):
