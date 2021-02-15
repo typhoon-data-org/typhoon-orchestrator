@@ -11,13 +11,13 @@ from pydantic import ValidationError
 
 from typhoon.core.dags import DAG, DAGDefinitionV2, add_yaml_constructors
 from typhoon.core.settings import Settings
-from typhoon.core.transpiler_old import transpile
+from typhoon.core.transpiler import TyphoonFileTemplate
 
 
 def transpile_dag_and_store(dag: dict, output_path: Union[str, Path], debug_mode: bool):
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    dag_code = transpile(dag, debug_mode=debug_mode)
+    dag_code = TyphoonFileTemplate(DAG.parse_obj(dag), debug_mode=debug_mode).render()
     Path(output_path).write_text(dag_code)
 
 
@@ -65,7 +65,7 @@ def get_dag_errors() -> Dict[str, List[dict]]:
     for dag_file in Settings.dags_directory.rglob('*.yml'):
         try:
             DAGDefinitionV2.parse_obj(
-                yaml.safe_load(dag_file.read_text())
+                yaml.load(dag_file.read_text(), yaml.FullLoader)
             ).make_dag()
         except ValidationError as e:
             result[dag_file.name.split('.yml')[0]] = e.errors()
