@@ -6,6 +6,61 @@ from typhoon.core.templated import Templated
 from typing import Any, List, Tuple, Iterable, Dict, Union
 
 
+def get_transformations_modules(dag: DAG) -> Iterable[str]:
+    if isinstance(dag, dict):
+        dag = DAG.parse_obj(dag)
+    modules = set()
+    for edge in dag.edges.values():
+        for val in edge.adapter.values():
+            if isinstance(val, Py) and 'transformations.' in val.value:
+                mods = re.findall(r'(transformations\.\w+)\.\w+', val.value)
+                modules = modules.union(mods)
+            elif isinstance(val, MultiStep):
+                for x in val.value:
+                    if not isinstance(x, Py):
+                        continue
+                    mods = re.findall(r'(transformations\.\w+)\.\w+', x.value)
+                    modules = modules.union(mods)
+
+    return list(modules)
+
+
+def get_functions_modules(nodes: Dict[str, Node]) -> Iterable[str]:
+    modules = set()
+    for node in nodes.values():
+        if not node.function.startswith('typhoon.'):
+            modules.add('.'.join(node.function.split('.')[:-1]))
+
+    return list(modules)
+
+
+def clean_function_name(function_name: str, function_type: str) -> str:
+    if not function_name.startswith('typhoon.'):
+        return function_name
+    else:
+        parts = function_name.split('.')
+        return '.'.join([f'typhoon_{function_type}', *parts[1:]])
+
+
+def clean_simple_param(param: Union[str, int, float, List, dict]):
+    if not isinstance(param, str):
+        return param
+    return f'"""{param}"""' if "'" in param else f"'{param}'"
+
+
+def substitute_special(code: str, key: str, target: str = 'typhoon') -> str:
+    if '=>' in key:
+        key = key.replace(' ', '').split('=>')[0]
+    code = code.replace('$BATCH', 'data' if target == 'typhoon' else 'batch')
+    code = re.sub(r'\$DAG_CONTEXT(\.(\w+))', r'dag_context.\g<2>', code)
+    code = code.replace('$DAG_CONTEXT', 'dag_context')
+    code = re.sub(r'\$(\d)+', r"{key}_\g<1>".format(key=key), code)
+    code = code.replace('$BATCH_NUM', 'batch_num')
+    code = re.sub(r'\$HOOK(\.(\w+))', r'get_hook("\g<2>")', code)
+    code = re.sub(r'\$VARIABLE(\.(\w+))', r'Settings.metadata_store().get_variable("\g<2>").get_contents()', code)
+    return code
+
+
 @dataclass
 class TyphoonFileTemplate(Templated):
     template = '''
@@ -191,63 +246,10 @@ tasks:
       meta: write_tables
       data: !MultiStep
         - !Py $BATCH[1] + 2
+        - !Py transformations.data.to_bytes_buffer
         -
           a: 10
           b: !Py 10 + $BATCH[1]
         - !Py $1 + $2['b']
 """, yaml.FullLoader))
     print(TyphoonFileTemplate(dag=dag_definition.make_dag(), debug_mode=True))
-
-
-def get_transformations_modules(dag: DAG) -> Iterable[str]:
-    if isinstance(dag, dict):
-        dag = DAG.parse_obj(dag)
-    modules = set()
-    for edge in dag.edges.values():
-        for val in edge.adapter.values():
-            if isinstance(val, str) and val.startswith('transformations.') and not val.startswith('typhoon.'):
-                modules.add('.'.join(val.split('.')[:-1]))
-            elif isinstance(val, list):
-                for x in val:
-                    if not isinstance(x, str):
-                        continue
-                    mods = re.findall(r'(transformations\.\w+)\.\w+', x)
-                    modules = modules.union(mods)
-
-    return list(modules)
-
-
-def get_functions_modules(nodes: Dict[str, Node]) -> Iterable[str]:
-    modules = set()
-    for node in nodes.values():
-        if not node.function.startswith('typhoon.'):
-            modules.add('.'.join(node.function.split('.')[:-1]))
-
-    return list(modules)
-
-
-def clean_function_name(function_name: str, function_type: str) -> str:
-    if not function_name.startswith('typhoon.'):
-        return function_name
-    else:
-        parts = function_name.split('.')
-        return '.'.join([f'typhoon_{function_type}', *parts[1:]])
-
-
-def clean_simple_param(param: Union[str, int, float, List, dict]):
-    if not isinstance(param, str):
-        return param
-    return f'"""{param}"""' if "'" in param else f"'{param}'"
-
-
-def substitute_special(code: str, key: str, target: str = 'typhoon') -> str:
-    if '=>' in key:
-        key = key.replace(' ', '').split('=>')[0]
-    code = code.replace('$BATCH', 'data' if target == 'typhoon' else 'batch')
-    code = re.sub(r'\$DAG_CONTEXT(\.(\w+))', r'dag_context.\g<2>', code)
-    code = code.replace('$DAG_CONTEXT', 'dag_context')
-    code = re.sub(r'\$(\d)+', r"{key}_\g<1>".format(key=key), code)
-    code = code.replace('$BATCH_NUM', 'batch_num')
-    code = re.sub(r'\$HOOK(\.(\w+))', r'get_hook("\g<2>")', code)
-    code = re.sub(r'\$VARIABLE(\.(\w+))', r'Settings.metadata_store().get_variable("\g<2>").get_contents()', code)
-    return code
