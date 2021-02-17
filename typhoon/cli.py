@@ -497,6 +497,7 @@ def dag_test(remote: Optional[str], dag_name: str):
         return
     passed = 0
     failed = 0
+    errors = 0
     for task_name, test_case in dag.tests.items():
         transformation_results = dag.tasks[task_name].execute_adapter(
             batch=test_case.evaluated_batch,
@@ -507,9 +508,29 @@ def dag_test(remote: Optional[str], dag_name: str):
             result = transformation_results[arg]
             if isinstance(result, ArgEvaluationError):
                 print(f'Error evaluating "{arg}". {result.error_type}: {result.message}')
+                failed += 1
+                errors += 1
                 continue
+            failed_message = f'Failed test for "{arg}"'
             try:
-                assert_equal(expected_value, result, msg=f'Failed test for "{arg}"')
+                import pandas as pd
+                if isinstance(expected_value, pd.DataFrame):
+                    if isinstance(result, pd.DataFrame):
+                        print(f'Converting dataframes to dicts for arg "{arg}"')
+                        expected_value = expected_value.to_dict()
+                        result = result.to_dict()
+                    else:
+                        print(failed_message + f'. Expected DataFrame but got {result}')
+                        failed += 1
+                        continue
+                elif isinstance(result, pd.DataFrame):
+                    print(f'Did not expect a DataFrame as result, expected {type(expected_value)}')
+                    continue
+            except ImportError:
+                pass
+
+            try:
+                assert_equal(expected_value, result, msg=failed_message)
                 passed += 1
             except AssertionError as e:
                 print(e)

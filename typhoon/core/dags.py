@@ -321,9 +321,19 @@ class TestCase(BaseModel):
         return DagContext(execution_date=self.execution_date or datetime.now())
 
     @property
+    def custom_locals(self) -> dict:
+        result = {}
+        try:
+            import pandas as pd
+            result['pd'] = pd
+        except ImportError:
+            print('Warning: could not import pandas. Run pip install pandas if you want to use dataframes')
+        return result
+
+    @property
     def evaluated_batch(self):
         if isinstance(self.batch, Py):
-            return eval(self.batch.transpile())
+            return eval(self.batch.transpile(), {}, self.custom_locals)
         return self.batch
 
     @property
@@ -331,7 +341,7 @@ class TestCase(BaseModel):
         result = {}
         for k, v in self.expected.items():
             if isinstance(v, Py):
-                result[k] = eval(v.transpile())
+                result[k] = eval(v.transpile(), {}, self.custom_locals)
             else:
                 result[k] = v
         return result
