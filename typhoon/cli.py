@@ -3,6 +3,7 @@ import pydoc
 import shutil
 import subprocess
 import sys
+from builtins import AssertionError
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -12,6 +13,8 @@ import pkg_resources
 import pygments
 import yaml
 from dataclasses import asdict
+from datadiff import diff
+from datadiff.tools import assert_equal
 from pygments.formatters.terminal256 import Terminal256Formatter
 from pygments.lexers.data import YamlLexer
 from pygments.lexers.python import PythonLexer
@@ -435,6 +438,20 @@ def cli_tasks():
     pass
 
 
+def eval_batch(batch: str):
+    custom_locals = {}
+    try:
+        import pandas as pd
+        custom_locals['pd'] = pd
+    except ImportError:
+        print('Warning: could not import pandas. Run pip install pandas if you want to use dataframes')
+    try:
+        batch = eval(batch, {}, custom_locals)
+    except Exception as e:
+        print(f'FATAL: Got an error while trying to evaluate input: "{e}"', file=sys.stderr)
+        sys.exit(-1)
+
+
 @cli_tasks.command(name='sample')
 @click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
 @click.option('--dag-name', autocompletion=get_dag_names, required=True)
@@ -451,17 +468,7 @@ def task_sample(remote: Optional[str], dag_name: str, task_name: str, batch, bat
         print(f'FATAL: No tasks found matching the name "{task_name}" in dag {dag_name}', file=sys.stderr)
         sys.exit(-1)
     if eval_:
-        custom_locals = {}
-        try:
-            import pandas as pd
-            custom_locals['pd'] = pd
-        except ImportError:
-            print('Warning: could not import pandas. Run pip install pandas if you want to use dataframes')
-        try:
-            batch = eval(batch, {}, custom_locals)
-        except Exception as e:
-            print(f'FATAL: Got an error while trying to evaluate input: "{e}"', file=sys.stderr)
-            sys.exit(-1)
+        eval_batch(batch)
     transformation_results = dag.tasks[task_name].execute_adapter(
         batch,
         DagContext(execution_date=execution_date or datetime.now()),
@@ -477,6 +484,40 @@ def task_sample(remote: Optional[str], dag_name: str, task_name: str, batch, bat
                 formatter=Terminal256Formatter()
             )
             print(colored(f'{config_item}:', 'green'), highlighted_result, end='')
+
+
+@cli_dags.command(name='test')
+@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
+@click.option('--dag-name', autocompletion=get_dag_names, required=True)
+def dag_test(remote: Optional[str], dag_name: str):
+    set_settings_from_remote(remote)
+    dag = _get_dag_definition(remote, dag_name)
+    if dag.tests is None:
+        print(f'No tests found for DAG {dag_name}')
+        return
+    passed = 0
+    failed = 0
+    for task_name, test_case in dag.tests.items():
+        transformation_results = dag.tasks[task_name].execute_adapter(
+            batch=test_case.evaluated_batch,
+            dag_context=test_case.dag_context,
+            batch_num=test_case.batch_num,
+        )
+        for arg, expected_value in test_case.evaluated_expected.items():
+            result = transformation_results[arg]
+            if isinstance(result, ArgEvaluationError):
+                print(f'Error evaluating "{arg}". {result.error_type}: {result.message}')
+                continue
+            try:
+                assert_equal(expected_value, result, msg=f'Failed test for "{arg}"')
+                passed += 1
+            except AssertionError as e:
+                print(e)
+                print(diff(expected_value, result))
+                failed += 1
+    if failed > 0:
+        print(colored(f'{failed} tests failed', 'red'))
+    print(colored(f'{passed} tests passed', 'green'))
 
 
 @cli_dags.group(name='edge')

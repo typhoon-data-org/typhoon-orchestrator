@@ -1,7 +1,7 @@
 import hashlib
 import os
 import re
-from datetime import datetime
+from datetime import datetime, date
 from enum import Enum
 from types import SimpleNamespace
 from typing import List, Union, Dict, Any, Optional
@@ -308,11 +308,33 @@ class DagDeployment(BaseModel):
         return hash_dag_code(self.dag_code)
 
 
-
-
 class TestCase(BaseModel):
     batch: Any = Field(..., description='Sample batch')
     expected: Dict[str, Any] = Field(..., description='Expected result')
+    batch_num: int = Field(
+        default=1,
+        description='Batch number for the test. If more than one is provided it will run the tests for each')
+    execution_date: Union[datetime, date, None] = Field(default=None, description='Execution date')
+
+    @property
+    def dag_context(self) -> DagContext:
+        return DagContext(execution_date=self.execution_date or datetime.now())
+
+    @property
+    def evaluated_batch(self):
+        if isinstance(self.batch, Py):
+            return eval(self.batch.transpile())
+        return self.batch
+
+    @property
+    def evaluated_expected(self):
+        result = {}
+        for k, v in self.expected.items():
+            if isinstance(v, Py):
+                result[k] = eval(v.transpile())
+            else:
+                result[k] = v
+        return result
 
 
 def add_yaml_constructors():
