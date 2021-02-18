@@ -380,6 +380,8 @@ class TaskDefinition(BaseModel):
     def validate_args_keys(cls, val):
         # Decorate MultiStep with key name if necessary
         for k, v in val.items():
+            if not re.fullmatch(IDENTIFIER_REGEX, k):
+                raise ValueError(f'Arg "{k}" should be an identifier')
             if isinstance(v, MultiStep):
                 v.key = k
         return val
