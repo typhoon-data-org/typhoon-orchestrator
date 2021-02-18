@@ -1,9 +1,11 @@
 import json
 from ast import literal_eval
 from enum import Enum
+from pathlib import Path
 
 import yaml
 from dataclasses import dataclass
+from typing import Union
 
 
 class VariableError(Exception):
@@ -50,3 +52,20 @@ class Variable:
             return yaml.safe_load(self.contents)
         else:
             assert False
+
+    @staticmethod
+    def from_file(path: Union[str, Path]) -> 'Variable':
+        split_path = str(Path(path).name).split('.')
+        name = split_path[0]
+        extension = split_path[-1]
+        contents = Path(path).read_text()
+        if extension in ['j2', 'jinja', 'jinja2']:
+            return Variable(name, VariableType.JINJA, contents)
+        elif extension == 'num':
+            return Variable(name, VariableType.NUMBER, contents)
+        elif extension == 'json':
+            return Variable(name, VariableType.JSON, contents)
+        elif extension in ['yml', 'yaml']:
+            return Variable(name, VariableType.YAML, contents)
+        else:
+            return Variable(name, VariableType.STRING, contents)

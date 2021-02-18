@@ -729,6 +729,18 @@ def add_variable(remote: Optional[str], var_id: str, var_type: str, contents):
     print(f'Variable {var_id} added')
 
 
+@cli_variable.command(name='load')
+@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
+@click.option('--file', type=click.Path(exists=True), required=True, help='Path of variable to load')
+def load_variable(remote: Optional[str], file: str):
+    """Read variable from file and add it to the metadata store"""
+    var = Variable.from_file(file)
+    set_settings_from_remote(remote)
+    metadata_store = Settings.metadata_store(Remotes.aws_profile(remote))
+    metadata_store.set_variable(var)
+    print(f'Variable {var.id} added')
+
+
 @cli_variable.command(name='rm')
 @click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
 @click.option('--var-id')
