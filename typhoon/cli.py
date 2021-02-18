@@ -534,7 +534,11 @@ def dag_test(remote: Optional[str], dag_name: str):
                 passed += 1
             except AssertionError as e:
                 print(e)
-                print(diff(expected_value, result))
+                excluded_from_diff = (str,)
+                if isinstance(expected_value, excluded_from_diff) or isinstance(result, excluded_from_diff):
+                    print(f'Expected "{expected_value}" but found "{result}"')
+                else:
+                    print(diff(expected_value, result))
                 failed += 1
     if failed > 0:
         print(colored(f'{failed} tests failed', 'red'))
@@ -714,7 +718,7 @@ def list_variables(remote: Optional[str], long: bool):
 @cli_variable.command(name='add')
 @click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
 @click.option('--var-id', required=True)
-@click.option('--var-type', autocompletion=get_var_types, help=f'One of {get_var_types(None, None, "")}')
+@click.option('--var-type', required=True, autocompletion=get_var_types, help=f'One of {get_var_types(None, None, "")}')
 @click.option('--contents', prompt=True, help='Value for the variable. Can be piped from STDIN or prompted if empty.')
 def add_variable(remote: Optional[str], var_id: str, var_type: str, contents):
     """Add variable to the metadata store"""
