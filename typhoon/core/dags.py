@@ -314,7 +314,7 @@ class TestCase(BaseModel):
     batch_num: int = Field(
         default=1,
         description='Batch number for the test. If more than one is provided it will run the tests for each')
-    execution_date: Union[datetime, date, None] = Field(default=None, description='Execution date')
+    execution_date: Union[datetime, None] = Field(default=None, description='Execution date')
 
     @property
     def dag_context(self) -> DagContext:

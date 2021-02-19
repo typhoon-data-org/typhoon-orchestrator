@@ -499,6 +499,9 @@ def dag_test(remote: Optional[str], dag_name: str):
     failed = 0
     errors = 0
     for task_name, test_case in dag.tests.items():
+        if task_name not in dag.tasks.keys():
+            print(f'Warning: No task named {task_name}. Skipping tests for it...')
+            continue
         transformation_results = dag.tasks[task_name].execute_adapter(
             batch=test_case.evaluated_batch,
             dag_context=test_case.dag_context,
