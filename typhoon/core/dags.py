@@ -332,18 +332,13 @@ class TestCase(BaseModel):
 
     @property
     def evaluated_batch(self):
-        if isinstance(self.batch, Py):
-            return eval(self.batch.transpile(), {}, self.custom_locals)
-        return self.batch
+        return evaluate_item(self.custom_locals, self.batch)
 
     @property
     def evaluated_expected(self):
         result = {}
         for k, v in self.expected.items():
-            if isinstance(v, Py):
-                result[k] = eval(v.transpile(), {}, self.custom_locals)
-            else:
-                result[k] = v
+            result[k] = evaluate_item(self.custom_locals, v)
         return result
 
 

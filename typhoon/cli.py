@@ -507,7 +507,7 @@ def dag_test(remote: Optional[str], dag_name: str):
         for arg, expected_value in test_case.evaluated_expected.items():
             result = transformation_results[arg]
             if isinstance(result, ArgEvaluationError):
-                print(f'Error evaluating "{arg}". {result.error_type}: {result.message}')
+                print(f'Error evaluating arg "{arg}". {result.error_type}: {result.message}')
                 failed += 1
                 errors += 1
                 continue
@@ -516,11 +516,11 @@ def dag_test(remote: Optional[str], dag_name: str):
                 import pandas as pd
                 if isinstance(expected_value, pd.DataFrame):
                     if isinstance(result, pd.DataFrame):
-                        print(f'Converting dataframes to dicts for arg "{arg}"')
+                        print(f'Converting DataFrames to dicts for arg "{arg}"')
                         expected_value = expected_value.to_dict()
                         result = result.to_dict()
                     else:
-                        print(failed_message + f'. Expected DataFrame but got {result}')
+                        print(failed_message + f'. Expected DataFrame but got {result} of type {type(result)}')
                         failed += 1
                         continue
                 elif isinstance(result, pd.DataFrame):
