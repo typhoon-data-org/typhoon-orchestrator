@@ -1,6 +1,7 @@
 import hashlib
 import os
 import re
+import sys
 from datetime import datetime, date
 from enum import Enum
 from types import SimpleNamespace
@@ -464,8 +465,10 @@ def load_module_from_path(module_path, module_name=None, must_exist=True):
 
 @dataclass
 class ArgEvaluationError:
-    error_type: str
-    message: str
+    code: str
+    error_type: Exception
+    error_value: Exception
+    traceback: object
 
 
 def evaluate_item(custom_locals, item) -> Any:
@@ -474,7 +477,8 @@ def evaluate_item(custom_locals, item) -> Any:
         try:
             result = eval(code, {}, custom_locals)
         except Exception as e:
-            result = ArgEvaluationError(type(e).__name__, str(e))
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            result = ArgEvaluationError(code, exc_type, exc_value, exc_traceback)
         return result
     elif isinstance(item, MultiStep):
         custom_locals_copy = custom_locals.copy()
@@ -487,7 +491,8 @@ def evaluate_item(custom_locals, item) -> Any:
             try:
                 result = eval(code, {}, custom_locals_copy)
             except Exception as e:
-                result = ArgEvaluationError(type(e).__name__, str(e))
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                result = ArgEvaluationError(code, exc_type, exc_value, exc_traceback)
             if 'config[' in name:
                 return result
             else:

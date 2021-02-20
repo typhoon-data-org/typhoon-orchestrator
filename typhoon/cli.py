@@ -3,6 +3,7 @@ import pydoc
 import shutil
 import subprocess
 import sys
+import traceback
 from builtins import AssertionError
 from datetime import datetime
 from pathlib import Path
@@ -447,6 +448,7 @@ def eval_batch(batch: str):
         print('Warning: could not import pandas. Run pip install pandas if you want to use dataframes')
     try:
         batch = eval(batch, {}, custom_locals)
+        return batch
     except Exception as e:
         print(f'FATAL: Got an error while trying to evaluate input: "{e}"', file=sys.stderr)
         sys.exit(-1)
@@ -468,7 +470,7 @@ def task_sample(remote: Optional[str], dag_name: str, task_name: str, batch, bat
         print(f'FATAL: No tasks found matching the name "{task_name}" in dag {dag_name}', file=sys.stderr)
         sys.exit(-1)
     if eval_:
-        eval_batch(batch)
+        batch = eval_batch(batch)
     transformation_results = dag.tasks[task_name].execute_adapter(
         batch,
         DagContext(execution_date=execution_date or datetime.now()),
@@ -476,7 +478,8 @@ def task_sample(remote: Optional[str], dag_name: str, task_name: str, batch, bat
     )
     for config_item, result in transformation_results.items():
         if isinstance(result, ArgEvaluationError):
-            print(f'{config_item}: Error {result.error_type} {result.message}', file=sys.stderr)
+            # traceback.print_exception(result.error_type, result.error_value, result.traceback, limit=5, file=sys.stderr)
+            print(f'{config_item}: {result.error_type.__name__} {result.error_value}', file=sys.stderr)
         else:
             highlighted_result = pygments.highlight(
                 code=TransformationResult(config_item, result).pretty_result,
@@ -510,7 +513,9 @@ def dag_test(remote: Optional[str], dag_name: str):
         for arg, expected_value in test_case.evaluated_expected.items():
             result = transformation_results[arg]
             if isinstance(result, ArgEvaluationError):
-                print(f'Error evaluating arg "{arg}". {result.error_type}: {result.message}')
+                print(f'Error evaluating arg "{arg}"')
+                # traceback.print_exception(result.error_type, result.error_value, result.traceback, limit=5, file=sys.stderr)
+                print(f'Error evaluating arg "{arg}". {result.error_type.__name__}: {result.error_value}')
                 failed += 1
                 errors += 1
                 continue
