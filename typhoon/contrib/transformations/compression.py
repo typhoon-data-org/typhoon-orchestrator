@@ -13,6 +13,7 @@ def gzip(data: Union[str, bytes, BytesIO]) -> BytesIO:
     out = BytesIO()
     with gz.GzipFile(fileobj=out, mode="wb") as f:
         f.write(data)
+    out.seek(0)
     return out
 
 
