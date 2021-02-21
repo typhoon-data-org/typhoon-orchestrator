@@ -6,8 +6,8 @@ from typing_extensions import TypedDict
 
 from typhoon.core.dags import DAG, Edge, Node
 from typhoon.core.templated import Templated
-from typhoon.core.transpiler import get_functions_modules, get_transformations_modules, clean_simple_param, \
-    substitute_special, clean_function_name
+from typhoon.core.transpiler import get_transformations_modules, get_functions_modules, clean_function_name, \
+    clean_simple_param, substitute_special
 from typhoon.deployment.targets.airflow.airflow_cron import aws_schedule_to_airflow_cron, timedelta_from_cron
 
 

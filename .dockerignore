@@ -1,0 +1,8 @@
+Dockerfile
+.git*
+makefile
+tests
+dist
+.pytest_cache
+site
+typhoon_orchestrator.egg-info

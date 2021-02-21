@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Iterable
 
 from typing_extensions import Protocol
 
@@ -8,6 +8,8 @@ from typhoon.contrib.hooks.hook_interface import HookInterface
 
 class CursorProtocol(Protocol):
     def execute(self, query: str): ...
+
+    def executemany(self, query: str, seq_of_params: Iterable[tuple]): ...
 
     def fetchmany(self, size): ...
 

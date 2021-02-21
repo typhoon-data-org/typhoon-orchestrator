@@ -1,6 +1,6 @@
 """Example module with data transformations"""
 from io import StringIO, BytesIO
-from typing import Union
+from typing import Union, List, TypeVar
 
 
 def to_bytes_buffer(data: Union[StringIO, str, bytes]):
@@ -17,3 +17,10 @@ def buffer_to_string(buffer: Union[StringIO, BytesIO]):
         return value.decode()
     else:
         return value
+
+
+T = TypeVar('T')
+
+
+def first(x: List[T]) -> T:
+    return x[0] if len(x) > 0 else None

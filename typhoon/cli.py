@@ -3,6 +3,8 @@ import pydoc
 import shutil
 import subprocess
 import sys
+import traceback
+from builtins import AssertionError
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -12,6 +14,8 @@ import pkg_resources
 import pygments
 import yaml
 from dataclasses import asdict
+from datadiff import diff
+from datadiff.tools import assert_equal
 from pygments.formatters.terminal256 import Terminal256Formatter
 from pygments.lexers.data import YamlLexer
 from pygments.lexers.python import PythonLexer
@@ -25,8 +29,8 @@ from typhoon.cli_helpers.status import dags_with_changes, dags_without_deploy, c
     check_connections_dags, check_variables_dags
 from typhoon.connections import Connection
 from typhoon.core import DagContext
-from typhoon.core.dags import DAG
-from typhoon.core.glue import get_dag_errors, load_dag
+from typhoon.core.dags import DAG, DAGDefinitionV2, ArgEvaluationError
+from typhoon.core.glue import get_dag_errors, load_dag, load_dag_definition
 from typhoon.core.settings import Settings, EnvVarName, set_settings_from_file
 from typhoon.deployment.packaging import build_all_dags
 from typhoon.deployment.targets.airflow.airflow_build import build_all_dags_airflow
@@ -78,7 +82,7 @@ def init(project_name: str, deploy_target: str):
         dest = Path.cwd() / project_name
     shutil.copytree(str(example_project_path), str(dest))
     (dest / 'typhoon.cfg').write_text(EXAMPLE_CONFIG.format(project_name=project_name, deploy_target=deploy_target))
-    (dest / 'dag_schema.json').write_text(DAG.schema_json(indent=2))
+    (dest / 'dag_schema.json').write_text(DAGDefinitionV2.schema_json(indent=2))
     print(f'Project created in {dest}')
 
 
@@ -378,6 +382,16 @@ def _get_dag(remote: str, dag_name: str) -> DAG:
     return dag
 
 
+def _get_dag_definition(remote: str, dag_name: str) -> DAGDefinitionV2:
+    if remote is None:
+        result = load_dag_definition(dag_name, ignore_errors=True)
+        if not result:
+            print(f'FATAL: No dags found matching the name "{dag_name}"', file=sys.stderr)
+            sys.exit(-1)
+        dag, _ = result
+        return dag
+    assert False
+
 @cli_nodes.command(name='ls')
 @click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
 @click.option('--dag-name', autocompletion=get_dag_names)
@@ -417,6 +431,126 @@ def node_definition(remote: Optional[str], dag_name: str, node_name: str):
             formatter=Terminal256Formatter()
         )
     )
+
+
+@cli_dags.group(name='task')
+def cli_tasks():
+    """Manage Typhoon DAG tasks"""
+    pass
+
+
+def eval_batch(batch: str):
+    custom_locals = {}
+    try:
+        import pandas as pd
+        custom_locals['pd'] = pd
+    except ImportError:
+        print('Warning: could not import pandas. Run pip install pandas if you want to use dataframes')
+    try:
+        batch = eval(batch, {}, custom_locals)
+        return batch
+    except Exception as e:
+        print(f'FATAL: Got an error while trying to evaluate input: "{e}"', file=sys.stderr)
+        sys.exit(-1)
+
+
+@cli_tasks.command(name='sample')
+@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
+@click.option('--dag-name', autocompletion=get_dag_names, required=True)
+@click.option('--task-name', autocompletion=get_edge_names, required=True)
+@click.option('--batch', help='Input batch to node transformations', required=True)
+@click.option('--batch-num', help='Batch number', type=int, required=False, default=1)
+@click.option('--execution-date', type=click.DateTime(), default=None, help='Input batch to node transformations')
+@click.option('--eval', 'eval_', is_flag=True, default=False, help='If true evaluate the input string')
+def task_sample(remote: Optional[str], dag_name: str, task_name: str, batch, batch_num, execution_date: datetime, eval_: bool):
+    """Test transformations for task"""
+    set_settings_from_remote(remote)
+    dag = _get_dag_definition(remote, dag_name)
+    if task_name not in dag.tasks.keys():
+        print(f'FATAL: No tasks found matching the name "{task_name}" in dag {dag_name}', file=sys.stderr)
+        sys.exit(-1)
+    if eval_:
+        batch = eval_batch(batch)
+    transformation_results = dag.tasks[task_name].execute_adapter(
+        batch,
+        DagContext(execution_date=execution_date or datetime.now()),
+        batch_num,
+    )
+    for config_item, result in transformation_results.items():
+        if isinstance(result, ArgEvaluationError):
+            # traceback.print_exception(result.error_type, result.error_value, result.traceback, limit=5, file=sys.stderr)
+            print(f'{config_item}: {result.error_type.__name__} {result.error_value}', file=sys.stderr)
+        else:
+            highlighted_result = pygments.highlight(
+                code=TransformationResult(config_item, result).pretty_result,
+                lexer=PythonLexer(),
+                formatter=Terminal256Formatter()
+            )
+            print(colored(f'{config_item}:', 'green'), highlighted_result, end='')
+
+
+@cli_dags.command(name='test')
+@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
+@click.option('--dag-name', autocompletion=get_dag_names, required=True)
+def dag_test(remote: Optional[str], dag_name: str):
+    set_settings_from_remote(remote)
+    dag = _get_dag_definition(remote, dag_name)
+    if dag.tests is None:
+        print(f'No tests found for DAG {dag_name}')
+        return
+    passed = 0
+    failed = 0
+    errors = 0
+    for task_name, test_case in dag.tests.items():
+        if task_name not in dag.tasks.keys():
+            print(f'Warning: No task named {task_name}. Skipping tests for it...')
+            continue
+        transformation_results = dag.tasks[task_name].execute_adapter(
+            batch=test_case.evaluated_batch,
+            dag_context=test_case.dag_context,
+            batch_num=test_case.batch_num,
+        )
+        for arg, expected_value in test_case.evaluated_expected.items():
+            result = transformation_results[arg]
+            if isinstance(result, ArgEvaluationError):
+                print(f'Error evaluating arg "{arg}"')
+                # traceback.print_exception(result.error_type, result.error_value, result.traceback, limit=5, file=sys.stderr)
+                print(f'Error evaluating arg "{arg}". {result.error_type.__name__}: {result.error_value}')
+                failed += 1
+                errors += 1
+                continue
+            failed_message = f'Failed test for "{arg}"'
+            try:
+                import pandas as pd
+                if isinstance(expected_value, pd.DataFrame):
+                    if isinstance(result, pd.DataFrame):
+                        print(f'Converting DataFrames to dicts for arg "{arg}"')
+                        expected_value = expected_value.to_dict()
+                        result = result.to_dict()
+                    else:
+                        print(failed_message + f'. Expected DataFrame but got {result} of type {type(result)}')
+                        failed += 1
+                        continue
+                elif isinstance(result, pd.DataFrame):
+                    print(f'Did not expect a DataFrame as result, expected {type(expected_value)}')
+                    continue
+            except ImportError:
+                pass
+
+            try:
+                assert_equal(expected_value, result, msg=failed_message)
+                passed += 1
+            except AssertionError as e:
+                print(e)
+                excluded_from_diff = (str,)
+                if isinstance(expected_value, excluded_from_diff) or isinstance(result, excluded_from_diff):
+                    print(f'Expected "{expected_value}" but found "{result}"')
+                else:
+                    print(diff(expected_value, result))
+                failed += 1
+    if failed > 0:
+        print(colored(f'{failed} tests failed', 'red'))
+    print(colored(f'{passed} tests passed', 'green'))
 
 
 @cli_dags.group(name='edge')
@@ -592,7 +726,7 @@ def list_variables(remote: Optional[str], long: bool):
 @cli_variable.command(name='add')
 @click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
 @click.option('--var-id', required=True)
-@click.option('--var-type', autocompletion=get_var_types, help=f'One of {get_var_types(None, None, "")}')
+@click.option('--var-type', required=True, autocompletion=get_var_types, help=f'One of {get_var_types(None, None, "")}')
 @click.option('--contents', prompt=True, help='Value for the variable. Can be piped from STDIN or prompted if empty.')
 def add_variable(remote: Optional[str], var_id: str, var_type: str, contents):
     """Add variable to the metadata store"""
@@ -601,6 +735,18 @@ def add_variable(remote: Optional[str], var_id: str, var_type: str, contents):
     var = Variable(var_id, VariableType[var_type.upper()], contents)
     metadata_store.set_variable(var)
     print(f'Variable {var_id} added')
+
+
+@cli_variable.command(name='load')
+@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
+@click.option('--file', type=click.Path(exists=True), required=True, help='Path of variable to load')
+def load_variable(remote: Optional[str], file: str):
+    """Read variable from file and add it to the metadata store"""
+    var = Variable.from_file(file)
+    set_settings_from_remote(remote)
+    metadata_store = Settings.metadata_store(Remotes.aws_profile(remote))
+    metadata_store.set_variable(var)
+    print(f'Variable {var.id} added')
 
 
 @cli_variable.command(name='rm')

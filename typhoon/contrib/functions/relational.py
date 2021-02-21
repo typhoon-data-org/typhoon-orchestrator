@@ -1,7 +1,7 @@
 import logging
 from contextlib import closing
 from itertools import count
-from typing import Optional, NamedTuple, Sequence, Generator
+from typing import Optional, NamedTuple, Sequence, Generator, Iterable
 
 import jinja2
 
@@ -74,6 +74,12 @@ def read_sql(hook: DbApiHook, query: str, batch_size: Optional[int] = None, meta
             return pd.read_sql(query, conn), metadata
         for chunk in pd.read_sql(query, conn, chunksize=batch_size):
             yield chunk, metadata
+
+
+def execute_many(hook: DbApiHook, query: str, seq_of_params: Iterable[tuple], metadata: dict = None) -> dict:
+    with hook as conn, closing(conn.cursor()) as cursor:
+        cursor.executemany(query, seq_of_params)
+    return metadata
 
 
 # def df_write(df: DataFrame, hook: SqlAlchemyHook, table_name: str, schema: str = None):
