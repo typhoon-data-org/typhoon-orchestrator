@@ -345,10 +345,29 @@ class TestCase(BaseModel):
 
 
 def construct_python_object(loader: yaml.Loader, node: yaml.Node) -> SimpleNamespace:
+    result = SimpleNamespace.__new__(SimpleNamespace)
+    yield result
     attributes = loader.construct_mapping(node)
     if not isinstance(attributes, dict):
         raise ValueError(f'Error constructing PyObj. Expected dictionary, found {attributes}')
-    return SimpleNamespace(**attributes)
+    result.__init__(**attributes)
+
+
+@dataclass
+class DataFrameFuture:
+    data: Union[List[dict], Dict[str, list]]
+
+
+def construct_dataframe(loader: yaml.Loader, node: yaml.Node):
+    result = DataFrameFuture.__new__(DataFrameFuture)
+    yield result
+    if isinstance(node, yaml.SequenceNode):
+        data = loader.construct_sequence(node)
+    elif isinstance(node, yaml.MappingNode):
+        data = loader.construct_mapping(node)
+    else:
+        raise ValueError(f'Error constructing DataFrame. Expected dictionary or array of dictionaries, found {type(node)}')
+    result.__init__(data)
 
 
 def add_yaml_constructors():
@@ -357,6 +376,7 @@ def add_yaml_constructors():
     yaml.add_constructor('!Var', construct_variable)
     yaml.add_constructor('!MultiStep', MultiStep.construct)
     yaml.add_constructor('!PyObj', construct_python_object)
+    yaml.add_constructor('!DataFrame', construct_dataframe)
 
 
 class TaskDefinition(BaseModel):
@@ -430,11 +450,11 @@ class TaskDefinition(BaseModel):
         else:
             custom_transformations_ns = None
 
-        import typhoon.contrib.transformations as typhoon
+        import typhoon.contrib.transformations as typhoon_transformations
         custom_locals = locals()
         custom_locals['Settings'] = Settings
         custom_locals['transformations'] = custom_transformations_ns
-        custom_locals['typhoon'] = typhoon
+        custom_locals['typhoon_transformations'] = typhoon_transformations
         custom_locals['batch'] = batch
         custom_locals['batch_num'] = batch_num
         custom_locals['dag_context'] = dag_context
@@ -489,6 +509,8 @@ def evaluate_item(custom_locals, item) -> Any:
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             result = ArgEvaluationError(code, exc_type, exc_value, exc_traceback)
+            print(code)
+            raise e
         return result
     elif isinstance(item, MultiStep):
         custom_locals_copy = custom_locals.copy()
@@ -513,6 +535,13 @@ def evaluate_item(custom_locals, item) -> Any:
         return [evaluate_item(custom_locals, x) for x in item]
     elif isinstance(item, dict):
         return {k: evaluate_item(custom_locals, v) for k, v in item.items()}
+    elif isinstance(item, SimpleNamespace):
+        for k, v in item.__dict__.items():
+            item.__setattr__(k, evaluate_item(custom_locals, v))
+        return item
+    elif isinstance(item, DataFrameFuture):
+        import pandas as pd
+        return pd.DataFrame(item.data)
     else:
         return item
 

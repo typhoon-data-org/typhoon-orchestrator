@@ -4,3 +4,5 @@ This module contains the functions that can be used to transform the output data
 """
 from typhoon.contrib.transformations import db_result
 from typhoon.contrib.transformations.templates import render
+from typhoon.contrib.transformations import compression
+from typhoon.contrib.transformations import decompression
