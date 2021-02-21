@@ -3,6 +3,7 @@ from ast import literal_eval
 from enum import Enum
 from pathlib import Path
 
+import jinja2
 import yaml
 from dataclasses import dataclass
 from typing import Union
@@ -36,8 +37,10 @@ class Variable:
             self.type = VariableType(self.type)
 
     def get_contents(self):
-        if self.type is VariableType.STRING or self.type is VariableType.JINJA:
+        if self.type is VariableType.STRING:
             return self.contents
+        elif self.type is VariableType.JINJA:
+            return jinja2.Template(self.contents)
         elif self.type is VariableType.NUMBER:
             try:
                 num = literal_eval(self.contents)
