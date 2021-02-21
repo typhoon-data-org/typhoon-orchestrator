@@ -343,11 +343,19 @@ class TestCase(BaseModel):
         return result
 
 
+def construct_python_object(loader: yaml.Loader, node: yaml.Node) -> SimpleNamespace:
+    attributes = loader.construct_mapping(node)
+    if not isinstance(attributes, dict):
+        raise ValueError(f'Error constructing PyObj. Expected dictionary, found {attributes}')
+    return SimpleNamespace(**attributes)
+
+
 def add_yaml_constructors():
     yaml.add_constructor('!Py', Py.construct)
     yaml.add_constructor('!Hook', construct_hook)
     yaml.add_constructor('!Var', construct_variable)
     yaml.add_constructor('!MultiStep', MultiStep.construct)
+    yaml.add_constructor('!PyObj', construct_python_object)
 
 
 class TaskDefinition(BaseModel):
@@ -423,6 +431,7 @@ class TaskDefinition(BaseModel):
 
         import typhoon.contrib.transformations as typhoon
         custom_locals = locals()
+        custom_locals['Settings'] = Settings
         custom_locals['transformations'] = custom_transformations_ns
         custom_locals['typhoon'] = typhoon
         custom_locals['batch'] = batch

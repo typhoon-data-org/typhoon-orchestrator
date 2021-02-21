@@ -6,7 +6,7 @@ from typing import List, Optional
 import yaml
 from termcolor import colored
 
-from typhoon.core.dags import DagDeployment
+from typhoon.core.dags import DagDeployment, add_yaml_constructors
 from typhoon.core.glue import get_dag_filenames, get_dags_contents
 from typhoon.core.metadata_store_interface import MetadataObjectNotFound
 from typhoon.core.settings import Settings
@@ -14,11 +14,12 @@ from typhoon.remotes import Remotes
 
 
 def dags_with_changes() -> List[str]:
+    add_yaml_constructors()
     result = []
     for dag_file in get_dag_filenames():
         yaml_path = Path(Settings.dags_directory) / dag_file
         yaml_modified_ts = datetime.fromtimestamp(yaml_path.stat().st_mtime)
-        dag_name = yaml.safe_load(yaml_path.read_text())['name']
+        dag_name = yaml.load(yaml_path.read_text(), yaml.FullLoader)['name']
         transpiled_path = Path(Settings.out_directory) / dag_name / f'{dag_name}.py'
         if not transpiled_path.exists():
             continue
@@ -30,9 +31,10 @@ def dags_with_changes() -> List[str]:
 
 
 def dags_without_deploy(remote: Optional[str]) -> List[str]:
+    add_yaml_constructors()
     undeployed_dags = []
     for dag_code in get_dags_contents(Settings.dags_directory):
-        loaded_dag = yaml.safe_load(dag_code)
+        loaded_dag = yaml.load(dag_code, yaml.FullLoader)
         dag_deployment = DagDeployment(dag_name=loaded_dag['name'], deployment_date=datetime.utcnow(), dag_code=dag_code)
         metadata_store = Settings.metadata_store(Remotes.aws_profile(remote))
         if loaded_dag.get('active', True):
@@ -86,7 +88,7 @@ def check_connections_yaml(remote: Optional[str]):
 def check_connections_dags(remote: Optional[str]):
     all_conn_ids = set()
     for dag_file in Path(Settings.dags_directory).rglob('*.yml'):
-        conn_ids = re.findall(r'\$HOOK\.(\w+)', dag_file.read_text())
+        conn_ids = re.findall(r'(?:\$HOOK\.|!Hook\s+)(\w+)', dag_file.read_text())
         all_conn_ids = all_conn_ids.union(conn_ids)
     undefined_connections = get_undefined_connections_in_metadata_db(remote, conn_ids=all_conn_ids)
     if undefined_connections:
@@ -105,7 +107,7 @@ def check_connections_dags(remote: Optional[str]):
 def check_variables_dags(remote: Optional[str]):
     all_var_ids = set()
     for dag_file in Path(Settings.dags_directory).rglob('*.yml'):
-        var_ids = re.findall(r'\$VARIABLE\.(\w+)', dag_file.read_text())
+        var_ids = re.findall(r'(?:\$VARIABLE\.|!Var\s+)(\w+)', dag_file.read_text())
         all_var_ids = all_var_ids.union(var_ids)
     undefined_variables = get_undefined_variables_in_metadata_db(remote, var_ids=all_var_ids)
     if undefined_variables:
