@@ -6,22 +6,37 @@ from typhoon.core.templated import Templated
 from typing import Any, List, Tuple, Iterable, Dict, Union
 
 
+def get_transformations_item(item) -> List[str]:
+    if isinstance(item, Py) and 'transformations.' in item.value:
+        return re.findall(r'(transformations\.\w+)\.\w+', item.value)
+    elif isinstance(item, MultiStep):
+        modules = []
+        for x in item.value:
+            mods = get_transformations_item(x)
+            modules += mods
+        return modules
+    elif isinstance(item, list):
+        modules = []
+        for x in item:
+            modules += get_transformations_item(x)
+        return modules
+    elif isinstance(item, dict):
+        modules = []
+        for k, v in item.items():
+            modules += get_transformations_item(v)
+        return modules
+    else:
+        return []
+
+
 def get_transformations_modules(dag: DAG) -> Iterable[str]:
     if isinstance(dag, dict):
         dag = DAG.parse_obj(dag)
     modules = set()
     for edge in dag.edges.values():
         for val in edge.adapter.values():
-            if isinstance(val, Py) and 'transformations.' in val.value:
-                mods = re.findall(r'(transformations\.\w+)\.\w+', val.value)
-                modules = modules.union(mods)
-            elif isinstance(val, MultiStep):
-                for x in val.value:
-                    if not isinstance(x, Py):
-                        continue
-                    mods = re.findall(r'(transformations\.\w+)\.\w+', x.value)
-                    modules = modules.union(mods)
-
+            mods = get_transformations_item(val)
+            modules = modules.union(mods)
     return list(modules)
 
 
