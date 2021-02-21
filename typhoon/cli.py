@@ -82,7 +82,7 @@ def init(project_name: str, deploy_target: str):
         dest = Path.cwd() / project_name
     shutil.copytree(str(example_project_path), str(dest))
     (dest / 'typhoon.cfg').write_text(EXAMPLE_CONFIG.format(project_name=project_name, deploy_target=deploy_target))
-    (dest / 'dag_schema.json').write_text(DAG.schema_json(indent=2))
+    (dest / 'dag_schema.json').write_text(DAGDefinitionV2.schema_json(indent=2))
     print(f'Project created in {dest}')
 
 
