@@ -31,6 +31,7 @@ class Py:
             code = re.sub(r'\$(\d)+', r"{key}_\g<1>".format(key=self.key), code)
         code = re.sub(r'\$HOOK(\.(\w+))', r'get_hook("\g<2>")', code)
         code = re.sub(r'\$VARIABLE(\.(\w+))', r'Settings.metadata_store().get_variable("\g<2>").get_contents()', code)
+        code = re.sub(r'typhoon\.(\w+\.\w+)', r'typhoon_transformations.\g<1>', code)
         return code
 
     @staticmethod
