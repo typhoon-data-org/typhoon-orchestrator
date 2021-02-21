@@ -6,7 +6,7 @@ from typing import Optional, NamedTuple, Sequence, Generator, Iterable
 import jinja2
 
 from typhoon.contrib.hooks.dbapi_hooks import DbApiHook
-
+from typhoon.contrib.hooks.sqlalchemy_hook import SqlAlchemyHook
 
 class ExecuteQueryResult(NamedTuple):
     schema: str
@@ -36,13 +36,20 @@ def execute_query(
     :return: ExecuteQueryResult namedtuple
     """
     query_template_params = query_template_params or {}
-    query = jinja2.Template(query).render(
+    query = query.render(
         dict(schema=schema, table_name=table_name, **query_template_params)
     )
-    with hook as conn, closing(conn.cursor()) as cursor:
+    
+    with hook as conn:
         logging.info(f'Executing query: {query}')
-        cursor.execute(query)
-        columns = [x[0] for x in cursor.description]
+        if isinstance(hook, SqlAlchemyHook):
+            cursor = conn.engine.execute(query)
+            columns = [x[0] for x in cursor._cursor_description()]
+        else:
+            cursor = conn.cursor()
+            cursor.execute(query)
+            columns = [x[0] for x in cursor.description]
+        
         if not batch_size:
             logging.info(f'Fetching all results for {schema}.{table_name}')
             yield ExecuteQueryResult(
