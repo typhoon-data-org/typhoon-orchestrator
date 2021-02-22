@@ -9,8 +9,7 @@ from typhoon.contrib.hooks.dbapi_hooks import DbApiHook
 from typhoon.contrib.hooks.sqlalchemy_hook import SqlAlchemyHook
 
 class ExecuteQueryResult(NamedTuple):
-    schema: str
-    table_name: str
+    metadata: dict
     columns: Sequence
     batch: Sequence[Sequence]
     batch_num: int
@@ -18,10 +17,9 @@ class ExecuteQueryResult(NamedTuple):
 
 def execute_query(
         hook: DbApiHook,
-        schema: str,
-        table_name: str,
         query: str,
         batch_size: Optional[int] = None,
+        metadata: Optional[dict] = None,
         query_template_params: Optional[dict] = None,
 ) -> Generator[ExecuteQueryResult, None, None]:
     """
@@ -35,39 +33,39 @@ def execute_query(
     :param query_template_params: Will used to render the query template
     :return: ExecuteQueryResult namedtuple
     """
-    query_template_params = query_template_params or {}
-    query = query.render(
-        dict(schema=schema, table_name=table_name, **query_template_params)
-    )
+    #query_template_params = query_template_params or {}
+    #query = query.render(
+    #    dict(schema=schema, table_name=table_name, **query_template_params)
+    #)
+       
+    
     
     with hook as conn:
         logging.info(f'Executing query: {query}')
         if isinstance(hook, SqlAlchemyHook):
-            cursor = conn.engine.execute(query)
+            cursor = conn.engine.execute(query, query_template_params)
             columns = [x[0] for x in cursor._cursor_description()]
         else:
             cursor = conn.cursor()
-            cursor.execute(query)
+            cursor.execute(query, query_template_params)
             columns = [x[0] for x in cursor.description]
         
         if not batch_size:
-            logging.info(f'Fetching all results for {schema}.{table_name}')
+            logging.info(f'Fetching all results')
             yield ExecuteQueryResult(
-                schema=schema,
-                table_name=table_name,
+                metadata=metadata,
                 columns=columns,
                 batch=cursor.fetchall(),
                 batch_num=1,
             )
         else:
             for batch_num in count(start=1):
-                logging.info(f'Fetching {batch_size} rows for {schema}.{table_name}')
+                logging.info(f'Fetching {batch_size} rows')
                 batch = cursor.fetchmany(batch_size)
                 if not batch:
                     break
                 yield ExecuteQueryResult(
-                    schema=schema,
-                    table_name=table_name,
+                    metadata=metadata,
                     columns=columns,
                     batch=batch,
                     batch_num=batch_num,
