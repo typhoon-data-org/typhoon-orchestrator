@@ -2,7 +2,7 @@ import hashlib
 import os
 import re
 import sys
-from datetime import datetime, date
+from datetime import datetime
 from enum import Enum
 from types import SimpleNamespace
 from typing import List, Union, Dict, Any, Optional
@@ -176,6 +176,8 @@ class Edge(BaseModel):
         description='Adapts the output of the source node to the input of the destination node'
     )
     destination: str = Field(..., regex=IDENTIFIER_REGEX, description='ID of destination node')
+    args_dict_name: Optional[str] = Field(default=None)
+    component_args: Dict[str, Any] = Field(default={})
 
     @validator('adapter')
     def validate_adapter_keys(cls, v):
@@ -384,14 +386,23 @@ class TaskDefinition(BaseModel):
         default=None,
         description='Task or tasks that will send their output as input to the current node'
     )
-    function: str = Field(
-        ...,
+    function: Optional[str] = Field(
+        default=None,
         regex=r'(typhoon\.\w+\.\w+|functions\.\w+\.\w+)',
         description="""Python function that will get called when the task runs.
                     If it is a built-in typhoon function it will have the following structure:
                       typhoon.[MODULE_NAME].[FUNCTION_NAME]
                     Whereas if it is a user defined function it will have the following structure:
                       functions.[MODULE_NAME].[FUNCTION_NAME]"""
+    )
+    component: Optional[str] = Field(
+        default=None,
+        regex=r'(typhoon\.\w+|components\.\w+\.\w+)',
+        description="""Typhoon component that will get substituted for its tasks.
+                    If it is a built-in typhoon component it will have the following structure:
+                      typhoon.[COMPONENT_NAME]
+                    Whereas if it is a user defined component it will have the following structure:
+                      components.[COMPONENT_NAME]"""
     )
     asynchronous: bool = Field(
         default=True,
@@ -409,6 +420,14 @@ class TaskDefinition(BaseModel):
                 raise ValueError(f'Arg "{k}" should be an identifier')
             if isinstance(v, MultiStep):
                 v.key = k
+        return val
+
+    @validator('function')
+    def validate_function(cls, val, values, **kwargs):
+        if val is not None and 'component' in values.keys():
+            raise ValueError('Function and component are mutually exclusive')
+        elif val is None and 'component' not in values.keys():
+            raise ValueError('Either function or component is necessary')
         return val
 
     def make_config(self) -> dict:
@@ -563,7 +582,9 @@ class DAGDefinitionV2(BaseModel):
     tasks: Dict[str, TaskDefinition]
     tests: Optional[Dict[str, TestCase]]
 
+    # noinspection PyProtectedMember
     def make_dag(self) -> DAG:
+        self.substitute_components()
         nodes = {
             task_name: Node(
                 function=task.function,
@@ -599,6 +620,44 @@ class DAGDefinitionV2(BaseModel):
         execute_results = task.execute_adapter(batch, dag_context, batch_num)
         for k, v in test_case.expected.items():
             assert v == execute_results[k]
+
+    def substitute_components(self):
+        from typhoon.core.glue import load_components
+        from typhoon.core import components
+
+        typhoon_components = {
+            c.name: c
+            for c, _ in load_components(ignore_errors=True, kind='typhoon')
+        }
+        custom_components = {
+            c.name: c
+            for c, _ in load_components(ignore_errors=True, kind='custom')
+        }
+        tasks_to_add = {}
+        tasks_to_remove = []
+        for task_name, task in self.tasks.items():
+            if task.input is not None and '.' in task.input:
+                input_task, component_output = task.input.split('.')
+                component_name = self.tasks[input_task].component
+                if component_name.startswith('typhoon.'):
+                    component = typhoon_components.get(component_name.split('.')[1])
+                else:
+                    component = custom_components.get(component_name.split('.')[1])
+                if not component.can_connect(component_output):
+                    raise ValueError(f'Can not connect {component_name} in task {task_name}. Does not have output {component_output}')
+                task.input = components.task_name(name_in_dag=input_task, task=component_output)
+            if task.component is not None:
+                component_name = task.component
+                if component_name.startswith('typhoon.'):
+                    component = typhoon_components.get(component_name.split('.')[1])
+                else:
+                    component = custom_components.get(component_name.split('.')[1])
+                tasks_to_add.update(
+                    **component.make_tasks(name_in_dag=task_name, input_task=task.input, input_arg_values=task.args))
+                tasks_to_remove.append(task_name)
+        for task_name in tasks_to_remove:
+            del self.tasks[task_name]
+        self.tasks.update(**tasks_to_add)
 
 
 def uses_batch(item):
