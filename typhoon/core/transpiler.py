@@ -1,7 +1,7 @@
 import re
 
 from dataclasses import dataclass
-from typhoon.core.dags import DAG, Py, MultiStep, Node
+from typhoon.core.dags import DAG, Py, MultiStep, Node, Edge
 from typhoon.core.templated import Templated
 from typing import Any, List, Tuple, Iterable, Dict, Union
 
@@ -154,7 +154,7 @@ class TyphoonFileTemplate(Templated):
         {{ k | adapter_params(v) | indent(4, False) }}
         {% endfor %}
         out = {{ node['function'] | clean_function_name('functions') }}(
-            **config,
+            **{k: v for k, v in config.items() if not k.startswith('_')},   # Remove component args from config
         )
         if isinstance(out, types.GeneratorType):
             yield from out

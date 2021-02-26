@@ -95,6 +95,10 @@ class TyphoonSettings:
         return Path(self.typhoon_home)/'dags'
 
     @property
+    def components_directory(self) -> Path:
+        return Path(self.typhoon_home)/'components'
+
+    @property
     def out_directory(self) -> Path:
         return Path(self.typhoon_home)/'out'
 

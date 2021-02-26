@@ -8,10 +8,12 @@ from typing import Union, List, Tuple, Dict, Optional
 
 import yaml
 from pydantic import ValidationError
+from typhoon.core.components import Component
 
 from typhoon.core.dags import DAG, DAGDefinitionV2, add_yaml_constructors
 from typhoon.core.settings import Settings
 from typhoon.core.transpiler import TyphoonFileTemplate
+from typing_extensions import Literal
 
 
 def transpile_dag_and_store(dag: dict, output_path: Union[str, Path], debug_mode: bool):
@@ -86,3 +88,32 @@ def get_dags_contents(dags_directory: Union[str, Path]) -> List[str]:
 def get_dag_filenames():
     dag_files = filter(lambda x: x.endswith('.yml'), os.listdir(str(Settings.dags_directory)))
     return dag_files
+
+
+def load_components(
+        ignore_errors: bool = False,
+        kind=Union[Literal['typhoon'], Literal['custom']],
+) -> List[Tuple[Component, str]]:
+    return [(c, cs) for c, cs in load_component_definitions(ignore_errors, kind)]
+
+
+def load_component_definitions(
+        ignore_errors: bool = False,
+        kind=Union[Literal['typhoon'], Literal['custom']],
+) -> List[Tuple[Component, str]]:
+    import typhoon
+
+    add_yaml_constructors()
+    directory = Settings.components_directory if kind == 'custom' else Path(typhoon.__file__).parent/'contrib/components'
+    components = []
+    for component_file in directory.rglob('*.yml'):
+        if ignore_errors:
+            try:
+                comp = Component.parse_obj(yaml.load(component_file.read_text(), yaml.FullLoader))
+            except ValidationError:
+                continue
+        else:
+            comp = Component.parse_obj(yaml.safe_load(component_file.read_text()))
+        components.append((comp, component_file.read_text()))
+
+    return components
