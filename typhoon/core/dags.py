@@ -1,12 +1,14 @@
 import hashlib
+import itertools
 import os
 import re
 import sys
 from datetime import datetime
 from enum import Enum
 from types import SimpleNamespace
-from typing import List, Union, Dict, Any, Optional
+from typing import List, Union, Dict, Any, Optional, Tuple
 
+import jinja2
 import yaml
 from dataclasses import dataclass
 from pydantic import BaseModel, validator, Field, root_validator
@@ -20,6 +22,7 @@ Identifier = Field(..., regex=r'\w+')
 class Py:
     value: str
     key: Optional[str] = None
+    args_dependencies: Optional[List[str]] = None
 
     def transpile(self) -> str:
         code = self.value
@@ -372,6 +375,11 @@ def construct_dataframe(loader: yaml.Loader, node: yaml.Node):
     result.__init__(data)
 
 
+def construct_template(loader: yaml.Loader, node: yaml.Node):
+    template_str = loader.construct_yaml_str(node)
+    return Py(f"jinja2.Template('{template_str}')")
+
+
 def add_yaml_constructors():
     yaml.add_constructor('!Py', Py.construct)
     yaml.add_constructor('!Hook', construct_hook)
@@ -379,6 +387,31 @@ def add_yaml_constructors():
     yaml.add_constructor('!MultiStep', MultiStep.construct)
     yaml.add_constructor('!PyObj', construct_python_object)
     yaml.add_constructor('!DataFrame', construct_dataframe)
+    yaml.add_constructor('!Template', construct_template)
+
+
+def get_deps_and_uses_batch(item):
+    deps = []
+
+    def _uses_batch(item):
+        if isinstance(item, Py):
+            nonlocal deps
+            if item.args_dependencies:
+                deps += item.args_dependencies
+            return '$BATCH' in item.value
+        if isinstance(item, MultiStep):
+            return _uses_batch(item.value)
+        elif isinstance(item, list):
+            items_use_batch = [_uses_batch(x) for x in item]
+            return any(items_use_batch)
+        elif isinstance(item, dict):
+            items_use_batch = [_uses_batch(v) for k, v in item.items()]
+            return any(items_use_batch)
+        elif isinstance(item, (str, float, int)):
+            return False
+        assert False, f'Found type {type(item)} with value {item}'
+    arg_uses_batch = _uses_batch(item)
+    return deps, arg_uses_batch
 
 
 class TaskDefinition(BaseModel):
@@ -430,19 +463,49 @@ class TaskDefinition(BaseModel):
             raise ValueError('Either function or component is necessary')
         return val
 
-    def make_config(self) -> dict:
-        result = {}
-        for k, v in self.args.items():
-            if not uses_batch(v):
-                result[k] = v
-        return result
+    # def make_config(self) -> dict:
+    #     result = {}
+    #     for k, v in self.args.items():
+    #         if not uses_batch(v):
+    #             result[k] = v
+    #     return result
 
-    def make_adapter(self) -> dict:
-        result = {}
+    # def make_adapter(self) -> dict:
+    #     result = {}
+    #     for k, v in self.args.items():
+    #         if uses_batch(v):
+    #             result[k] = v
+    #     return result
+
+    def make_adapter_and_config(self) -> Tuple[dict, dict]:
+        arg_deps = {}
+        args_that_use_batch = []
         for k, v in self.args.items():
-            if uses_batch(v):
-                result[k] = v
-        return result
+            deps, arg_uses_batch = get_deps_and_uses_batch(v)
+            arg_deps[k] = deps
+            if arg_uses_batch:
+                args_that_use_batch.append(k)
+
+        args_that_indirectly_use_batch = [
+            x
+            for x in self.args.keys() if not x.startswith('_') and any(d in args_that_use_batch for d in arg_deps[x])
+        ]
+        args_that_use_batch += args_that_indirectly_use_batch
+        component_args_needed_by_args_that_use_batch = list(
+            itertools.chain(*[arg_deps[x] for x in args_that_use_batch]))
+        adapter = {}
+        for arg in [*component_args_needed_by_args_that_use_batch, *args_that_use_batch]:
+            adapter[arg] = self.args[arg]
+
+        config = {}
+        component_args_that_dont_use_batch = [
+            x for x in self.args.keys() if not x.startswith('_') and x not in args_that_use_batch
+        ]
+        component_args_needed_by_args_that_dont_use_batch = list(
+            itertools.chain(*[arg_deps[x] for x in component_args_that_dont_use_batch]))
+        for arg in [*component_args_needed_by_args_that_dont_use_batch, *component_args_that_dont_use_batch]:
+            config[arg] = self.args[arg]
+        return adapter, config
 
     @staticmethod
     def load_custom_transformations_namespace() -> object:
@@ -463,7 +526,7 @@ class TaskDefinition(BaseModel):
     # noinspection PyUnresolvedReferences
     def execute_adapter(self, batch: Any, dag_context: DagContext, batch_num=1, no_custom_transformations=False)\
             -> Dict[str, Any]:
-        adapter = self.make_adapter()
+        adapter, _ = self.make_adapter_and_config()
         if not no_custom_transformations:
             custom_transformations_ns = self.load_custom_transformations_namespace()
         else:
@@ -585,24 +648,23 @@ class DAGDefinitionV2(BaseModel):
     # noinspection PyProtectedMember
     def make_dag(self) -> DAG:
         self.substitute_components()
-        nodes = {
-            task_name: Node(
-                function=task.function,
-                asynchronous=task.asynchronous,
-                config=task.make_config()
-            )
-            for task_name, task in self.tasks.items()
-        }
+        nodes = {}
         edges = {}
         edge_id = 1
         for task_name, task in self.tasks.items():
+            adapter, config = task.make_adapter_and_config()
+            nodes[task_name] = Node(
+                function=task.function,
+                asynchronous=task.asynchronous,
+                config=config,
+            )
             if task.input:
                 inp = task.input if isinstance(task.input, list) else [task.input]
                 for source_task_id in inp:
                     edges[f'e{edge_id}'] = Edge(
                         source=source_task_id,
                         destination=task_name,
-                        adapter=task.make_adapter(),
+                        adapter=adapter,
                     )
                     edge_id += 1
 
@@ -627,11 +689,11 @@ class DAGDefinitionV2(BaseModel):
 
         typhoon_components = {
             c.name: c
-            for c, _ in load_components(ignore_errors=True, kind='typhoon')
+            for c, _ in load_components(ignore_errors=False, kind='typhoon')
         }
         custom_components = {
             c.name: c
-            for c, _ in load_components(ignore_errors=True, kind='custom')
+            for c, _ in load_components(ignore_errors=False, kind='custom')
         }
         tasks_to_add = {}
         tasks_to_remove = []
@@ -652,8 +714,10 @@ class DAGDefinitionV2(BaseModel):
                     component = typhoon_components.get(component_name.split('.')[1])
                 else:
                     component = custom_components.get(component_name.split('.')[1])
-                tasks_to_add.update(
-                    **component.make_tasks(name_in_dag=task_name, input_task=task.input, input_arg_values=task.args))
+                if component is None:
+                    raise ValueError(f'No component found for {component_name}')
+                component_tasks = component.make_tasks(name_in_dag=task_name, input_task=task.input, input_arg_values=task.args)
+                tasks_to_add.update(**component_tasks)
                 tasks_to_remove.append(task_name)
         for task_name in tasks_to_remove:
             del self.tasks[task_name]

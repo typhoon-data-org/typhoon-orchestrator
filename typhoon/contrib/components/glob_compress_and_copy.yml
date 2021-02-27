@@ -1,0 +1,39 @@
+name: glob_compress_and_copy
+
+args:
+  source_hook: FileSyestemHookInterface
+  destination_hook: FileSyestemHookInterface
+  pattern: str
+  destination_path: jinja2.Template
+  compression: gzip or zlib
+
+tasks:
+  glob_files:
+    function: typhoon.filesystem.glob
+    args:
+      hook: !Py $ARG.source_hook
+      pattern: !Py $ARG.pattern
+
+  read_file:
+    input: glob_files
+    function: typhoon.filesystem.read_data
+    args:
+      hook: !Py $ARG.source_hook
+      path: !Py $BATCH
+
+  write_file:
+    input: read_file
+    function: typhoon.filesystem.write_data
+    args:
+      hook: !Py $ARG.destination_hook
+      path: !MultiStep
+        - dag_context: !Py $DAG_CONTEXT
+          source_filename: !Py typhoon.files.name($BATCH.path)
+          batch_num: !Py $BATCH_NUM
+        - !Py $ARG.destination_path.render($1)
+      data: !MultiStep
+        - !Py typhoon.compression.gzip if $ARG.compression == 'gzip' else typhoon.compression.zlib
+        - !Py $1($BATCH.data)
+
+output:
+  - write_file

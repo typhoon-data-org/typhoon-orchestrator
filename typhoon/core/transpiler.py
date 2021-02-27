@@ -83,6 +83,7 @@ class TyphoonFileTemplate(Templated):
     # Schedule interval = {{ dag.schedule_interval }}
     import os
     import types
+    import jinja2
     from datetime import datetime
     from typing import Dict
     
@@ -124,7 +125,7 @@ class TyphoonFileTemplate(Templated):
     {% for node_name, node in dag.nodes.items() %}
     @task(asynchronous={% if not dev_mode and node.asynchronous %}True{% else %}False{% endif %}, dag_name='{{ dag.name }}')
     def {{ node_name }}_branches(dag_context: DagContext, {% if node_name not in dag.sources%}config, {% endif %}batch_num: int = 0):
-        data_generator = {{ node_name }}_node(dag_context=dag_context, {% if node_name not in dag.sources%}config=config, {% endif %}batch_num=batch_num)
+        data_generator = {{ node_name }}_node(dag_context=dag_context, {% if node_name not in dag.sources%}config=config.copy(), {% endif %}batch_num=batch_num)
         for batch_num, batch in enumerate(data_generator or [], start=1):
             if batch is SKIP_BATCH:
                 print(f'Skipping batch {batch_num} for {{ node_name }}')
@@ -136,9 +137,6 @@ class TyphoonFileTemplate(Templated):
             {{ k | adapter_params(v) | indent(8, False) }}
             {% endfor %}
             {{ out_node }}_branches(dag_context=dag_context, config=config, batch_num=batch_num)
-    
-            {% else %}
-            pass        # Necessary for the generator to be exhausted since it probably has side effects
     
             {% endfor %}
     
@@ -206,7 +204,6 @@ class TyphoonFileTemplate(Templated):
 @dataclass
 class AdapterParams(Templated):
     template = '''
-    # Parameter {{ key }}
     {% if is_literal %}
     config['{{ key }}'] = {{ value | clean_simple_param }}
     {% elif is_py %}

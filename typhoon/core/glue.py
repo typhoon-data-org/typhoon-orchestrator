@@ -113,7 +113,7 @@ def load_component_definitions(
             except ValidationError:
                 continue
         else:
-            comp = Component.parse_obj(yaml.safe_load(component_file.read_text()))
+            comp = Component.parse_obj(yaml.load(component_file.read_text(), yaml.FullLoader))
         components.append((comp, component_file.read_text()))
 
     return components

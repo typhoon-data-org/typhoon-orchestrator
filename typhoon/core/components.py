@@ -29,15 +29,22 @@ class Component(BaseModel):
     tasks: Dict[str, TaskDefinition]
     output: List[str]
 
-    def replace_input_and_args(self, task: TaskDefinition, input_task: str, input_arg_values: dict) -> TaskDefinition:
+    def replace_input_and_args(self, name_in_dag: str, task: TaskDefinition, input_task: str, input_arg_values: dict) -> TaskDefinition:
+        if task.input == '$COMPONENT_INPUT':
+            inp = input_task
+        elif isinstance(task.input, str):
+            inp = task_name(name_in_dag, task.input)
+        else:
+            inp = input_task
+        component_config = {
+            config_arg_name(self.name, k): v
+            for k, v in input_arg_values.items()
+        }
         new_task = task.copy(
             update={
-                'input': task.input.replace('$COMPONENT_INPUT', input_task),
+                'input': inp,
                 'args': {
-                    **{
-                        config_arg_name(self.name, k): v
-                        for k, v in input_arg_values.items()
-                    },
+                    **component_config,
                     **{
                         k: self.replace_args_with_reference(v)
                         for k, v in task.args.items()
@@ -49,7 +56,9 @@ class Component(BaseModel):
 
     def replace_args_with_reference(self, item):
         if isinstance(item, Py):
-            item.value = re.sub(r'\$ARG\.(\w+)', f"config['_{self.name}__\\1']", item.value)
+            regex = r'\$ARG\.(\w+)'
+            item.args_dependencies = [f"_{self.name}__{dep}" for dep in re.findall(regex, item.value)] or None
+            item.value = re.sub(regex, f"config['_{self.name}__\\1']", item.value)
             return item
         elif isinstance(item, MultiStep):
             for step in item.value:
@@ -63,16 +72,20 @@ class Component(BaseModel):
             return [self.replace_args_with_reference(x) for x in item]
         elif isinstance(item, dict):
             return {k: self.replace_args_with_reference(v) for k, v in item.items()}
-        assert False
+        return item
 
     def make_tasks(self, name_in_dag: str, input_task: str, input_arg_values: dict) -> Dict[str, TaskDefinition]:
         return {
-            task_name(name_in_dag, k): self.replace_input_and_args(v, input_task, input_arg_values)
+            task_name(name_in_dag, k): self.replace_input_and_args(name_in_dag, v, input_task, input_arg_values)
             for k, v in self.tasks.items()
         }
 
     def can_connect(self, task: str) -> bool:
         return task in self.output
+
+    @property
+    def source_tasks(self) -> Dict[str, TaskDefinition]:
+        return {k: v for k, v in self.tasks.items() if v.input is None}
 
 
 if __name__ == '__main__':
