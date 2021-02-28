@@ -20,15 +20,20 @@ class CopyTemplate(Templated):
     )
     FILE_FORMAT = {{ file_format }}
     {% when copy_options %}
+    
+    {% if pattern %}
+    PATTERN='{{ pattern }}'
+    {% endif %}
     ;
     """
     table: str
     stage_name: str
-    s3_path: str
-    fields: List[FieldMetadata]
-    file_format: Union['NamedFileFormatTemplate', 'CustomFileFormatTemplate']
+    file_format: Union['NamedFileFormatTemplate', 'CustomFileFormatTemplate', str]
+    fields: List[FieldMetadata] = ()
+    s3_path: str = ''
     copy_options: 'CopyOptionsTemplate' = None
     audit_fields: str = None
+    pattern: str = None
 
 
 @dataclass
@@ -94,16 +99,28 @@ class CopyOptionsTemplate(Templated):
 
 
 if __name__ == '__main__':
+    """
+    copy into clients
+  from @stagetestcorpdatalake
+  FILE_FORMAT=csv1
+  PATTERN= 'data_clients_batch_num_1_2021-02-22T23_55_36.csv';
+    """
     rendered_copy = CopyTemplate(
-        table='foo',
-        stage_name='bi',
-        s3_path='bar',
-        fields=[FieldMetadata(name='a', type='varchar'), FieldMetadata(name='b', type='integer')],
-        file_format=CustomFileFormatTemplate(
-            type=FileFormatType.CSV,
-            field_delimiter=Quoted(','),
-            null_if=('null', 'NULL'),
-            compression=FileFormatCompression.AUTO,
-        )
-    ).rendered
+        table='clients',
+        stage_name='stagetestcorpdatalake',
+        file_format='csv1',
+        pattern='data_clients_batch_num_1_2021-02-22T23_55_36.csv',
+    )
+    # rendered_copy = CopyTemplate(
+    #     table='foo',
+    #     stage_name='bi',
+    #     s3_path='bar',
+    #     fields=[FieldMetadata(name='a', type='varchar'), FieldMetadata(name='b', type='integer')],
+    #     file_format=CustomFileFormatTemplate(
+    #         type=FileFormatType.CSV,
+    #         field_delimiter=Quoted(','),
+    #         null_if=('null', 'NULL'),
+    #         compression=FileFormatCompression.AUTO,
+    #     )
+    # ).rendered
     print(rendered_copy)

@@ -1,18 +1,17 @@
 import logging
 from contextlib import closing
-from itertools import count
 from typing import Optional, NamedTuple, Sequence, Generator, Iterable
 
-import jinja2
+import sqlparse
 
 from typhoon.contrib.hooks.dbapi_hooks import DbApiHook
 from typhoon.contrib.hooks.sqlalchemy_hook import SqlAlchemyHook
+
 
 class ExecuteQueryResult(NamedTuple):
     metadata: dict
     columns: Sequence
     batch: Sequence[Sequence]
-    batch_num: int
 
 
 def execute_query(
@@ -20,7 +19,8 @@ def execute_query(
         query: str,
         batch_size: Optional[int] = None,
         metadata: Optional[dict] = None,
-        query_template_params: Optional[dict] = None,
+        query_params: Optional[dict] = None,
+        multi_query: bool = False,
 ) -> Generator[ExecuteQueryResult, None, None]:
     """
     Executes query against a relational database. Schema and table name are returned with the result since they can be
@@ -30,46 +30,39 @@ def execute_query(
     :param table_name: Can be used as template parameter {{ table }} inside the query
     :param query: Query. Can be a jinja2 template
     :param batch_size: Used as parameter to fetchmany. Full extraction if not defined.
-    :param query_template_params: Will used to render the query template
+    :param query_params: Will used to render the query template
     :return: ExecuteQueryResult namedtuple
     """
-    #query_template_params = query_template_params or {}
-    #query = query.render(
-    #    dict(schema=schema, table_name=table_name, **query_template_params)
-    #)
-       
-    
-    
     with hook as conn:
-        logging.info(f'Executing query: {query}')
-        if isinstance(hook, SqlAlchemyHook):
-            cursor = conn.engine.execute(query, query_template_params)
-            columns = [x[0] for x in cursor._cursor_description()]
-        else:
-            cursor = conn.cursor()
-            cursor.execute(query, query_template_params)
-            columns = [x[0] for x in cursor.description]
-        
-        if not batch_size:
-            logging.info(f'Fetching all results')
-            yield ExecuteQueryResult(
-                metadata=metadata,
-                columns=columns,
-                batch=cursor.fetchall(),
-                batch_num=1,
-            )
-        else:
-            for batch_num in count(start=1):
-                logging.info(f'Fetching {batch_size} rows')
-                batch = cursor.fetchmany(batch_size)
-                if not batch:
-                    break
+        for single_query in (sqlparse.split(query) if multi_query else [query]):
+            logging.info(f'Executing query: {single_query}')
+            if isinstance(hook, SqlAlchemyHook):
+                cursor = conn.engine.execute(single_query, query_params)
+                columns = [x[0] for x in cursor._cursor_description()]
+            else:
+                cursor = conn.cursor()
+                cursor.execute(single_query, query_params)
+                columns = [x[0] for x in cursor.description] if cursor.description else None
+            conn.commit()
+
+            if not batch_size:
+                logging.info(f'Fetching all results')
                 yield ExecuteQueryResult(
                     metadata=metadata,
                     columns=columns,
-                    batch=batch,
-                    batch_num=batch_num,
+                    batch=cursor.fetchall(),
                 )
+            else:
+                while True:
+                    logging.info(f'Fetching {batch_size} rows')
+                    batch = cursor.fetchmany(batch_size)
+                    if not batch:
+                        break
+                    yield ExecuteQueryResult(
+                        metadata=metadata,
+                        columns=columns,
+                        batch=batch,
+                    )
 
 
 def read_sql(hook: DbApiHook, query: str, batch_size: Optional[int] = None, metadata: dict = None):

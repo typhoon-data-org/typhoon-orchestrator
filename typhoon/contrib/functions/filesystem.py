@@ -3,13 +3,14 @@ from pathlib import Path
 from typing import Iterable, NamedTuple, Union, List, Optional
 
 from fs.copy import copy_fs
+from fs.info import Info
 
 from typhoon.contrib.hooks.filesystem_hooks import FileSystemHookInterface
 
 
 class ReadDataResponse(NamedTuple):
     data: bytes
-    path: str
+    info: Info
 
 
 def read_data(hook: FileSystemHookInterface, path: Union[Path, str]) -> ReadDataResponse:
@@ -20,7 +21,7 @@ def read_data(hook: FileSystemHookInterface, path: Union[Path, str]) -> ReadData
     """
     with hook as conn:
         print(f'Reading from {path}')
-        return ReadDataResponse(data=conn.readbytes(str(path)), path=path)
+        return ReadDataResponse(data=conn.readbytes(str(path)), info=conn.getinfo(path))
 
 
 def write_data(data: Union[str, bytes, BytesIO], hook: FileSystemHookInterface, path: Union[Path, str]) -> Iterable[str]:
@@ -61,14 +62,46 @@ def copy(source_hook: FileSystemHookInterface, source_path: str, destination_hoo
         copy_fs(source_conn.opendir(source_path), dest_conn.opendir(destination_path))
 
 
-def glob(hook: FileSystemHookInterface, pattern: str, path: Union[Path, str] = '/', exclude_dirs: Optional[List[str]] = None) -> Iterable[str]:
+def glob(hook: FileSystemHookInterface, pattern: str, path: Union[Path, str] = '/', exclude_dirs: Optional[List[str]] = None) -> Iterable[Info]:
     """
     List all the files in a given directory matching the glob pattern
     :param hook: Filesystem hook
     :param pattern: Glob pattern e.g. '*.csv' or '"**/*.py"'
     :param path: Optional directory path
     :param exclude_dirs: An optional list of patterns to exclude when searching e.g. ["*.git"]
+    :return fs.info.Info
+        raw_info (dict) – A dict containing resource info.
+            accessed: datetime. The resource last access time, or None.
+            copy(to_datetime=None)[source]: Create a copy of this resource info object.
+            created: datetime. The resource creation time, or None.
+            get(namespace, key, default=None)[source]: Get a raw info value.
+                Example
+                >>> info.get('access', 'permissions')
+                ['u_r', 'u_w', '_wx']
+            gid: int. The group id of the resource, or None.
+            group: str. The group of the resource owner, or None.
+            has_namespace(namespace)[source]: Check if the resource info contains a given namespace.
+            is_dir: bool. True if the resource references a directory.
+            is_link: bool. True if the resource is a symlink.
+            is_writeable(namespace, key)[source]: Check if a given key in a namespace is writable.
+            make_path(dir_path)[source]: Make a path by joining dir_path with the resource name.
+            modified: datetime. The resource last modification time, or None.
+            name: str. The resource name.
+            permissions: Permissions. The permissions of the resource, or None.
+            size: int. The size of the resource, in bytes.
+            stem: str. The name minus any suffixes.
+                Example
+                >>> info
+                <info 'foo.tar.gz'>
+                >>> info.stem
+                'foo'
+            suffix: str. The last component of the name (including dot), or an empty string if there is no suffix.
+            suffixes: List. A list of any suffixes in the name.
+            target: str. The link target (if resource is a symlink), or None.
+            type: ResourceType. The type of the resource.
+            uid: int. The user id of the resource, or None.
+            user: str. The owner of the resource, or None.
     """
     with hook as conn:
-        for match in conn.glob(pattern, path=path, exclude_dirs=exclude_dirs):
-            yield match.path
+        for match in conn.glob(pattern, path=path, exclude_dirs=exclude_dirs, namespaces=['details', 'access']):
+            yield match

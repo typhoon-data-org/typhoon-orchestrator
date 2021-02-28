@@ -19,7 +19,7 @@ tasks:
     function: typhoon.filesystem.read_data
     args:
       hook: !Py $ARG.source_hook
-      path: !Py $BATCH
+      path: !Py $BATCH.path
 
   write_file:
     input: read_file
@@ -28,7 +28,7 @@ tasks:
       hook: !Py $ARG.destination_hook
       path: !MultiStep
         - dag_context: !Py $DAG_CONTEXT
-          source_filename: !Py typhoon.files.name($BATCH.path)
+          source_filename: !Py $BATCH.info.name
           batch_num: !Py $BATCH_NUM
         - !Py $ARG.destination_path.render($1)
       data: !MultiStep
