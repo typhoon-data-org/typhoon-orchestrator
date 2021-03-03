@@ -3,7 +3,6 @@ import pydoc
 import shutil
 import subprocess
 import sys
-import traceback
 from builtins import AssertionError
 from datetime import datetime
 from pathlib import Path
@@ -32,7 +31,7 @@ from typhoon.core import DagContext
 from typhoon.core.components import Component
 from typhoon.core.dags import DAG, DAGDefinitionV2, ArgEvaluationError
 from typhoon.core.glue import get_dag_errors, load_dag, load_dag_definition
-from typhoon.core.settings import Settings, EnvVarName, set_settings_from_file
+from typhoon.core.settings import Settings
 from typhoon.deployment.packaging import build_all_dags
 from typhoon.deployment.targets.airflow.airflow_build import build_all_dags_airflow
 from typhoon.handler import run_dag
@@ -99,32 +98,32 @@ def status(remote: Optional[str]):
         print(colored(f'FATAL: typhoon home not found...', 'red'))
         return
     else:
-        print(colored('• Typhoon home defined as', 'green'), colored(Settings.typhoon_home, 'grey'))
+        print(colored('• Typhoon home defined as', 'green'), colored(Settings.typhoon_home, 'blue'))
 
     metadata_store = Settings.metadata_store(Remotes.aws_profile(remote))
     if metadata_store.exists():
-        print(colored('• Metadata database found in', 'green'), colored(Settings.metadata_db_url, 'grey'))
+        print(colored('• Metadata database found in', 'green'), colored(Settings.metadata_db_url, 'blue'))
         check_connections_yaml(remote)
         check_connections_dags(remote)
         check_variables_dags(remote)
     elif isinstance(metadata_store, SQLiteMetadataStore):
-        print(colored('• Metadata store not found for', 'yellow'), colored(Settings.metadata_db_url, 'grey'))
+        print(colored('• Metadata store not found for', 'yellow'), colored(Settings.metadata_db_url, 'blue'))
         print(
-            colored('   - It will be created upon use, or create by running (idempotent) command', color='blue'),
-            colored(f'typhoon migrate{" " + remote if remote else ""}', 'grey'))
+            colored('   - It will be created upon use, or create by running (idempotent) command', color=None),
+            colored(f'typhoon migrate{" " + remote if remote else ""}', 'blue'))
         print(colored('  Skipping connections and variables checks...', 'red'))
     else:
-        print(colored('• Metadata store not found or incomplete for', 'red'), colored(Settings.metadata_db_url, 'grey'))
+        print(colored('• Metadata store not found or incomplete for', 'red'), colored(Settings.metadata_db_url, 'blue'))
         print(
-            colored('   - Fix by running (idempotent) command', color='blue'),
-            colored(f'typhoon metadata migrate{" " + remote if remote else ""}', 'grey'))
+            colored('   - Fix by running (idempotent) command', color=None),
+            colored(f'typhoon metadata migrate{" " + remote if remote else ""}', 'blue'))
         print(colored('  Skipping connections and variables checks...', 'red'))
 
     if not remote:
         changed_dags = dags_with_changes()
         if changed_dags:
-            print(colored('• Unbuilt changes in DAGs...', 'yellow'), colored('To rebuild run', 'white'),
-                  colored(f'typhoon dag build{" " + remote if remote else ""} --all [--debug]', 'grey'))
+            print(colored('• Unbuilt changes in DAGs... To rebuild run', 'yellow'),
+                  colored(f'typhoon dag build{" " + remote if remote else ""} --all [--debug]', 'blue'))
             for dag in changed_dags:
                 print(colored(f'   - {dag}', 'blue'))
         else:
@@ -132,8 +131,8 @@ def status(remote: Optional[str]):
     else:
         undeployed_dags = dags_without_deploy(remote)
         if undeployed_dags:
-            print(colored('• Undeployed changes in DAGs...', 'yellow'), colored('To deploy run', 'white'),
-                  colored(f'typhoon dag push {remote} --all [--build-dependencies]', 'grey'))
+            print(colored('• Undeployed changes in DAGs... To deploy run', 'yellow'),
+                  colored(f'typhoon dag push {remote} --all [--build-dependencies]', 'blue'))
             for dag in undeployed_dags:
                 print(colored(f'   - {dag}', 'blue'))
         else:

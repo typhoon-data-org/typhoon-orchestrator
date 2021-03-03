@@ -67,7 +67,7 @@ def get_undefined_variables_in_metadata_db(remote: Optional[str], var_ids: List[
 
 def check_connections_yaml(remote: Optional[str]):
     if not Path('connections.yml').exists():
-        print(colored('• Connections YAML not found. For better version control create', 'red'), colored('connections.yml', 'grey'))
+        print(colored('• Connections YAML not found. For better version control create', 'red'), colored('connections.yml', 'blue'))
         print(colored('  Skipping connections YAML checks...', 'red'))
         return
     conn_yml = yaml.safe_load(Path('connections.yml').read_text())
@@ -79,7 +79,7 @@ def check_connections_yaml(remote: Optional[str]):
                 colored('   - Connection', 'yellow'),
                 colored(conn_id, 'blue'),
                 colored('is not set. Try', 'yellow'),
-                colored(f'typhoon connection add{" " + remote if remote else ""} --conn-id {conn_id} --conn-env CONN_ENV', 'grey')
+                colored(f'typhoon connection add{" " + remote if remote else ""} --conn-id {conn_id} --conn-env CONN_ENV', 'blue')
             )
     else:
         print(colored('• All connections in YAML are defined in the database', 'green'))
@@ -98,7 +98,7 @@ def check_connections_dags(remote: Optional[str]):
                 colored('   - Connection', 'yellow'),
                 colored(conn_id, 'blue'),
                 colored('is not set. Try', 'yellow'),
-                colored(f'typhoon connection add{" " + remote if remote else ""} --conn-id {conn_id} --conn-env CONN_ENV', 'grey')
+                colored(f'typhoon connection add{" " + remote if remote else ""} --conn-id {conn_id} --conn-env CONN_ENV', 'blue')
             )
     else:
         print(colored('• All connections in the DAGs are defined in the database', 'green'))
@@ -117,7 +117,7 @@ def check_variables_dags(remote: Optional[str]):
                 colored('   - Variable', 'yellow'),
                 colored(var_id, 'blue'),
                 colored('is not set. Try', 'yellow'),
-                colored(f'typhoon variable add {" " + remote if remote else ""} --var-id {var_id} --var-type VAR_TYPE --contents VALUE', 'grey')
+                colored(f'typhoon variable add {" " + remote if remote else ""} --var-id {var_id} --var-type VAR_TYPE --contents VALUE', 'blue')
             )
     else:
         print(colored('• All variables in the DAGs are defined in the database', 'green'))
