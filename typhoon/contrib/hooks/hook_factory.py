@@ -4,6 +4,7 @@ import inspect
 from typhoon.contrib.hooks.dbapi_hooks import SqliteHook, PostgresHook, SnowflakeHook, EchoDbHook
 from typhoon.contrib.hooks.filesystem_hooks import S3Hook, LocalStorageHook, FTPHook
 from typhoon.contrib.hooks.hook_interface import HookInterface
+from typhoon.contrib.hooks.singer_hook import SingerHook
 from typhoon.contrib.hooks.sqlalchemy_hook import SqlAlchemyHook
 from typhoon.core.settings import Settings
 
@@ -16,6 +17,7 @@ HOOK_MAPPINGS = {
     'ftp': FTPHook,
     'local_storage': LocalStorageHook,
     'sqlalchemy': SqlAlchemyHook,
+    'singer': SingerHook,
 }
 
 

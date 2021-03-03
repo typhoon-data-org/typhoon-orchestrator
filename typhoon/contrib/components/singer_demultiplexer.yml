@@ -1,0 +1,30 @@
+name: singer_demultiplexer
+args:
+  message: dict
+
+tasks:
+  schema:
+    input: $COMPONENT_INPUT
+    function: typhoon.flow_control.filter
+    args:
+      filter_func: !Py "lambda x: x['type'] == 'SCHEMA'"
+      data: !Py $ARG.message
+
+  record:
+    input: $COMPONENT_INPUT
+    function: typhoon.flow_control.filter
+    args:
+      filter_func: !Py "lambda x: x['type'] == 'RECORD'"
+      data: !Py $ARG.message
+
+  state:
+    input: $COMPONENT_INPUT
+    function: typhoon.flow_control.filter
+    args:
+      filter_func: !Py "lambda x: x['type'] == 'STATE'"
+      data: !Py $ARG.message
+
+output:
+  - schema
+  - record
+  - state
