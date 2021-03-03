@@ -430,7 +430,7 @@ class TaskDefinition(BaseModel):
     )
     component: Optional[str] = Field(
         default=None,
-        regex=r'(typhoon\.\w+|components\.\w+\.\w+)',
+        regex=r'(typhoon\.\w+|components\.\w+)',
         description="""Typhoon component that will get substituted for its tasks.
                     If it is a built-in typhoon component it will have the following structure:
                       typhoon.[COMPONENT_NAME]

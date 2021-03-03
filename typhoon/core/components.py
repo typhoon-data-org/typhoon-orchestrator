@@ -2,8 +2,8 @@ import re
 from types import SimpleNamespace
 
 from pydantic import BaseModel, Field
-from typhoon.core.dags import IDENTIFIER_REGEX, TaskDefinition, Py, MultiStep, add_yaml_constructors
-from typing import Dict, List
+from typhoon.core.dags import IDENTIFIER_REGEX, TaskDefinition, Py, MultiStep, add_yaml_constructors, evaluate_item
+from typing import Dict, List, Union
 
 
 def task_name(name_in_dag: str, task: str) -> str:
@@ -14,9 +14,14 @@ def config_arg_name(component_name: str, arg: str) -> str:
     return f'_{component_name}__{arg}'
 
 
+class ComponentArgument(BaseModel):
+    type: str = Field(..., description='Type of your argument')
+    default: Union[str, list, dict, Py] = Field(..., description='Default value for your argument')
+
+
 class Component(BaseModel):
     name: str = Field(..., regex=IDENTIFIER_REGEX, description='Name of your DAG')
-    args: Dict[str, str]
+    args: Dict[str, Union[str, ComponentArgument]]
     tasks: Dict[str, TaskDefinition]
     output: List[str]
 
@@ -30,6 +35,14 @@ class Component(BaseModel):
         component_config = {
             config_arg_name(self.name, k): v
             for k, v in input_arg_values.items()
+        }
+        component_config = {
+            **component_config,
+            **{
+                config_arg_name(self.name, k): evaluate_item({}, v.default)
+                for k, v in self.args.items()
+                if k not in input_arg_values.keys()
+            }
         }
         new_task = task.copy(
             update={
