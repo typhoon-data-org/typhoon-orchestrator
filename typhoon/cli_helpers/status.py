@@ -67,7 +67,7 @@ def get_undefined_variables_in_metadata_db(remote: Optional[str], var_ids: List[
 
 def check_connections_yaml(remote: Optional[str]):
     if not Path('connections.yml').exists():
-        print(colored('• Connections YAML not found. For better version control create', 'red'), colored('connections.yml', 'blue'))
+        print(colored('• Connections YAML not found. To add connections create', 'red'), colored('connections.yml', 'blue'))
         print(colored('  Skipping connections YAML checks...', 'red'))
         return
     conn_yml = yaml.safe_load(Path('connections.yml').read_text())
