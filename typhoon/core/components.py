@@ -6,15 +6,6 @@ from typhoon.core.dags import IDENTIFIER_REGEX, TaskDefinition, Py, MultiStep, a
 from typing import Dict, List
 
 
-# from yaml import ScalarNode
-#
-# ScalarNode.
-
-
-class ComponentError(Exception):
-    pass
-
-
 def task_name(name_in_dag: str, task: str) -> str:
     return f'_{name_in_dag}__{task}'
 
@@ -86,44 +77,3 @@ class Component(BaseModel):
     @property
     def source_tasks(self) -> Dict[str, TaskDefinition]:
         return {k: v for k, v in self.tasks.items() if v.input is None}
-
-
-if __name__ == '__main__':
-    import yaml
-    add_yaml_constructors()
-    component = Component.parse_obj(yaml.load("""
-name: if
-args:
-    condition: Callable[[T], bool]
-    data: T
-
-tasks:
-    then:
-        input: $COMPONENT_INPUT
-        function: typhoon.flow_control.filter
-        args:
-            filter_func: !Py $ARG.condition
-            data: !Py $ARG.data
-
-    else:
-        input: $COMPONENT_INPUT
-        function: typhoon.flow_control.filter
-        args:
-            filter_func: !Py  "lambda x: not $ARG.condition(x)"
-            data: !Py $ARG.data
-
-output:
-    - then
-    - else
-""", yaml.FullLoader))
-    print(yaml.dump(
-        {
-            k: v.dict()
-            for k, v in component.make_tasks(
-                name_in_dag='if_mine',
-                input_task='read_messages',
-                input_arg_values={'condition': Py('lambda x: x == 1'), 'data': '1'}
-            ).items()
-        },
-        sort_keys=False,
-    ), yaml.Dumper)
