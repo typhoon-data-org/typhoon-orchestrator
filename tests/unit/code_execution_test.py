@@ -36,5 +36,5 @@ def test_custom_transformation():
     Settings.typhoon_home = Path(typhoon.__file__).parent / 'examples/hello_world'
 
     assert example_task.execute_adapter(['aa', 'bb', 'cc'], None) == {
-        'a': 'a',
+        'a': 'aa',
     }

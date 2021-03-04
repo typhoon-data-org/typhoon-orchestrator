@@ -4,6 +4,7 @@ from datetime import datetime
 from pathlib import Path
 
 from typhoon.core import make_lambda_payload
+from typhoon.core.settings import Settings
 from typhoon.handler import handle
 from typhoon.core.dags import DagContext
 
@@ -19,7 +20,7 @@ def foo(a, b, dag_context: DagContext, batch_num):
 
 
 def test_handle_task(monkeypatch):
-    os.environ['TYPHOON_HOME'] = str(Path(__file__).parent)
+    Settings.typhoon_home = Path(__file__).parent
 
     payload = make_lambda_payload(
         dag_name='handler_test',
