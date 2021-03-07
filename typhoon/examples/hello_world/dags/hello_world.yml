@@ -1,25 +1,25 @@
 name: hello_world
-schedule_interval: rate(10 minutes)
+schedule_interval: rate(3 hours)
 
-nodes:
+tasks:
   send_data:
     function: typhoon.flow_control.branch
-    config:
+    args:
       branches:
-        - ['users.txt', 'John, Amy, Adam, Jane']
-        - ['animals.txt', 'dog, cat, mouse, elephant, giraffe']
-        - ['fruits.csv', 'apple,pear,apricot']
+        - filename: users.txt
+          contents: John, Amy, Adam, Jane
+        - filename: animals.txt
+          contents: dog, cat, mouse, elephant, giraffe
+        - filename: fruits.csv
+          contents: apple,pear,apricot
 
   write_data:
+    input: send_data
     function: typhoon.filesystem.write_data
     config:
-      hook => APPLY: $HOOK.data_lake
-
-
-edges:
-  e1:
-    source: send_data
-    adapter:
-      data => APPLY: transformations.data.to_bytes_buffer($BATCH[1])
-      path => APPLY: f'/store/{$BATCH[0]}'
-    destination: write_data
+      hook: !Hook $HOOK.data_lake
+      path: !MultiStep
+        - !Py $BATCH['filename']
+        - !Py $DAG_CONTEXT.ds_nodash
+        - f'/store/{$1}/{$0}'
+      data: !Py $BATCH['contents']
