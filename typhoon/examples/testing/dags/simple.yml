@@ -1,0 +1,21 @@
+name: simple
+schedule_interval: rate(1 day)
+
+tasks:
+  files:
+    function: typhoon.flow_control.branch
+    args:
+      branches:
+        - name: a.txt
+          data: !Py $VARIABLE.a
+
+  write:
+    input: files
+    function: typhoon.filesystem.write_data
+    args:
+      hook: !Py $HOOK.data_lake
+      data: !Py $BATCH['data']
+      path: !MultiStep
+        - !Py $BATCH['name']
+        - !Py f'{$DAG_CONTEXT.ds_nodash}/{$1}'
+      create_intermediate_dirs: true

@@ -24,12 +24,18 @@ def read_data(hook: FileSystemHookInterface, path: Union[Path, str]) -> ReadData
         return ReadDataResponse(data=conn.readbytes(str(path)), info=conn.getinfo(path))
 
 
-def write_data(data: Union[str, bytes, BytesIO], hook: FileSystemHookInterface, path: Union[Path, str]) -> Iterable[str]:
+def write_data(
+        data: Union[str, bytes, BytesIO],
+        hook: FileSystemHookInterface,
+        path: Union[Path, str],
+        create_intermediate_dirs: bool = False,
+) -> Iterable[str]:
     """
     Write the given data to the path specified.
     :param data: Bytes buffer
     :param hook: A FileSystemHookInterface hook instance
     :param path: Path where the data should be written
+    :param create_intermediate_dirs: Create intermediate directories if necessary
     """
     if isinstance(data, BytesIO):
         data = data.getvalue()
@@ -37,6 +43,9 @@ def write_data(data: Union[str, bytes, BytesIO], hook: FileSystemHookInterface, 
         data = data.encode()
     path = str(path)
     with hook as conn:
+        if create_intermediate_dirs:
+            print('Creating intermediate directories')
+            conn.makedirs(str(Path(path).parent), recreate=True)
         print(f'Writing to {path}')
         conn.writebytes(path, data)
     yield path
