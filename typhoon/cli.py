@@ -6,6 +6,7 @@ import sys
 from builtins import AssertionError
 from datetime import datetime
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Optional
 
 import click
@@ -442,6 +443,7 @@ def cli_tasks():
 
 def eval_batch(batch: str):
     custom_locals = {}
+    custom_locals['PyObj'] = SimpleNamespace
     try:
         import pandas as pd
         custom_locals['pd'] = pd
