@@ -18,7 +18,8 @@ test_required = ['pytest', 'moto']
 postgres = ['psycopg2']
 sqlalchemy = ['sqlalchemy']
 
-all_requirements = postgres + sqlalchemy
+db_requirements = ['sqlparse']
+all_requirements = db_requirements + postgres + sqlalchemy
 dev_requirements = all_requirements + ['termcolor', 'watchdog', 'tabulate', 'pygments', 'sqlitedict', 'datadiff']
 
 setup(
@@ -28,9 +29,11 @@ setup(
     install_requires=required,
     extras_require={
         'all': all_requirements,
-        'postgres': postgres,
-        'sqlalchemy': sqlalchemy,
+        'db': db_requirements,
+        'postgres': db_requirements + postgres,
+        'sqlalchemy': db_requirements + sqlalchemy,
         'dev': dev_requirements,
+        'test': test_required,
     },
     tests_require=test_required,
     test_suite='pytest',

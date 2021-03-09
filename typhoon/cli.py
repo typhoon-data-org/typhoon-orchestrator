@@ -74,9 +74,10 @@ def cli():
 @cli.command()
 @click.argument('project_name')
 @click.option('--deploy-target', autocompletion=get_deploy_targets, required=False, default='typhoon')
-def init(project_name: str, deploy_target: str):
+@click.option('--template', required=False, default='hello_world')
+def init(project_name: str, deploy_target: str, template: str):
     """Create a new Typhoon project"""
-    example_project_path = Path(pkg_resources.resource_filename('typhoon', 'examples')) / 'hello_world'
+    example_project_path = Path(pkg_resources.resource_filename('typhoon', 'examples')) / template
     if deploy_target == 'airflow':
         dest = Path.cwd() / 'typhoon_extension'
     else:
@@ -237,8 +238,8 @@ def list_dags(remote: Optional[str], long: bool):
                 ]
                 print(colored(tabulate(table_body, header, 'plain'), 'red'), file=sys.stderr)
     else:
-        for dag_deployment in metadata_store.get_dag_deployments():
-            print(dag_deployment.dag_name)
+        for dag_name in sorted(set(x.dag_name for x in metadata_store.get_dag_deployments())):
+            print(dag_name)
         if not remote:
             for dag_name, _ in get_dag_errors().items():
                 print(colored(dag_name, 'red'), file=sys.stderr)
@@ -312,7 +313,7 @@ def run_local_dag(dag_name: str, execution_date: datetime):
 @cli_dags.command(name='run')
 @click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
 @click.option('--dag-name', autocompletion=get_dag_names)
-@click.option('--execution-date', default=None, is_flag=True, type=click.DateTime(), help='DAG execution date as YYYY-mm-dd')
+@click.option('--execution-date', default=None, type=click.DateTime(), help='DAG execution date as YYYY-mm-dd')
 def cli_run_dag(remote: Optional[str], dag_name: str, execution_date: Optional[datetime]):
     """Run a DAG for a specific date. Will create a metadata entry in the database (TODO: create entry)."""
     set_settings_from_remote(remote)

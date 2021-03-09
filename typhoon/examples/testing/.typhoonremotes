@@ -1,0 +1,4 @@
+[TEST-EXAMPLE]
+aws-profile=my-profile
+use-name-as-suffix=true     ; Needed to separate table names in same region but different remotes/envs
+metadata-db-url=dynamodb:Host=dynamodb.us-west-1.amazonaws.com;Region=us-west-1

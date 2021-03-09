@@ -51,7 +51,7 @@ class LocalStorageHook(FileSystemHookInterface):
 
     def __enter__(self) -> OSFS:
         self.base_path = self.conn_params.extra.get('base_path', '')
-        self.conn = OSFS(root_path=self.base_path, create=self.conn_params.extra.get('create', True))
+        self.conn = OSFS(root_path=self.base_path, create=self.conn_params.extra.get('create', False))
         return self.conn
 
     def __exit__(self, exc_type, exc_val, exc_tb):

@@ -389,8 +389,9 @@ def add_yaml_constructors():
     yaml.add_constructor('!Template', construct_template)
 
 
-def get_deps_and_uses_batch(item):
+def get_deps_uses_batch_and_warnings(item):
     deps = []
+    warnings = []
 
     def _uses_batch(item):
         if isinstance(item, Py):
@@ -406,11 +407,16 @@ def get_deps_and_uses_batch(item):
         elif isinstance(item, dict):
             items_use_batch = [_uses_batch(v) for k, v in item.items()]
             return any(items_use_batch)
-        elif isinstance(item, (str, float, int)):
+        elif isinstance(item, str):
+            for x in ['$BATCH', '$DAG_CONTEXT', '$VARIABLE', '$HOOK', '$ARG']:
+                if x in item:
+                    warnings.append('WARNING: Argument {arg} is a string and contains' + f' "{x}". Did you mean to make it !Py?')
+            return False
+        elif isinstance(item, (float, int)):
             return False
         assert False, f'Found type {type(item)} with value {item}'
     arg_uses_batch = _uses_batch(item)
-    return deps, arg_uses_batch
+    return deps, arg_uses_batch, warnings
 
 
 class TaskDefinition(BaseModel):
@@ -480,7 +486,9 @@ class TaskDefinition(BaseModel):
         arg_deps = {}
         args_that_use_batch = []
         for k, v in self.args.items():
-            deps, arg_uses_batch = get_deps_and_uses_batch(v)
+            deps, arg_uses_batch, warnings = get_deps_uses_batch_and_warnings(v)
+            for warning in warnings:
+                print(warning.format(arg=k))
             arg_deps[k] = deps
             if arg_uses_batch:
                 args_that_use_batch.append(k)
