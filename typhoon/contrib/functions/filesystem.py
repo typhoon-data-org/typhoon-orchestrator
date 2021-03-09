@@ -13,6 +13,11 @@ class ReadDataResponse(NamedTuple):
     info: Info
 
 
+class WriteDataResponse(NamedTuple):
+    metadata: dict
+    path: str
+
+
 def read_data(hook: FileSystemHookInterface, path: Union[Path, str]) -> ReadDataResponse:
     """
     Reads the data from a file given its relative path and returns a named tuple with the shape (data: bytes, path: str)
@@ -29,9 +34,11 @@ def write_data(
         hook: FileSystemHookInterface,
         path: Union[Path, str],
         create_intermediate_dirs: bool = False,
+        metadata: Optional[dict] = None,
 ) -> Iterable[str]:
     """
     Write the given data to the path specified.
+    :param metadata: optional dict
     :param data: Bytes buffer
     :param hook: A FileSystemHookInterface hook instance
     :param path: Path where the data should be written
@@ -48,7 +55,7 @@ def write_data(
             conn.makedirs(str(Path(path).parent), recreate=True)
         print(f'Writing to {path}')
         conn.writebytes(path, data)
-    yield path
+    yield WriteDataResponse(metadata=metadata, path=path)
 
 
 def list_directory(hook: FileSystemHookInterface, path: Union[Path, str] = '/') -> Iterable[str]:
