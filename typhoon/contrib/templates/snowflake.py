@@ -99,28 +99,41 @@ class CopyOptionsTemplate(Templated):
 
 
 if __name__ == '__main__':
-    """
-    copy into clients
-  from @stagetestcorpdatalake
-  FILE_FORMAT=csv1
-  PATTERN= 'data_clients_batch_num_1_2021-02-22T23_55_36.csv';
-    """
-    rendered_copy = CopyTemplate(
-        table='clients',
-        stage_name='stagetestcorpdatalake',
-        file_format='csv1',
-        pattern='data_clients_batch_num_1_2021-02-22T23_55_36.csv',
-    )
+
     # rendered_copy = CopyTemplate(
-    #     table='foo',
-    #     stage_name='bi',
-    #     s3_path='bar',
-    #     fields=[FieldMetadata(name='a', type='varchar'), FieldMetadata(name='b', type='integer')],
+    #     table='clients',
+    #     fields= [FieldMetadata(name='src', type='variant')],
+    #     stage_name='stagetestcorpdatalake',
     #     file_format=CustomFileFormatTemplate(
-    #         type=FileFormatType.CSV,
-    #         field_delimiter=Quoted(','),
-    #         null_if=('null', 'NULL'),
-    #         compression=FileFormatCompression.AUTO,
-    #     )
-    # ).rendered
-    print(rendered_copy)
+    #                 type=FileFormatType.JSON,
+    #                 field_delimiter=Quoted(','),
+    #                 null_if=('null', 'NULL'),
+    #                 compression=FileFormatCompression.AUTO,
+    #             ),
+    #     pattern='data_client.*[.]json',
+    #     audit_fields=',\nmetadata$filename,\ncurrent_timestamp(),\nmetadata$filename'
+    # )
+
+    fields = [FieldMetadata(name='src', type='variant')]
+    file_format = CustomFileFormatTemplate(
+        type=FileFormatType.JSON.value,
+        compression=FileFormatCompression.AUTO.value,
+    )
+    audit_fields = ',\nmetadata$filename,\ncurrent_timestamp(),\nmetadata$filename'
+    pattern = 'data_client.*[.]json',
+    table = 'clients'
+    stage_name = 'stagetestcorpdatalake'
+    s3_path = None
+    query = CopyTemplate(
+        table=table,
+        stage_name=stage_name,
+        file_format=file_format,
+        fields=fields,
+        s3_path=s3_path,
+        copy_options=None,
+        audit_fields=audit_fields,
+        pattern=None,
+    ).render()
+
+
+    print(query)

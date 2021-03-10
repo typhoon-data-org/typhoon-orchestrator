@@ -16,22 +16,24 @@ def copy_into(
         metadata: Optional[dict] = None,
 
 ) -> str:
-    fields = [FieldMetadata(name='content', type='variant')]
+    fields = [FieldMetadata(name='src', type='variant')]
     file_format = CustomFileFormatTemplate(
-        type=FileFormatType.JSON,
-        field_delimiter=Quoted(','),
-        null_if=('null', 'NULL'),
-        compression=FileFormatCompression.AUTO,
-    )
-    audit_fields = 'etl_id number,\netl_timestamp timestamp_ntz\netl_filename'
+        type=FileFormatType.JSON.value,
+        compression=FileFormatCompression.AUTO.value,
+        )
+    audit_fields = ',\nmetadata$filename,\ncurrent_timestamp(),\nmetadata$filename'
     query = CopyTemplate(
-        table,
-        stage_name,
-        s3_path,
-        fields,
-        file_format,
+        table=table,
+        stage_name=stage_name,
+        file_format=file_format,
+        fields=fields,
+        s3_path=s3_path,
+        copy_options=None,
         audit_fields=audit_fields,
+        pattern=None,
     ).render()
     logging.info(f'Executing query: {query}')
-    relational.execute_query(hook, query=query, batch_size=None, metadata=metadata, query_params=query_params, multi_query=False)
+    result = relational.execute_query(hook, query=query, batch_size=None, metadata=metadata, query_params=query_params, multi_query=False)
+    logging.info(f'Results: {result}')
+    next(result)
     return table
