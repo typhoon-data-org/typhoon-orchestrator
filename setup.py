@@ -17,9 +17,10 @@ test_required = ['pytest', 'moto']
 
 postgres = ['psycopg2']
 sqlalchemy = ['sqlalchemy']
+snowflake = ['snowflake-connector-python']
 
 db_requirements = ['sqlparse']
-all_requirements = db_requirements + postgres + sqlalchemy
+all_requirements = db_requirements + postgres + sqlalchemy + snowflake
 dev_requirements = all_requirements + ['termcolor', 'watchdog', 'tabulate', 'pygments', 'sqlitedict', 'datadiff']
 
 setup(
