@@ -283,7 +283,7 @@ class DAG(BaseModel):
 
 class DagContext(BaseModel):
     execution_date: datetime
-    etl_timestamp: datetime = Field(default=datetime.now())
+    etl_timestamp: datetime = Field(default_factory=lambda: datetime.now())
 
     @property
     def ds(self) -> str:
