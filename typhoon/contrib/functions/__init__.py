@@ -4,4 +4,4 @@ We typically prefer to pass a connection ID and have the function call get_dag r
  hook because that way we can easily modify a connection by changing it's type and details without having to modify the
  DAG or function (as long as both connections share the same interface) therefore reducing complexity and duplication.
 """
-from typhoon.contrib.functions import filesystem, flow_control, relational, singer
+from typhoon.contrib.functions import filesystem, flow_control, relational, singer, snowflake

@@ -43,7 +43,9 @@ def execute_query(
                 cursor = conn.cursor()
                 cursor.execute(single_query, query_params)
                 columns = [x[0] for x in cursor.description] if cursor.description else None
-            conn.commit()
+            
+            # @todo put connection to autocommit=True
+            #conn.commit()
 
             if not batch_size:
                 logging.info(f'Fetching all results')
