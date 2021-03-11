@@ -2,13 +2,13 @@ from datetime import datetime
 from typing import Union, Optional, List
 
 from dataclasses import dataclass
+from typhoon.core.cron_utils import aws_schedule_to_cron, timedelta_from_cron
 from typing_extensions import TypedDict
 
 from typhoon.core.dags import DAG, Edge, Node
 from typhoon.core.templated import Templated
 from typhoon.core.transpiler import get_transformations_modules, get_functions_modules, clean_function_name, \
     clean_simple_param, substitute_special
-from typhoon.deployment.targets.airflow.airflow_cron import aws_schedule_to_airflow_cron, timedelta_from_cron
 
 
 @dataclass
@@ -110,7 +110,7 @@ class AirflowDag(Templated):
 
     @property
     def cron_expression(self):
-        return aws_schedule_to_airflow_cron(self.dag.schedule_interval)
+        return aws_schedule_to_cron(self.dag.schedule_interval)
 
     @property
     def delta(self):

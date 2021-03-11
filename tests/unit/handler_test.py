@@ -27,7 +27,10 @@ def test_handle_task(monkeypatch):
         task_name='foo',
         args=(3, 2),
         kwargs={
-            'dag_context': DagContext.parse_obj({'execution_date': '2019-08-16 00:00:00'}),
+            'dag_context': DagContext.parse_obj({
+                'start_interval': '2019-08-15 00:00:00',
+                'end_interval': '2019-08-16 00:00:00'
+            }),
             'batch_num': 4
         },
     )

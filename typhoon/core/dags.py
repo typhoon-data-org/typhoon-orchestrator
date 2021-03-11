@@ -3,14 +3,17 @@ import itertools
 import os
 import re
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
 from types import SimpleNamespace
 from typing import List, Union, Dict, Any, Optional, Tuple
 
 import yaml
+from croniter import croniter
 from dataclasses import dataclass
+from dateutil.parser import parse
 from pydantic import BaseModel, validator, Field, root_validator
+from typhoon.core.cron_utils import interval_start_from_schedule_and_interval_end, aws_schedule_to_cron
 from typhoon.core.settings import Settings
 
 IDENTIFIER_REGEX = r'\w+'
@@ -189,6 +192,15 @@ class Edge(BaseModel):
         return v
 
 
+class Granularity(str, Enum):
+    YEAR = 'year'
+    MONTH = 'month'
+    DAY = 'day'
+    HOUR = 'hour'
+    MINUTE = 'minute'
+    SECOND = 'second'
+
+
 class DAG(BaseModel):
     name: str = Field(..., regex=IDENTIFIER_REGEX, description='Name of your DAG')
     schedule_interval: str = Field(
@@ -202,6 +214,7 @@ class DAG(BaseModel):
               ')',
         description='Schedule or frequency on which the DAG should run'
     )
+    granularity: Granularity = Field(default=Granularity.DAY, description='Granularity of DAG')
     nodes: Dict[str, Node]
     edges: Dict[str, Edge]
     active: bool = Field(True, description='Whether to deploy the DAG or not')
@@ -282,20 +295,45 @@ class DAG(BaseModel):
 
 
 class DagContext(BaseModel):
-    execution_date: datetime
-    etl_timestamp: datetime = Field(default_factory=lambda: datetime.now())
+    interval_start: datetime = Field(
+        ..., description='Date representing the start of the interval for which we want to get data')
+    interval_end: datetime = Field(
+        ..., description='Date representing the end of the interval for which we want to get data')
+    execution_time: datetime = Field(default_factory=lambda: datetime.now(), description='Date')
+    granularity: Granularity = Field(default='daily', description='Granularity of DAG')
 
-    @property
-    def ds(self) -> str:
-        return self.execution_date.strftime('%Y-%m-%d')
+    def __init__(self, **data):
+        super().__init__(**data)
+        granularity = self.granularity
+        if granularity == 'minute':
+            self.interval_start = self.interval_start.replace(second=0, microsecond=0)
+            self.interval_end = self.interval_end.replace(second=0, microsecond=0)
+        elif granularity == 'hour':
+            self.interval_start = self.interval_start.replace(minute=0, second=0, microsecond=0)
+            self.interval_end = self.interval_end.replace(minute=0, second=0, microsecond=0)
+        elif granularity == 'day':
+            self.interval_start = self.interval_start.replace(hour=0, minute=0, second=0, microsecond=0)
+            self.interval_end = self.interval_end.replace(hour=0, minute=0, second=0, microsecond=0)
+        elif granularity == 'month':
+            self.interval_start = self.interval_start.replace(day=0, hour=0, minute=0, second=0, microsecond=0)
+            self.interval_end = self.interval_end.replace(day=0, hour=0, minute=0, second=0, microsecond=0)
+        elif granularity == 'year':
+            self.interval_start = self.interval_start.replace(month=0, day=0, hour=0, minute=0, second=0, microsecond=0)
+            self.interval_end = self.interval_end.replace(month=0, day=0, hour=0, minute=0, second=0, microsecond=0)
 
-    @property
-    def ds_nodash(self) -> str:
-        return self.execution_date.strftime('%Y%m%d')
-
-    @property
-    def ts(self) -> str:
-        return self.execution_date.strftime('%Y-%m-%dT%H:%M:%S')
+    @staticmethod
+    def from_cron_and_event_time(
+            schedule_interval: str,
+            event_time: Union[datetime, str],
+            granularity: str,
+    ) -> 'DagContext':
+        if not isinstance(event_time, datetime):
+            event_time = parse(event_time)
+        cron = aws_schedule_to_cron(schedule_interval)
+        iterator = croniter(cron, event_time + timedelta(seconds=1))   # In case the event is exactly on time
+        interval_end = iterator.get_prev(datetime)
+        interval_start = iterator.get_prev(datetime)
+        return DagContext(interval_start=interval_start, interval_end=interval_end, granularity=granularity)
 
 
 def hash_dag_code(dag_code: str) -> str:
@@ -320,11 +358,18 @@ class TestCase(BaseModel):
     batch_num: int = Field(
         default=1,
         description='Batch number for the test. If more than one is provided it will run the tests for each')
-    execution_date: Union[datetime, None] = Field(default=None, description='Execution date')
+    interval_start: datetime = Field(
+        ..., description='Date representing the start of the interval for which we want to get data')
+    interval_end: datetime = Field(
+        ..., description='Date representing the end of the interval for which we want to get data')
 
     @property
     def dag_context(self) -> DagContext:
-        return DagContext(execution_date=self.execution_date or datetime.now())
+        interval_start = self.interval_start or datetime.now()
+        return DagContext(
+            interval_start=interval_start,
+            interval_end=interval_end or (interval_start - timedelta(days=1))
+        )
 
     @property
     def custom_locals(self) -> dict:
@@ -648,6 +693,7 @@ class DAGDefinitionV2(BaseModel):
               ')',
         description='Schedule or frequency on which the DAG should run'
     )
+    granularity: Granularity = Field(default=Granularity.DAY, description='Granularity of DAG')
     active: bool = Field(True, description='Whether to deploy the DAG or not')
     tasks: Dict[str, TaskDefinition]
     tests: Optional[Dict[str, TestCase]]
@@ -678,6 +724,7 @@ class DAGDefinitionV2(BaseModel):
         return DAG(
             name=self.name,
             schedule_interval=self.schedule_interval,
+            granularity=self.granularity,
             active=self.active,
             nodes=nodes,
             edges=edges,

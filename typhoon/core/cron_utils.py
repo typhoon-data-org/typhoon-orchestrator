@@ -1,7 +1,9 @@
 import re
 from datetime import timedelta, datetime
+from typing import Union
 
 from croniter import croniter
+from dateutil.parser import parse
 
 cron_templates = {
     'minutes': '*/{n} * * * *',
@@ -11,7 +13,7 @@ cron_templates = {
 }
 
 
-def aws_schedule_to_airflow_cron(schedule: str) -> str:
+def aws_schedule_to_cron(schedule: str) -> str:
     match = re.match(r'rate\s*\(\s*(\d+)\s+(minute|minutes|hour|hours|day|days|month|months)\s*\)', schedule)
     if match:
         n, freq = match.groups()
@@ -31,6 +33,15 @@ def timedelta_from_cron(cron: str) -> timedelta:
     return delta
 
 
+def interval_start_from_schedule_and_interval_end(schedule: str, interval_end: Union[str, datetime]) -> datetime:
+    if isinstance(interval_end, str):
+        interval_end = parse(interval_end)
+    cron = aws_schedule_to_cron(schedule)
+    iterator = croniter(cron, start_time=interval_end)
+    return iterator.get_prev(datetime)
+
+
 if __name__ == '__main__':
-    print(aws_schedule_to_airflow_cron('rate ( 5 months )'))
+    print(aws_schedule_to_cron('rate ( 5 months )'))
     print(repr(timedelta_from_cron('* * * * *')))
+    print(repr(interval_start_from_schedule_and_interval_end('rate(1 day)', '2021-02-13')))

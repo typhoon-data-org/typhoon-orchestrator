@@ -1,9 +1,9 @@
 import re
+from typing import Any, List, Iterable, Dict, Union
 
 from dataclasses import dataclass
-from typhoon.core.dags import DAG, Py, MultiStep, Node, Edge
+from typhoon.core.dags import DAG, Py, MultiStep, Node
 from typhoon.core.templated import Templated
-from typing import Any, List, Tuple, Iterable, Dict, Union
 
 
 def get_transformations_item(item) -> List[str]:
@@ -91,7 +91,7 @@ class TyphoonFileTemplate(Templated):
     import typhoon.contrib.transformations as typhoon_transformations
     from typhoon.contrib.hooks.hook_factory import get_hook
     from typhoon.handler import handle
-    from typhoon.core import SKIP_BATCH, task, DagContext, setup_logging
+    from typhoon.core import SKIP_BATCH, task, DagContext, setup_logging, interval_start_from_schedule_and_interval_end
     {% for transformations_module in transformations_modules %}
     
     import {{ transformations_module }}
@@ -114,7 +114,11 @@ class TyphoonFileTemplate(Templated):
             return handle(event, context)
     
         # Main execution
-        dag_context = DagContext(execution_date=event['time'])
+        dag_context = DagContext.from_cron_and_event_time(
+            schedule_interval='{{ dag.schedule_interval }}',
+            event_time=event['time'],
+            granularity='{{ dag.granularity.value }}',
+        )
     
         {% for source in dag.sources %}
         {{ source }}_branches(dag_context=dag_context)
@@ -166,7 +170,7 @@ class TyphoonFileTemplate(Templated):
         import os
     
         example_event = {
-            'time': '2019-02-05T03:00:00Z'
+            'time': '2019-02-05T00:00:00Z'
         }
         example_event_task = {
             'type': 'task',
@@ -175,7 +179,13 @@ class TyphoonFileTemplate(Templated):
             'trigger': 'dag',
             'attempt': 1,
             'args': [],
-            'kwargs': {'dag_context': DagContext(execution_date='2019-02-05T03:00:00Z').dict()},
+            'kwargs': {
+                'dag_context': DagContext.from_cron_and_event_time(
+                    schedule_interval='{{ dag.schedule_interval }}',
+                    event_time=example_event['time'],
+                    granularity='{{ dag.granularity.value }}',
+                ).dict()
+            },
         }
     
         {{ dag.name }}_main(example_event, None)

@@ -4,7 +4,7 @@ import shutil
 import subprocess
 import sys
 from builtins import AssertionError
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Optional
@@ -464,9 +464,19 @@ def eval_batch(batch: str):
 @click.option('--task-name', autocompletion=get_edge_names, required=True)
 @click.option('--batch', help='Input batch to node transformations', required=True)
 @click.option('--batch-num', help='Batch number', type=int, required=False, default=1)
-@click.option('--execution-date', type=click.DateTime(), default=None, help='Input batch to node transformations')
+@click.option('--interval-start', type=click.DateTime(), default=None)
+@click.option('--interval-end', type=click.DateTime(), default=None)
 @click.option('--eval', 'eval_', is_flag=True, default=False, help='If true evaluate the input string')
-def task_sample(remote: Optional[str], dag_name: str, task_name: str, batch, batch_num, execution_date: datetime, eval_: bool):
+def task_sample(
+        remote: Optional[str],
+        dag_name: str,
+        task_name: str,
+        batch,
+        batch_num,
+        interval_start: datetime,
+        interval_end: datetime,
+        eval_: bool,
+):
     """Test transformations for task"""
     set_settings_from_remote(remote)
     dag = _get_dag_definition(remote, dag_name)
@@ -475,9 +485,23 @@ def task_sample(remote: Optional[str], dag_name: str, task_name: str, batch, bat
         sys.exit(-1)
     if eval_:
         batch = eval_batch(batch)
+    interval_start = interval_start or datetime.now()
+    if interval_start and interval_end:
+        dag_context = DagContext(
+            schedule_interval=dag.schedule_interval,
+            interval_start=interval_start,
+            interval_end=interval_end,
+            granularity=dag.granularity,
+        )
+    else:
+        dag_context = DagContext.from_cron_and_event_time(
+            schedule_interval=dag.schedule_interval,
+            event_time=datetime.now(),
+            granularity=dag.granularity,
+        )
     transformation_results = dag.tasks[task_name].execute_adapter(
         batch,
-        DagContext(execution_date=execution_date or datetime.now()),
+        dag_context,
         batch_num,
     )
     for config_item, result in transformation_results.items():
@@ -609,9 +633,18 @@ def edge_definition(remote: Optional[str], dag_name: str, edge_name: str):
 @click.option('--dag-name', autocompletion=get_dag_names, required=True)
 @click.option('--edge-name', autocompletion=get_edge_names, required=True)
 @click.option('--input', 'input_', help='Input batch to node transformations', required=True)
-@click.option('--execution-date', type=click.DateTime(), default=None, help='Input batch to node transformations')
+@click.option('--interval-start', type=click.DateTime(), default=None)
+@click.option('--interval-end', type=click.DateTime(), default=None)
 @click.option('--eval', 'eval_', is_flag=True, default=False, help='If true evaluate the input string')
-def edge_test(remote: Optional[str], dag_name: str, edge_name: str, input_, execution_date: datetime, eval_: bool):
+def edge_test(
+        remote: Optional[str],
+        dag_name: str,
+        edge_name: str,
+        input_,
+        interval_start: datetime,
+        interval_end: datetime,
+        eval_: bool,
+):
     """Show node definition"""
     set_settings_from_remote(remote)
     dag = _get_dag(remote, dag_name)
@@ -620,10 +653,24 @@ def edge_test(remote: Optional[str], dag_name: str, edge_name: str, input_, exec
         sys.exit(-1)
     if eval_:
         input_ = eval(input_)
+    if interval_start and interval_end:
+        dag_context = DagContext(
+            schedule_interval=dag.schedule_interval,
+            interval_start=interval_start,
+            interval_end=interval_end,
+            granularity=dag.granularity,
+        )
+    else:
+        dag_context = DagContext.from_cron_and_event_time(
+            schedule_interval=dag.schedule_interval,
+            event_time=datetime.now(),
+            granularity=dag.granularity,
+        )
     transformation_results = run_transformations(
         dag.edges[edge_name],
         input_,
-        DagContext(execution_date=execution_date or datetime.now()))
+        dag_context,
+    )
     for result in transformation_results:
         if isinstance(result, TransformationResult):
             highlighted_result = pygments.highlight(
