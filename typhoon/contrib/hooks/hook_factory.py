@@ -1,7 +1,8 @@
 import importlib.util
 import inspect
 
-from typhoon.contrib.hooks.dbapi_hooks import SqliteHook, PostgresHook, SnowflakeHook, EchoDbHook
+from typhoon.contrib.hooks.dbapi_hooks import SqliteHook, PostgresHook, SnowflakeHook, EchoDbHook, DuckDbHook
+from typhoon.contrib.hooks.debug_hooks import EchoHook
 from typhoon.contrib.hooks.filesystem_hooks import S3Hook, LocalStorageHook, FTPHook
 from typhoon.contrib.hooks.hook_interface import HookInterface
 from typhoon.contrib.hooks.singer_hook import SingerHook
@@ -13,11 +14,13 @@ HOOK_MAPPINGS = {
     'postgres': PostgresHook,
     'snowflake': SnowflakeHook,
     'echodb': EchoDbHook,
+    'duckdb': DuckDbHook,
     's3': S3Hook,
     'ftp': FTPHook,
     'local_storage': LocalStorageHook,
     'sqlalchemy': SqlAlchemyHook,
     'singer': SingerHook,
+    'echo': EchoHook,
 }
 
 

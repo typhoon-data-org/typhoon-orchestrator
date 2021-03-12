@@ -96,6 +96,23 @@ class SqliteHook(DbApiHook):
         self.connection.close()
 
 
+class DuckDbHook(DbApiHook):
+    def __init__(self, conn_params):
+        self.conn_params = conn_params
+
+    def __enter__(self) -> DbApiConnection:
+        import duckdb
+
+        self.connection = duckdb.connect(
+            database=self.conn_params.extra['database'],
+            read_only=self.conn_params.extra.get('read_only', False),
+        )
+        return self.connection
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.connection.close()
+
+
 class EchoDb(DbApiConnection):
     """Just prints every query that is executed"""
     def __init__(self):
