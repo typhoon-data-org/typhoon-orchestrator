@@ -3,6 +3,7 @@ from typing import Union, Optional
 
 from dataclasses import dataclass
 from typhoon.core.cron_utils import aws_schedule_to_cron, timedelta_from_cron
+from typhoon.core.settings import Settings
 from typing_extensions import TypedDict
 
 from typhoon.core.dags import DAG, Edge, Node, Py, MultiStep
@@ -49,7 +50,7 @@ class AirflowDag(Templated):
     from airflow.operators.python_operator import PythonOperator
     {% endif %}
     
-    TYPHOON_HOME = Path(__file__).parent.parent.parent/'typhoon_extension'
+    TYPHOON_HOME = Path(__file__).parent.parent.parent/'{{ project_name }}'
     os.environ['TYPHOON_HOME'] = str(TYPHOON_HOME)
     
     
@@ -166,13 +167,14 @@ class AirflowDag(Templated):
                 for edge_name in self.dag.get_edges_for_source(node_name):
                     edge = self.dag.edges[edge_name]
                     for batch_num, branch in enumerate(node.config['branches'], start=1):
-                        print(edge.adapter)
                         new_config = replace_batch_and_batch_num(edge.adapter, branch, batch_num)
-                        print(edge.adapter)
-                        print(new_config)
                         dest = edge.destination
                         recursive_branch(dest, branch, new_config)
-            recursive_delete(node_name)
+                recursive_delete(node_name)
+
+    @property
+    def project_name(self) -> str:
+        return Settings.project_name
 
     @property
     def cron_expression(self):
