@@ -79,10 +79,7 @@ def cli():
 def init(project_name: str, deploy_target: str, template: str):
     """Create a new Typhoon project"""
     example_project_path = Path(pkg_resources.resource_filename('typhoon', 'examples')) / template
-    if deploy_target == 'airflow':
-        dest = Path.cwd() / 'typhoon_extension'
-    else:
-        dest = Path.cwd() / project_name
+    dest = Path.cwd() / project_name
     shutil.copytree(str(example_project_path), str(dest))
     (dest / 'typhoon.cfg').write_text(EXAMPLE_CONFIG.format(project_name=project_name, deploy_target=deploy_target))
     (dest / 'dag_schema.json').write_text(DAGDefinitionV2.schema_json(indent=2))
