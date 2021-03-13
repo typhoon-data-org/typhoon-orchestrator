@@ -95,6 +95,7 @@ def construct_variable(loader: yaml.Loader, node: yaml.Node) -> Py:
 class MultiStep:
     value: list
     key: Optional[str] = None
+    config_name: str = 'config'
 
     @staticmethod
     def construct(loader: yaml.Loader, node: yaml.Node):
@@ -126,7 +127,7 @@ class MultiStep:
         for i, x in enumerate(self.value):
             add_key(x)
             steps.append(f'{self.key}_{i + 1} = {x}')
-        return '\n'.join(steps) + '\n' + f"config['{self.key}'] = {self.key}_{len(steps)}"
+        return '\n'.join(steps) + '\n' + f"{self.config_name}['{self.key}'] = {self.key}_{len(steps)}"
 
     def __str__(self):
         if not isinstance(self.value, list) or self.key is None:
@@ -720,6 +721,9 @@ class DAGDefinitionV2(BaseModel):
                         adapter=adapter,
                     )
                     edge_id += 1
+            elif adapter:
+                raise ValueError(
+                    f'The task {task_name} in dag {self.name} is trying to use $BATCH or $BATCH_NUM but it has no input')
 
         return DAG(
             name=self.name,

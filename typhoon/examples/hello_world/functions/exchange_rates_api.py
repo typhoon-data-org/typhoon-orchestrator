@@ -56,4 +56,3 @@ def get_history(
         params['symbols'] = symbols
     response = requests.get(full_endpoint, params=params)
     return response.json()
-

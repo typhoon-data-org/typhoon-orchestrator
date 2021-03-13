@@ -1,0 +1,14 @@
+data_lake:
+  test:
+    conn_type: s3
+    extra:
+      bucket: my-typhoon-test-bucket
+
+  local:
+    conn_type: local_storage
+    extra:
+      base_path: /tmp/data_lake/
+
+echo:
+  local:
+    conn_type: echo
