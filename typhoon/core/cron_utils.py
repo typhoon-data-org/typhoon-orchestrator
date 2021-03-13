@@ -1,11 +1,21 @@
 import re
 from datetime import timedelta, datetime
-from typing import Union
+from typing import Union, Dict
 
 from croniter import croniter
 from dateutil.parser import parse
 
+cron_presets: Dict[str, str] = {
+    '@hourly': '0 * * * *',
+    '@daily': '0 0 * * *',
+    '@weekly': '0 0 * * 0',
+    '@monthly': '0 0 1 * *',
+    '@quarterly': '0 0 1 */3 *',
+    '@yearly': '0 0 1 1 *',
+}
+
 cron_templates = {
+    'seconds': '*/{n} * * * *',
     'minutes': '*/{n} * * * *',
     'hours': '0 */{n} * * *',
     'days': '0 0 */{n} * *',
@@ -14,6 +24,8 @@ cron_templates = {
 
 
 def aws_schedule_to_cron(schedule: str) -> str:
+    if schedule in cron_presets.keys():
+        return cron_presets[schedule]
     match = re.match(r'rate\s*\(\s*(\d+)\s+(minute|minutes|hour|hours|day|days|month|months)\s*\)', schedule)
     if match:
         n, freq = match.groups()

@@ -20,6 +20,6 @@ tasks:
       hook: !Hook $HOOK.data_lake
       path: !MultiStep
         - !Py $BATCH['filename']
-        - !Py $DAG_CONTEXT.ds_nodash
+        - !Py $DAG_CONTEXT.interval_end.date.isoformat()
         - f'/store/{$1}/{$0}'
       data: !Py $BATCH['contents']

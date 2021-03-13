@@ -215,15 +215,20 @@ class TyphoonFileTemplate(Templated):
 class AdapterParams(Templated):
     template = '''
     {% if is_literal %}
-    config['{{ key }}'] = {{ value | clean_simple_param }}
+    {{ config_name }}['{{ key }}'] = {{ value | clean_simple_param }}
     {% elif is_py %}
-    config['{{ key }}'] = {{ value }}
+    {{ config_name }}['{{ key }}'] = {{ value }}
     {% else %}
     {{ value }}
     {% endif %}
     '''
     key: str
     value: Any
+    config_name: str = 'config'
+
+    def __post_init__(self):
+        if isinstance(self.value, MultiStep):
+            self.value.config_name = self.config_name
 
     @property
     def is_literal(self):

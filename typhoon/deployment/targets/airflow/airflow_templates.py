@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Union, Optional, List
+from typing import Union, Optional
 
 from dataclasses import dataclass
 from typhoon.core.cron_utils import aws_schedule_to_cron, timedelta_from_cron
@@ -8,7 +8,7 @@ from typing_extensions import TypedDict
 from typhoon.core.dags import DAG, Edge, Node
 from typhoon.core.templated import Templated
 from typhoon.core.transpiler import get_transformations_modules, get_functions_modules, clean_function_name, \
-    clean_simple_param, substitute_special
+    clean_simple_param, substitute_special, AdapterParams
 
 
 @dataclass
@@ -33,6 +33,7 @@ class AirflowDag(Templated):
     os.environ['TYPHOON_HOME'] = str(TYPHOON_HOME)
     
     
+    from typhoon.core import DagContext
     import typhoon.contrib.functions as typhoon_functions
     import typhoon.contrib.transformations as typhoon_transformations
     from typhoon.contrib.hooks.hook_factory import get_hook
@@ -66,6 +67,7 @@ class AirflowDag(Templated):
         {% else %}
         # noinspection DuplicatedCode
         def {{ dependency.task_id }}_task(**context):
+            dag_context = DagContext(interval_start=context['execution_date'], interval_end=context['next_execution_date'])
             source_task_id = '{{ dependency.input.task_id }}'
             data = json.loads(context['ti'].xcom_pull(task_ids=source_task_id, key='result'))
             result = []
@@ -141,6 +143,7 @@ class AirflowDag(Templated):
 
     @property
     def synchronous_edges(self):
+        print(self.dag.nodes)
         for edge_name, edge in self.dag.edges.items():
             if not self.dag.nodes[edge.source].asynchronous:
                 yield SynchronousEdge(edge_name, edge).render()
@@ -153,29 +156,29 @@ class AirflowDag(Templated):
             node_id: str
             node_name: str
 
-        def find_dependencies(inp: Optional[Inp], labels: List[str], node_name: str, prev: str = None):
+        def find_dependencies(inp: Optional[Inp], node_name: str, prev: str = None):
             node = self.dag.nodes[node_name]
             if not node.asynchronous:
                 for edge_name in self.dag.get_edges_for_source(node_name):
                     edge = self.dag.edges[edge_name]
-                    find_dependencies(inp, labels, edge.destination, prev=node_name)
+                    find_dependencies(inp, edge.destination, prev=node_name)
                 return
             # Asynchronous
             if (prev is None and inp is None) or self.dag.nodes[prev or inp['node_name']].asynchronous:
-                task_id = '__'.join([node_name] + labels)
+                task_id = node_name
                 task_function = f'{node_name}_node'
                 is_async = True
             else:   # Async false
                 source_node = prev or inp['node_name']
                 edge_name = self.dag.get_edge_name(source_node, node_name)
-                task_id = '__'.join([f'{edge_name}'] + labels)
-                task_function = f'{self.dag.get_edge_name(source_node, node_name)}_sync_edge'
+                task_id = f'{source_node}_then_{node_name}'
+                task_function = f'{task_id}_sync_edge'
                 is_async = False
             rendered_adapters = []
             if inp is not None:
                 inbound_edge = self.dag.get_edge(inp['node_name'], prev or node_name)
                 for k, v in inbound_edge.adapter.items():
-                    rendered_adapters.append(Adapter(k, v, 'adapter_config').render())
+                    rendered_adapters.append(AdapterParams(k, v, 'adapter_config').render())
             dependencies.append({
                 'task_id': task_id,
                 'task_function': task_function,
@@ -185,10 +188,10 @@ class AirflowDag(Templated):
             })
             for edge_name in self.dag.get_edges_for_source(node_name):
                 edge = self.dag.edges[edge_name]
-                find_dependencies(inp={'node_name': node_name, 'task_id': task_id}, labels=labels+[node_name], node_name=edge.destination)
+                find_dependencies(inp={'node_name': node_name, 'task_id': task_id}, node_name=edge.destination)
 
         for source in self.dag.sources:
-            find_dependencies(None, [], source)
+            find_dependencies(None, source)
 
         return dependencies
 
@@ -197,6 +200,7 @@ class AirflowDag(Templated):
 class NodeTask(Templated):
     template = '''
     def {{ node_name }}_node(adapter_config: dict, batch_num, **context):
+            dag_context = DagContext(interval_start=context['execution_date'], interval_end=context['next_execution_date'])
             config = {**adapter_config} 
             {% for adapter in rendered_adapters %}
             {{ adapter | indent(8, False) }}
@@ -213,7 +217,7 @@ class NodeTask(Templated):
     @property
     def rendered_adapters(self):
         for k, v in self.node.config.items():
-            yield Adapter(k, v).render()
+            yield AdapterParams(k, v).render()
 
     @staticmethod
     def clean_function_name(function_name, function_type):
@@ -223,7 +227,8 @@ class NodeTask(Templated):
 @dataclass
 class SynchronousEdge(Templated):
     template = '''
-    def {{ edge_name }}_sync_edge(adapter_config: dict, batch_num, **context):
+    def {{ edge.source }}_then_{{ edge.destination }}_sync_edge(adapter_config: dict, batch_num, **context):
+        dag_context = DagContext(interval_start=context['execution_date'], interval_end=context['next_execution_date'])
         config = {**adapter_config}
         source_data = {{ edge.source }}_node(adapter_config, batch_num, **context)
         for batch_num_dest, batch in enumerate(source_data or [], start=1):
@@ -238,7 +243,7 @@ class SynchronousEdge(Templated):
     @property
     def rendered_adapters(self):
         for k, v in self.edge.adapter.items():
-            yield Adapter(k, v).render()
+            yield AdapterParams(k, v).render()
 
 
 @dataclass
@@ -278,6 +283,7 @@ class Adapter(Templated):
 class AirflowSourceTask(Templated):
     template = '''
     def {{ node_name }}_source(**context):
+        dag_context = DagContext(interval_start=context['execution_date'], interval_end=context['next_execution_date'])
         config = {} 
         {% for adapter in rendered_adapters %}
         {{ adapter | indent(4, False) }}
@@ -291,7 +297,7 @@ class AirflowSourceTask(Templated):
     @property
     def rendered_adapters(self):
         for k, v in self.node.config.items():
-            yield Adapter(k, v).render()
+            yield AdapterParams(k, v).render()
 
     @staticmethod
     def clean_function_name(function_name, function_type):
@@ -303,6 +309,7 @@ class AirflowTask(Templated):
     template = '''
     ## Edge {{ edge_name }}: {{ edge.source }} -> {{ edge.destination }}
     def {{ task_name }}(tid, **context):
+        dag_context = DagContext(interval_start=context['execution_date'], interval_end=context['next_execution_date'])
         config = {} 
         {% for adapter in rendered_adapters_destination %}
         {{ adapter | indent(4, False) }}
@@ -338,12 +345,12 @@ class AirflowTask(Templated):
     @property
     def rendered_adapters_destination(self):
         for k, v in self.destination_node.config.items():
-            yield Adapter(k, v).render()
+            yield AdapterParams(k, v).render()
 
     @property
     def rendered_adapters_edge(self):
         for k, v in self.edge.adapter.items():
-            yield Adapter(k, v).render()
+            yield AdapterParams(k, v).render()
 
 
 if __name__ == '__main__':
