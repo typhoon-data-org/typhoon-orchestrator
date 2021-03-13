@@ -5,10 +5,30 @@ from dataclasses import dataclass
 from typhoon.core.cron_utils import aws_schedule_to_cron, timedelta_from_cron
 from typing_extensions import TypedDict
 
-from typhoon.core.dags import DAG, Edge, Node
+from typhoon.core.dags import DAG, Edge, Node, Py, MultiStep
 from typhoon.core.templated import Templated
 from typhoon.core.transpiler import get_transformations_modules, get_functions_modules, clean_function_name, \
     clean_simple_param, substitute_special, AdapterParams
+
+
+def replace_batch_and_batch_num(item, batch, batch_num):
+    if isinstance(item, Py):
+        return Py(
+            value=item.value.replace('$BATCH_NUM', str(batch_num)).replace('$BATCH', f"'{batch}'"),
+            key=item.key,
+            args_dependencies=item.args_dependencies,
+        )
+    elif isinstance(item, MultiStep):
+        return MultiStep(
+            value=[replace_batch_and_batch_num(x, batch, batch_num) for x in item.value],
+            key=item.key,
+            config_name=item.config_name,
+        )
+    elif isinstance(item, list):
+        return [replace_batch_and_batch_num(x, batch, batch_num) for x in item]
+    elif isinstance(item, dict):
+        return {k: replace_batch_and_batch_num(v, batch, batch_num) for k, v in item.items()}
+    return item
 
 
 @dataclass
@@ -118,9 +138,12 @@ class AirflowDag(Templated):
             visited.add(e.destination)
 
         # If there's a branch at the start then explicitly create separate branches for each
-        def recursive_branch(node_name, branch_name):
+        def recursive_branch(node_name, branch_name, new_config=None):
             new_source_node_name = f'{node_name}_{branch}'
-            self.dag.nodes[new_source_node_name] = node.copy()
+            new_node = self.dag.nodes[node_name].copy(deep=True)
+            if new_config:
+                new_node.config.update(**new_config)
+            self.dag.nodes[new_source_node_name] = new_node
             for edge_name in self.dag.get_edges_for_source(node_name):
                 edge = self.dag.edges[edge_name]
                 new_edge = edge.copy()
@@ -141,9 +164,14 @@ class AirflowDag(Templated):
             if node.function == 'typhoon.flow_control.branch' and 'branches' in node.config and all(isinstance(x, str) for x in node.config['branches']):
                 # Reshape the dag to separate branches
                 for edge_name in self.dag.get_edges_for_source(node_name):
-                    for branch in node.config['branches']:
-                        dest = self.dag.edges[edge_name].destination
-                        recursive_branch(dest, branch)
+                    edge = self.dag.edges[edge_name]
+                    for batch_num, branch in enumerate(node.config['branches'], start=1):
+                        print(edge.adapter)
+                        new_config = replace_batch_and_batch_num(edge.adapter, branch, batch_num)
+                        print(edge.adapter)
+                        print(new_config)
+                        dest = edge.destination
+                        recursive_branch(dest, branch, new_config)
             recursive_delete(node_name)
 
     @property
@@ -267,6 +295,7 @@ class SynchronousEdge(Templated):
         config = {**adapter_config}
         source_data = {{ edge.source }}_node(adapter_config, batch_num, **context)
         for batch_num_dest, batch in enumerate(source_data or [], start=1):
+            dest_config = {}
             {% for adapter in rendered_adapters %}
             {{ adapter | indent(8, False) }}
             {% endfor %}
@@ -278,7 +307,7 @@ class SynchronousEdge(Templated):
     @property
     def rendered_adapters(self):
         for k, v in self.edge.adapter.items():
-            yield AdapterParams(k, v).render()
+            yield AdapterParams(k, v, config_name='dest_config').render()
 
 
 @dataclass
