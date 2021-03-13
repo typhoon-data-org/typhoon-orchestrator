@@ -1,5 +1,6 @@
 name: hello_world
 schedule_interval: rate(1 hours)
+add granularity: hour
 
 tasks:
   send_data:
