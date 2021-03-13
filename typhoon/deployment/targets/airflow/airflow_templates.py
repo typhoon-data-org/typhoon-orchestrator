@@ -110,6 +110,42 @@ class AirflowDag(Templated):
         if not self.start_date:
             self.start_date = datetime.now()
 
+        # Validate that there's no node with two inputs
+        visited = set()
+        for e in self.dag.edges.values():
+            if e.destination in visited:
+                raise ValueError(f'Cannot build airflow DAG. Node {e.destination} has two or more inputs')
+            visited.add(e.destination)
+
+        # If there's a branch at the start then explicitly create separate branches for each
+        def recursive_branch(node_name, branch_name):
+            new_source_node_name = f'{node_name}_{branch}'
+            self.dag.nodes[new_source_node_name] = node.copy()
+            for edge_name in self.dag.get_edges_for_source(node_name):
+                edge = self.dag.edges[edge_name]
+                new_edge = edge.copy()
+                new_edge.source = new_source_node_name
+                new_edge.destination = f'{edge.destination}_{branch}'
+                self.dag.edges[f'{edge_name}_{branch}'] = new_edge
+                recursive_branch(edge.destination, branch_name)
+
+        def recursive_delete(node_name):
+            for edge_name in self.dag.get_edges_for_source(node_name):
+                edge = self.dag.edges[edge_name]
+                recursive_delete(edge.destination)
+                del self.dag.edges[edge_name]
+            del self.dag.nodes[node_name]
+
+        for node_name in self.dag.sources:
+            node = self.dag.nodes[node_name]
+            if node.function == 'typhoon.flow_control.branch' and 'branches' in node.config and all(isinstance(x, str) for x in node.config['branches']):
+                # Reshape the dag to separate branches
+                for edge_name in self.dag.get_edges_for_source(node_name):
+                    for branch in node.config['branches']:
+                        dest = self.dag.edges[edge_name].destination
+                        recursive_branch(dest, branch)
+            recursive_delete(node_name)
+
     @property
     def cron_expression(self):
         return aws_schedule_to_cron(self.dag.schedule_interval)
@@ -143,7 +179,6 @@ class AirflowDag(Templated):
 
     @property
     def synchronous_edges(self):
-        print(self.dag.nodes)
         for edge_name, edge in self.dag.edges.items():
             if not self.dag.nodes[edge.source].asynchronous:
                 yield SynchronousEdge(edge_name, edge).render()
