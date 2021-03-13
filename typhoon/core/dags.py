@@ -721,6 +721,9 @@ class DAGDefinitionV2(BaseModel):
                         adapter=adapter,
                     )
                     edge_id += 1
+            elif adapter:
+                raise ValueError(
+                    f'The task {task_name} in dag {self.name} is trying to use $BATCH or $BATCH_NUM but it has no input')
 
         return DAG(
             name=self.name,
