@@ -11,6 +11,7 @@ class Echo:
     def __call__(self, *args, **kwargs):
         print(f'** Calling {self.name} for {self.parent} with the following arguments')
         for i, arg in enumerate(args):
+            print(f'** arg{i} is of type:', type(arg))
             print(f'** arg{i}:', arg)
         for k, v in kwargs.items():
             print(f'**{k}:', v)
