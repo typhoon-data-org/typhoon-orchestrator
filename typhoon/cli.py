@@ -73,7 +73,8 @@ def cli():
 
 @cli.command()
 @click.argument('project_name')
-@click.option('--deploy-target', autocompletion=get_deploy_targets, required=False, default='typhoon')
+@click.option('--deploy-target', autocompletion=get_deploy_targets, required=False, default='typhoon',
+              help='Target for DAG deployment. It can be "typhoon" or "airflow"')
 @click.option('--template', required=False, default='hello_world')
 def init(project_name: str, deploy_target: str, template: str):
     """Create a new Typhoon project"""
@@ -87,6 +88,7 @@ def init(project_name: str, deploy_target: str, template: str):
     (dest / 'dag_schema.json').write_text(DAGDefinitionV2.schema_json(indent=2))
     (dest / 'component_schema.json').write_text(Component.schema_json(indent=2))
     print(f'Project created in {dest}')
+    print('Run', colored('eval "$(_TYPHOON_COMPLETE=source typhoon)"', 'blue'))
 
 
 @cli.command()
