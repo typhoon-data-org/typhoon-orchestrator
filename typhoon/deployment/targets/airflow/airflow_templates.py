@@ -36,7 +36,6 @@ def replace_batch_and_batch_num(item, batch, batch_num):
 class AirflowDag(Templated):
     template = '''
     import datetime
-    import json
     import os
     import types
     from pathlib import Path
@@ -84,13 +83,13 @@ class AirflowDag(Templated):
         # Source task {{ dependency.task_id }}
         def {{ dependency.task_id }}_task(**context):
             output = {{ dependency.task_function }}({}, 1, **context)
-            context['ti'].xcom_push('result', json.dumps(list(output)))
+            context['ti'].xcom_push('result', list(output))
         {% else %}
         # noinspection DuplicatedCode
         def {{ dependency.task_id }}_task(**context):
             dag_context = DagContext(interval_start=context['execution_date'], interval_end=context['next_execution_date'])
             source_task_id = '{{ dependency.input.task_id }}'
-            data = json.loads(context['ti'].xcom_pull(task_ids=source_task_id, key='result'))
+            data = context['ti'].xcom_pull(task_ids=source_task_id, key='result')
             result = []
             for batch_num, batch in enumerate(data, 1):
                 adapter_config = {}
@@ -98,7 +97,7 @@ class AirflowDag(Templated):
                 {{ adapter | indent(12, False) }}
                 {% endfor %}
                 result + list({{ dependency.task_function }}(adapter_config, batch_num, **context))
-            context['ti'].xcom_push('result', json.dumps(list(result)))
+            context['ti'].xcom_push('result', list(result))
         {% endif %}
         {{ dependency.task_id }} = PythonOperator(
             task_id='{{ dependency.task_id }}',
@@ -106,7 +105,8 @@ class AirflowDag(Templated):
             provide_context=True,
         )
         {% if dependency.input is none %}
-        dag >> {{ dependency.task_id }}
+        if airflow.__version__.startswith('1.'):
+            dag >> {{ dependency.task_id }}
         {% else %}
         {{ dependency.input.task_id }} >> {{ dependency.task_id }}
         {% endif %}
@@ -354,7 +354,7 @@ class AirflowSourceTask(Templated):
         {% for adapter in rendered_adapters %}
         {{ adapter | indent(4, False) }}
         {% endfor %}
-        result = json.dumps(list({{ node.function | clean_function_name('functions') }}(**config)))
+        result = list({{ node.function | clean_function_name('functions') }}(**config))
         context['ti'].xcom_push('result', result)
     '''
     node_name: str
@@ -380,14 +380,14 @@ class AirflowTask(Templated):
         {% for adapter in rendered_adapters_destination %}
         {{ adapter | indent(4, False) }}
         {% endfor %}
-        data = json.loads(context['ti'].xcom_pull(task_ids=tid, key='result'))
+        data = context['ti'].xcom_pull(task_ids=tid, key='result')
         result = []
         for batch_num, batch in enumerate(data):
             {% for adapter in rendered_adapters_edge %}
             {{ adapter | indent(8, False) }}
             {% endfor %}
             result += list({{ destination_node.function | clean_function_name('functions') }}(**config))
-        context['ti'].xcom_push('result', json.dumps(result))
+        context['ti'].xcom_push('result', result)
     '''
     dag: DAG
     edge_name: str
