@@ -5,6 +5,7 @@ from typhoon.contrib.hooks.dbapi_hooks import SqliteHook, PostgresHook, Snowflak
 from typhoon.contrib.hooks.debug_hooks import EchoHook
 from typhoon.contrib.hooks.filesystem_hooks import S3Hook, LocalStorageHook, FTPHook
 from typhoon.contrib.hooks.hook_interface import HookInterface
+from typhoon.contrib.hooks.kafka_hooks import KafkaProducerHook, KafkaConsumerHook
 from typhoon.contrib.hooks.singer_hook import SingerHook
 from typhoon.contrib.hooks.sqlalchemy_hook import SqlAlchemyHook
 from typhoon.core.settings import Settings
@@ -21,6 +22,8 @@ HOOK_MAPPINGS = {
     'sqlalchemy': SqlAlchemyHook,
     'singer': SingerHook,
     'echo': EchoHook,
+    'kafka_producer': KafkaProducerHook,
+    'kafka_consumer': KafkaConsumerHook,
 }
 
 
