@@ -77,7 +77,7 @@ class AirflowDag(Templated):
         dag_id='{{ dag.name }}',
         default_args={'owner': '{{ owner }}'},
         schedule_interval='{{ cron_expression }}',
-        start_date={{ start_date }}
+        start_date={{ start_date.__repr__() }}
     ) as dag:
         {% for dependency in edge_dependencies %}
         {% if dependency.input is none %}
@@ -185,10 +185,6 @@ class AirflowDag(Templated):
     @property
     def cron_expression(self):
         return aws_schedule_to_cron(self.dag.schedule_interval)
-
-    @property
-    def delta(self):
-        return timedelta_from_cron(self.cron_expression)
 
     @property
     def typhoon_imports(self):
