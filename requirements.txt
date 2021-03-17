@@ -4,10 +4,10 @@ PyYAML
 boto3
 dataclasses
 jsonpickle
-typing_extensions
+typing_extensions>=3.7.4.3
 python-dateutil
+pydantic[dotenv]
 pydantic
 fs
 fs-s3fs
-pydantic[dotenv]
 croniter

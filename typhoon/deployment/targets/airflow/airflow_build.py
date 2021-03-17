@@ -1,3 +1,4 @@
+import os
 import re
 from pathlib import Path
 from shutil import rmtree
@@ -9,7 +10,9 @@ from typhoon.deployment.targets.airflow.airflow_templates import AirflowDag
 
 
 def build_all_dags_airflow(remote: Optional[str], matching: Optional[str] = None):
-    target_folder: Path = Settings.typhoon_home.parent/'dags/typhoon_managed/'
+    airflow_home = Path(os.environ['AIRFLOW_HOME'])
+    target_folder: Path = airflow_home/'dags/typhoon_managed/'
+    target_folder.mkdir(parents=True, exist_ok=True)
     rmtree(str(target_folder), ignore_errors=True)
     target_folder.mkdir()
 

@@ -84,7 +84,9 @@ class AirflowDb:
     def get_variable(self, var_id: str) -> Variable:
         assert repr(settings.engine.url) == self.sql_alchemy_conn
         session = settings.Session()
-        return Variable.get(var_id, session=session)
+        not_found = object()
+        var = Variable.get(var_id, default_var=not_found, session=session)
+        return var if var is not not_found else None
 
     def delete_variable(self, var_id: str):
         assert repr(settings.engine.url) == self.sql_alchemy_conn

@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Union, Optional
 
+from croniter import croniter
 from dataclasses import dataclass
 from typhoon.core.cron_utils import aws_schedule_to_cron, timedelta_from_cron
 from typhoon.core.settings import Settings
@@ -76,7 +77,7 @@ class AirflowDag(Templated):
         dag_id='{{ dag.name }}',
         default_args={'owner': '{{ owner }}'},
         schedule_interval='{{ cron_expression }}',
-        start_date=datetime.datetime.now() - {{ delta }}
+        start_date={{ start_date }}
     ) as dag:
         {% for dependency in edge_dependencies %}
         {% if dependency.input is none %}
@@ -129,7 +130,10 @@ class AirflowDag(Templated):
         if isinstance(self.dag, dict):
             self.dag = DAG.parse_obj(self.dag)
         if not self.start_date:
-            self.start_date = datetime.now()
+            cron = aws_schedule_to_cron(self.cron_expression)
+            iterator = croniter(cron, datetime.now())   # In case the event is exactly on time
+            iterator.get_prev(datetime)
+            self.start_date = iterator.get_prev(datetime)
 
         # Validate that there's no node with two inputs
         visited = set()
@@ -162,7 +166,9 @@ class AirflowDag(Templated):
 
         for node_name in self.dag.sources:
             node = self.dag.nodes[node_name]
-            if node.function == 'typhoon.flow_control.branch' and 'branches' in node.config and all(isinstance(x, str) for x in node.config['branches']):
+            if node.function == 'typhoon.flow_control.branch' and \
+                    isinstance(node.config['branches'], list) and \
+                    'branches' in node.config and all(isinstance(x, str) for x in node.config['branches']):
                 # Reshape the dag to separate branches
                 for edge_name in self.dag.get_edges_for_source(node_name):
                     edge = self.dag.edges[edge_name]
@@ -182,7 +188,7 @@ class AirflowDag(Templated):
 
     @property
     def delta(self):
-        return repr(timedelta_from_cron(self.cron_expression))
+        return timedelta_from_cron(self.cron_expression)
 
     @property
     def typhoon_imports(self):

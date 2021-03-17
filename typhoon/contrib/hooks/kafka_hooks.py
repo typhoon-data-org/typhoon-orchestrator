@@ -1,4 +1,3 @@
-from kafka import KafkaConsumer, KafkaProducer
 from typhoon.connections import ConnectionParams
 from typhoon.contrib.hooks.hook_interface import HookInterface
 
@@ -7,7 +6,8 @@ class KafkaConsumerHook(HookInterface):
     def __init__(self, conn_params: ConnectionParams):
         self.conn_params = conn_params
 
-    def __enter__(self) -> KafkaConsumer:
+    def __enter__(self) -> 'KafkaConsumer':
+        from kafka import KafkaConsumer
         self.conn = KafkaConsumer(
             bootstrap_servers=self.conn_params.login or self.conn_params.extra.get('bootstrap_servers'),
             client_id=self.conn_params.extra.get('client_id') or 'typhoon',
@@ -24,7 +24,8 @@ class KafkaProducerHook(HookInterface):
     def __init__(self, conn_params: ConnectionParams):
         self.conn_params = conn_params
 
-    def __enter__(self) -> KafkaProducer:
+    def __enter__(self) -> 'KafkaProducer':
+        from kafka import KafkaProducer
         self.conn = KafkaProducer(
             bootstrap_servers=self.conn_params.login or self.conn_params.extra.get('bootstrap_servers'),
             client_id=self.conn_params.extra.get('client_id') or 'typhoon',
