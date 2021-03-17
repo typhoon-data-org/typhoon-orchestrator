@@ -6,11 +6,11 @@ from typing import Optional, Union, ContextManager, List
 
 from airflow import models
 from airflow import settings
-from airflow.hooks.base_hook import BaseHook
-from airflow.models import Connection, Variable
+from airflow.models import Connection, Variable, DagRun
 from airflow.utils.db import initdb
 from airflow.utils.db import merge_conn
 from cryptography.fernet import Fernet
+from sqlalchemy import asc
 
 
 @contextlib.contextmanager
@@ -109,6 +109,12 @@ class AirflowDb:
         assert repr(settings.engine.url) == self.sql_alchemy_conn
         session = settings.Session()
         return [x for x in session.query(Variable)]
+
+    def get_first_dag_run(self, dag_id) -> Optional[DagRun]:
+        assert repr(settings.engine.url) == self.sql_alchemy_conn
+        session = settings.Session()
+        dag_run = session.query(DagRun).filter(DagRun.dag_id == dag_id).order_by(asc(DagRun.execution_date)).first()
+        return dag_run
 
 
 @contextlib.contextmanager

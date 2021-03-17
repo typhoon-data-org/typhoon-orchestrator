@@ -42,6 +42,7 @@ class AirflowDag(Templated):
     from pathlib import Path
     
     import pendulum
+    import airflow
     from airflow import DAG
     from airflow.models import TaskInstance
     {% if airflow_version == 2 %}
@@ -50,8 +51,8 @@ class AirflowDag(Templated):
     from airflow.operators.python_operator import PythonOperator
     {% endif %}
     
-    TYPHOON_HOME = Path(__file__).parent.parent.parent/'{{ project_name }}'
-    os.environ['TYPHOON_HOME'] = str(TYPHOON_HOME)
+    if 'TYPHOON_HOME' not in os.environ.keys():
+        os.environ['TYPHOON_HOME'] = '{{ typhoon_home }}'
     
     
     from typhoon.core import DagContext
@@ -132,7 +133,6 @@ class AirflowDag(Templated):
         if not self.start_date:
             cron = aws_schedule_to_cron(self.cron_expression)
             iterator = croniter(cron, datetime.now())   # In case the event is exactly on time
-            iterator.get_prev(datetime)
             self.start_date = iterator.get_prev(datetime)
 
         # Validate that there's no node with two inputs
@@ -179,8 +179,8 @@ class AirflowDag(Templated):
                 recursive_delete(node_name)
 
     @property
-    def project_name(self) -> str:
-        return Settings.project_name
+    def typhoon_home(self) -> str:
+        return Settings.typhoon_home
 
     @property
     def cron_expression(self):

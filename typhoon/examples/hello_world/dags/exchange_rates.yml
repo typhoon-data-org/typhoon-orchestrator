@@ -16,4 +16,4 @@ tasks:
       data: !MultiStep
         - !Py transformations.xr.flatten_response($BATCH)
         - !Py typhoon.data.dicts_to_csv($1, delimiter='|')
-      path: xr_data.csv
+      path: !Py f'{$DAG_CONTEXT.interval_start.isoformat()}_xr_data.csv'
