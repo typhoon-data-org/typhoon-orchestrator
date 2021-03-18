@@ -31,6 +31,6 @@ def build_all_dags_airflow(remote: Optional[str], matching: Optional[str] = None
             with set_airflow_db(store.db_path, store.fernet_key) as db:
                 dag_run = db.get_first_dag_run(dag.name)
                 if dag_run:
-                    start_date = dag_run.start_date
+                    start_date = dag_run.execution_date.replace(tzinfo=None)
             compiled_dag = AirflowDag(dag, start_date=start_date).render()
             (target_folder / f'{dag.name}.py').write_text(compiled_dag)
