@@ -2,7 +2,8 @@ FROM puckel/docker-airflow:1.10.9
 
 ENV AIRFLOW_HOME="/usr/local/airflow"
 ENV PROJECT_NAME="typhoon_project"
-ENV TYPHOON_HOME="/opt/$PROJECT_NAME/"
+ENV TYPHOON_BASE="/opt/typhoon"
+ENV TYPHOON_HOME="$TYPHOON_BASE/$PROJECT_NAME/"
 ENV PYTHONPATH="$PYTHONPATH:$TYPHOON_HOME"
 
 USER root
@@ -13,6 +14,9 @@ RUN set -ex && apt-get update -yqq \
 WORKDIR /
 COPY . /
 RUN pip install -e ./[dev]
+RUN mkdir $TYPHOON_BASE && chown -R airflow: ${TYPHOON_BASE} && mkdir /tmp/data_lake && chown -R airflow: /tmp/data_lake
 
-RUN cd /opt/ && typhoon init $PROJECT_NAME --deploy-target airflow
+USER airflow
+WORKDIR $TYPHOON_BASE
+RUN typhoon init $PROJECT_NAME --deploy-target airflow && cd $PROJECT_NAME
 WORKDIR $TYPHOON_HOME

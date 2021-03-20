@@ -1,9 +1,10 @@
 import importlib.util
 import inspect
 
-from typhoon.contrib.hooks.dbapi_hooks import SqliteHook, PostgresHook, SnowflakeHook, EchoDbHook, DuckDbHook
+from typhoon.contrib.hooks.dbapi_hooks import SqliteHook, PostgresHook, SnowflakeHook, EchoDbHook, DuckDbHook, \
+    BigQueryHook
 from typhoon.contrib.hooks.debug_hooks import EchoHook
-from typhoon.contrib.hooks.filesystem_hooks import S3Hook, LocalStorageHook, FTPHook
+from typhoon.contrib.hooks.filesystem_hooks import S3Hook, LocalStorageHook, FTPHook, GCSHook
 from typhoon.contrib.hooks.hook_interface import HookInterface
 from typhoon.contrib.hooks.kafka_hooks import KafkaProducerHook, KafkaConsumerHook
 from typhoon.contrib.hooks.singer_hook import SingerHook
@@ -14,9 +15,11 @@ HOOK_MAPPINGS = {
     'sqlite': SqliteHook,
     'postgres': PostgresHook,
     'snowflake': SnowflakeHook,
+    'bigquery': BigQueryHook,
     'echodb': EchoDbHook,
     'duckdb': DuckDbHook,
     's3': S3Hook,
+    'gcs': GCSHook,
     'ftp': FTPHook,
     'local_storage': LocalStorageHook,
     'sqlalchemy': SqlAlchemyHook,

@@ -1,3 +1,4 @@
+import os
 from typing import Optional, Iterable
 
 from typing_extensions import Protocol
@@ -80,6 +81,59 @@ class SnowflakeHook(DbApiHook):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.connection.close()
+        self.connection = None
+
+
+class BigQueryHook(DbApiHook):
+    credentials_env_var = 'GOOGLE_APPLICATION_CREDENTIALS'
+
+    def __init__(self, conn_params):
+        self.conn_params = conn_params
+
+    @property
+    def client(self):
+        from google.cloud import bigquery
+        return bigquery.Client()
+
+    # noinspection PyProtectedMember
+    def __enter__(self) -> 'google.cloud.bigquery.dbapi.Connection':
+        from google.cloud.bigquery import dbapi
+
+        self.saved_credentials = os.environ.get(BigQueryHook.credentials_env_var)
+        credentials_path = self.conn_params.extra.get('credentials_path')
+        if credentials_path:
+            os.environ[BigQueryHook.credentials_env_var] = credentials_path
+
+        self.conn = dbapi.Connection(self.client)
+        return self.conn
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.saved_credentials:
+            os.environ[BigQueryHook.credentials_env_var] = self.saved_credentials
+        self.connection.close()
+        self.connection = None
+
+    def load_csv(self, table: str, path: str, CSVFormat=None):
+        from google.cloud import bigquery
+        # TODO(developer): Set table_id to the ID of the table to create.
+        # table_id = "your-project.your_dataset.your_table_name
+
+        # Set the encryption key to use for the destination.
+        # TODO: Replace this key with a key you have created in KMS.
+        # kms_key_name = "projects/{}/locations/{}/keyRings/{}/cryptoKeys/{}".format(
+        #     "cloud-samples-tests", "us", "test", "test"
+        # )
+        job_config = bigquery.LoadJobConfig(
+            autodetect=True,
+            source_format=bigquery.SourceFormat.CSV,
+            write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
+        )
+        load_job = self.client.load_table_from_uri(
+            path, table, job_config=job_config
+        )
+        load_job.result()  # Waits for the job to complete.
+        destination_table = self.client.get_table(table)
+        print("Loaded {} rows.".format(destination_table.num_rows))
 
 
 class SqliteHook(DbApiHook):

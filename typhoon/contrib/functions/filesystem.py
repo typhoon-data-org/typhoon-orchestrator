@@ -35,6 +35,7 @@ def write_data(
         path: Union[Path, str],
         create_intermediate_dirs: bool = False,
         metadata: Optional[dict] = None,
+        return_path_format: str = 'relative',
 ) -> Iterable[str]:
     """
     Write the given data to the path specified.
@@ -43,6 +44,7 @@ def write_data(
     :param hook: A FileSystemHookInterface hook instance
     :param path: Path where the data should be written
     :param create_intermediate_dirs: Create intermediate directories if necessary
+    :param return_path_format: relative, absolute or url
     """
     if isinstance(data, BytesIO):
         data = data.getvalue()
@@ -55,7 +57,15 @@ def write_data(
             conn.makedirs(str(Path(path).parent), recreate=True)
         print(f'Writing to {path}')
         conn.writebytes(path, data)
-    yield WriteDataResponse(metadata=metadata, path=path)
+        if return_path_format == 'relative':
+            return_path = path
+        elif return_path_format == 'absolute':
+            return_path = str(conn.open(path))
+        elif return_path_format == 'url':
+            return_path = conn.geturl(path)
+        else:
+            raise ValueError(f'return_path_format should be "relative", "absolute" or "url". Found "{return_path_format}"')
+    yield WriteDataResponse(metadata=metadata, path=return_path)
 
 
 def list_directory(hook: FileSystemHookInterface, path: Union[Path, str] = '/') -> Iterable[str]:
