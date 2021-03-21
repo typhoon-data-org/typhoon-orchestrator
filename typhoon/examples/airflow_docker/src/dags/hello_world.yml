@@ -1,0 +1,33 @@
+name: hello_world
+schedule_interval: rate(1 hours)
+granularity: hour
+
+tasks:
+  send_data:
+    function: typhoon.flow_control.branch
+    args:
+      branches:
+        - filename: users.txt
+          contents: John, Amy, Adam, Jane
+        - filename: animals.txt
+          contents: dog, cat, mouse, elephant, giraffe
+        - filename: fruits.csv
+          contents: apple,pear,apricot
+
+#  echo_my_output:
+#    input: send_data
+#    function: typhoon.debug.echo
+#    args:
+#      mydata: !Py $BATCH
+
+  write_data:
+    input: send_data
+    function: typhoon.filesystem.write_data
+    args:
+      hook: !Hook data_lake
+      path: !MultiStep
+        - !Py $BATCH['filename']
+        - !Py $DAG_CONTEXT.interval_end
+        - !Py f'/store/{$2}/{$1}'
+      data: !Py $BATCH['contents']
+      create_intermediate_dirs: True

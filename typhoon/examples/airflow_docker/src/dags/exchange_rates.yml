@@ -1,0 +1,19 @@
+name: exchange_rates
+schedule_interval: rate(1 day)
+
+tasks:
+  exchange_rate:
+    function: functions.exchange_rates_api.get_history
+    args:
+      start_at: !Py $DAG_CONTEXT.interval_start
+      end_at: !Py $DAG_CONTEXT.interval_end
+
+  write_csv:
+    input: exchange_rate
+    function: typhoon.filesystem.write_data
+    args:
+      hook: !Hook echo
+      data: !MultiStep
+        - !Py transformations.xr.flatten_response($BATCH)
+        - !Py typhoon.data.dicts_to_csv($1, delimiter='|')
+      path: !Py f'{$DAG_CONTEXT.interval_start.isoformat()}_xr_data.csv'

@@ -81,9 +81,19 @@ def init(project_name: str, deploy_target: str, template: str):
     example_project_path = Path(pkg_resources.resource_filename('typhoon', 'examples')) / template
     dest = Path.cwd() / project_name
     shutil.copytree(str(example_project_path), str(dest))
-    (dest / 'typhoon.cfg').write_text(EXAMPLE_CONFIG.format(project_name=project_name, deploy_target=deploy_target))
-    (dest / 'dag_schema.json').write_text(DAGDefinitionV2.schema_json(indent=2))
-    (dest / 'component_schema.json').write_text(Component.schema_json(indent=2))
+
+    if template == 'airflow_docker':
+        cfg_path = (dest / 'src/typhoon.cfg')
+        dag_schema_path = (dest / 'src/dag_schema.json')
+        component_schema_path = (dest / 'src/component_schema.json')
+    else:
+        cfg_path = (dest / 'typhoon.cfg')
+        dag_schema_path = (dest / 'dag_schema.json')
+        component_schema_path = (dest / 'component_schema.json')
+
+    cfg_path.write_text(EXAMPLE_CONFIG.format(project_name=project_name, deploy_target=deploy_target))
+    dag_schema_path.write_text(DAGDefinitionV2.schema_json(indent=2))
+    component_schema_path.write_text(Component.schema_json(indent=2))
     print(f'Project created in {dest}')
     print('Run', colored('eval "$(_TYPHOON_COMPLETE=source typhoon)"', 'blue'))
 
