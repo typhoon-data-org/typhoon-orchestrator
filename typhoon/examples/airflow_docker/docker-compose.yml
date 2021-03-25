@@ -8,7 +8,7 @@ services:
     ports:
       - "8088:8080"
     volumes:
-      - "typhoon_vol:/opt/typhoon_project/"
+      - "typhoon_vol:/opt/typhoon/typhoon_project/"
       - "./data_lake:/tmp/data_lake/"
       - "./airflow_dags:/usr/local/airflow/dags"
 
