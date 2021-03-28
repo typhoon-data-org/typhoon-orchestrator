@@ -13,7 +13,8 @@ from croniter import croniter
 from dataclasses import dataclass
 from dateutil.parser import parse
 from pydantic import BaseModel, validator, Field, root_validator
-from typhoon.core.cron_utils import interval_start_from_schedule_and_interval_end, aws_schedule_to_cron
+
+from typhoon.core.cron_utils import aws_schedule_to_cron
 from typhoon.core.settings import Settings
 
 IDENTIFIER_REGEX = r'\w+'
@@ -694,10 +695,32 @@ class DAGDefinitionV2(BaseModel):
               ')',
         description='Schedule or frequency on which the DAG should run'
     )
-    granularity: Granularity = Field(default=Granularity.DAY, description='Granularity of DAG')
+    granularity: Optional[Granularity] = Field(
+        default=None,
+        description='Granularity of DAG. If not specified it will guess based on the expected time between runs.',
+    )
     active: bool = Field(True, description='Whether to deploy the DAG or not')
     tasks: Dict[str, TaskDefinition]
     tests: Optional[Dict[str, TestCase]]
+
+    def guess_granularity(self) -> Granularity:
+        cron = aws_schedule_to_cron(self.schedule_interval)
+        iterator = croniter(cron)   # In case the event is exactly on time
+        interval = iterator.get_next(datetime)
+        next_interval = iterator.get_next(datetime)
+        delta = (next_interval - interval)
+        if delta < timedelta(minutes=1):
+            return Granularity.SECOND
+        elif delta < timedelta(hours=1):
+            return Granularity.MINUTE
+        elif delta < timedelta(days=1):
+            return Granularity.HOUR
+        elif delta < timedelta(days=31):
+            return Granularity.DAY
+        elif delta < timedelta(days=365):
+            return Granularity.MONTH
+        else:
+            return Granularity.YEAR
 
     # noinspection PyProtectedMember
     def make_dag(self) -> DAG:
@@ -728,7 +751,7 @@ class DAGDefinitionV2(BaseModel):
         return DAG(
             name=self.name,
             schedule_interval=self.schedule_interval,
-            granularity=self.granularity,
+            granularity=self.granularity if self.granularity is not None else self.guess_granularity(),
             active=self.active,
             nodes=nodes,
             edges=edges,
