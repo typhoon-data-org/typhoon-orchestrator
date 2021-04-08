@@ -90,15 +90,30 @@ def get_dag_filenames():
     return dag_files
 
 
+def load_component(
+        component_name: str,
+        ignore_errors: bool = False,
+        kind: Union[Literal['typhoon'], Literal['custom'], Literal['all']] = 'all',
+) -> Optional[Component]:
+    components = load_components(ignore_errors, kind)
+    matching_components = [(component, code) for component, code in components if component.name == component_name]
+    assert len(matching_components) <= 1, f'Found {len(matching_components)} dags with name "{component_name}"'
+    return matching_components[0][0] if len(matching_components) == 1 else None
+
+
 def load_components(
         ignore_errors: bool = False,
-        kind=Union[Literal['typhoon'], Literal['custom']],
+        kind: Union[Literal['typhoon'], Literal['custom'], Literal['all']] = 'all',
 ) -> List[Tuple[Component, str]]:
-    return [(c, cs) for c, cs in load_component_definitions(ignore_errors, kind)]
+    if kind == 'all':
+        return [(c, cs) for c, cs in load_component_definitions(ignore_errors, kind='typhoon')] + \
+               [(c, cs) for c, cs in load_component_definitions(ignore_errors, kind='custom')]
+    else:
+        return [(c, cs) for c, cs in load_component_definitions(ignore_errors, kind)]
 
 
 def load_component_definitions(
-        ignore_errors: bool = False,
+        ignore_errors,
         kind=Union[Literal['typhoon'], Literal['custom']],
 ) -> List[Tuple[Component, str]]:
     import typhoon
