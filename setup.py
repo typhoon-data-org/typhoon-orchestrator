@@ -40,13 +40,13 @@ setup(
     tests_require=test_required,
     test_suite='pytest',
     include_package_data=True,
-    license='MIT License',
-    description='Serverless task orchestrator in AWS cloud',
+    license='Apache 2 License',
+    description='Create asynchronous data pipelines and deploy to cloud or airflow',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/biellls/typhoon-orchestrator',
-    author='Gabriel Llobera Salas',
-    author_email='bielllobera@gmail.com',
+    url='https://github.com/typhoon-data-org/typhoon-orchestrator',
+    author='Typhoon Data',
+    author_email='info.typhoon.data@gmail.com',
     entry_points={
         'console_scripts': [
             'typhoon=typhoon.cli:cli',
