@@ -153,7 +153,7 @@ if Settings.typhoon_home:
     print(f'${EnvVarName.PROJECT_HOME} defined from env variable to "{Settings.typhoon_home}"')
 else:
     typhoon_config_file = local_config.find_typhoon_cfg_in_cwd_or_parents()
-    if os.environ.get('_TYPHOON_COMPLETE') == 'source':
+    if os.environ.get('_TYPHOON_COMPLETE') in ['source', 'source_bash', 'source_zsh', 'source_fish']:
         # We just want click to generate a shell script that can be evaluated to provide code complete
         # Anything we print will be evaluated as a shell script and cause errors so we just do nothing
         pass
