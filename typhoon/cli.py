@@ -258,8 +258,6 @@ def list_dags(remote: Optional[str], long: bool):
 @click.option('--all', 'all_', is_flag=True, default=False, help='Build all DAGs (mutually exclusive with DAG_NAME)')
 def build_dags(dag_name: Optional[str], all_: bool):
     """Build code for dags in $TYPHOON_HOME/out/"""
-    from typhoon.deployment.targets.airflow.airflow_build import build_all_dags_airflow
-
     if dag_name and all_:
         raise click.UsageError(f'Illegal usage: DAG_NAME is mutually exclusive with --all')
     elif dag_name is None and not all_:
@@ -275,6 +273,7 @@ def build_dags(dag_name: Optional[str], all_: bool):
         if Settings.deploy_target == 'typhoon':
             build_all_dags(remote=None)
         else:
+            from typhoon.deployment.targets.airflow.airflow_build import build_all_dags_airflow
             build_all_dags_airflow(remote=None)
     else:
         dag_errors = get_dag_errors().get(dag_name)
@@ -290,6 +289,7 @@ def build_dags(dag_name: Optional[str], all_: bool):
         if Settings.deploy_target == 'typhoon':
             build_all_dags(remote=None, matching=dag_name)
         else:
+            from typhoon.deployment.targets.airflow.airflow_build import build_all_dags_airflow
             build_all_dags_airflow(remote=None, matching=dag_name)
 
 
