@@ -94,7 +94,9 @@ def init(project_name: str, deploy_target: str, template: str):
     dag_schema_path.write_text(DAGDefinitionV2.schema_json(indent=2))
     component_schema_path.write_text(Component.schema_json(indent=2))
     print(f'Project created in {dest}')
-    print('Run', colored('eval "$(_TYPHOON_COMPLETE=source typhoon)"', 'blue'))
+    print('If you want auto completion run the following:')
+    for shell_type in ['bash', 'zsh', 'fish']:
+        print(f'In {shell_type}', colored(f'eval "$(_TYPHOON_COMPLETE=source_{shell_type} typhoon)"', 'blue'))
 
 
 @cli.command()
