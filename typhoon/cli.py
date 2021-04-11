@@ -34,7 +34,6 @@ from typhoon.core.dags import DAG, DAGDefinitionV2, ArgEvaluationError
 from typhoon.core.glue import get_dag_errors, load_dag, load_dag_definition
 from typhoon.core.settings import Settings
 from typhoon.deployment.packaging import build_all_dags
-from typhoon.deployment.targets.airflow.airflow_build import build_all_dags_airflow
 from typhoon.handler import run_dag
 from typhoon.introspection.introspect_transformations import run_transformations, TransformationResult
 from typhoon.local_config import EXAMPLE_CONFIG
@@ -259,6 +258,8 @@ def list_dags(remote: Optional[str], long: bool):
 @click.option('--all', 'all_', is_flag=True, default=False, help='Build all DAGs (mutually exclusive with DAG_NAME)')
 def build_dags(dag_name: Optional[str], all_: bool):
     """Build code for dags in $TYPHOON_HOME/out/"""
+    from typhoon.deployment.targets.airflow.airflow_build import build_all_dags_airflow
+
     if dag_name and all_:
         raise click.UsageError(f'Illegal usage: DAG_NAME is mutually exclusive with --all')
     elif dag_name is None and not all_:
