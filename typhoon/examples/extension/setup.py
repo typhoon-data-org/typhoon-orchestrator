@@ -7,7 +7,7 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
     requirements = fh.read().splitlines(keepends=False)
 
 setuptools.setup(
-    name="example-pkg-YOUR-USERNAME-HERE",
+    name="{{ name }}",
     version="0.0.1",
     author="Example Author",
     author_email="author@example.com",

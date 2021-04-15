@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import List
 
 import yaml
@@ -6,6 +7,13 @@ from typhoon.core.glue import load_dags, load_dag
 from typhoon.core.settings import Settings
 from typhoon.remotes import Remotes
 from typhoon.variables import VariableType
+
+
+PROJECT_TEMPLATES = list(x.name for x in (Path(__file__).parent.parent / 'examples').iterdir())
+
+
+def get_project_templates(ctx, args, incomplete) -> List[str]:
+    return [x for x in PROJECT_TEMPLATES if incomplete in x]
 
 
 def get_deploy_targets(ctx, args, incomplete) -> List[str]:

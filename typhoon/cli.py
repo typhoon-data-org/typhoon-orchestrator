@@ -10,6 +10,7 @@ from types import SimpleNamespace
 from typing import Optional
 
 import click
+import jinja2
 import pkg_resources
 import pygments
 import yaml
@@ -24,7 +25,7 @@ from termcolor import colored
 
 from typhoon import connections
 from typhoon.cli_helpers.cli_completion import get_remote_names, get_dag_names, get_conn_envs, get_conn_ids, \
-    get_var_types, get_node_names, get_edge_names, get_deploy_targets
+    get_var_types, get_node_names, get_edge_names, get_deploy_targets, PROJECT_TEMPLATES
 from typhoon.cli_helpers.status import dags_with_changes, dags_without_deploy, check_connections_yaml, \
     check_connections_dags, check_variables_dags
 from typhoon.connections import Connection
@@ -74,29 +75,39 @@ def cli():
 @click.argument('project_name')
 @click.option('--deploy-target', autocompletion=get_deploy_targets, required=False, default='typhoon',
               help='Target for DAG deployment. It can be "typhoon" or "airflow"')
-@click.option('--template', required=False, default='hello_world')
+@click.option('--template', required=False, default='hello_world',
+              help=f'Project template. One of {PROJECT_TEMPLATES}')
 def init(project_name: str, deploy_target: str, template: str):
     """Create a new Typhoon project"""
     example_project_path = Path(pkg_resources.resource_filename('typhoon', 'examples')) / template
     dest = Path.cwd() / project_name
     shutil.copytree(str(example_project_path), str(dest))
 
-    if template == 'airflow_docker':
-        cfg_path = (dest / 'src/typhoon.cfg')
-        dag_schema_path = (dest / 'src/dag_schema.json')
-        component_schema_path = (dest / 'src/component_schema.json')
+    if template == 'extension':
+        module_path = dest / 'module'
+        module_path.rename(dest / project_name)
+        setup_path = dest / 'setup.py'
+        setup_path.write_text(
+            data=jinja2.Template(setup_path.read_text()).render(name=project_name))
+        print(f'Extension created in {dest}')
     else:
-        cfg_path = (dest / 'typhoon.cfg')
-        dag_schema_path = (dest / 'dag_schema.json')
-        component_schema_path = (dest / 'component_schema.json')
+        if template == 'airflow_docker':
+            cfg_path = dest / 'src/typhoon.cfg'
+            dag_schema_path = dest / 'src/dag_schema.json'
+            component_schema_path = dest / 'src/component_schema.json'
+        else:
+            cfg_path = (dest / 'typhoon.cfg')
+            dag_schema_path = (dest / 'dag_schema.json')
+            component_schema_path = (dest / 'component_schema.json')
 
-    cfg_path.write_text(EXAMPLE_CONFIG.format(project_name=project_name, deploy_target=deploy_target))
-    dag_schema_path.write_text(DAGDefinitionV2.schema_json(indent=2))
-    component_schema_path.write_text(Component.schema_json(indent=2))
-    print(f'Project created in {dest}')
-    print('If you want auto completion run the following:')
-    for shell_type in ['bash', 'zsh', 'fish']:
-        print(f'In {shell_type}', colored(f'eval "$(_TYPHOON_COMPLETE=source_{shell_type} typhoon)"', 'blue'))
+        cfg_path.write_text(EXAMPLE_CONFIG.format(project_name=project_name, deploy_target=deploy_target))
+        dag_schema_path.write_text(DAGDefinitionV2.schema_json(indent=2))
+        component_schema_path.write_text(Component.schema_json(indent=2))
+
+        print(f'Project created in {dest}')
+        print('If you want auto completion run the following:')
+        for shell_type in ['bash', 'zsh', 'fish']:
+            print(f'In {shell_type}', colored(f'eval "$(_TYPHOON_COMPLETE=source_{shell_type} typhoon)"', 'blue'))
 
 
 @cli.command()
