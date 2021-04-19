@@ -1,6 +1,6 @@
 # Hello World Typhoon Extension
 
-Serves to show the structure and serve as a template for a Typhoon Extension
+Intended to show the structure and serve as a template for a Typhoon Extension
 
 ## Virtualenv for development
 

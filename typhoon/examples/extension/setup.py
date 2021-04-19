@@ -1,10 +1,10 @@
 import setuptools
 
-with open("README.md", "r", encoding="utf-8") as fh:
+with open("README.md", "r") as fh:
     long_description = fh.read()
 
-with open("requirements.txt", "r", encoding="utf-8") as fh:
-    requirements = fh.read().splitlines(keepends=False)
+with open("requirements.txt", "r") as fh:
+    requirements = fh.read().splitlines(False)
 
 setuptools.setup(
     name="{{ name }}",
