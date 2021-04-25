@@ -1,9 +1,10 @@
 import re
-from typing import Any, List, Iterable, Dict, Union
+from typing import Any, List, Iterable, Dict, Union, Optional
 
 from dataclasses import dataclass
 from typhoon.core.dags import DAG, Py, MultiStep, Node
 from typhoon.core.templated import Templated
+from typhoon.introspection.introspect_extensions import get_typhoon_extensions_info, ExtensionsInfo
 
 
 def get_transformations_item(item) -> List[str]:
@@ -29,6 +30,29 @@ def get_transformations_item(item) -> List[str]:
         return []
 
 
+def get_typhoon_transformations_item(item) -> List[str]:
+    if isinstance(item, Py) and 'typhoon.' in item.value:
+        return re.findall(r'typhoon\.(\w+\.\w+)', item.value)
+    elif isinstance(item, MultiStep):
+        modules = []
+        for x in item.value:
+            mods = get_typhoon_transformations_item(x)
+            modules += mods
+        return modules
+    elif isinstance(item, list):
+        modules = []
+        for x in item:
+            modules += get_typhoon_transformations_item(x)
+        return modules
+    elif isinstance(item, dict):
+        modules = []
+        for k, v in item.items():
+            modules += get_typhoon_transformations_item(v)
+        return modules
+    else:
+        return []
+
+
 def get_transformations_modules(dag: DAG) -> Iterable[str]:
     if isinstance(dag, dict):
         dag = DAG.parse_obj(dag)
@@ -40,6 +64,16 @@ def get_transformations_modules(dag: DAG) -> Iterable[str]:
     return list(modules)
 
 
+def get_typhoon_transformations_modules(dag: DAG) -> Iterable[str]:
+    if isinstance(dag, dict):
+        dag = DAG.parse_obj(dag)
+    items = set()
+    for edge in dag.edges.values():
+        for val in edge.adapter.values():
+            items = items.union(x.split('.')[0] for x in get_typhoon_transformations_item(val))
+    return list(items)
+
+
 def get_functions_modules(nodes: Dict[str, Node]) -> Iterable[str]:
     modules = set()
     for node in nodes.values():
@@ -49,12 +83,21 @@ def get_functions_modules(nodes: Dict[str, Node]) -> Iterable[str]:
     return list(modules)
 
 
+def get_typhoon_functions_modules(nodes: Dict[str, Node]) -> Iterable[str]:
+    modules = set()
+    for node in nodes.values():
+        if node.function.startswith('typhoon.'):
+            modules.add(node.function.split('.')[1])
+
+    return list(modules)
+
+
 def clean_function_name(function_name: str, function_type: str) -> str:
     if not function_name.startswith('typhoon.'):
         return function_name
     else:
-        parts = function_name.split('.')
-        return '.'.join([f'typhoon_{function_type}', *parts[1:]])
+        _, module_name, function_name = function_name.split('.')
+        return f'typhoon_{function_type}_{module_name}.{function_name}'
 
 
 def clean_simple_param(param: Union[str, int, float, List, dict]):
@@ -76,6 +119,14 @@ def substitute_special(code: str, key: str, target: str = 'typhoon') -> str:
     return code
 
 
+def typhoon_import_function_as(module_name: str) -> str:
+    return f'typhoon_functions_{module_name}'
+
+
+def typhoon_import_transformation_as(module_name: str) -> str:
+    return f'typhoon_transformations_{module_name}'
+
+
 @dataclass
 class TyphoonFileTemplate(Templated):
     template = '''
@@ -87,8 +138,6 @@ class TyphoonFileTemplate(Templated):
     from datetime import datetime
     from typing import Dict
     
-    import typhoon.contrib.functions as typhoon_functions
-    import typhoon.contrib.transformations as typhoon_transformations
     from typhoon.contrib.hooks.hook_factory import get_hook
     from typhoon.handler import handle
     from typhoon.core import SKIP_BATCH, task, DagContext, setup_logging, interval_start_from_schedule_and_interval_end
@@ -98,6 +147,12 @@ class TyphoonFileTemplate(Templated):
     {% endfor %}
     {% for functions_module in functions_modules %}
     import {{ functions_module }}
+    {% endfor %}
+    {% for import_from, import_as in typhoon_functions_modules %}
+    import {{ import_from }} as {{ import_as }}
+    {% endfor %}
+    {% for import_from, import_as in typhoon_transformations_modules %}
+    import {{ import_from }} as {{ import_as }}
     {% endfor %}
     
     
@@ -193,6 +248,7 @@ class TyphoonFileTemplate(Templated):
     '''
     dag: DAG
     debug_mode: bool
+    _extensions_info: ExtensionsInfo = None
 
     @staticmethod
     def clean_function_name(function_name, function_type):
@@ -209,6 +265,22 @@ class TyphoonFileTemplate(Templated):
     @staticmethod
     def adapter_params(k, v):
         return AdapterParams(k, v).render()
+
+    @property
+    def extensions_info(self):
+        if self._extensions_info is None:
+            self._extensions_info = get_typhoon_extensions_info()
+        return self._extensions_info
+
+    @property
+    def typhoon_functions_modules(self):
+        function_modules_in_use = get_typhoon_functions_modules(self.dag.nodes)
+        return [(v, typhoon_import_function_as(k)) for k, v in self.extensions_info['functions'].items() if k in function_modules_in_use]
+
+    @property
+    def typhoon_transformations_modules(self):
+        transformation_modules_in_use = get_typhoon_transformations_modules(self.dag)
+        return [(v, typhoon_import_transformation_as(k)) for k, v in self.extensions_info['transformations'].items() if k in transformation_modules_in_use]
 
 
 @dataclass

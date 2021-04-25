@@ -1,7 +1,7 @@
 import logging
 from typing import Optional
 
-from typhoon.contrib.functions import relational
+from typhoon.contrib.functions import relational_deprecated
 from typhoon.contrib.hooks.dbapi_hooks import SnowflakeHook
 from typhoon.contrib.schemas.metadata import FieldMetadata
 from typhoon.contrib.templates.snowflake import CustomFileFormatTemplate, CopyTemplate, FileFormatType, Quoted, FileFormatCompression
@@ -33,7 +33,7 @@ def copy_into(
         pattern=None,
     ).render()
     logging.info(f'Executing query: {query}')
-    result = relational.execute_query(hook, query=query, batch_size=None, metadata=metadata, query_params=query_params, multi_query=False)
+    result = relational_deprecated.execute_query(hook, query=query, batch_size=None, metadata=metadata, query_params=query_params, multi_query=False)
     logging.info(f'Results: {result}')
     next(result)
     return table

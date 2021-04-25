@@ -22,6 +22,8 @@ class FileSystemHookInterface(HookInterface, Protocol):
 
 
 class S3Hook(FileSystemHookInterface, AwsSessionHook):
+    conn_type = 's3'
+
     def __init__(self, conn_params: ConnectionParams):
         AwsSessionHook.__init__(self, conn_params)
 
@@ -48,6 +50,7 @@ class S3Hook(FileSystemHookInterface, AwsSessionHook):
 
 
 class GCSHook(FileSystemHookInterface):
+    conn_type = 'gcs'
     credentials_env_var = 'GOOGLE_APPLICATION_CREDENTIALS'
 
     def __init__(self, conn_params: ConnectionParams):
@@ -76,6 +79,8 @@ class GCSHook(FileSystemHookInterface):
 
 
 class LocalStorageHook(FileSystemHookInterface):
+    conn_type = 'local_storage'
+
     def __init__(self, conn_params: ConnectionParams):
         self.conn_params = conn_params
 
@@ -91,6 +96,8 @@ class LocalStorageHook(FileSystemHookInterface):
 
 
 class FTPHook(FileSystemHookInterface):
+    conn_type = 'ftp'
+
     def __init__(self, conn_params: ConnectionParams):
         self.conn_params = conn_params
 

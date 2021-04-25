@@ -7,6 +7,8 @@ from typhoon.contrib.hooks.hook_interface import HookInterface
 
 
 class SingerHook(HookInterface):
+    conn_type = 'singer'
+
     def __init__(self, conn_params):
         self.conn_params = conn_params
 

@@ -35,6 +35,8 @@ class DbApiHook(HookInterface, Protocol):
 
 
 class PostgresHook(DbApiHook):
+    conn_type = 'postgres'
+
     def __init__(self, conn_params):
         self.conn_params = conn_params
         self.connection = None
@@ -58,6 +60,7 @@ class PostgresHook(DbApiHook):
 
 
 class SnowflakeHook(DbApiHook):
+    conn_type = 'snowflake'
     def __init__(self, conn_params):
         self.conn_params = conn_params
 
@@ -85,6 +88,7 @@ class SnowflakeHook(DbApiHook):
 
 
 class BigQueryHook(DbApiHook):
+    conn_type = 'bigquery'
     credentials_env_var = 'GOOGLE_APPLICATION_CREDENTIALS'
 
     def __init__(self, conn_params):
@@ -137,6 +141,8 @@ class BigQueryHook(DbApiHook):
 
 
 class SqliteHook(DbApiHook):
+    conn_type = 'sqlite'
+
     def __init__(self, conn_params):
         self.conn_params = conn_params
 
@@ -151,6 +157,8 @@ class SqliteHook(DbApiHook):
 
 
 class DuckDbHook(DbApiHook):
+    conn_type = 'duckdb'
+
     def __init__(self, conn_params):
         self.conn_params = conn_params
 
@@ -193,6 +201,8 @@ class EchoDb(DbApiConnection):
 
 class EchoDbHook(DbApiHook):
     """Just prints every query that is executed"""
+    conn_type = 'echodb'
+
     def __init__(self, conn_params):
         self.conn_params = conn_params
 

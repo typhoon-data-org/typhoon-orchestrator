@@ -9,6 +9,8 @@ URL_TEMPLATE = """\
 
 
 class SqlAlchemyHook(HookInterface):
+    conn_type = 'sqlalchemy'
+
     def __init__(self, conn_params):
         self.conn_params = conn_params
 

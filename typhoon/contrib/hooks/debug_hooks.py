@@ -21,6 +21,8 @@ class Echo:
 
 
 class EchoHook(FileSystemHookInterface):
+    conn_type = 'echo'
+
     def __init__(self, conn_params: ConnectionParams):
         self.conn_params = conn_params
 

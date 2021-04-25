@@ -3,6 +3,8 @@ from typhoon.contrib.hooks.hook_interface import HookInterface
 
 
 class KafkaConsumerHook(HookInterface):
+    conn_type = 'kafka_consumer'
+
     def __init__(self, conn_params: ConnectionParams):
         self.conn_params = conn_params
 
@@ -21,6 +23,8 @@ class KafkaConsumerHook(HookInterface):
 
 
 class KafkaProducerHook(HookInterface):
+    conn_type = 'kafka_producer'
+
     def __init__(self, conn_params: ConnectionParams):
         self.conn_params = conn_params
 

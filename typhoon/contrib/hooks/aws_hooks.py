@@ -25,6 +25,8 @@ class AwsSessionHook(HookInterface):
 
 
 class DynamoDbHook(HookInterface):
+    conn_type = 'dynamodb'
+
     def __init__(self, conn_params: ConnectionParams, conn_type: str = 'client'):
         self.conn_params = conn_params
         self.conn_type = conn_type

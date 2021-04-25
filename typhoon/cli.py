@@ -36,6 +36,8 @@ from typhoon.core.glue import get_dag_errors, load_dag, load_dag_definition
 from typhoon.core.settings import Settings
 from typhoon.deployment.packaging import build_all_dags
 from typhoon.handler import run_dag
+from typhoon.introspection.introspect_extensions import get_typhoon_extensions, get_typhoon_extensions_info, \
+    get_hooks_info
 from typhoon.introspection.introspect_transformations import run_transformations, TransformationResult
 from typhoon.local_config import EXAMPLE_CONFIG
 from typhoon.metadata_store_impl.sqlite_metadata_store import SQLiteMetadataStore
@@ -267,7 +269,7 @@ def list_dags(remote: Optional[str], long: bool):
 
 
 @cli_dags.command(name='build')
-@click.argument('dag_name', autocompletion=get_dag_names, required=False, default=None)
+@click.option('--dag-name', autocompletion=get_dag_names, required=False, default=None)
 @click.option('--all', 'all_', is_flag=True, default=False, help='Build all DAGs (mutually exclusive with DAG_NAME)')
 def build_dags(dag_name: Optional[str], all_: bool):
     """Build code for dags in $TYPHOON_HOME/out/"""
@@ -832,6 +834,72 @@ def remove_variable(remote: Optional[str], var_id: str):
     metadata_store = Settings.metadata_store(Remotes.aws_profile(remote))
     metadata_store.delete_variable(var_id)
     print(f'Variable {var_id} deleted')
+
+
+@cli.group(name='extension')
+def cli_extension():
+    """Manage Typhoon extensions"""
+    pass
+
+
+@cli_extension.command(name='ls')
+@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
+def list_extensions(remote: Optional[str]):
+    # set_settings_from_remote(remote)
+    for extension_info, _ in get_typhoon_extensions():
+        print(extension_info.name)
+
+
+@cli_extension.group(name='functions')
+def cli_extension_functions():
+    """Manage Typhoon extension functions"""
+    pass
+
+
+@cli_extension_functions.command(name='ls')
+@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
+def list_extension_functions(remote: Optional[str]):
+    # set_settings_from_remote(remote)
+    header = ['Module', 'Path']
+    table_body = []
+    for module_name, module_path in get_typhoon_extensions_info()['functions'].items():
+        table_body.append([module_name, module_path])
+    print(tabulate(table_body, header, 'plain'))
+
+
+@cli_extension.group(name='transformations')
+def cli_extension_transformations():
+    """Manage Typhoon extension transformations"""
+    pass
+
+
+@cli_extension_transformations.command(name='ls')
+@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
+def list_extension_transformations(remote: Optional[str]):
+    # set_settings_from_remote(remote)
+    header = ['Module', 'Path']
+    table_body = []
+    for module_name, module_path in get_typhoon_extensions_info()['transformations'].items():
+        table_body.append([module_name, module_path])
+    print(tabulate(table_body, header, 'plain'))
+
+
+@cli_extension.group(name='hooks')
+def cli_extension_hooks():
+    """Manage Typhoon extension transformations"""
+    pass
+
+
+@cli_extension_hooks.command(name='ls')
+@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
+def list_extension_hooks(remote: Optional[str]):
+    # set_settings_from_remote(remote)
+    header = ['Hook Type', 'Class name']
+    table_body = []
+    extensions_info = get_typhoon_extensions_info()
+    for conn_type, cls in get_hooks_info(extensions_info).items():
+        table_body.append([conn_type, cls.__name__])
+    print(tabulate(table_body, header, 'plain'))
 
 
 class SubprocessError(Exception):
