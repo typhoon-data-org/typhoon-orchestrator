@@ -15,13 +15,9 @@ with open(os.path.join(os.path.dirname(__file__), 'requirements.txt')) as f:
 test_required = ['pytest', 'moto']
 
 
-postgres = ['psycopg2']
-sqlalchemy = ['sqlalchemy']
-snowflake = ['snowflake-connector-python']
 kafka = ['kafka-python']
 
-db_requirements = ['sqlparse']
-all_requirements = db_requirements + postgres + sqlalchemy + snowflake + kafka
+all_requirements = kafka
 dev_requirements = all_requirements + ['termcolor', 'watchdog', 'tabulate', 'pygments', 'sqlitedict', 'datadiff']
 
 setup(
@@ -31,9 +27,6 @@ setup(
     install_requires=required,
     extras_require={
         'all': all_requirements,
-        'db': db_requirements,
-        'postgres': db_requirements + postgres,
-        'sqlalchemy': db_requirements + sqlalchemy,
         'dev': dev_requirements,
         'test': test_required,
     },
