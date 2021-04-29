@@ -10,7 +10,9 @@ from typing_extensions import TypedDict
 from typhoon.core.dags import DAG, Edge, Node, Py, MultiStep
 from typhoon.core.templated import Templated
 from typhoon.core.transpiler import get_transformations_modules, get_functions_modules, clean_function_name, \
-    clean_simple_param, substitute_special, AdapterParams
+    clean_simple_param, substitute_special, AdapterParams, get_typhoon_functions_modules, typhoon_import_function_as, \
+    get_typhoon_transformations_modules, typhoon_import_transformation_as
+from typhoon.introspection.introspect_extensions import get_typhoon_extensions_info
 
 
 def replace_batch_and_batch_num(item, batch, batch_num):
@@ -60,7 +62,12 @@ class AirflowDag(Templated):
     import typhoon.contrib.transformations as typhoon_transformations
     from typhoon.contrib.hooks.hook_factory import get_hook
     
-    {{ typhoon_imports }}
+    {% for import_from, import_as in typhoon_functions_modules %}
+    import {{ import_from }} as {{ import_as }}
+    {% endfor %}
+    {% for import_from, import_as in typhoon_transformations_modules %}
+    import {{ import_from }} as {{ import_as }}
+    {% endfor %}
     
     
     # Nodes
@@ -126,6 +133,7 @@ class AirflowDag(Templated):
     owner: str = 'typhoon'
     start_date: Optional[datetime] = None
     airflow_version: int = 1
+    _extensions_info: ExtensionsInfo = None
 
     def __post_init__(self):
         if isinstance(self.dag, dict):
@@ -187,10 +195,21 @@ class AirflowDag(Templated):
         return aws_schedule_to_cron(self.dag.schedule_interval)
 
     @property
-    def typhoon_imports(self):
-        functions_modules = "\n".join('import ' + x for x in get_functions_modules(self.dag.nodes))
-        transformations_modules = "\n".join('import ' + x for x in get_transformations_modules(self.dag))
-        return f'{functions_modules}\n\n{transformations_modules}' if transformations_modules else functions_modules
+    def extensions_info(self):
+        if self._extensions_info is None:
+            self._extensions_info = get_typhoon_extensions_info()
+        return self._extensions_info
+
+
+    @property
+    def typhoon_functions_modules(self):
+        function_modules_in_use = get_typhoon_functions_modules(self.dag.nodes)
+        return [(v, typhoon_import_function_as(k)) for k, v in self.extensions_info['functions'].items() if k in function_modules_in_use]
+
+    @property
+    def typhoon_transformations_modules(self):
+        transformation_modules_in_use = get_typhoon_transformations_modules(self.dag)
+        return [(v, typhoon_import_transformation_as(k)) for k, v in self.extensions_info['transformations'].items() if k in transformation_modules_in_use]
 
     @property
     def nodes(self):
