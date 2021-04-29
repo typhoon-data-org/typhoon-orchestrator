@@ -33,29 +33,36 @@ class ExtensionsInfo(TypedDict):
     functions: Dict[str, str]
     transformations: Dict[str, str]
     hooks: Dict[str, str]
+    components: Dict[str, str]
 
 
 def get_typhoon_extensions_info(extensions: ExtensionsList = None) -> ExtensionsInfo:
     if extensions is None:
         extensions = get_typhoon_extensions()
-    info = dict(functions={}, transformations={}, hooks={})
+    info = dict(functions={}, transformations={}, hooks={}, components={})
     for module_info, module in extensions:
         module_path = Path(module.__file__).parent
-        for ext_folder in ['functions', 'transformations', 'hooks', 'components']:
+        for ext_folder in ['functions', 'transformations', 'hooks']:
             for sub_module_path in (module_path/ext_folder).rglob('*.py'):
                 function_module_name = sub_module_path.stem
                 if function_module_name.startswith('__'):
                     continue
                 info[ext_folder][function_module_name] = str(sub_module_path.relative_to(module_path.parent)) \
                     .replace('.py', '').replace('/', '.')
+            for component_path in (module_path/'components').rglob('*.yml'):
+                component_name = component_path.stem
+                info['components'][component_name] = str(component_path)
     typhoon_contrib_path = Path(__file__).parent.parent / 'contrib'
-    for ext_folder in ['functions', 'transformations', 'hooks', 'components']:
+    for ext_folder in ['functions', 'transformations', 'hooks']:
         for sub_module_path in (typhoon_contrib_path / ext_folder).rglob('*.py'):
             function_module_name = sub_module_path.stem
             if function_module_name.startswith('__'):
                 continue
             info[ext_folder][function_module_name] = str(sub_module_path.relative_to(typhoon_contrib_path.parent.parent)) \
                 .replace('.py', '').replace('/', '.')
+    for component_path in (typhoon_contrib_path / 'components').rglob('*.yml'):
+        component_name = component_path.stem
+        info['components'][component_name] = str(component_path)
     return info
 
 

@@ -902,6 +902,24 @@ def list_extension_hooks(remote: Optional[str]):
     print(tabulate(table_body, header, 'plain'))
 
 
+@cli_extension.group(name='components')
+def cli_extension_components():
+    """Manage Typhoon extension transformations"""
+    pass
+
+
+@cli_extension_components.command(name='ls')
+@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
+def list_extension_components(remote: Optional[str]):
+    # set_settings_from_remote(remote)
+    header = ['Component', 'Path']
+    table_body = []
+    extensions_info = get_typhoon_extensions_info()
+    for component_name, component_path in get_typhoon_extensions_info()['components'].items():
+        table_body.append([component_name, component_path])
+    print(tabulate(table_body, header, 'plain'))
+
+
 class SubprocessError(Exception):
     pass
 

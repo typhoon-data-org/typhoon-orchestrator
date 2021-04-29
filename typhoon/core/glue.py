@@ -15,6 +15,8 @@ from typhoon.core.settings import Settings
 from typhoon.core.transpiler import TyphoonFileTemplate
 from typing_extensions import Literal
 
+from typhoon.introspection.introspect_extensions import get_typhoon_extensions_info
+
 
 def transpile_dag_and_store(dag: dict, output_path: Union[str, Path], debug_mode: bool):
     output_path = Path(output_path)
@@ -116,12 +118,13 @@ def load_component_definitions(
         ignore_errors,
         kind=Union[Literal['typhoon'], Literal['custom']],
 ) -> List[Tuple[Component, str]]:
-    import typhoon
-
     add_yaml_constructors()
-    directory = Settings.components_directory if kind == 'custom' else Path(typhoon.__file__).parent/'contrib/components'
+    if kind == 'custom':
+        component_files = list(Settings.components_directory.rglob('*.yml'))
+    else:
+        component_files = [Path(x) for x in get_typhoon_extensions_info()['components'].values()]
     components = []
-    for component_file in directory.rglob('*.yml'):
+    for component_file in component_files:
         if ignore_errors:
             try:
                 comp = Component.parse_obj(yaml.load(component_file.read_text(), yaml.FullLoader))
