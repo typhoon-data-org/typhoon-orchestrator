@@ -127,6 +127,8 @@ class MultiStep:
         steps = []
         for i, x in enumerate(self.value):
             add_key(x)
+            if isinstance(x, str):
+                x = f'"""{x}"""'
             steps.append(f'{self.key}_{i + 1} = {x}')
         return '\n'.join(steps) + '\n' + f"{self.config_name}['{self.key}'] = {self.key}_{len(steps)}"
 
@@ -253,6 +255,8 @@ class DAG(BaseModel):
     @property
     def sources(self) -> List[str]:
         """Nodes that are sources of the DAG"""
+        if len(self.edges) == 0:
+            return list(self.nodes.keys())
         sources = set(self.structure.keys())
         destinations = set(self.non_source_nodes)
         return list(sources.difference(destinations))

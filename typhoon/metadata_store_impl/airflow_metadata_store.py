@@ -1,6 +1,8 @@
 import json
 from typing import List, Union
 
+from sqlalchemy.orm.exc import UnmappedInstanceError
+
 from typhoon.connections import Connection
 from typhoon.core.dags import DagDeployment
 from typhoon.core.metadata_store_interface import MetadataStoreInterface, MetadataObjectNotFound
@@ -77,6 +79,7 @@ class AirflowMetadataStore(MetadataStoreInterface):
         return result
 
     def set_connection(self, conn: Connection):
+        self.delete_connection(conn)
         with set_airflow_db(self.db_path, self.fernet_key) as db:
             db.set_connection(
                 conn_id=typhoon_airflow_conn_name(conn.conn_id),
@@ -87,7 +90,10 @@ class AirflowMetadataStore(MetadataStoreInterface):
         conn_id = conn.conn_id if isinstance(conn, Connection) else conn
         af_name = typhoon_airflow_conn_name(conn_id)
         with set_airflow_db(self.db_path, self.fernet_key) as db:
-            db.delete_connection(af_name)
+            try:
+                db.delete_connection(af_name)
+            except UnmappedInstanceError:
+                pass
 
     def get_variable(self, variable_id: str) -> Variable:
         af_name = typhoon_airflow_variable_name(variable_id)

@@ -1,4 +1,5 @@
 import csv
+import json
 from io import StringIO
 from typing import List, Optional, Union
 
@@ -29,3 +30,8 @@ def csv_to_dicts(data: Union[str, bytes], fieldnames: Optional[List[str]] = None
 def to_dataframe(data):
     import pandas as pd
     return pd.DataFrame(data)
+
+
+def json_array_to_json_records(data: list) -> str:
+    result = [json.dumps(x) for x in data]
+    return '\n'.join(result)

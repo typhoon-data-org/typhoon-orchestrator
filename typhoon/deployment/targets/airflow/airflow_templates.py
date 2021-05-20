@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 from typing import Union, Optional
 
@@ -7,18 +8,18 @@ from typhoon.core.cron_utils import aws_schedule_to_cron, timedelta_from_cron
 from typhoon.core.settings import Settings
 from typing_extensions import TypedDict
 
-from typhoon.core.dags import DAG, Edge, Node, Py, MultiStep
+from typhoon.core.dags import DAG, Edge, Node, Py, MultiStep, evaluate_item
 from typhoon.core.templated import Templated
 from typhoon.core.transpiler import get_transformations_modules, get_functions_modules, clean_function_name, \
     clean_simple_param, substitute_special, AdapterParams, get_typhoon_functions_modules, typhoon_import_function_as, \
     get_typhoon_transformations_modules, typhoon_import_transformation_as
-from typhoon.introspection.introspect_extensions import get_typhoon_extensions_info
+from typhoon.introspection.introspect_extensions import get_typhoon_extensions_info, ExtensionsInfo
 
 
 def replace_batch_and_batch_num(item, batch, batch_num):
     if isinstance(item, Py):
         return Py(
-            value=item.value.replace('$BATCH_NUM', str(batch_num)).replace('$BATCH', f"'{batch}'"),
+            value=item.value.replace('$BATCH_NUM', str(batch_num)).replace('$BATCH', batch.__repr__()),
             key=item.key,
             args_dependencies=item.args_dependencies,
         )
@@ -53,13 +54,8 @@ class AirflowDag(Templated):
     from airflow.operators.python_operator import PythonOperator
     {% endif %}
     
-    if 'TYPHOON_HOME' not in os.environ.keys():
-        os.environ['TYPHOON_HOME'] = '{{ typhoon_home }}'
-    
     
     from typhoon.core import DagContext
-    import typhoon.contrib.functions as typhoon_functions
-    import typhoon.contrib.transformations as typhoon_transformations
     from typhoon.contrib.hooks.hook_factory import get_hook
     
     {% for import_from, import_as in typhoon_functions_modules %}
@@ -68,6 +64,13 @@ class AirflowDag(Templated):
     {% for import_from, import_as in typhoon_transformations_modules %}
     import {{ import_from }} as {{ import_as }}
     {% endfor %}
+    
+    
+    def make_typhoon_dag_context(context):
+        interval_start = (context['dag_run'].conf or {}).get('interval_start') or context['execution_date']
+        interval_end = (context['dag_run'].conf or {}).get('interval_end') or context['next_execution_date']
+        dag_context = DagContext(interval_start=interval_start, interval_end=interval_end)
+        return dag_context
     
     
     # Nodes
@@ -152,7 +155,7 @@ class AirflowDag(Templated):
 
         # If there's a branch at the start then explicitly create separate branches for each
         def recursive_branch(node_name, branch_name, new_config=None):
-            new_source_node_name = f'{node_name}_{branch}'
+            new_source_node_name = f'{node_name}_{branch_name}'
             new_node = self.dag.nodes[node_name].copy(deep=True)
             if new_config:
                 new_node.config.update(**new_config)
@@ -161,8 +164,8 @@ class AirflowDag(Templated):
                 edge = self.dag.edges[edge_name]
                 new_edge = edge.copy()
                 new_edge.source = new_source_node_name
-                new_edge.destination = f'{edge.destination}_{branch}'
-                self.dag.edges[f'{edge_name}_{branch}'] = new_edge
+                new_edge.destination = f'{edge.destination}_{branch_name}'
+                self.dag.edges[f'{edge_name}_{branch_name}'] = new_edge
                 recursive_branch(edge.destination, branch_name)
 
         def recursive_delete(node_name):
@@ -172,18 +175,39 @@ class AirflowDag(Templated):
                 del self.dag.edges[edge_name]
             del self.dag.nodes[node_name]
 
+        def dict_with_name(x):
+            return isinstance(x, dict) and x.get('name', False)
+
+        def name(branch):
+            text = branch if isinstance(branch, str) else branch['name']
+            illegal_chars = r' $\'",'
+            for c in illegal_chars:
+                text = text.replace(c, '_')
+            return text
+
         for node_name in self.dag.sources:
             node = self.dag.nodes[node_name]
+            if isinstance(node.config['branches'], Py):
+                custom_locals = {'config': {}}
+                for dep in node.config['branches'].args_dependencies:
+                    custom_locals['config'][dep] = node.config[dep]
+                try:
+                    new_value = evaluate_item(custom_locals, node.config['branches'])
+                    node.config['branches'] = new_value
+                    # for dep in node.config['branches'].args_dependencies:
+                    #     del node.config[dep]
+                except Exception:
+                    print('Can not evaluate {node.config["branches"]}')
             if node.function == 'typhoon.flow_control.branch' and \
                     isinstance(node.config['branches'], list) and \
-                    'branches' in node.config and all(isinstance(x, str) for x in node.config['branches']):
+                    'branches' in node.config and all(isinstance(x, str) or dict_with_name(x) for x in node.config['branches']):
                 # Reshape the dag to separate branches
                 for edge_name in self.dag.get_edges_for_source(node_name):
                     edge = self.dag.edges[edge_name]
                     for batch_num, branch in enumerate(node.config['branches'], start=1):
                         new_config = replace_batch_and_batch_num(edge.adapter, branch, batch_num)
                         dest = edge.destination
-                        recursive_branch(dest, branch, new_config)
+                        recursive_branch(dest, name(branch), new_config)
                 recursive_delete(node_name)
 
     @property
@@ -286,7 +310,7 @@ class AirflowDag(Templated):
 class NodeTask(Templated):
     template = '''
     def {{ node_name }}_node(adapter_config: dict, batch_num, **context):
-            dag_context = DagContext(interval_start=context['execution_date'], interval_end=context['next_execution_date'])
+            dag_context = make_typhoon_dag_context(context)
             config = {**adapter_config} 
             {% for adapter in rendered_adapters %}
             {{ adapter | indent(8, False) }}
@@ -314,7 +338,7 @@ class NodeTask(Templated):
 class SynchronousEdge(Templated):
     template = '''
     def {{ edge.source }}_then_{{ edge.destination }}_sync_edge(adapter_config: dict, batch_num, **context):
-        dag_context = DagContext(interval_start=context['execution_date'], interval_end=context['next_execution_date'])
+        dag_context = make_typhoon_dag_context(context)
         config = {**adapter_config}
         source_data = {{ edge.source }}_node(adapter_config, batch_num, **context)
         for batch_num_dest, batch in enumerate(source_data or [], start=1):
