@@ -83,7 +83,12 @@ class TyphoonSettings:
 
     @property
     def metadata_db_url(self):
-        return self.metadata_db_url_ or self.default_sqlite_path
+        if self.metadata_db_url_:
+            return self.metadata_db_url_
+        elif self.deploy_target == 'airflow':
+            return None
+        else:
+            return default_sqlite_path
 
     @metadata_db_url.setter
     def metadata_db_url(self, value: str):
@@ -129,7 +134,7 @@ class TyphoonSettings:
     def metadata_store(self, aws_profile: Optional[str] = None) -> 'MetadataStoreInterface':
         if self.deploy_target == 'airflow':
             from typhoon.metadata_store_impl.airflow_metadata_store import AirflowMetadataStore
-            return AirflowMetadataStore(None)   # Todo: Use remote path
+            return AirflowMetadataStore(self.metadata_db_url)   # Todo: Use remote path
         elif self.metadata_db_url.startswith('sqlite'):
             from typhoon.metadata_store_impl.sqlite_metadata_store import SQLiteMetadataStore
             db_path = self.metadata_db_url.split(':')[1]

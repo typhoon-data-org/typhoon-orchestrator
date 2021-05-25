@@ -46,7 +46,7 @@ class AirflowDb:
             port: Optional[int] = None,
             extra: Optional[Union[str, dict]] = None,
     ):
-        assert repr(settings.engine.url) == self.sql_alchemy_conn
+        assert str(settings.engine.url) == self.sql_alchemy_conn
         session = settings.Session()
         new_conn = Connection(conn_id=conn_id, conn_type=conn_type, host=host,
                               login=login, password=password, schema=schema, port=port)
@@ -57,13 +57,13 @@ class AirflowDb:
         session.commit()
 
     def get_connection(self, conn_id: str) -> Connection:
-        assert repr(settings.engine.url) == self.sql_alchemy_conn
+        assert str(settings.engine.url) == self.sql_alchemy_conn
         session = settings.Session()
         conn = session.query(Connection).filter(Connection.conn_id == conn_id).first()
         return conn
 
     def delete_connection(self, conn_id: str):
-        assert repr(settings.engine.url) == self.sql_alchemy_conn
+        assert str(settings.engine.url) == self.sql_alchemy_conn
         session = settings.Session()
         conn = session.query(Connection).filter(Connection.conn_id == conn_id).first()
         session.delete(conn)
@@ -75,43 +75,43 @@ class AirflowDb:
             value: str,
             is_encrypted: Optional[bool] = None
     ):
-        assert repr(settings.engine.url) == self.sql_alchemy_conn
+        assert str(settings.engine.url) == self.sql_alchemy_conn
         session = settings.Session()
         new_var = Variable(key=var_id, _val=value, is_encrypted=is_encrypted)
         session.add(new_var)
         session.commit()
 
     def get_variable(self, var_id: str) -> Variable:
-        assert repr(settings.engine.url) == self.sql_alchemy_conn
+        assert str(settings.engine.url) == self.sql_alchemy_conn
         session = settings.Session()
         not_found = object()
         var = Variable.get(var_id, default_var=not_found, session=session)
         return var if var is not not_found else None
 
     def delete_variable(self, var_id: str):
-        assert repr(settings.engine.url) == self.sql_alchemy_conn
+        assert str(settings.engine.url) == self.sql_alchemy_conn
         session = settings.Session()
         var = session.query(Variable).filter(Variable.key == var_id).first()
         session.delete(var)
         session.commit()
 
     def list_connections(self) -> List[str]:
-        assert repr(settings.engine.url) == self.sql_alchemy_conn
+        assert str(settings.engine.url) == self.sql_alchemy_conn
         session = settings.Session()
         return [x.conn_id for x in session.query(Connection)]
 
     def get_connections(self) -> List[Connection]:
-        assert repr(settings.engine.url) == self.sql_alchemy_conn
+        assert str(settings.engine.url) == self.sql_alchemy_conn
         session = settings.Session()
         return [x for x in session.query(Connection)]
 
     def get_variables(self) -> List[Variable]:
-        assert repr(settings.engine.url) == self.sql_alchemy_conn
+        assert str(settings.engine.url) == self.sql_alchemy_conn
         session = settings.Session()
         return [x for x in session.query(Variable)]
 
     def get_first_dag_run(self, dag_id) -> Optional[DagRun]:
-        assert repr(settings.engine.url) == self.sql_alchemy_conn
+        assert str(settings.engine.url) == self.sql_alchemy_conn
         session = settings.Session()
         dag_run = session.query(DagRun).filter(DagRun.dag_id == dag_id).order_by(asc(DagRun.execution_date)).first()
         return dag_run
@@ -138,7 +138,7 @@ def set_airflow_db(sql_alchemy_conn: Optional[str], fernet_key: Optional[str]) -
         settings.configure_vars()
         settings.configure_orm()
         if sql_alchemy_conn is not None:
-            assert repr(settings.engine.url) == sql_alchemy_conn, f'{settings.engine.url} != {sql_alchemy_conn}'
+            assert str(settings.engine.url) == sql_alchemy_conn, f'{settings.engine.url} != {sql_alchemy_conn}'
         yield AirflowDb(sql_alchemy_conn or settings.SQL_ALCHEMY_CONN)
     settings.configure_vars()
     settings.configure_orm()

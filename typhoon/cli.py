@@ -63,6 +63,7 @@ def set_settings_from_remote(remote: str):
                   file=sys.stderr)
             sys.exit(-1)
         Settings.metadata_db_url = Remotes.metadata_db_url(remote)
+        Settings.fernet_key = Remotes.fernet_key(remote)
         if Remotes.use_name_as_suffix(remote):
             Settings.metadata_suffix = remote
 

@@ -27,15 +27,26 @@ class _Remotes:
     def metadata_db_url(self, remote: str) -> str:
         return self.remotes_config[remote]['metadata-db-url']
 
+    def fernet_key(self, remote: str) -> str:
+        return self.remotes_config[remote]['fernet-key']
+
     def use_name_as_suffix(self, remote: str) -> bool:
         return self.remotes_config[remote].getboolean('use-name-as-suffix')
 
-    def add_remote(self, remote: str, aws_profile: str, metadata_db_url: str, use_name_as_suffix: bool):
+    def add_remote(
+            self,
+            remote: str,
+            aws_profile: str,
+            metadata_db_url: str,
+            use_name_as_suffix: bool,
+            fernet_key: str = None,
+    ):
         config = self.remotes_config
         config[remote] = {}
         config[remote]['aws-profile'] = aws_profile
         config[remote]['metadata-db-url'] = metadata_db_url
         config[remote]['use-name-as-suffix'] = str(use_name_as_suffix).lower()  # HACK: Because configparser can only set strings
+        config[remote]['fernet-key'] = airflow_fernet_key
         with open(self.remotes_config_path, 'w') as f:
             config.write(f)
 

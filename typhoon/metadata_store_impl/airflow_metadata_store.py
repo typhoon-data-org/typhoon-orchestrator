@@ -28,8 +28,8 @@ class AirflowMetadataStore(MetadataStoreInterface):
     def __init__(self, db_path: str):
         self.db_path = db_path
         self.fernet_key = Settings.fernet_key
-        airflow_db_path = Settings.default_sqlite_path.split(':')[1]
-        self.sqlite_store = SQLiteMetadataStore(airflow_db_path, no_conns_and_vars=True)
+        metadata_store_path = Settings.default_sqlite_path.split(':')[1]
+        self.sqlite_store = SQLiteMetadataStore(metadata_store_path, no_conns_and_vars=True)
 
     def close(self):
         self.sqlite_store.close()
