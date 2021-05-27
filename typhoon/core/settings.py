@@ -88,7 +88,7 @@ class TyphoonSettings:
         elif self.deploy_target == 'airflow':
             return None
         else:
-            return default_sqlite_path
+            return self.default_sqlite_path
 
     @metadata_db_url.setter
     def metadata_db_url(self, value: str):
