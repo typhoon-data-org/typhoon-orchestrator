@@ -8,7 +8,6 @@ from typhoon.core.dags import DagDeployment
 from typhoon.core.metadata_store_interface import MetadataStoreInterface, MetadataObjectNotFound
 from typhoon.core.settings import Settings
 from typhoon.deployment.targets.airflow.airflow_database import set_airflow_db
-from typhoon.metadata_store_impl.sqlite_metadata_store import SQLiteMetadataStore
 from typhoon.variables import Variable, VariableType
 
 
@@ -28,11 +27,18 @@ class AirflowMetadataStore(MetadataStoreInterface):
     def __init__(self, db_path: str):
         self.db_path = db_path
         self.fernet_key = Settings.fernet_key
+        self.opened_sqlite_store = False
+
+    @property
+    def sqlite_store(self):
+        from typhoon.metadata_store_impl.sqlite_metadata_store import SQLiteMetadataStore
+        self.opened_sqlite_store = True
         metadata_store_path = Settings.default_sqlite_path.split(':')[1]
-        self.sqlite_store = SQLiteMetadataStore(metadata_store_path, no_conns_and_vars=True)
+        return SQLiteMetadataStore(metadata_store_path, no_conns_and_vars=True)
 
     def close(self):
-        self.sqlite_store.close()
+        if self.opened_sqlite_store:
+            self.sqlite_store.close()
 
     def exists(self) -> bool:
         return self.sqlite_store.exists()
