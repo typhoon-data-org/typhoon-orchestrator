@@ -270,10 +270,12 @@ def list_dags(remote: Optional[str], long: bool):
 
 
 @cli_dags.command(name='build')
+@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
 @click.option('--dag-name', autocompletion=get_dag_names, required=False, default=None)
 @click.option('--all', 'all_', is_flag=True, default=False, help='Build all DAGs (mutually exclusive with DAG_NAME)')
-def build_dags(dag_name: Optional[str], all_: bool):
+def build_dags(remote: Optional[str], dag_name: Optional[str], all_: bool):
     """Build code for dags in $TYPHOON_HOME/out/"""
+    set_settings_from_remote(remote)
     if dag_name and all_:
         raise click.UsageError(f'Illegal usage: DAG_NAME is mutually exclusive with --all')
     elif dag_name is None and not all_:
@@ -361,7 +363,8 @@ def cli_run_dag(remote: Optional[str], dag_name: str, execution_date: Optional[d
         build_all_dags(remote=None, matching=dag_name)
         # Sets the env variable for metadata store to the sqlite in CWD if not set, because the CWD will be different at
         # runtime
-        Settings.metadata_db_url = Settings.metadata_db_url
+        # Settings.deploy_target = 'typhoon'
+        # Settings.metadata_db_url = Settings.metadata_db_url
         run_local_dag(dag_name, execution_date)
     else:
         # TODO: Run lambda function

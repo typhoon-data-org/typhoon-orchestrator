@@ -20,6 +20,8 @@ class Encoder(JSONEncoder):
         if o.__class__.__name__ == 'Decimal':
             # print(f'Decimal encoding')
             return float(o)
+        elif o.__class__.__name__ == 'UUID':
+            return str(o)
         elif isinstance(o, bytes):
             # print(f'Bytes encoding len {len(o)}')
             # return base64.b64encode(o)

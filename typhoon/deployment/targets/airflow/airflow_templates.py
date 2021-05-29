@@ -67,8 +67,8 @@ class AirflowDag(Templated):
     
     
     def make_typhoon_dag_context(context):
-        interval_start = (context['dag_run'].conf or {}).get('interval_start') or context['execution_date']
-        interval_end = (context['dag_run'].conf or {}).get('interval_end') or context['next_execution_date']
+        interval_start = (context['dag_run'] and (context['dag_run'].conf or {}).get('interval_start')) or context['execution_date']
+        interval_end = (context['dag_run'] and (context['dag_run'].conf or {}).get('interval_end')) or context['next_execution_date']
         dag_context = DagContext(interval_start=interval_start, interval_end=interval_end)
         return dag_context
     
@@ -104,11 +104,11 @@ class AirflowDag(Templated):
             data = context['ti'].xcom_pull(task_ids=source_task_id, key='result')
             result = []
             for batch_num, batch in enumerate(data, 1):
-                adapter_config = {}
+                config = {}
                 {% for adapter in dependency.rendered_adapters %}
                 {{ adapter | indent(12, False) }}
                 {% endfor %}
-                result + list({{ dependency.task_function }}(adapter_config, batch_num, **context))
+                result = result + list({{ dependency.task_function }}(config, batch_num, **context))
             context['ti'].xcom_push('result', list(result))
         {% endif %}
         {{ dependency.task_id }} = PythonOperator(
@@ -180,7 +180,7 @@ class AirflowDag(Templated):
 
         def name(branch):
             text = branch if isinstance(branch, str) else branch['name']
-            illegal_chars = r' $\'",'
+            illegal_chars = r' $\'",-'
             for c in illegal_chars:
                 text = text.replace(c, '_')
             return text
@@ -288,7 +288,7 @@ class AirflowDag(Templated):
             if inp is not None:
                 inbound_edge = self.dag.get_edge(inp['node_name'], prev or node_name)
                 for k, v in inbound_edge.adapter.items():
-                    rendered_adapters.append(AdapterParams(k, v, 'adapter_config').render())
+                    rendered_adapters.append(AdapterParams(k, v).render())
             dependencies.append({
                 'task_id': task_id,
                 'task_function': task_function,
@@ -315,7 +315,7 @@ class NodeTask(Templated):
             {% for adapter in rendered_adapters %}
             {{ adapter | indent(8, False) }}
             {% endfor %}
-            out = {{ node.function | clean_function_name('functions') }}(**config)
+            out = {{ node.function | clean_function_name('functions') }}(**{k: v for k, v in config.items() if not k.startswith('_')})
             if isinstance(out, types.GeneratorType):
                 yield from out
             else:
@@ -339,14 +339,13 @@ class SynchronousEdge(Templated):
     template = '''
     def {{ edge.source }}_then_{{ edge.destination }}_sync_edge(adapter_config: dict, batch_num, **context):
         dag_context = make_typhoon_dag_context(context)
-        config = {**adapter_config}
         source_data = {{ edge.source }}_node(adapter_config, batch_num, **context)
-        for batch_num_dest, batch in enumerate(source_data or [], start=1):
-            dest_config = {}
+        for batch_num, batch in enumerate(source_data or [], start=1):
+            config = {}
             {% for adapter in rendered_adapters %}
             {{ adapter | indent(8, False) }}
             {% endfor %}
-            yield from {{ edge.destination }}_node(dest_config, batch_num_dest, **context)
+            yield from {{ edge.destination }}_node(config, batch_num, **context)
     '''
     edge_name: str
     edge: Edge
@@ -354,40 +353,9 @@ class SynchronousEdge(Templated):
     @property
     def rendered_adapters(self):
         for k, v in self.edge.adapter.items():
-            yield AdapterParams(k, v, config_name='dest_config').render()
+            yield AdapterParams(k, v).render()
 
 
-@dataclass
-class Adapter(Templated):
-    template = '''
-    # Parameter {{ key }}
-    {% if '=>APPLY' not in key | replace(' ', '') %}
-    {{ config_name }}['{{ key }}'] = {{ value | clean_simple_param }}
-    {% else %}
-    {% set transforms = value if value is iterable and value is not string else [value] %}
-    {% for transform in transforms %}
-    {{ key.replace(' ', '').split('=>')[0] }}_{{ loop.index }} = {{ transform | substitute_special(key) | clean_function_name('transformations') }}
-    {% if loop.last %}
-    {{ config_name }}['{{ key.replace(' ', '').split('=>')[0] }}'] = {{ key.replace(' ', '').split('=>')[0] }}_{{ loop.index }}
-    {% endif %}
-    {% endfor %}
-    {% endif %}
-    '''
-    key: str
-    value: str
-    config_name: str = 'config'
-
-    @staticmethod
-    def clean_simple_param(x):
-        return clean_simple_param(x)
-
-    @staticmethod
-    def substitute_special(code, key):
-        return substitute_special(code, key, target='airflow')
-
-    @staticmethod
-    def clean_function_name(function_name, function_type):
-        return clean_function_name(function_name, function_type)
 
 
 @dataclass
@@ -399,7 +367,7 @@ class AirflowSourceTask(Templated):
         {% for adapter in rendered_adapters %}
         {{ adapter | indent(4, False) }}
         {% endfor %}
-        result = list({{ node.function | clean_function_name('functions') }}(**config))
+        result = list({{ node.function | clean_function_name('functions') }}(**{k: v for k, v in config.items() if not k.startswith('_')}))
         context['ti'].xcom_push('result', result)
     '''
     node_name: str
@@ -431,7 +399,7 @@ class AirflowTask(Templated):
             {% for adapter in rendered_adapters_edge %}
             {{ adapter | indent(8, False) }}
             {% endfor %}
-            result += list({{ destination_node.function | clean_function_name('functions') }}(**config))
+            result += list({{ destination_node.function | clean_function_name('functions') }}(**{k: v for k, v in config.items() if not k.startswith('_')}))
         context['ti'].xcom_push('result', result)
     '''
     dag: DAG
