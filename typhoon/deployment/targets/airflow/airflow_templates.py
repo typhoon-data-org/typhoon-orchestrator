@@ -1,17 +1,16 @@
-import re
 from datetime import datetime
 from typing import Union, Optional
 
 from croniter import croniter
 from dataclasses import dataclass
-from typhoon.core.cron_utils import aws_schedule_to_cron, timedelta_from_cron
-from typhoon.core.settings import Settings
 from typing_extensions import TypedDict
 
+from typhoon.core.cron_utils import aws_schedule_to_cron
 from typhoon.core.dags import DAG, Edge, Node, Py, MultiStep, evaluate_item
+from typhoon.core.settings import Settings
 from typhoon.core.templated import Templated
-from typhoon.core.transpiler import get_transformations_modules, get_functions_modules, clean_function_name, \
-    clean_simple_param, substitute_special, AdapterParams, get_typhoon_functions_modules, typhoon_import_function_as, \
+from typhoon.core.transpiler import clean_function_name, \
+    AdapterParams, get_typhoon_functions_modules, typhoon_import_function_as, \
     get_typhoon_transformations_modules, typhoon_import_transformation_as
 from typhoon.introspection.introspect_extensions import get_typhoon_extensions_info, ExtensionsInfo
 
@@ -69,7 +68,8 @@ class AirflowDag(Templated):
     def make_typhoon_dag_context(context):
         interval_start = (context['dag_run'] and (context['dag_run'].conf or {}).get('interval_start')) or context['execution_date']
         interval_end = (context['dag_run'] and (context['dag_run'].conf or {}).get('interval_end')) or context['next_execution_date']
-        dag_context = DagContext(interval_start=interval_start, interval_end=interval_end)
+        execution_time = context['dag_run'].start_date
+        dag_context = DagContext(interval_start=interval_start, interval_end=interval_end, execution_time=execution_time)
         return dag_context
     
     
@@ -180,7 +180,7 @@ class AirflowDag(Templated):
 
         def name(branch):
             text = branch if isinstance(branch, str) else branch['name']
-            illegal_chars = r' $\'",-'
+            illegal_chars = r' $\'",-/&'
             for c in illegal_chars:
                 text = text.replace(c, '_')
             return text

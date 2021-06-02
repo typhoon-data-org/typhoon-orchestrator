@@ -1,4 +1,5 @@
 import re
+from copy import copy, deepcopy
 from types import SimpleNamespace
 
 from pydantic import BaseModel, Field
@@ -50,7 +51,7 @@ class Component(BaseModel):
                 'args': {
                     **component_config,
                     **{
-                        k: self.replace_args_with_reference(v)
+                        k: self.replace_args_with_reference(deepcopy(v))
                         for k, v in task.args.items()
                     }
                 },

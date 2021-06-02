@@ -314,10 +314,6 @@ class AdapterParams(Templated):
     def clean_simple_param(x):
         return clean_simple_param(x)
 
-    @staticmethod
-    def substitute_special(code, key):
-        return substitute_special(code, key)
-
 
 if __name__ == '__main__':
     import yaml
