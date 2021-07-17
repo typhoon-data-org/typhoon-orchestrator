@@ -70,6 +70,8 @@ docker run -it biellls/typhoon bash
 docker run --rm biellls/typhoon typhoon status
 ```
 
+-- @TODO UPDATE this 
+
 ## Local installation
 
 ```bash
@@ -88,6 +90,8 @@ eval "$(_TYPHOON_COMPLETE=source typhoon)"
 typhoon init typhoon_project
 cd typhoon_project
 ```
+
+-- @TODO UPDATE this 
 
 ### Testing with Airflow
 

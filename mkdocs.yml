@@ -1,3 +1,5 @@
+
+
 site_name: Typhoon Orchestrator
 
 repo_name: typhoon-orchestrator
@@ -15,11 +17,23 @@ google_analytics:
 
 nav:
   - Overview: 'index.md'
-  - Getting Started: 'getting-started.md'
-  - Usage: 'usage.md'
-  - Example Walkthroughs: 'walkthroughs.md'
-  - Components: 'components.md'
-  - Hooks: 'hooks.md'
+  - Getting Started:
+    - Installation: 'getting-started.md'
+    - Connections: 'connections.md'
+    - Creating your DAG: 'creating-a-dag.md'
+    - Deployment: 'building-dags.md'
+    - Using Components: 'using-components.md'
+    - UI configurator: 'using-component-ui.md'
+    - Creating Components: 'creating-components.md'
+    - Hooks (connections): 'connections.md'
+  - Usage:
+    - Components: 'components.md'
+    - Hooks: 'hooks.md'
+  - Example Walkthroughs:
+      - Hello World: 'hello-world.md'
+      - MySql to Snowflake: 'mysql-to-snowflake.md'
+      - Pandas automation: 'automating-pandas.md'
+      - Airflow examples: 'airflow-examples.md'
   - Contributing: 'contributing.md'
   - Licence: 'licence.md'
 

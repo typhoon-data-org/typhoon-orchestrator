@@ -1,10 +1,10 @@
 # Typhoon Orchestrator
 
-Typhoon is a Task Worfklow tool for composing **Airflow** or Lambda DAGs in YAML. 
+Typhoon is a Data Worfklow tool (ETL / ELT pipelines) for composing **Airflow** or AWS Lambda DAGs in YAML. 
 
 **Supercharge your existing Airflow workflow** by using Typhoon to create your DAGs with complete simplicity and re-usability. Deploying to your existing Airflow you can upgrade with zero risk, migrations or loss of existing Airflow functionality.
 
-*If you like Airflow, you will like it more with Typhoon.*
+*If you like Airflow, you will Ariflow + Typhoon more.*
 
 ## Key principles
 - **Elegant**:  YAML; low-code and easy to pick up.
