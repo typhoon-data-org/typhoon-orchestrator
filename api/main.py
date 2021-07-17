@@ -10,6 +10,7 @@ from typhoon.core.dags import IDENTIFIER_REGEX, Granularity, DAGDefinitionV2, Ta
 from typhoon.core.glue import load_components, load_component
 from typhoon.core.settings import Settings
 from typhoon.deployment.packaging import build_all_dags
+import uvicorn
 
 app = FastAPI()
 

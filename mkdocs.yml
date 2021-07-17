@@ -1,12 +1,12 @@
 site_name: Typhoon Orchestrator
 
 repo_name: typhoon-orchestrator
-repo_url: https://github.com/biellls/typhoon-orchestrator
+repo_url: https://github.com/typhoon-data-org/typhoon-orchestrator
 
 theme:
     name: 'material'
     palette:
-      primary: 'brown'
+      primary: 'deep purple'
     logo: 'img/typhoon_solo_inverted2.png'
 
 google_analytics:
@@ -16,9 +16,12 @@ google_analytics:
 nav:
   - Overview: 'index.md'
   - Getting Started: 'getting-started.md'
-  - DAG Development:
-    - Tutorial: 'dag-development-tutorial.md'
-    - Improving the tutorial DAG: 'dag-development-improving.md'
+  - Usage: 'usage.md'
+  - Example Walkthroughs: 'walkthroughs.md'
+  - Components: 'components.md'
+  - Hooks: 'hooks.md'
+  - Contributing: 'contributing.md'
+  - Licence: 'licence.md'
 
 markdown_extensions:
   - markdown.extensions.codehilite:
