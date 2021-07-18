@@ -52,7 +52,7 @@ If we run the status command again we will see that everything is ok in our proj
 ```bash
 typhoon status
 ```
-<img src="img/Screenshot%202021-07-17%20203022.png">
+<img src="../img/Screenshot%202021-07-17%20203022.png">
 
 ## Connections types (Hooks)
 

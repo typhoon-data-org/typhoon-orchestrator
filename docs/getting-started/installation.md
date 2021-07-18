@@ -1,5 +1,4 @@
-# Getting started
-
+# Installation
 Typhoon can be installed locally with pip or using docker. To test airflow (especially on Windows) we recommend using the docker version. 
 
 !!! tip "Use the DEV version when installing it locally."
@@ -38,7 +37,7 @@ typhoon status
 
 Result:
 
-<img src="img/Screenshot 2021-07-17 192117.png">
+<img src="../img/Screenshot%202021-07-17%20192117.png">
 
 We can see that it's detecting the project home as well as a SQLite metadata database that just got created. It's also warning us that our DAG uses a connection that is not defined in the metadata database and suggesting us a fix.
 
