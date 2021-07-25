@@ -20,6 +20,14 @@ Typhoon is a Data Worfklow tool (ETL / ELT pipelines) for composing **Airflow** 
         - deploy to Airflow - large reduction in effort, without breaking existing production.
         - deploy to AWS Lambda - completely serverless
 
+### Layers 
+
+- **Pristine**: Pre-built (OSS) components and UI that can be shared to your team    
+- **Core**: Python (OSS) core 
+    - Extensible and hackable.
+    - Components allow you to share extensions widely in the Pristine layer.    
+
+
 ## Example DAG
 
 === "Typhoon DAG (YAML)"
