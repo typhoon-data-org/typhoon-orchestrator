@@ -19,6 +19,7 @@ cron_templates = {
     'minutes': '*/{n} * * * *',
     'hours': '0 */{n} * * *',
     'days': '0 0 */{n} * *',
+    'weeks': '0 0 * * */{n}',
     'months': '0 0 0 */{n} *',
 }
 
@@ -26,7 +27,7 @@ cron_templates = {
 def aws_schedule_to_cron(schedule: str) -> str:
     if schedule in cron_presets.keys():
         return cron_presets[schedule]
-    match = re.match(r'rate\s*\(\s*(\d+)\s+(minute|minutes|hour|hours|day|days|month|months)\s*\)', schedule)
+    match = re.match(r'rate\s*\(\s*(\d+)\s+(minute|minutes|hour|hours|day|days|week|weeks|month|months)\s*\)', schedule)
     if match:
         n, freq = match.groups()
         freq = freq + 's' if not freq.endswith('s') else freq

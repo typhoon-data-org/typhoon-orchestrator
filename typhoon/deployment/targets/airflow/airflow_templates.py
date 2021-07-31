@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Union, Optional
 
 from croniter import croniter
@@ -86,9 +86,9 @@ class AirflowDag(Templated):
     {% endfor %}
     with DAG(
         dag_id='{{ dag.name }}',
-        default_args={'owner': '{{ owner }}'},
+        default_args={'owner': '{{ owner }}'{% if dag.airflow_default_args %}, **{{ dag.airflow_default_args }}{% endif %}},
         schedule_interval='{{ cron_expression }}',
-        start_date={{ start_date.__repr__() }}
+        start_date={{ start_date.__repr__() }},
     ) as dag:
         {% for dependency in edge_dependencies %}
         {% if dependency.input is none %}
@@ -143,7 +143,7 @@ class AirflowDag(Templated):
             self.dag = DAG.parse_obj(self.dag)
         if not self.start_date:
             cron = aws_schedule_to_cron(self.cron_expression)
-            iterator = croniter(cron, datetime.now())   # In case the event is exactly on time
+            iterator = croniter(cron, datetime.now())
             self.start_date = iterator.get_prev(datetime)
 
         # Validate that there's no node with two inputs

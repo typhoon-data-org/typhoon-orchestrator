@@ -5,6 +5,7 @@ from typhoon.connections import ConnectionParams
 
 class HookInterface(Protocol):
     conn_type: str
+    conn_params: ConnectionParams
 
     def __init__(self, conn_params: ConnectionParams): ...
     def __enter__(self): ...

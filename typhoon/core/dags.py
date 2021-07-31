@@ -222,6 +222,8 @@ class DAG(BaseModel):
     nodes: Dict[str, Node]
     edges: Dict[str, Edge]
     active: bool = Field(True, description='Whether to deploy the DAG or not')
+    airflow_default_args: Optional[dict] = Field(
+        None, description='Arguments passed to generated Airflow DAG. Ignored if deploy target is not airflow.')
 
     @root_validator
     def validate_undefined_nodes_in_edges(cls, values):
@@ -706,10 +708,12 @@ class DAGDefinitionV2(BaseModel):
     active: bool = Field(True, description='Whether to deploy the DAG or not')
     tasks: Dict[str, TaskDefinition]
     tests: Optional[Dict[str, TestCase]]
+    airflow_default_args: Optional[dict] = Field(
+        None, description='Arguments passed to generated Airflow DAG. Ignored if deploy target is not airflow.')
 
     def guess_granularity(self) -> Granularity:
         cron = aws_schedule_to_cron(self.schedule_interval)
-        iterator = croniter(cron)   # In case the event is exactly on time
+        iterator = croniter(cron)
         interval = iterator.get_next(datetime)
         next_interval = iterator.get_next(datetime)
         delta = (next_interval - interval)
@@ -759,6 +763,7 @@ class DAGDefinitionV2(BaseModel):
             active=self.active,
             nodes=nodes,
             edges=edges,
+            airflow_default_args=self.airflow_default_args,
         )
 
     def assert_tests(self, task_name, batch, batch_num, dag_context):
