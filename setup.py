@@ -32,6 +32,7 @@ setup(
     },
     tests_require=test_required,
     test_suite='pytest',
+    setup_requires=['wheel'],
     include_package_data=True,
     license='Apache 2 License',
     description='Create asynchronous data pipelines and deploy to cloud or airflow',
