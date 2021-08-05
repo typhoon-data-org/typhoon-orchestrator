@@ -23,7 +23,7 @@ def build_all_dags_airflow(remote: Optional[str], matching: Optional[str] = None
 
     print('Build all DAGs...')
     dags = load_dags(ignore_errors=True)
-    for dag, dag_code in dags:
+    for dag, _ in dags:
         print(f'Found DAG {dag.name}')
         if not matching or re.match(matching, dag.name):
             store: AirflowMetadataStore = Settings.metadata_store()
@@ -32,5 +32,5 @@ def build_all_dags_airflow(remote: Optional[str], matching: Optional[str] = None
                 dag_run = db.get_first_dag_run(dag.name)
                 if dag_run:
                     start_date = dag_run.execution_date.replace(tzinfo=None)
-            compiled_dag = AirflowDag(dag, start_date=start_date).render()
+            compiled_dag = AirflowDag(dag, start_date=start_date, debug_mode=remote is None).render()
             (target_folder / f'{dag.name}.py').write_text(compiled_dag)

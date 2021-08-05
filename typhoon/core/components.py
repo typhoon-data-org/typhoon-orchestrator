@@ -1,10 +1,11 @@
 import re
-from copy import copy, deepcopy
+from copy import deepcopy
 from types import SimpleNamespace
+from typing import Dict, List, Union, Any
 
 from pydantic import BaseModel, Field
-from typhoon.core.dags import IDENTIFIER_REGEX, TaskDefinition, Py, MultiStep, add_yaml_constructors, evaluate_item
-from typing import Dict, List, Union
+
+from typhoon.core.dags import IDENTIFIER_REGEX, TaskDefinition, Py, MultiStep, evaluate_item
 
 
 def task_name(name_in_dag: str, task: str) -> str:
@@ -17,7 +18,7 @@ def config_arg_name(component_name: str, arg: str) -> str:
 
 class ComponentArgument(BaseModel):
     type: str = Field(..., description='Type of your argument')
-    default: Union[str, list, dict, Py] = Field(..., description='Default value for your argument')
+    default: Any = Field(..., description='Default value for your argument')
 
 
 class Component(BaseModel):

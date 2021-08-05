@@ -25,40 +25,38 @@ def transpile_dag_and_store(dag: dict, output_path: Union[str, Path], debug_mode
     Path(output_path).write_text(dag_code)
 
 
-def load_dags(ignore_errors: bool = False) -> List[Tuple[DAG, str]]:
-    return [(dd.make_dag(), ds) for dd, ds in load_dag_definitions(ignore_errors)]
+def load_dags(ignore_errors: bool = False) -> List[Tuple[DAG, Path]]:
+    return [(dd.make_dag(), df) for dd, df in load_dag_definitions(ignore_errors)]
 
 
-def load_dag_definitions(ignore_errors: bool = False) -> List[Tuple[DAGDefinitionV2, str]]:
+def load_dag_definitions(ignore_errors: bool = False) -> List[Tuple[DAGDefinitionV2, Path]]:
     add_yaml_constructors()
     dags = []
     for dag_file in Settings.dags_directory.rglob('*.yml'):
-        if ignore_errors:
-            try:
-                dag = DAGDefinitionV2.parse_obj(
-                    yaml.load(dag_file.read_text(), yaml.FullLoader)
-                )
-            except ValidationError:
-                continue
-        else:
+        try:
             dag = DAGDefinitionV2.parse_obj(
-                yaml.safe_load(dag_file.read_text())
+                yaml.load(dag_file.read_text(), yaml.FullLoader)
             )
-        dags.append((dag, dag_file.read_text()))
+        except ValidationError:
+            if ignore_errors:
+                continue
+            else:
+                raise
+        dags.append((dag, dag_file))
 
     return dags
 
 
 def load_dag(dag_name: str, ignore_errors: bool = False) -> Optional[DAG]:
     dags = load_dags(ignore_errors)
-    matching_dags = [(dag, code) for dag, code in dags if dag.name == dag_name]
+    matching_dags = [(dag, _) for dag, _ in dags if dag.name == dag_name]
     assert len(matching_dags) <= 1, f'Found {len(matching_dags)} dags with name "{dag_name}"'
     return matching_dags[0] if len(matching_dags) == 1 else None
 
 
 def load_dag_definition(dag_name: str, ignore_errors: bool = False) -> Optional[DAGDefinitionV2]:
     dags = load_dag_definitions(ignore_errors)
-    matching_dags = [(dag, code) for dag, code in dags if dag.name == dag_name]
+    matching_dags = [(dag, _) for dag, _ in dags if dag.name == dag_name]
     assert len(matching_dags) <= 1, f'Found {len(matching_dags)} dags with name "{dag_name}"'
     return matching_dags[0] if len(matching_dags) == 1 else None
 

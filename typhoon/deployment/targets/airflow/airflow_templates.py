@@ -124,6 +124,7 @@ class AirflowDag(Templated):
         {% endif %}
         
         {% endfor %}
+        {% if debug_mode %}
         if __name__ == '__main__':
             d = pendulum.datetime.now()
             {% for dependency in edge_dependencies %}
@@ -131,12 +132,14 @@ class AirflowDag(Templated):
             ti.run(ignore_all_deps=True, test_mode=True)
             
             {% endfor %}
+        {% endif %}
     '''
     dag: Union[DAG, dict]
     owner: str = 'typhoon'
     start_date: Optional[datetime] = None
     airflow_version: int = 1
     _extensions_info: ExtensionsInfo = None
+    debug_mode: bool = False
 
     def __post_init__(self):
         if isinstance(self.dag, dict):
@@ -144,6 +147,7 @@ class AirflowDag(Templated):
         if not self.start_date:
             cron = aws_schedule_to_cron(self.cron_expression)
             iterator = croniter(cron, datetime.now())
+            self.start_date = iterator.get_prev(datetime)
             self.start_date = iterator.get_prev(datetime)
 
         # Validate that there's no node with two inputs
@@ -187,7 +191,7 @@ class AirflowDag(Templated):
 
         for node_name in self.dag.sources:
             node = self.dag.nodes[node_name]
-            if isinstance(node.config['branches'], Py):
+            if isinstance(node.config.get('branches'), Py):
                 custom_locals = {'config': {}}
                 for dep in node.config['branches'].args_dependencies:
                     custom_locals['config'][dep] = node.config[dep]
@@ -199,7 +203,7 @@ class AirflowDag(Templated):
                 except Exception:
                     print('Can not evaluate {node.config["branches"]}')
             if node.function == 'typhoon.flow_control.branch' and \
-                    isinstance(node.config['branches'], list) and \
+                    isinstance(node.config.get('branches'), list) and \
                     'branches' in node.config and all(isinstance(x, str) or dict_with_name(x) for x in node.config['branches']):
                 # Reshape the dag to separate branches
                 for edge_name in self.dag.get_edges_for_source(node_name):
@@ -310,16 +314,16 @@ class AirflowDag(Templated):
 class NodeTask(Templated):
     template = '''
     def {{ node_name }}_node(adapter_config: dict, batch_num, **context):
-            dag_context = make_typhoon_dag_context(context)
-            config = {**adapter_config} 
-            {% for adapter in rendered_adapters %}
-            {{ adapter | indent(8, False) }}
-            {% endfor %}
-            out = {{ node.function | clean_function_name('functions') }}(**{k: v for k, v in config.items() if not k.startswith('_')})
-            if isinstance(out, types.GeneratorType):
-                yield from out
-            else:
-                yield out
+        dag_context = make_typhoon_dag_context(context)
+        config = {**adapter_config} 
+        {% for adapter in rendered_adapters %}
+        {{ adapter | indent(4, False) }}
+        {% endfor %}
+        out = {{ node.function | clean_function_name('functions') }}(**{k: v for k, v in config.items() if not k.startswith('_')})
+        if isinstance(out, types.GeneratorType):
+            yield from out
+        else:
+            yield out
     '''
     node_name: str
     node: Node

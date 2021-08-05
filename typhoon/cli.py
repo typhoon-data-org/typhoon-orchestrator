@@ -289,10 +289,10 @@ def build_dags(remote: Optional[str], dag_name: Optional[str], all_: bool):
             sys.exit(-1)
 
         if Settings.deploy_target == 'typhoon':
-            build_all_dags(remote=None)
+            build_all_dags(remote=remote)
         else:
             from typhoon.deployment.targets.airflow.airflow_build import build_all_dags_airflow
-            build_all_dags_airflow(remote=None)
+            build_all_dags_airflow(remote=remote)
     else:
         dag_errors = get_dag_errors().get(dag_name)
         if dag_errors:
@@ -329,13 +329,7 @@ def watch_dags(dag_name: Optional[str], all_: bool):
 
 
 def run_local_dag(dag_name: str, execution_date: datetime):
-    dag_path = Settings.out_directory / dag_name / f'{dag_name}.py'
-    if not dag_path.exists():
-        print(f"Error: {dag_path} doesn't exist. Build DAGs")
-    try:
-        run_dag(dag_name, str(execution_date), capture_logs=False)
-    except FileNotFoundError:
-        print(f'DAG {dag_name} could not be built')
+    run_dag(dag_name, str(execution_date), capture_logs=False)
 
 
 @cli_dags.command(name='run')
@@ -360,7 +354,9 @@ def cli_run_dag(remote: Optional[str], dag_name: str, execution_date: Optional[d
             print(tabulate(table_body, header, 'plain'), file=sys.stderr)
             sys.exit(-1)
 
-        build_all_dags(remote=None, matching=dag_name)
+        dag_files = build_all_dags(remote=None, matching=dag_name)
+        assert len(dag_files) == 1, f'Expected to find exactly one dag file matching {dag_name}'
+        dag_file = dag_files[0]
         # Sets the env variable for metadata store to the sqlite in CWD if not set, because the CWD will be different at
         # runtime
         # Settings.deploy_target = 'typhoon'

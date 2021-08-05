@@ -1,6 +1,6 @@
 import csv
 import json
-from datetime import datetime
+from datetime import datetime, date
 from io import StringIO
 from json import JSONEncoder
 from typing import Sequence
@@ -27,6 +27,9 @@ class Encoder(JSONEncoder):
             # return base64.b64encode(o)
             return o.hex()
         elif isinstance(o, datetime):
+            # print(f'Date encoding')
+            return o.isoformat()
+        elif isinstance(o, date):
             # print(f'Date encoding')
             return o.isoformat()
         # print(f'Default encoding')

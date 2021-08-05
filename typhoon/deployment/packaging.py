@@ -8,7 +8,7 @@ from distutils.dir_util import copy_tree
 from distutils.errors import DistutilsFileError
 from pathlib import Path
 from shutil import copytree, copy, make_archive, move, rmtree
-from typing import Optional
+from typing import Optional, List
 
 import pkg_resources
 
@@ -109,7 +109,7 @@ def get_current_venv():
     return venv
 
 
-def build_all_dags(remote: Optional[str], matching: Optional[str] = None):
+def build_all_dags(remote: Optional[str], matching: Optional[str] = None) -> List[Path]:
     from typhoon.deployment.deploy import clean_out
     from typhoon.deployment.sam import deploy_sam_template
 
@@ -119,14 +119,17 @@ def build_all_dags(remote: Optional[str], matching: Optional[str] = None):
     deployment_date = datetime.now()
     dags = load_dags(ignore_errors=True)
     deploy_sam_template([dag for dag, _ in dags], remote=remote)
-    for dag, dag_code in dags:
+    dag_files = []
+    for dag, dag_file in dags:
         if not matching or re.match(matching, dag.name):
-            build_dag(dag, dag_code, deployment_date, remote)
+            dag_files.append(dag_file)
+            build_dag(dag, dag_file, deployment_date, remote)
 
     print('Finished building DAGs\n')
+    return dag_files
 
 
-def build_dag(dag: DAG, dag_code: str, deployment_date: datetime, remote: Optional[str]):
+def build_dag(dag: DAG, dag_file: Path, deployment_date: datetime, remote: Optional[str]):
     dag = dag.dict()
     dag_folder = Settings.out_directory / dag['name']
     transpile_dag_and_store(dag, dag_folder / f"{dag['name']}.py", debug_mode=remote is None)
@@ -142,7 +145,7 @@ def build_dag(dag: DAG, dag_code: str, deployment_date: datetime, remote: Option
             DagDeployment(
                 dag_name=dag['name'],
                 deployment_date=deployment_date,
-                dag_code=dag_code,
+                dag_code=dag_file.read_text(),
             )
         )
 
