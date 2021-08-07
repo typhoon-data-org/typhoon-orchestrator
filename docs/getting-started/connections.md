@@ -65,7 +65,7 @@ Hooks available:
 - **Snowflake** specific flavour
 = **SQLAlchemy** - most DBs can use this
 - **AWS** - AWS Session, DynamoDB
-- **Singer** - so you can use anything [singer can connect to][2] 
+- **Singer** - You can use any singer taps in your DAG as a task.  [singer can connect to][2] 
 
 Any you can add/extend your own, of course.
 

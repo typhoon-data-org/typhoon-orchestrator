@@ -23,14 +23,14 @@ nav:
   - Overview: 'index.md'
   - Getting Started:
     - Installation: 'getting-started/installation.md'
-    - Connections: 'getting-started/connections.md'
+    - Adding connections: 'getting-started/connections.md'
     - Creating your DAG: 'getting-started/creating-a-dag.md'
     - Typhoon Cli: 'getting-started/typhoon-cli.md'
     - Deployment: 'getting-started/deployment.md'
     - Using Components: 'getting-started/using-components.md'
     - UI configurator: 'getting-started/using-component-ui.md'
     - Creating Components: 'getting-started/creating-components.md'
-    - Hooks (connections): 'getting-started/creating-hooks.md'
+    - New Hooks (connections): 'getting-started/creating-hooks.md'
   - Usage:
     - Dag Context: 'usage/dag-context.md'
     - Tasks: 'usage/tasks.md'
