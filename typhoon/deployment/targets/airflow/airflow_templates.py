@@ -9,9 +9,9 @@ from typhoon.core.cron_utils import aws_schedule_to_cron
 from typhoon.core.dags import DAG, Edge, Node, Py, MultiStep, evaluate_item
 from typhoon.core.settings import Settings
 from typhoon.core.templated import Templated
-from typhoon.core.transpiler import clean_function_name, \
-    AdapterParams, get_typhoon_functions_modules, typhoon_import_function_as, \
-    get_typhoon_transformations_modules, typhoon_import_transformation_as
+from typhoon.core.old_transpiler import clean_function_name, \
+    AdapterParams, typhoon_import_function_as, \
+    typhoon_import_transformation_as, get_typhoon_transformations_modules, get_typhoon_functions_modules
 from typhoon.introspection.introspect_extensions import get_typhoon_extensions_info, ExtensionsInfo
 
 

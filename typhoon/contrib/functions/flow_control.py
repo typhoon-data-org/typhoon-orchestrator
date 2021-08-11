@@ -28,3 +28,7 @@ def filter(data: T, filter_func: Callable[[T], bool]) -> Iterator:
     :return:
     """
     yield data if filter_func(data) else SKIP_BATCH
+
+
+def do(func: Callable, args: list = None, kwargs: dict = None):
+    yield func(*(args or []), **(kwargs or {}))

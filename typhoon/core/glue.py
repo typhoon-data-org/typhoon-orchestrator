@@ -12,7 +12,7 @@ from typhoon.core.components import Component
 
 from typhoon.core.dags import DAG, DAGDefinitionV2, add_yaml_constructors
 from typhoon.core.settings import Settings
-from typhoon.core.transpiler import TyphoonFileTemplate
+from typhoon.core.old_transpiler import TyphoonFileTemplate
 from typing_extensions import Literal
 
 from typhoon.introspection.introspect_extensions import get_typhoon_extensions_info

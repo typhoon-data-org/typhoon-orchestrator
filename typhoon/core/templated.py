@@ -3,12 +3,14 @@ import re
 import textwrap
 
 import jinja2
+from typing import Callable, List
 from typing_extensions import runtime_checkable, Protocol
 
 
 @runtime_checkable
 class Templated(Protocol):
     template: str
+    _filters: List[Callable] = None
 
     def get_properties(self) -> dict:
         base_properties = [
@@ -48,6 +50,9 @@ class Templated(Protocol):
         )
         for name in self.get_methods().keys():
             env.filters[name] = _make_filter(name)
+        if self._filters:
+            for filter_func in self._filters:
+                env.filters[filter_func.__name__] = filter_func
         return env
 
     def expand_template(self) -> str:

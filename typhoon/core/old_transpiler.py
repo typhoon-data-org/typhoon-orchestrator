@@ -1,5 +1,5 @@
 import re
-from typing import Any, List, Iterable, Dict, Union, Optional
+from typing import Any, List, Union, Iterable, Dict
 
 from dataclasses import dataclass
 from typhoon.core.dags import DAG, Py, MultiStep, Node
