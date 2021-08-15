@@ -360,7 +360,7 @@
   
     <li class="md-nav__item">
       <a href="connections.html" class="md-nav__link">
-        Connections
+        Adding connections
       </a>
     </li>
   
@@ -447,15 +447,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#in-flow-component-usage" class="md-nav__link">
-    In-flow component usage
+  <a href="#example-in-flow-component" class="md-nav__link">
+    Example In-flow component
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#standalone-component-usage" class="md-nav__link">
-    Standalone Component usage
+  <a href="#example-standalone-component" class="md-nav__link">
+    Example Standalone Component
   </a>
   
 </li>
@@ -498,7 +498,7 @@
   
     <li class="md-nav__item">
       <a href="creating-hooks.html" class="md-nav__link">
-        Hooks (connections)
+        New Hooks (connections)
       </a>
     </li>
   
@@ -551,8 +551,32 @@
   
   
     <li class="md-nav__item">
-      <a href="../usage/tasks.html" class="md-nav__link">
-        Tasks
+      <a href="../usage/py-multistep.html" class="md-nav__link">
+        !Py & !Multistep
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/task-flow-control.html" class="md-nav__link">
+        Task flow control
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/task-testing.html" class="md-nav__link">
+        Task testing
       </a>
     </li>
   
@@ -777,15 +801,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#in-flow-component-usage" class="md-nav__link">
-    In-flow component usage
+  <a href="#example-in-flow-component" class="md-nav__link">
+    Example In-flow component
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#standalone-component-usage" class="md-nav__link">
-    Standalone Component usage
+  <a href="#example-standalone-component" class="md-nav__link">
+    Example Standalone Component
   </a>
   
 </li>
@@ -810,19 +834,107 @@
                 <h1 id="using-components">Using Components</h1>
 <h2 id="what-is-a-component">What is a component?</h2>
 <p>Components are ways of packaging up sets of regularly used tasks. This encourages modularity and re-use. </p>
-<p>This means a library of powerful workflows that are then simple dropping in  2-3 line YAML fragments. </p>
-<p>Components can be 'in-flow' using previous steps as inputs. Alternatively, 'standalone' ones can be built as DAG full templates. <strong><em>'Standalone' components can use the Component Builder UI</em></strong> </p>
-<p>Example components:</p>
+<p>This means a library of powerful workflows that are then simple dropping in  2-3 line YAML fragments.</p>
+<p>Components can be structured as complete workflows or to slot into larger ones:</p>
 <ul>
-<li><em>in-flow</em>: if, glob_complress_and_copy, signer_demultiplexer</li>
-<li><em>standalone</em>: db_to_snowflake, csv_my_pandas_transform        </li>
+<li><strong>'In-flow'</strong> using previous steps as inputs <ul>
+<li>e.g. 'if', 'singer_multiplexer' </li>
 </ul>
+</li>
+<li><strong>'Standalone'</strong> ones can be built as DAG full templates. The difference is this structure can use the Component Builder UI.   <ul>
+<li>e.g. 'db_to_snowflake', 'csv_my_pandas_transform'</li>
+</ul>
+</li>
+</ul>
+<p><img src="../img/component-descriptor.png"></p>
 <p>@TODO - screenshot of UI</p>
-<h2 id="in-flow-component-usage">In-flow component usage</h2>
-<p>@ TOdo - usage of if and glob_compress</p>
-<h2 id="standalone-component-usage">Standalone Component usage</h2>
-<p>@ Todo  -usage of a simple component of transform</p>
-<p>@ Todo usage of Snowflake in code</p>
+<h2 id="example-in-flow-component">Example In-flow component</h2>
+<p>Trivial example to choose a different path based on if its a Monday.</p>
+<p><code>$DAG_CONTEXT.ts</code> is a datetime object representing the <a href="https://docs.python.org/3/library/datetime.html#datetime.datetime.weekday">timestamp</a> of runtime in the context. </p>
+<p>Calling <code>component: typhoon.if</code> imports the template structure defined in the component YAML. Your constributed components would be referenced <code>component: components.my_component</code>.</p>
+<p>This <code>if</code> component defines two outputs. These are accessed in the line <code>choose_preprocessing.then</code> and <code>choose_preprocessing.else</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">conditional_process</span>
+<span class="nt">schedule_interval</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">rate(10 minutes)</span>
+
+<span class="nt">tasks</span><span class="p">:</span>
+
+  <span class="nt">list_files</span><span class="p">:</span>
+    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.filesystem.list_directory</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">hook</span><span class="p">:</span> <span class="kt">!Hook</span> <span class="l l-Scalar l-Scalar-Plain">ftp</span>
+      <span class="nt">path</span><span class="p">:</span> <span class="s">&#39;/&#39;</span>
+
+  <span class="nt">choose_preprocessing</span><span class="p">:</span>
+    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">list_files</span>
+    <span class="nt">component</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.if</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">data</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$BATCH</span>
+      <span class="nt">condition</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$DAG_CONTEXT.ts.weekday() == 0</span>
+
+  <span class="nt">monday_processing_task</span><span class="p">:</span>
+    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">choose_preprocessing.then</span>
+    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">functions.my_process_monday</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">data</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$BATCH</span>
+
+
+  <span class="nt">otherday_processing_task</span><span class="p">:</span>
+    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">choose_preprocessing.else</span>
+    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">functions.my_process_other_day</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">data</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$BATCH</span>
+
+  <span class="l l-Scalar l-Scalar-Plain">...</span>
+</code></pre></div>
+<h2 id="example-standalone-component">Example Standalone Component</h2>
+<p>This is a non-trivial example of a full DWH load from multipler tables across 3 separate ERP systems.</p>
+<p>This calls the entire end to end flow that is packaged in the  <code>typhoon.db_to_snowflake</code> flow. This component example is idempotence, and encapsulating the management of the DHW staging metadata.</p>
+<div class="highlight"><pre><span></span><code><span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">source_to_snowflake</span>
+<span class="nt">schedule_interval</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">rate(1 day)</span>
+
+<span class="nt">tasks</span><span class="p">:</span>
+  <span class="nt">get_sku_erp</span><span class="p">:</span>
+    <span class="nt">component</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.db_to_snowflake</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">source_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">sku_component_erp</span>
+      <span class="nt">source_hook</span><span class="p">:</span> <span class="kt">!Hook</span> <span class="l l-Scalar l-Scalar-Plain">ERP</span>
+      <span class="nt">snowflake_hook</span><span class="p">:</span> <span class="kt">!Hook</span> <span class="l l-Scalar l-Scalar-Plain">data_warehouse</span>
+      <span class="nt">quote_tables</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+      <span class="nt">source_tables</span><span class="p">:</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">sku_list</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">sku_component</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">build_master</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">builds</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">component_extended_desc</span>
+
+  <span class="nt">get_transactions</span><span class="p">:</span>
+    <span class="nt">component</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.db_to_snowflake</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">source_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">transactions_erp</span>
+      <span class="nt">source_hook</span><span class="p">:</span> <span class="kt">!Hook</span> <span class="l l-Scalar l-Scalar-Plain">trans_ERP</span>
+      <span class="nt">snowflake_hook</span><span class="p">:</span> <span class="kt">!Hook</span> <span class="l l-Scalar l-Scalar-Plain">data_warehouse</span>
+      <span class="nt">quote_tables</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+      <span class="nt">source_tables</span><span class="p">:</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">transactions</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">client_master</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">shipping</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">supplers</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">deliveries</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">factory_productivity</span>
+
+  <span class="nt">get_financials_pnl</span><span class="p">:</span>
+    <span class="nt">component</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.db_to_snowflake</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">source_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">finance_erp</span>
+      <span class="nt">source_hook</span><span class="p">:</span> <span class="kt">!Hook</span> <span class="l l-Scalar l-Scalar-Plain">fin_erp</span>
+      <span class="nt">snowflake_hook</span><span class="p">:</span> <span class="kt">!Hook</span> <span class="l l-Scalar l-Scalar-Plain">data_warehouse</span>
+      <span class="nt">quote_tables</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+      <span class="nt">source_tables</span><span class="p">:</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">payables</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">recievables</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">reconciliations</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">cost_to_serve</span>
+</code></pre></div>
                 
               
               

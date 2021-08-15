@@ -77,6 +77,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#dag-context-batch-etc" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -353,7 +358,7 @@
   
     <li class="md-nav__item">
       <a href="../getting-started/connections.html" class="md-nav__link">
-        Connections
+        Adding connections
       </a>
     </li>
   
@@ -437,7 +442,7 @@
   
     <li class="md-nav__item">
       <a href="../getting-started/creating-hooks.html" class="md-nav__link">
-        Hooks (connections)
+        New Hooks (connections)
       </a>
     </li>
   
@@ -486,10 +491,70 @@
       <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
       
       
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Dag Context
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="dag-context.html" class="md-nav__link md-nav__link--active">
         Dag Context
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#batch" class="md-nav__link">
+    $BATCH
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#batch_num" class="md-nav__link">
+    $BATCH_NUM
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hook" class="md-nav__link">
+    $HOOK
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#variable" class="md-nav__link">
+    $VARIABLE
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dag_context" class="md-nav__link">
+    $DAG_CONTEXT
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -500,8 +565,32 @@
   
   
     <li class="md-nav__item">
-      <a href="tasks.html" class="md-nav__link">
-        Tasks
+      <a href="py-multistep.html" class="md-nav__link">
+        !Py & !Multistep
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="task-flow-control.html" class="md-nav__link">
+        Task flow control
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="task-testing.html" class="md-nav__link">
+        Task testing
       </a>
     </li>
   
@@ -700,6 +789,66 @@
               </div>
             
             
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#batch" class="md-nav__link">
+    $BATCH
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#batch_num" class="md-nav__link">
+    $BATCH_NUM
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hook" class="md-nav__link">
+    $HOOK
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#variable" class="md-nav__link">
+    $VARIABLE
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dag_context" class="md-nav__link">
+    $DAG_CONTEXT
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
           
           <div class="md-content" data-md-component="content">
             <article class="md-content__inner md-typeset">
@@ -710,9 +859,104 @@
                   </a>
                 
                 
-                  <h1>Dag Context</h1>
-                
-                
+                <h1 id="dag-context-batch-etc">DAG Context, $Batch etc.</h1>
+<p>Typhoon has some built in context variables: </p>
+<ul>
+<li>$BATCH:    This is the data package passed to the next node.</li>
+<li>$BATCH_NUM:    This is the iterator number if you are batching (queries for example).</li>
+<li>$HOOK:    This represents your hook - you can use <code>!Hook my_conn</code> as syntax sugar or <code>!Py $HOOK.myconn</code></li>
+<li>$VARIABLE:    This is how you can access saved variables e.g. lists of tables, query templates etc. An example might be <code>!Py $VARIABLE.mysql_read_3.format(table_name=$BATCH)</code></li>
+<li>$DAG_CONTEXT.interval_start &amp; $DAG_CONTEXT.interval_end:     Execution interval for example:<ul>
+<li>$DAG_CONTEXT.interval_start → '2021-05-23 10:00:00'     (inclusive)</li>
+<li>$DAG_CONTEXT.interval_end → '2021-05-23 11:00:00'     (exclusive)</li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre><span></span><code>  <span class="nt">write_data</span><span class="p">:</span>
+    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">send_data</span>
+    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.filesystem.write_data</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">hook</span><span class="p">:</span> <span class="kt">!Hook</span> <span class="l l-Scalar l-Scalar-Plain">data_lake</span>
+      <span class="nt">path</span><span class="p">:</span> <span class="kt">!MultiStep</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$BATCH[&#39;filename&#39;]</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$DAG_CONTEXT.interval_end</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">f&#39;/store/{$2}/{$1}&#39;</span>
+      <span class="nt">data</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$BATCH[&#39;contents&#39;]</span>
+      <span class="nt">create_intermediate_dirs</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+</code></pre></div>
+<h2 id="batch">$BATCH</h2>
+<p>This is the data package passed to the next node and can access the various features of the payload. </p>
+<p>For example if the data being passed is a JSON array:</p>
+<p><div class="highlight"><pre><span></span><code><span class="p">{</span>
+  <span class="nt">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;my_file.csv&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;contents&quot;</span><span class="p">:</span> <span class="s2">&quot;a, b, c, d ...etc&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+You can access these in the following way. In this example we are using the previous step's data for the path and the data step separately.  </p>
+<div class="highlight"><pre><span></span><code>  <span class="nt">write_data</span><span class="p">:</span>
+    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">send_data</span>
+    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.filesystem.write_data</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">hook</span><span class="p">:</span> <span class="kt">!Hook</span> <span class="l l-Scalar l-Scalar-Plain">data_lake</span>
+      <span class="nt">path</span><span class="p">:</span> <span class="kt">!MultiStep</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$BATCH[&#39;filename&#39;]</span> 
+        <span class="p p-Indicator">-</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">f&#39;/store/{$1}&#39;</span>
+      <span class="nt">data</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$BATCH[&#39;contents&#39;]</span>
+      <span class="nt">create_intermediate_dirs</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+</code></pre></div>
+<h2 id="batch_num">$BATCH_NUM</h2>
+<p>This is the iterator number if you are batching (queries for example).</p>
+<div class="highlight"><pre><span></span><code>  <span class="nt">load</span><span class="p">:</span>
+    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">extract</span>
+    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.filesystem.write_data</span>
+    <span class="nt">args</span><span class="p">:</span>
+        <span class="nt">hook</span><span class="p">:</span> <span class="kt">!Hook</span> <span class="l l-Scalar l-Scalar-Plain">data_lake</span>
+        <span class="nt">data</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.transformations.write_csv($BATCH.data)</span>
+        <span class="nt">path</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">f&#39;{$BATCH.table_name}/part{$BATCH_NUM}.csv&#39;</span>
+</code></pre></div>
+<h2 id="hook">$HOOK</h2>
+<p>$HOOK represents your hook - you can use <code>!Hook my_conn</code> as syntax sugar or <code>!Py $HOOK.myconn</code></p>
+<h2 id="variable">$VARIABLE</h2>
+<p>This is how you can access saved variables e.g. lists of tables, query templates etc. </p>
+<p>To add a variable use the typhoon cli with <code>typhoon variable add</code>. Full list of options is available with <code>typhoon variable --help</code>.</p>
+<p>To call the variable, you can use <code>!Var myvariable</code> syntactic sugar or <code>$VARIABLE.myvariable</code> for example this DAG has 2 usages:
+- <code>!Var sql_tables_list_1["my_db_tables"]</code>    (getting the list of tables)
+- <code>!Py $VARIABLE.mysql_read_3.format(table_name=$BATCH)</code>    (using a sql string .format() template)</p>
+<div class="highlight"><pre><span></span><code><span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">dwh_flow</span>
+<span class="nt">schedule_interval</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">rate(1 hours)</span>
+
+<span class="nt">tasks</span><span class="p">:</span>
+
+  <span class="nt">list_tables</span><span class="p">:</span>
+    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.flow_control.branch</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">branches</span><span class="p">:</span> <span class="kt">!Var</span> <span class="l l-Scalar l-Scalar-Plain">sql_tables_list_1[&quot;my_db_tables&quot;]</span>
+
+  <span class="nt">extract_tables</span><span class="p">:</span>
+    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">list_tables</span>
+    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.relational.execute_query</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">hook</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$HOOK.transaction_db</span>
+      <span class="c1">#hook: !Py $HOOK.echo</span>
+      <span class="nt">batch_size</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">10</span>
+      <span class="nt">query_params</span><span class="p">:</span>
+        <span class="nt">table_name</span><span class="p">:</span> <span class="s">&quot;tablen&quot;</span>
+      <span class="nt">metadata</span><span class="p">:</span>
+        <span class="nt">table_name</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$BATCH</span>
+      <span class="nt">query</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$VARIABLE.mysql_read_3.format(table_name=$BATCH)</span>
+
+  <span class="nt">debug_1</span><span class="p">:</span>
+    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">extract_tables</span>
+    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">functions.debug.my_echo</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">x</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$BATCH</span>
+</code></pre></div>
+<h2 id="dag_context">$DAG_CONTEXT</h2>
+<ul>
+<li><code>interval_start</code>  - execution interval  (e.g.'2021-05-23 10:00:00'  inclusive)</li>
+<li><code>interval_end</code> - execution interval (e.g.'2021-05-23 10:00:00'  exclusive)</li>
+<li>...</li>
+</ul>
                 
               
               
@@ -732,7 +976,7 @@
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
         
-        <a href="../getting-started/creating-hooks.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Hooks (connections)" rel="prev">
+        <a href="../getting-started/creating-hooks.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: New Hooks (connections)" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -741,20 +985,20 @@
               <span class="md-footer__direction">
                 Previous
               </span>
-              Hooks (connections)
+              New Hooks (connections)
             </div>
           </div>
         </a>
       
       
         
-        <a href="tasks.html" class="md-footer__link md-footer__link--next" aria-label="Next: Tasks" rel="next">
+        <a href="py-multistep.html" class="md-footer__link md-footer__link--next" aria-label="Next: !Py &amp; !Multistep" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
                 Next
               </span>
-              Tasks
+              !Py & !Multistep
             </div>
           </div>
           <div class="md-footer__button md-icon">

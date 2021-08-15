@@ -14,7 +14,7 @@
     
     
       
-        <title>Typhoon Orchestrator</title>
+        <title>Getting started - Typhoon Orchestrator</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#typhoon-orchestrator" class="md-skip">
+        <a href="#getting-started" class="md-skip">
           Skip to content
         </a>
       
@@ -107,7 +107,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Overview
+              Getting started
             
           </span>
         </div>
@@ -175,12 +175,10 @@
         
   
   
-    
-  
 
 
   <li class="md-tabs__item">
-    <a href="index.html" class="md-tabs__link md-tabs__link--active">
+    <a href="index.html" class="md-tabs__link">
       Overview
     </a>
   </li>
@@ -307,72 +305,11 @@
 
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          Overview
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="index.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="index.html" class="md-nav__link">
         Overview
       </a>
-      
-        
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
-    Overview
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#example-dag" class="md-nav__link">
-    Example DAG
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#using-with-airflow" class="md-nav__link">
-    Using with Airflow
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#component-ui" class="md-nav__link">
-    Component UI
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -799,30 +736,70 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
-    Overview
+  <a href="#new-project" class="md-nav__link">
+    New project
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#example-dag" class="md-nav__link">
-    Example DAG
+  <a href="#checking-status" class="md-nav__link">
+    Checking status
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#using-with-airflow" class="md-nav__link">
-    Using with Airflow
+  <a href="#connections" class="md-nav__link">
+    Connections
   </a>
+  
+    <nav class="md-nav" aria-label="Connections">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#connections-yaml" class="md-nav__link">
+    Connections YAML
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-the-connection" class="md-nav__link">
+    Adding the connection
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#component-ui" class="md-nav__link">
-    Component UI
+  <a href="#dag" class="md-nav__link">
+    DAG
   </a>
+  
+    <nav class="md-nav" aria-label="DAG">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dag-code" class="md-nav__link">
+    DAG code
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-the-dag" class="md-nav__link">
+    Running the DAG
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -838,231 +815,145 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/typhoon-data-org/typhoon-orchestrator/edit/master/docs/index.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/typhoon-data-org/typhoon-orchestrator/edit/master/docs/getting-started.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
                 
                 
-                <h1 id="typhoon-orchestrator">Typhoon Orchestrator</h1>
-<p>Typhoon is a Data Worfklow tool (ETL / ELT pipelines) for composing <strong>Airflow</strong> or AWS Lambda DAGs in YAML.</p>
-<h3 id="overview">Overview</h3>
-<div class="tabbed-set" data-tabs="1:3"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><label for="__tabbed_1_1">Why Typhoon</label><div class="tabbed-content">
-<p>To make creating batch ELT pipelines for the whole team supported by a Data Engineer friendly toolkit.</p>
-<p><strong>Supercharge your existing Airflow workflow</strong>. Use Typhoon to create your DAGs with complete simplicity and re-usability. Deploying to your existing Airflow you can upgrade with zero risk and no migration work.</p>
-<p><strong>Workflow</strong>: Typhoon YAML DAG --&gt; transpile --&gt; Airflow DAG </p>
+                <h1 id="getting-started">Getting started</h1>
+<p>To install typhoon for development do</p>
+<div class="highlight"><pre><span></span><code>pip install typhoon-orchestrator<span class="o">[</span>dev<span class="o">]</span>
+</code></pre></div>
+<p>You always want the DEV version when installing it locally since it comes will all the libraries and tools that make development easier.</p>
+<div class="admonition error">
+<p class="admonition-title">Don't install the basic version</p>
+<p>The basic version that you would get with <code>pip install typhoon-orchestrator</code> is the lightweight version that runs inside lambda in production because it is much more light-weight.</p>
 </div>
-<input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><label for="__tabbed_1_2">Key Principles</label><div class="tabbed-content">
-<ul>
-<li><strong>Elegant</strong>:  YAML; low-code and easy to pick up.</li>
-<li><strong>Data sharing</strong> - data flows between tasks making it intuitive and easy to build tasks.</li>
-<li><strong>Composability</strong> - Functions combine like Lego. Effortless to extend for more sources and connections.</li>
-<li><strong>Components</strong> - reduce complex tasks (e.g. CSV→S3→Snowflake) to 1 re-usable task.</li>
-<li><strong>UI</strong>: Component UI for sharing DAG configuration with your DWH, Analyst or Data Sci. teams.</li>
-<li><strong>Rich Cli</strong>: Inspired by other great command line interfaces and instantly familiar. Intelligent bash/zsh completion.</li>
-<li><strong>Testable Python</strong> - automated PyTest to for more robust flows.</li>
-<li><strong>Flexible deployment</strong>:<ul>
-<li>deploy to Airflow - large reduction in effort, without breaking existing production.</li>
-<li>deploy to AWS Lambda - completely serverless</li>
-</ul>
-</li>
-</ul>
-</div>
-<input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><label for="__tabbed_1_3">Layers</label><div class="tabbed-content">
-<ul>
-<li><strong>Pristine</strong>: Pre-built (OSS) components and UI that can be shared to your team    </li>
-<li><strong>Core</strong>: Python (OSS) core <ul>
-<li>Extensible and hackable.</li>
-<li>Components allow you to share extensions widely in the Pristine layer.    </li>
-</ul>
-</li>
-</ul>
-</div>
-</div>
-<h2 id="example-dag">Example DAG</h2>
-<div class="tabbed-set" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><label for="__tabbed_2_1">Typhoon DAG (YAML)</label><div class="tabbed-content">
-<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">exchange_rates</span>
-<span class="nt">schedule_interval</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">rate(1 day)</span>
+<h2 id="new-project">New project</h2>
+<p>Inside your terminal run:</p>
+<div class="highlight"><pre><span></span><code>typhoon init hello_world
+<span class="nb">cd</span> hello_world
+</code></pre></div>
+<p>This will create a directory named hello_world that serves as an example project. As in git, when we cd into the directory it will detect that it's a Typhoon project and consider that directory the base directory for Typhoon (TYPHOON_HOME).</p>
+<h2 id="checking-status">Checking status</h2>
+<p>As in git, one of the most important commands is status. It gives us information about the state of the project as well as tips on how to fix problems or warnings.</p>
+<div class="highlight"><pre><span></span><code>typhoon status
+</code></pre></div>
+<p>Result:
+<div class="highlight"><pre><span></span><code> _________  __  __   ______   ___   ___   ______   ______   ___   __
+/________/\/_/\/_/\ /_____/\ /__/\ /__/\ /_____/\ /_____/\ /__/\ /__/\
+\__.::.__\/\ \ \ \ \\:::_ \ \\::\ \\  \ \\:::_ \ \\:::_ \ \\::\_\\  \ \
+   \::\ \   \:\_\ \ \\:(_) \ \\::\/_\ .\ \\:\ \ \ \\:\ \ \ \\:. `-\  \ \
+    \::\ \   \::::_\/ \: ___\/ \:: ___::\ \\:\ \ \ \\:\ \ \ \\:. _    \ \
+     \::\ \    \::\ \  \ \ \    \: \ \\::\ \\:\_\ \ \\:\_\ \ \\. \`-\  \ \
+      \__\/     \__\/   \_\/     \__\/ \::\/ \_____\/ \_____\/ \__\/ \__\/
 
-<span class="nt">tasks</span><span class="p">:</span>
-  <span class="nt">exchange_rate</span><span class="p">:</span>
-    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">functions.exchange_rates_api.get_history</span>
-    <span class="nt">args</span><span class="p">:</span>
-      <span class="nt">start_at</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$DAG_CONTEXT.interval_start</span>
-      <span class="nt">end_at</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$DAG_CONTEXT.interval_end</span>
+• Typhoon home defined as /Users/biellls/Desktop/typhoon/hello_world
+• Metadata database found in sqlite:/Users/biellls/Desktop/typhoon/hello_world/hello_world.db
+• Found connections in YAML that are not defined in the metadata database
+   - Connection data_lake is not set. Try typhoon connection add --conn-id data_lake --conn-env CONN_ENV
+• Found connections in DAGs that are not defined in the metadata database
+   - Connection data_lake is not set. Try typhoon connection add --conn-id data_lake --conn-env CONN_ENV
+• All variables in the DAGs are defined in the database
+• DAGs up to date
+</code></pre></div></p>
+<p>We can see that it's detecting the project home as well as a SQLite metadata database that just got created. It's also warning us that our DAG uses a connection that is not defined in the metadata database and suggesting us a fix.</p>
+<div class="admonition tip">
+<p class="admonition-title">Bash/ZSH complete</p>
+<p>To get bash complete for the project run <code>eval "$(_TYPHOON_COMPLETE=source typhoon)"</code> and add that into <code>~/.bashrc</code>. For zsh run <code>eval "$(_TYPHOON_COMPLETE=source_zsh typhoon)"</code> and add that into <code>~/.zshrc</code></p>
+</div>
+<h2 id="connections">Connections</h2>
+<h3 id="connections-yaml">Connections YAML</h3>
+<p>During development we may want to use different connections to test our DAGs. For example we may start development writing to a local file and after that is working correctly switch the connection to S3 to finish testing. We may also want to keep the production connection details somewhere handy.</p>
+<p>For this specific purpose there is a file called <code>connections.yml</code> in our project where we will define all our connection details. Furthermore, for one connection name we can define different connection environments, each with their own connection. For example in this project we will write data using a connection called <code>data_lake</code> which has two connection environments, <code>local</code> which writes to a local file and <code>test</code> which writes to S3. It is possible to use them interchangeably since they both implement the same interface: <code>FileSystemHook</code>.</p>
+<p><strong>connections.yml:</strong>
+<div class="highlight"><pre><span></span><code><span class="nt">data_lake</span><span class="p">:</span>
+  <span class="nt">test</span><span class="p">:</span>
+    <span class="nt">conn_type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">s3</span>
+    <span class="nt">extra</span><span class="p">:</span>
+      <span class="nt">bucket</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">my-typhoon-test-bucket</span>
 
-  <span class="nt">write_csv</span><span class="p">:</span>
-    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">exchange_rate</span>
+  <span class="nt">local</span><span class="p">:</span>
+    <span class="nt">conn_type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">local_storage</span>
+    <span class="nt">extra</span><span class="p">:</span>
+      <span class="nt">base_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/tmp/data_lake/</span>
+</code></pre></div></p>
+<div class="admonition note">
+<p class="admonition-title">connections.yml is not versioned</p>
+<p>The <code>connections.yml</code> file may contain passwords so it should never be versioned. That is why it's included in the <code>.gitignore</code> file for projects generated with the CLI.</p>
+</div>
+<h3 id="adding-the-connection">Adding the connection</h3>
+<p>Following the advice we got from the <code>typhoon status command</code> we will now add the connection to the metadata database. We will add the local data_lake connection with the command:</p>
+<div class="highlight"><pre><span></span><code>typhoon connection add --conn-id data_lake --conn-env <span class="nb">local</span>
+<span class="c1"># Check that it was added</span>
+typhoon connection ls -l
+</code></pre></div>
+<p>If we run the status command again we will see that everything is ok in our project now:</p>
+<div class="highlight"><pre><span></span><code>typhoon status
+</code></pre></div>
+<div class="highlight"><pre><span></span><code> _________  __  __   ______   ___   ___   ______   ______   ___   __
+/________/\/_/\/_/\ /_____/\ /__/\ /__/\ /_____/\ /_____/\ /__/\ /__/\
+\__.::.__\/\ \ \ \ \\:::_ \ \\::\ \\  \ \\:::_ \ \\:::_ \ \\::\_\\  \ \
+   \::\ \   \:\_\ \ \\:(_) \ \\::\/_\ .\ \\:\ \ \ \\:\ \ \ \\:. `-\  \ \
+    \::\ \   \::::_\/ \: ___\/ \:: ___::\ \\:\ \ \ \\:\ \ \ \\:. _    \ \
+     \::\ \    \::\ \  \ \ \    \: \ \\::\ \\:\_\ \ \\:\_\ \ \\. \`-\  \ \
+      \__\/     \__\/   \_\/     \__\/ \::\/ \_____\/ \_____\/ \__\/ \__\/
+
+• Typhoon home defined as /Users/biellls/Desktop/typhoon/hello_world
+• Metadata database found in sqlite:/Users/biellls/Desktop/typhoon/hello_world/hello_world.db
+• All connections in YAML are defined in the database
+• All connections in the DAGs are defined in the database
+• All variables in the DAGs are defined in the database
+• DAGs up to date
+</code></pre></div>
+<div class="admonition tip">
+<p class="admonition-title">Use bash complete</p>
+<p>Typhoon CLI has intelligent completion for a lot of commands and arguments so make sure to hit TAB whenever you want some help. It can suggest connection IDs and connection environments from the <code>connections.yml</code> file.</p>
+</div>
+<h2 id="dag">DAG</h2>
+<h3 id="dag-code">DAG code</h3>
+<p>We can check an example DAG in <code>dags/hello_world.yml</code>. You can also check it with the CLI by running <code>typhoon dag definition --dag-name hello_world</code>.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>To get some editor completion and hints you can configure the JSON schema in <code>dag_schema.json</code> as the schema for the DAG YAML file. This can be done in VS Code with the <a href="https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml">Red Hat YAML extension</a> or in <a href="https://www.jetbrains.com/help/pycharm/json.html">PyCharm natively</a>.</p>
+</div>
+<div class="highlight"><pre><span></span><code><span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">hello_world</span>
+<span class="nt">schedule_interval</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">rate(10 minutes)</span>   <span class="c1"># Can also be a cron expression or a string such as &quot;@daily&quot;</span>
+
+<span class="nt">nodes</span><span class="p">:</span>
+  <span class="nt">send_data</span><span class="p">:</span>
+    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.flow_control.branch</span>   <span class="c1"># Yields a batch for each item in branches</span>
+    <span class="nt">config</span><span class="p">:</span>
+      <span class="nt">branches</span><span class="p">:</span>
+        <span class="p p-Indicator">-</span> <span class="p p-Indicator">[</span><span class="s">&#39;users.txt&#39;</span><span class="p p-Indicator">,</span> <span class="s">&#39;John,</span><span class="nv"> </span><span class="s">Amy,</span><span class="nv"> </span><span class="s">Adam,</span><span class="nv"> </span><span class="s">Jane&#39;</span><span class="p p-Indicator">]</span>
+        <span class="p p-Indicator">-</span> <span class="p p-Indicator">[</span><span class="s">&#39;animals.txt&#39;</span><span class="p p-Indicator">,</span> <span class="s">&#39;dog,</span><span class="nv"> </span><span class="s">cat,</span><span class="nv"> </span><span class="s">mouse,</span><span class="nv"> </span><span class="s">elephant,</span><span class="nv"> </span><span class="s">giraffe&#39;</span><span class="p p-Indicator">]</span>
+        <span class="p p-Indicator">-</span> <span class="p p-Indicator">[</span><span class="s">&#39;fruits.csv&#39;</span><span class="p p-Indicator">,</span> <span class="s">&#39;apple,pear,apricot&#39;</span><span class="p p-Indicator">]</span>
+
+  <span class="nt">write_data</span><span class="p">:</span>
     <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.filesystem.write_data</span>
-    <span class="nt">args</span><span class="p">:</span>
-      <span class="nt">hook</span><span class="p">:</span> <span class="kt">!Hook</span> <span class="l l-Scalar l-Scalar-Plain">echo</span>
-      <span class="nt">data</span><span class="p">:</span> <span class="kt">!MultiStep</span>
-        <span class="p p-Indicator">-</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">transformations.xr.flatten_response($BATCH)</span>
-        <span class="p p-Indicator">-</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.data.dicts_to_csv($1, delimiter=&#39;|&#39;)</span>
-      <span class="nt">path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">xr_data.csv</span>
+    <span class="nt">config</span><span class="p">:</span>
+      <span class="nt">conn_id</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">$HOOK.data_lake</span>
+
+
+<span class="nt">edges</span><span class="p">:</span>
+  <span class="nt">e1</span><span class="p">:</span>
+    <span class="nt">source</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">send_data</span>
+    <span class="nt">adapter</span><span class="p">:</span>
+      <span class="nt">data =&gt; APPLY</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">transformations.data.to_bytes_buffer($BATCH[1])</span>
+      <span class="nt">path =&gt; APPLY</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">f&#39;/store/{$BATCH[0]}&#39;</span>
+    <span class="nt">destination</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">write_data</span>
 </code></pre></div>
-</td></tr></table>
+<p>This DAG has three branches, each with a file name and a string and for each branch it will write the string data into that file</p>
+<div class="admonition info">
+<p class="admonition-title">Skim the code</p>
+<p>Don't get caught up on the details, we will explain how to create your own DAGs in the following section.</p>
 </div>
-<input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><label for="__tabbed_2_2">Airflow DAG (python)</label><div class="tabbed-content">
-<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29
-30
-31
-32
-33
-34
-35
-36
-37
-38
-39
-40
-41
-42
-43
-44
-45
-46
-47
-48
-49
-50
-51
-52
-53
-54
-55
-56
-57
-58
-59
-60
-61
-62</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">datetime</span>
-
-<span class="kn">import</span> <span class="nn">typhoon.contrib.functions</span> <span class="k">as</span> <span class="nn">typhoon_functions</span>   <span class="c1"># for a fair comparison</span>
-<span class="kn">import</span> <span class="nn">typhoon.contrib.transformations</span> <span class="k">as</span> <span class="nn">typhoon_transformations</span>
-<span class="kn">from</span> <span class="nn">airflow</span> <span class="kn">import</span> <span class="n">DAG</span>
-<span class="kn">from</span> <span class="nn">airflow.hooks.base_hook</span> <span class="kn">import</span> <span class="n">BaseHook</span>
-<span class="kn">from</span> <span class="nn">airflow.operators.python_operator</span> <span class="kn">import</span> <span class="n">PythonOperator</span>
-
-<span class="kn">import</span> <span class="nn">transformations.xr</span>
-<span class="kn">from</span> <span class="nn">functions</span> <span class="kn">import</span> <span class="n">exchange_rates_api</span>
-<span class="kn">from</span> <span class="nn">out.new_people.typhoon.contrib.hooks.filesystem_hooks</span> <span class="kn">import</span> <span class="n">LocalStorageHook</span>
-
-<span class="k">def</span> <span class="nf">exchange_rate</span><span class="p">(</span><span class="n">base</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">context</span><span class="p">):</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">exchange_rates_api</span><span class="o">.</span><span class="n">get_history</span><span class="p">(</span>
-        <span class="n">start_at</span><span class="o">=</span><span class="n">context</span><span class="p">[</span><span class="s1">&#39;execution_date&#39;</span><span class="p">],</span>
-        <span class="n">end_at</span><span class="o">=</span><span class="n">context</span><span class="p">[</span><span class="s1">&#39;next_execution_date&#39;</span><span class="p">],</span>
-        <span class="n">base</span><span class="o">=</span><span class="n">base</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">context</span><span class="p">[</span><span class="s1">&#39;ti&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">xcom_push</span><span class="p">(</span><span class="s1">&#39;result&#39;</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">result</span><span class="p">))</span>
-
-<span class="k">def</span> <span class="nf">write_csv</span><span class="p">(</span><span class="n">source_task_id</span><span class="p">,</span> <span class="o">**</span><span class="n">context</span><span class="p">):</span>
-    <span class="n">conn_params</span> <span class="o">=</span> <span class="n">BaseHook</span><span class="o">.</span><span class="n">get_connection</span><span class="p">(</span><span class="s1">&#39;data_lake&#39;</span><span class="p">)</span>
-    <span class="n">hook</span> <span class="o">=</span> <span class="n">LocalStorageHook</span><span class="p">(</span><span class="n">conn_params</span><span class="p">)</span>       <span class="c1"># Note how we&#39;re hardcoding the class</span>
-
-    <span class="n">batches</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s1">&#39;ti&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">xcom_pull</span><span class="p">(</span><span class="n">task_ids</span><span class="o">=</span><span class="n">source_task_id</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;result&#39;</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">batches</span><span class="p">:</span>
-        <span class="n">flattened</span> <span class="o">=</span> <span class="n">transformations</span><span class="o">.</span><span class="n">xr</span><span class="o">.</span><span class="n">flatten_response</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">typhoon_transformations</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">dicts_to_csv</span><span class="p">(</span><span class="n">flattened</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;|&#39;</span><span class="p">)</span>
-        <span class="n">path</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s1">&#39;ds&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;_xr_data.csv&#39;</span>
-        <span class="n">typhoon_functions</span><span class="o">.</span><span class="n">filesystem</span><span class="o">.</span><span class="n">write_data</span><span class="p">(</span>
-            <span class="n">hook</span><span class="o">=</span><span class="n">hook</span><span class="p">,</span>
-            <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
-            <span class="n">path</span><span class="o">=</span><span class="n">path</span>
-        <span class="p">)</span>
-
-<span class="k">with</span> <span class="n">DAG</span><span class="p">(</span>
-    <span class="n">dag_id</span><span class="o">=</span><span class="s1">&#39;exchange_rates&#39;</span><span class="p">,</span>
-    <span class="n">default_args</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;owner&#39;</span><span class="p">:</span> <span class="s1">&#39;typhoon&#39;</span><span class="p">},</span>
-    <span class="n">schedule_interval</span><span class="o">=</span><span class="s1">&#39;*/1 * * * *&#39;</span><span class="p">,</span>
-    <span class="n">start_date</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2021</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">21</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
-<span class="p">)</span> <span class="k">as</span> <span class="n">dag</span><span class="p">:</span>
-    <span class="k">for</span> <span class="n">base</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;EUR&#39;</span><span class="p">,</span> <span class="s1">&#39;USD&#39;</span><span class="p">,</span> <span class="s1">&#39;AUD&#39;</span><span class="p">]:</span>
-        <span class="n">exchange_rate_task_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;exchange_rate_</span><span class="si">{</span><span class="n">base</span><span class="si">}</span><span class="s1">&#39;</span>
-        <span class="n">exchange_rate_task</span> <span class="o">=</span> <span class="n">PythonOperator</span><span class="p">(</span>
-            <span class="n">task_id</span><span class="o">=</span><span class="n">exchange_rate_task_id</span><span class="p">,</span>
-            <span class="n">python_callable</span><span class="o">=</span><span class="n">exchange_rate</span><span class="p">,</span>
-            <span class="n">op_kwargs</span><span class="o">=</span><span class="p">{</span>
-                <span class="s1">&#39;base&#39;</span><span class="p">:</span> <span class="n">base</span>
-            <span class="p">},</span>
-            <span class="n">provide_context</span><span class="o">=</span><span class="kc">True</span>
-        <span class="p">)</span>
-        <span class="n">dag</span> <span class="o">&gt;&gt;</span> <span class="n">exchange_rate_task</span>
-
-        <span class="n">write_csv_task</span> <span class="o">=</span> <span class="n">PythonOperator</span><span class="p">(</span>
-            <span class="n">task_id</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;write_csv_</span><span class="si">{</span><span class="n">base</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
-            <span class="n">python_callable</span><span class="o">=</span><span class="n">write_csv</span><span class="p">,</span>
-            <span class="n">op_kwargs</span><span class="o">=</span><span class="p">{</span>
-                <span class="s1">&#39;source_task_id&#39;</span><span class="p">:</span> <span class="n">exchange_rate_task_id</span>
-            <span class="p">},</span>
-            <span class="n">provide_context</span><span class="o">=</span><span class="kc">True</span>
-        <span class="p">)</span>
-        <span class="n">exchange_rate_task</span> <span class="o">&gt;&gt;</span> <span class="n">write_csv_task</span>
+<h3 id="running-the-dag">Running the DAG</h3>
+<p>We can run this with:</p>
+<div class="highlight"><pre><span></span><code>typhoon dag run --dag-name hello_world
 </code></pre></div>
-</td></tr></table>
-</div>
-</div>
-<p>Above is an example of two tasks:</p>
-<ol>
-<li>Extracting the exchange rates from an API call function for a 1-day range</li>
-<li>Writing CSV to a filesystem. This example actually echos it;  to put it to S3 change the Hook connection name. Within the edge between task 1 and 2 it transforms the data:<ol>
-<li>It flattens the data </li>
-<li>Then transforms it from a dict to a pipe delimited CSV.</li>
-</ol>
-</li>
-</ol>
-<h2 id="using-with-airflow">Using with Airflow</h2>
-<p>Building the above DAG using <code>typhoon dag build --all</code>. </p>
-<p>Airflow UI will then show:<br />
-<img src="https://user-images.githubusercontent.com/2353804/112546625-f1cad480-8db9-11eb-8dfb-11e2c8d18a48.jpeg" width="300"></p>
-<h2 id="component-ui">Component UI</h2>
-<p>Put in screenshot of UI</p>
+<p>We can check the files that have been written to <code>/tmp/data_lake/store/</code> where <code>/tmp/data_lake/</code> was the base directory defined for our connection (go back to <code>connections.yml</code> to check) and the DAG wrote to <code>/store/[FILE_NAME]</code>.</p>
+<p>The file name was the first item of the list in each batch (eg: the first batch is the list <code>['users.txt', 'John, Amy, Adam, Jane']</code>) and the second item of the list are the contents that were written to that file.</p>
                 
               
               
@@ -1078,26 +969,6 @@
       
         
 <footer class="md-footer">
-  
-    <nav class="md-footer__inner md-grid" aria-label="Footer">
-      
-      
-        
-        <a href="getting-started/installation.html" class="md-footer__link md-footer__link--next" aria-label="Next: Installation" rel="next">
-          <div class="md-footer__title">
-            <div class="md-ellipsis">
-              <span class="md-footer__direction">
-                Next
-              </span>
-              Installation
-            </div>
-          </div>
-          <div class="md-footer__button md-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
-          </div>
-        </a>
-      
-    </nav>
   
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">

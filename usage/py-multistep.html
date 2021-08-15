@@ -14,7 +14,7 @@
     
     
       
-        <title>Adding connections - Typhoon Orchestrator</title>
+        <title>!Py & !Multistep - Typhoon Orchestrator</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#connections" class="md-skip">
+        <a href="#inline-python" class="md-skip">
           Skip to content
         </a>
       
@@ -107,7 +107,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Adding connections
+              !Py & !Multistep
             
           </span>
         </div>
@@ -187,15 +187,13 @@
         
   
   
-    
-  
 
 
   
   
   
     <li class="md-tabs__item">
-      <a href="installation.html" class="md-tabs__link md-tabs__link--active">
+      <a href="../getting-started/installation.html" class="md-tabs__link">
         Getting Started
       </a>
     </li>
@@ -205,13 +203,15 @@
         
   
   
+    
+  
 
 
   
   
   
     <li class="md-tabs__item">
-      <a href="../usage/dag-context.html" class="md-tabs__link">
+      <a href="dag-context.html" class="md-tabs__link md-tabs__link--active">
         Usage
       </a>
     </li>
@@ -322,14 +322,12 @@
 
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" checked>
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
       
       <label class="md-nav__link" for="__nav_2">
         Getting Started
@@ -347,8 +345,148 @@
   
   
     <li class="md-nav__item">
-      <a href="installation.html" class="md-nav__link">
+      <a href="../getting-started/installation.html" class="md-nav__link">
         Installation
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/connections.html" class="md-nav__link">
+        Adding connections
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/creating-a-dag.html" class="md-nav__link">
+        Creating your DAG
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/typhoon-cli.html" class="md-nav__link">
+        Typhoon Cli
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/deployment.html" class="md-nav__link">
+        Deployment
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/using-components.html" class="md-nav__link">
+        Using Components
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/using-component-ui.html" class="md-nav__link">
+        UI configurator
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/creating-components.html" class="md-nav__link">
+        Creating Components
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/creating-hooks.html" class="md-nav__link">
+        New Hooks (connections)
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" checked>
+      
+      <label class="md-nav__link" for="__nav_3">
+        Usage
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Usage" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Usage
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="dag-context.html" class="md-nav__link">
+        Dag Context
       </a>
     </li>
   
@@ -369,12 +507,12 @@
       
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
-          Adding connections
+          !Py & !Multistep
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <a href="connections.html" class="md-nav__link md-nav__link--active">
-        Adding connections
+      <a href="py-multistep.html" class="md-nav__link md-nav__link--active">
+        !Py & !Multistep
       </a>
       
         
@@ -392,28 +530,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#connections-yaml" class="md-nav__link">
-    Connections YAML
+  <a href="#py" class="md-nav__link">
+    !Py
   </a>
-  
-    <nav class="md-nav" aria-label="Connections YAML">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#adding-the-connection" class="md-nav__link">
-    Adding the connection
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#connections-types-hooks" class="md-nav__link">
-    Connections types (Hooks)
+  <a href="#multistep" class="md-nav__link">
+    !Multistep
   </a>
   
 </li>
@@ -431,145 +556,7 @@
   
   
     <li class="md-nav__item">
-      <a href="creating-a-dag.html" class="md-nav__link">
-        Creating your DAG
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="typhoon-cli.html" class="md-nav__link">
-        Typhoon Cli
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="deployment.html" class="md-nav__link">
-        Deployment
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="using-components.html" class="md-nav__link">
-        Using Components
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="using-component-ui.html" class="md-nav__link">
-        UI configurator
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="creating-components.html" class="md-nav__link">
-        Creating Components
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="creating-hooks.html" class="md-nav__link">
-        New Hooks (connections)
-      </a>
-    </li>
-  
-
-          
-        </ul>
-      </nav>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-      
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
-      
-      <label class="md-nav__link" for="__nav_3">
-        Usage
-        <span class="md-nav__icon md-icon"></span>
-      </label>
-      <nav class="md-nav" aria-label="Usage" data-md-level="1">
-        <label class="md-nav__title" for="__nav_3">
-          <span class="md-nav__icon md-icon"></span>
-          Usage
-        </label>
-        <ul class="md-nav__list" data-md-scrollfix>
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../usage/dag-context.html" class="md-nav__link">
-        Dag Context
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../usage/py-multistep.html" class="md-nav__link">
-        !Py & !Multistep
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../usage/task-flow-control.html" class="md-nav__link">
+      <a href="task-flow-control.html" class="md-nav__link">
         Task flow control
       </a>
     </li>
@@ -581,7 +568,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../usage/task-testing.html" class="md-nav__link">
+      <a href="task-testing.html" class="md-nav__link">
         Task testing
       </a>
     </li>
@@ -593,7 +580,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../usage/functions.html" class="md-nav__link">
+      <a href="functions.html" class="md-nav__link">
         Functions
       </a>
     </li>
@@ -605,7 +592,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../usage/transformations.html" class="md-nav__link">
+      <a href="transformations.html" class="md-nav__link">
         Transformations
       </a>
     </li>
@@ -617,7 +604,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../usage/components.html" class="md-nav__link">
+      <a href="components.html" class="md-nav__link">
         Components
       </a>
     </li>
@@ -629,7 +616,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../usage/hooks.html" class="md-nav__link">
+      <a href="hooks.html" class="md-nav__link">
         Hooks
       </a>
     </li>
@@ -641,7 +628,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../usage/templates.md" class="md-nav__link">
+      <a href="templates.md" class="md-nav__link">
         Tempaltes
       </a>
     </li>
@@ -653,7 +640,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../usage/variables.md" class="md-nav__link">
+      <a href="variables.md" class="md-nav__link">
         Variables
       </a>
     </li>
@@ -800,28 +787,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#connections-yaml" class="md-nav__link">
-    Connections YAML
+  <a href="#py" class="md-nav__link">
+    !Py
   </a>
-  
-    <nav class="md-nav" aria-label="Connections YAML">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#adding-the-connection" class="md-nav__link">
-    Adding the connection
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#connections-types-hooks" class="md-nav__link">
-    Connections types (Hooks)
+  <a href="#multistep" class="md-nav__link">
+    !Multistep
   </a>
   
 </li>
@@ -838,67 +812,56 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/typhoon-data-org/typhoon-orchestrator/edit/master/docs/getting-started/connections.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/typhoon-data-org/typhoon-orchestrator/edit/master/docs/usage/py-multistep.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
                 
                 
-                <h1 id="connections">Connections</h1>
-<p>During development, we may want to use different connections to test our DAGs. Also, for the <strong><em>same connections we might want different details per environment</em></strong>. </p>
-<p>For example, we may start development writing to a local file and after that is working correctly switch the connection to S3 to finish testing. Finally we want to move this to the production S3 bucket in a seamless way. </p>
-<ul>
-<li>data_lake workflow<ul>
-<li>local -&gt; disk</li>
-<li>dev -&gt; dev S3 bucket</li>
-<li>prod -&gt; production S3 bucket</li>
-</ul>
-</li>
-</ul>
-<p>For this specific purpose there is a file called <strong><code>connections.yml</code></strong>. This is where we will define all our connection details for our project for all environments.</p>
-<h2 id="connections-yaml">Connections YAML</h2>
-<p>For example in this project we will write data using a connection called <code>data_lake</code> which has two connection environments, <code>local</code> which writes to a local file and <code>test</code> which writes to S3. It is possible to use them interchangeably since they both implement the same interface: <code>FileSystemHook</code>.</p>
-<p><strong>connections.yml:</strong>
-<div class="highlight"><pre><span></span><code><span class="nt">data_lake</span><span class="p">:</span>
-
-  <span class="nt">local</span><span class="p">:</span>
-    <span class="nt">conn_type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">local_storage</span>
-    <span class="nt">extra</span><span class="p">:</span>
-      <span class="nt">base_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/tmp/data_lake/</span>
-
-  <span class="nt">test</span><span class="p">:</span>
-    <span class="nt">conn_type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">s3</span>
-    <span class="nt">extra</span><span class="p">:</span>
-      <span class="nt">bucket</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">my-typhoon-test-bucket</span>
+                <h1 id="inline-python">Inline python</h1>
+<p>Typhoon lets you run inline pytnon either in one line <code>!Py print('Normal python here')</code> or in multiple lines with <code>!Multistep</code>. </p>
+<h2 id="py">!Py</h2>
+<p>This lets you evaluate any python quickly, for example to use pandas or a transformation function.</p>
+<p>For example here we are using it to pass the first element of the $BATCH and also to use teh path_mapping regex transformation.   </p>
+<div class="highlight"><pre><span></span><code>  <span class="nt">write_df_to_sql</span><span class="p">:</span>
+    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">read_csv_to_df</span>
+    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">functions.pandas_data_helpers.df_write</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">hook</span><span class="p">:</span> <span class="kt">!Hook</span> <span class="l l-Scalar l-Scalar-Plain">transaction_db</span>
+      <span class="nt">df</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$BATCH[0]</span>
+      <span class="nt">table_name</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">transformations.path_mapping.to_regex_name($BATCH[1])</span>
+</code></pre></div>
+<h2 id="multistep">!Multistep</h2>
+<p>Sometimes you want to put a few lines in the DAG without making a function for it. You can create powerfull transformations in series in a nice readable way.</p>
+<p>In this example we are evaluating each !Py line in the YAML list and referencing the result of the 1st in the second with <code>$1</code> (subsequent lines are <code>$2</code>, <code>$3</code> etc.). </p>
+<p>The result is flattening the response $BATCH data and then outputting as csv to the path that is prefixed with the start timestamp.  </p>
+<div class="highlight"><pre><span></span><code>  <span class="nt">write_csv</span><span class="p">:</span>
+    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">exchange_rate</span>
+    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.filesystem.write_data</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">hook</span><span class="p">:</span> <span class="kt">!Hook</span> <span class="l l-Scalar l-Scalar-Plain">echo</span>
+      <span class="nt">data</span><span class="p">:</span> <span class="kt">!MultiStep</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">transformations.xr.flatten_response($BATCH)</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.data.dicts_to_csv($1, delimiter=&#39;|&#39;)</span>
+      <span class="nt">path</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">f&#39;{$DAG_CONTEXT.interval_start.isoformat()}_xr_data.csv&#39;</span>
+</code></pre></div>
+<p>Another example... 
+<div class="highlight"><pre><span></span><code>  <span class="nt">write_data</span><span class="p">:</span>
+    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">send_data</span>
+    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.filesystem.write_data</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">hook</span><span class="p">:</span> <span class="kt">!Hook</span> <span class="l l-Scalar l-Scalar-Plain">data_lake</span>
+      <span class="nt">path</span><span class="p">:</span> <span class="kt">!MultiStep</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$BATCH[&#39;filename&#39;]</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$DAG_CONTEXT.interval_end</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">f&#39;/store/{$2}/{$1}&#39;</span>
+      <span class="nt">data</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$BATCH[&#39;contents&#39;]</span>
+      <span class="nt">create_intermediate_dirs</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
 </code></pre></div></p>
-<div class="admonition note">
-<p class="admonition-title">connections.yml is not versioned</p>
-<p>The <code>connections.yml</code> file may contain passwords so it should never be versioned. That is why it's included in the <code>.gitignore</code> file for projects generated with the CLI.</p>
-</div>
-<h3 id="adding-the-connection">Adding the connection</h3>
-<p>Following the advice we got from the <code>typhoon status</code> command we will now add the connection to the metadata database. We will add the local data_lake connection with the command:</p>
-<div class="highlight"><pre><span></span><code>typhoon connection add --conn-id data_lake --conn-env <span class="nb">local</span>
-<span class="c1"># Check that it was added</span>
-typhoon connection ls -l
-
-<span class="c1"># add the echo one too for completeness</span>
-typhoon connection add --conn-id <span class="nb">echo</span> --conn-env <span class="nb">local</span>
-</code></pre></div>
-<p>If we run the status command again we will see that everything is ok in our project now:</p>
-<p><div class="highlight"><pre><span></span><code>typhoon status
-</code></pre></div>
-<img src="../img/Screenshot%202021-07-17%20203022.png"></p>
-<h2 id="connections-types-hooks">Connections types (Hooks)</h2>
-<p>Typhoon hooks represent the same thing as <a href="https://airflow.incubator.apache.org/docs/apache-airflow/2.0.0/concepts.html?highlight=hooks">airlflow hooks</a>, so if you are familiar it's an easy concept. They are the interface to external platforms and databases. You use the <code>connections.yml</code> to choose which hook to use and configure it. You can extend typhoon to connect to new platforms by adding Hooks. It comes with many popular ones already.</p>
-<p>Hooks available:</p>
-<ul>
-<li><strong>File System</strong> - local, S3, GC storage, Ftp </li>
-<li><strong>DB API</strong> - most DBs can use this, e.g. MySql, MSSQL, Postgres, Redshift</li>
-<li><strong>Snowflake</strong> specific flavour
-= <strong>SQLAlchemy</strong> - most DBs can use this</li>
-<li><strong>AWS</strong> - AWS Session, DynamoDB</li>
-<li><strong>Singer</strong> - You can use any singer taps in your DAG as a task.  <a href="https://www.singer.io/#taps">singer can connect to</a> </li>
-</ul>
-<p>Any you can add/extend your own, of course.</p>
+<ol>
+<li><code>!Py $BATCH['filename']</code>  will evaluate to "users.txt' (for example). </li>
+<li><code>!Py $DAG_CONTEXT.interval_end</code> will evaluate to the timestamp of the DAG run. This is a built in context variable. </li>
+<li><code>!Py f'/store/{$2}/{$1}'</code> finally this references the first two lines (1, 2) and uses a normal <a href="https://realpython.com/python-f-strings/">Python f-string</a> to make the path. Evaluating to '/store/ 2021-03-13T12:00:00/users.txt'</li>
+</ol>
                 
               
               
@@ -918,7 +881,7 @@ typhoon connection add --conn-id <span class="nb">echo</span> --conn-env <span c
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
         
-        <a href="installation.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Installation" rel="prev">
+        <a href="dag-context.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Dag Context" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -927,20 +890,20 @@ typhoon connection add --conn-id <span class="nb">echo</span> --conn-env <span c
               <span class="md-footer__direction">
                 Previous
               </span>
-              Installation
+              Dag Context
             </div>
           </div>
         </a>
       
       
         
-        <a href="creating-a-dag.html" class="md-footer__link md-footer__link--next" aria-label="Next: Creating your DAG" rel="next">
+        <a href="task-flow-control.html" class="md-footer__link md-footer__link--next" aria-label="Next: Task flow control" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
                 Next
               </span>
-              Creating your DAG
+              Task flow control
             </div>
           </div>
           <div class="md-footer__button md-icon">
