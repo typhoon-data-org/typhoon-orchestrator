@@ -33,7 +33,9 @@ nav:
     - New Hooks (connections): 'getting-started/creating-hooks.md'
   - Usage:
     - Dag Context: 'usage/dag-context.md'
-    - Tasks: 'usage/tasks.md'
+    - "!Py & !Multistep": 'usage/py-multistep.md'
+    - Task flow control: 'usage/task-flow-control.md'
+    - Task testing: 'usage/task-testing.md'
     - Functions: 'usage/functions.md'
     - Transformations: 'usage/transformations.md'
     - Components: 'usage/components.md'
