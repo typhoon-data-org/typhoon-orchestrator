@@ -20,7 +20,8 @@ Typhoon is a Data Worfklow tool (ETL / ELT pipelines) for composing **Airflow** 
     - **Components** - reduce complex tasks (e.g. CSV→S3→Snowflake) to 1 re-usable task.
     - **UI**: Component UI for sharing DAG configuration with your DWH, Analyst or Data Sci. teams.
     - **Rich Cli**: Inspired by other great command line interfaces and instantly familiar. Intelligent bash/zsh completion.
-    - **Testable Python** - automated PyTest to for more robust flows.
+    - **Testable Tasks** - automate DAG task tests.
+    - **Testable Python** - test functions or full DAGs with PyTest.
     - **Flexible deployment**:
         - deploy to Airflow - large reduction in effort, without breaking existing production.
         - deploy to AWS Lambda - completely serverless
