@@ -40,8 +40,7 @@ nav:
     - Transformations: 'usage/transformations.md'
     - Components: 'usage/components.md'
     - Hooks: 'usage/hooks.md'
-    - Tempaltes: 'usage/templates.md'
-    - Variables: 'usage/variables.md'
+    - Variables & Templates : 'usage/templates.md'
   - Example Walkthroughs:
       - Hello World: 'examples/hello-world.md'
       - MySql to Snowflake: 'examples/mysql-to-snowflake.md'
