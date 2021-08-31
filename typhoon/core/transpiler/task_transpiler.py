@@ -1,9 +1,43 @@
 from dataclasses import dataclass
+from typing import Dict
 
-from typhoon.core.dags import DAGDefinitionV2
+from typhoon.core.dags import DAGDefinitionV2, TaskDefinition
 from typhoon.core.templated import Templated
 from typhoon.core.transpiler.transpiler_helpers import expand_function, get_transformations_modules, \
-    get_typhoon_transformations_modules, get_functions_modules, get_typhoon_functions_modules, camel_case, TaskArgs
+    get_typhoon_transformations_modules, get_functions_modules, get_typhoon_functions_modules, camel_case, TaskArgs, \
+    extract_imports, ImportsTemplate
+
+
+@dataclass
+class TaskTemplate(Templated):
+    template = '''
+    class {{ task_id | camel_case }}Task(TaskInterface):
+        def __init__(self, broker: BrokerInterface, parent_component: Optional[ComponentInterface]=None):
+            self.broker = broker
+            self.task_id = '{{ task_id }}'
+            self.function = {{ task.function | expand_function }}
+            self.destinations = []
+            self.parent_component = parent_component
+    
+        def get_args(self, dag_context: DagContext, source: Optional[str], batch_num: int, batch: Any) -> dict:
+            {% if inside_component %}
+            component_args = self.parent_component.args_class(source, batch_num, batch)
+            {% endif %}
+            args = {}
+            {{ task.args | render_args | indent(8, False) }}
+            return args
+    '''
+    task_id: str
+    task: TaskDefinition
+    inside_component: bool = False
+    _filters = [
+        expand_function,
+        camel_case,
+    ]
+
+    @staticmethod
+    def render_args(args: dict) -> str:
+        return TaskArgs(args).render()
 
 
 @dataclass
@@ -29,20 +63,7 @@ class TaskFile(Templated):
     from typhoon.core.dags import DagContext
     
     {% for task_id, task in dag.tasks.items() %}
-    class {{ task_id | camel_case }}Task(TaskInterface):
-        def __init__(self, dag_context: DagContext, broker: BrokerInterface):
-            self.dag_context = dag_context
-            self.broker = broker
-            self.task_id = '{{ task_id }}'
-            self.function = {{ task.function | expand_function }}
-            self.destinations = []
-            self.parent_component = None
-    
-        def get_args(self, source: Optional[str], batch_num: int, batch: Any) -> dict:
-            args = []
-            {{ task.args | render_args }}
-            return args
-    
+    {{ task_id | render_task(task) }}
     {% endfor %}
     '''
     dag: DAGDefinitionV2
@@ -51,46 +72,36 @@ class TaskFile(Templated):
         get_typhoon_transformations_modules,
         get_functions_modules,
         get_typhoon_functions_modules,
-        expand_function,
-        camel_case,
     ]
 
     @staticmethod
-    def render_args(args: dict) -> str:
-        return TaskArgs(args).render()
+    def render_task(task_id: str, task: TaskDefinition) -> str:
+        return TaskTemplate(task_id=task_id, task=task).render()
 
 
-if __name__ == '__main__':
-    import yaml
-    from typhoon.core.dags import DAGDefinitionV2, add_yaml_constructors
+def render_task(task_id: str, task: TaskDefinition, inside_component) -> str:
+    return TaskTemplate(task_id=task_id, task=task, inside_component=inside_component).render()
 
-    add_yaml_constructors()
-    dag_definition = DAGDefinitionV2.parse_obj(yaml.load("""
-    name: test
-    schedule_interval: rate(10 minutes)
 
-    tasks:
-      tables:
-        function: typhoon.flow_control.branch
-        args:
-          branches:
-            - [foo, 1]
-            - [bar, 2]
-            - [baz, 3]
+@dataclass
+class TasksFile(Templated):
+    template = '''
+    from typing import Any, Optional
+    
+    from typhoon.core.runtime import TaskInterface, BrokerInterface, ComponentInterface
+    from typhoon.core import DagContext
+    
+    {{ render_imports }}
+    {% for task_id, task in tasks.items() %}
+    
+    {{ task_id | render_task(task, inside_component=False) }}
+    
+    {% endfor %}
+    '''
+    tasks: Dict[str, TaskDefinition]
+    _filters = [render_task]
 
-      write_table:
-        input: tables
-        function: typhoon.echo.tables
-        args:
-          hook: !Py $HOOK.data_lake
-          table: !Py $BATCH[0]
-          meta: write_tables
-          data: !MultiStep
-            - !Py $BATCH[1] + 2
-            - !Py transformations.data.to_bytes_buffer
-            -
-              a: 10
-              b: !Py 10 + $BATCH[1]
-            - !Py $1 + $2['b']
-    """, yaml.FullLoader))
-    print(TaskFile(dag=dag_definition))
+    @property
+    def render_imports(self) -> str:
+        imports = extract_imports(self.tasks)
+        return ImportsTemplate(imports).render()

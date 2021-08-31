@@ -1,0 +1,99 @@
+input:
+  name: if
+
+  args:
+    condition: Callable[[T], bool]
+    data: T
+
+  tasks:
+    then:
+      input: $COMPONENT_INPUT
+      function: typhoon.flow_control.filter
+      args:
+        filter_func: !Py $ARG.condition
+        data: !Py $ARG.data
+
+    else:
+      input: $COMPONENT_INPUT
+      function: typhoon.flow_control.filter
+      args:
+        filter_func: !Py "lambda x: not $ARG.condition(x)"
+        data: !Py $ARG.data
+
+  output:
+    - then
+    - else
+expects: |
+  # Component name: if
+  from types import SimpleNamespace
+  from typing import Optional, Any, Type
+
+  from typhoon.core import DagContext
+  from typhoon.contrib.hooks.hook_factory import get_hook
+  from typhoon.runtime import ComponentInterface, BrokerInterface, TaskInterface, ComponentArgs
+
+  import typhoon.contrib.functions.flow_control as typhoon_functions_flow_control
+
+
+  class IfComponent(ComponentInterface):
+      def __init__(
+          self,
+          task_id: str,
+          args_class: Type[ComponentArgs],
+          sync_broker: BrokerInterface,
+          async_broker: BrokerInterface,
+      ):
+          self.task_id = task_id
+          self.args_class = args_class
+
+          # Tasks
+          then_task = ThenTask(
+              async_broker,
+              parent_component=self,
+          )
+
+          else_task = ElseTask(
+              async_broker,
+              parent_component=self,
+          )
+
+          self.component_sources = [
+              then_task,
+              else_task,
+          ]
+          self.output = SimpleNamespace(**{
+              'then': then_task,
+              'else': else_task,
+          })
+
+
+  class ThenTask(TaskInterface):
+      def __init__(self, broker: BrokerInterface, parent_component: Optional[ComponentInterface]=None):
+          self.broker = broker
+          self.task_id = 'then'
+          self.function = typhoon_functions_flow_control.filter
+          self.destinations = []
+          self.parent_component = parent_component
+
+      def get_args(self, dag_context: DagContext, source: Optional[str], batch_num: int, batch: Any) -> dict:
+          component_args = self.parent_component.args_class(source, batch_num, batch)
+          args = []
+          args['filter_func'] = component_args.condition
+          args['data'] = component_args.data
+          return args
+
+
+  class ElseTask(TaskInterface):
+      def __init__(self, broker: BrokerInterface, parent_component: Optional[ComponentInterface]=None):
+          self.broker = broker
+          self.task_id = 'else'
+          self.function = typhoon_functions_flow_control.filter
+          self.destinations = []
+          self.parent_component = parent_component
+
+      def get_args(self, dag_context: DagContext, source: Optional[str], batch_num: int, batch: Any) -> dict:
+          component_args = self.parent_component.args_class(source, batch_num, batch)
+          args = []
+          args['filter_func'] = lambda x: not component_args.condition(x)
+          args['data'] = component_args.data
+          return args

@@ -12,8 +12,8 @@ from typing import Optional, List
 
 import pkg_resources
 
-from typhoon.core.dags import DagDeployment, DAG
-from typhoon.core.glue import load_dags, transpile_dag_and_store
+from typhoon.core.dags import DagDeployment, DAG, DAGDefinitionV2
+from typhoon.core.glue import load_dags, transpile_dag_and_store, load_dag_definitions
 from typhoon.core.settings import Settings
 from typhoon.deployment.deploy import deploy_dag_requirements, copy_local_typhoon, copy_user_defined_code
 
@@ -117,7 +117,7 @@ def build_all_dags(remote: Optional[str], matching: Optional[str] = None) -> Lis
 
     print('Build all DAGs...')
     deployment_date = datetime.now()
-    dags = load_dags(ignore_errors=True)
+    dags = load_dag_definitions(ignore_errors=True)
     deploy_sam_template([dag for dag, _ in dags], remote=remote)
     dag_files = []
     for dag, dag_file in dags:
@@ -129,10 +129,10 @@ def build_all_dags(remote: Optional[str], matching: Optional[str] = None) -> Lis
     return dag_files
 
 
-def build_dag(dag: DAG, dag_file: Path, deployment_date: datetime, remote: Optional[str]):
+def build_dag(dag: DAGDefinitionV2, dag_file: Path, deployment_date: datetime, remote: Optional[str]):
     dag = dag.dict()
     dag_folder = Settings.out_directory / dag['name']
-    transpile_dag_and_store(dag, dag_folder / f"{dag['name']}.py", debug_mode=remote is None)
+    transpile_dag_and_store(dag, dag_folder, debug_mode=remote is None)
     deploy_dag_requirements(dag, typhoon_version_is_local(), Settings.typhoon_version)
     if typhoon_version_is_local():
         print('Typhoon package is in editable mode. Copying to lambda package...')

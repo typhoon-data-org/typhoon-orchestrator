@@ -1,10 +1,11 @@
 import re
-from typing import Iterable, Union, Any, List
+from typing import Iterable, Union, List, Tuple, Dict, NamedTuple, Optional, Set
 
 from dataclasses import dataclass
+from typing_extensions import Literal
 
 from typhoon.core.components import Component
-from typhoon.core.dags import DAGDefinitionV2, MultiStep, Py
+from typhoon.core.dags import DAGDefinitionV2, MultiStep, Py, TaskDefinition
 from typhoon.core.templated import Templated
 
 
@@ -93,8 +94,8 @@ def expand_function(function: str) -> str:
     if not function.startswith('typhoon.'):
         return function
     else:
-        _, module_name, function= function.split('.')
-        return f'typhoon_function_{module_name}.{function}'
+        _, module_name, function = function.split('.')
+        return f'typhoon_functions_{module_name}.{function}'
 
 
 def camel_case(s: str) -> str:
@@ -104,10 +105,10 @@ def camel_case(s: str) -> str:
 @dataclass
 class TaskArgs(Templated):
     template = '''
-    {% for key, value in args.items %}
+    {% for key, value in args.items() %}
     {% if value | is_literal %}
     args['{{ key }}'] = {{ value | clean_simple_param }}
-    {% elif is_py %}
+    {% elif value | is_py %}
     args['{{ key }}'] = {{ value }}
     {% else %}
     {{ value }}
@@ -129,3 +130,104 @@ class TaskArgs(Templated):
         if not isinstance(x, str):
             return x
         return f'"""{x}"""' if "'" in x else f"'{x}'"
+
+
+def render_dependencies(dependencies: List[Tuple[str, str]]) -> str:
+    return DependenciesTemplate(dependencies).render()
+
+
+@dataclass
+class DependenciesTemplate(Templated):
+    template = '''
+    {% for a, b in dependencies %}
+    {{ a }}_task.set_destination({{ b }}_task)
+    {% endfor %}
+    '''
+    dependencies: List[Tuple[str, str]]
+
+
+def extract_dependencies(tasks: Dict[str, TaskDefinition]):
+    task_ids = [task_id for task_id, task in tasks.items()]
+    return [
+        (task.input, task_id)
+        for task_id, task
+        in tasks.items()
+        if task.input is not None and task.input in task_ids
+    ]
+
+
+class ImportDefinition(NamedTuple):
+    module: Optional[str]
+    type: Union[Literal['function'], Literal['component'], Literal['transformation']]
+    submodule: str
+
+
+def extract_imports(tasks: Dict[str, TaskDefinition]) -> List[ImportDefinition]:
+    imports = set()
+    for task_name, task in tasks.items():
+        if task.function:
+            parts = task.function.split('.')
+            module, submodule, _ = parts
+            imports.add(ImportDefinition(
+                module=module if module != 'functions' else None,
+                type='function',
+                submodule=submodule
+            ))
+        # Find transformations and append
+        for arg_name, item in task.args.items():
+            imports = imports.union(get_transformations_item(item))
+
+    return sorted(imports, key=lambda x: x.submodule)
+
+
+@dataclass
+class ImportsTemplate(Templated):
+    template = '''
+    {% for _import in imports %}
+    {% if _import.module == 'typhoon' %}
+    import typhoon.contrib.{{_import.type}}s.{{_import.submodule}} as typhoon_{{ _import.type }}s_{{ _import.submodule }}
+    {% elif _import.module is none %}
+    import {{ _import.type }}s.{{ _import.submodule }}
+    {% else %}
+    from {{ _import.module }}.{{ _import.submodule }} import {{ _import.type }}s_{{ _import.submodule }}
+    {% endif %}
+    {% endfor %}
+    '''
+    imports: List[ImportDefinition]
+
+
+def get_transformations_item(item) -> Set[ImportDefinition]:
+    if isinstance(item, Py) and 'transformations.' in item.value:
+        import_definitions = set()
+        typhoon_transformations = re.findall(r'typhoon\.(\w+)\.\w+', item.value)
+        for submodule in typhoon_transformations:
+            import_definitions.add(ImportDefinition(
+                module='typhoon',
+                type='transformation',
+                submodule=submodule,
+            ))
+        custom_transformations = re.findall(r'transformations\.(\w+)\.\w+', item.value)
+        for submodule in custom_transformations:
+            import_definitions.add(ImportDefinition(
+                module=None,
+                type='transformation',
+                submodule=submodule,
+            ))
+        return import_definitions
+    elif isinstance(item, MultiStep):
+        import_definitions = set()
+        for x in item.value:
+            import_definitions = import_definitions.union(get_transformations_item(x))
+        return import_definitions
+    elif isinstance(item, list):
+        import_definitions = set()
+        for x in item:
+            import_definitions = import_definitions.union(get_transformations_item(x))
+        return import_definitions
+    elif isinstance(item, dict):
+        import_definitions = set()
+        for k, v in item.items():
+            import_definitions = import_definitions.union(get_transformations_item(v))
+        return import_definitions
+    else:
+        return set()

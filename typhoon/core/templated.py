@@ -32,16 +32,19 @@ class Templated(Protocol):
 
     @property
     def context(self):
-        args = {
+        _args = {
             k: getattr(self, k).rendered if isinstance(getattr(self, k), Templated) else getattr(self, k)
             for k, v in self.__annotations__.items() if k != 'template'
         }
-        return dict(args={k: v for k, v in args.items() if v is not None}, **args, **self.get_properties())
+        return dict(_args={k: v for k, v in _args.items() if v is not None}, **_args, **self.get_properties())
 
     @property
     def environment(self):
         def _make_filter(method_name):
-            return lambda *args: getattr(self, method_name)(*args)
+            def _custom_filter(*args):
+                return getattr(self, method_name)(*args)
+            return _custom_filter
+            # return lambda *args: getattr(self, method_name)(*args)
         env = jinja2.Environment(
             loader=jinja2.loaders.BaseLoader,
             trim_blocks=True,

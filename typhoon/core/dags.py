@@ -38,6 +38,7 @@ class Py:
         code = re.sub(r'\$HOOK(\.(\w+))', r'get_hook("\g<2>")', code)
         code = re.sub(r'\$VARIABLE(\.(\w+))', r'Settings.metadata_store().get_variable("\g<2>").get_contents()', code)
         code = re.sub(r'typhoon\.(\w+)\.(\w+)', r'typhoon_transformations_\g<1>.\g<2>', code)
+        code = code.replace('$ARG', 'component_args')
         return code
 
     @staticmethod
@@ -96,7 +97,7 @@ def construct_variable(loader: yaml.Loader, node: yaml.Node) -> Py:
 class MultiStep:
     value: list
     key: Optional[str] = None
-    config_name: str = 'config'
+    config_name: str = 'args'
 
     @staticmethod
     def construct(loader: yaml.Loader, node: yaml.Node):
@@ -729,6 +730,10 @@ class DAGDefinitionV2(BaseModel):
             return Granularity.MONTH
         else:
             return Granularity.YEAR
+
+    @property
+    def sources(self) -> Dict[str, TaskDefinition]:
+        return {k: v for k, v in self.tasks.items() if v.input is None}
 
     # noinspection PyProtectedMember
     def make_dag(self) -> DAG:

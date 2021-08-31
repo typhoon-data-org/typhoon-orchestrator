@@ -1,0 +1,97 @@
+input:
+  name: greet
+
+  args:
+    greeting: Hello there
+
+  tasks:
+    names:
+      function: typhoon.flow_control.branch
+      args:
+        branches:
+          - a
+          - b
+          - c
+
+    greet:
+      input: names
+      function: functions.debug.echo
+      args:
+        greeting: !Py $ARG.greeting
+        name: !Py $BATCH
+
+expects: |
+  # Component name: greet
+  from types import SimpleNamespace
+  from typing import Optional, Any, Type
+
+  from typhoon.core import DagContext
+  from typhoon.contrib.hooks.hook_factory import get_hook
+  from typhoon.runtime import ComponentInterface, BrokerInterface, TaskInterface, ComponentArgs
+
+  import functions.debug
+  import typhoon.contrib.functions.flow_control as typhoon_functions_flow_control
+
+
+  class GreetComponent(ComponentInterface):
+      def __init__(
+          self,
+          task_id: str,
+          args_class: Type[ComponentArgs],
+          sync_broker: BrokerInterface,
+          async_broker: BrokerInterface,
+      ):
+          self.task_id = task_id
+          self.args_class = args_class
+
+          # Tasks
+          names_task = NamesTask(
+              async_broker,
+              parent_component=self,
+          )
+
+          greet_task = GreetTask(
+              async_broker,
+              parent_component=self,
+          )
+
+          # Dependencies
+          names_task.set_destination(greet_task)
+
+
+          self.component_sources = [
+              names_task,
+          ]
+          self.output = SimpleNamespace(**{
+          })
+
+
+  class NamesTask(TaskInterface):
+      def __init__(self, broker: BrokerInterface, parent_component: Optional[ComponentInterface]=None):
+          self.broker = broker
+          self.task_id = 'names'
+          self.function = typhoon_functions_flow_control.branch
+          self.destinations = []
+          self.parent_component = parent_component
+
+      def get_args(self, dag_context: DagContext, source: Optional[str], batch_num: int, batch: Any) -> dict:
+          component_args = self.parent_component.args_class(source, batch_num, batch)
+          args = []
+          args['branches'] = ['a', 'b', 'c']
+          return args
+
+
+  class GreetTask(TaskInterface):
+      def __init__(self, broker: BrokerInterface, parent_component: Optional[ComponentInterface]=None):
+          self.broker = broker
+          self.task_id = 'greet'
+          self.function = functions.debug.echo
+          self.destinations = []
+          self.parent_component = parent_component
+
+      def get_args(self, dag_context: DagContext, source: Optional[str], batch_num: int, batch: Any) -> dict:
+          component_args = self.parent_component.args_class(source, batch_num, batch)
+          args = []
+          args['greeting'] = component_args.greeting
+          args['name'] = batch
+          return args

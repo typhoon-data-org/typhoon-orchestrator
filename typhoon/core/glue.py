@@ -12,17 +12,22 @@ from typhoon.core.components import Component
 
 from typhoon.core.dags import DAG, DAGDefinitionV2, add_yaml_constructors
 from typhoon.core.settings import Settings
-from typhoon.core.old_transpiler import TyphoonFileTemplate
 from typing_extensions import Literal
 
+from typhoon.core.transpiler.dag_transpiler import DagFile
+from typhoon.core.transpiler.task_transpiler import TasksFile
 from typhoon.introspection.introspect_extensions import get_typhoon_extensions_info
 
 
-def transpile_dag_and_store(dag: dict, output_path: Union[str, Path], debug_mode: bool):
-    output_path = Path(output_path)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    dag_code = TyphoonFileTemplate(DAG.parse_obj(dag), debug_mode=debug_mode).render()
-    Path(output_path).write_text(dag_code)
+def transpile_dag_and_store(dag: dict, output_folder_path: Union[str, Path], debug_mode: bool):
+    output_folder_path = Path(output_folder_path)
+    output_folder_path.mkdir(parents=True, exist_ok=True)
+    print(dag)
+    dag = DAGDefinitionV2.parse_obj(dag)
+    dag_code = DagFile(dag, debug_mode=debug_mode).render()
+    (output_folder_path / f'{dag.name}.py').write_text(dag_code)
+    tasks_code = TasksFile(dag.tasks).render()
+    (output_folder_path / 'tasks.py').write_text(tasks_code)
 
 
 def load_dags(ignore_errors: bool = False) -> List[Tuple[DAG, Path]]:
@@ -68,7 +73,7 @@ def get_dag_errors() -> Dict[str, List[dict]]:
         try:
             DAGDefinitionV2.parse_obj(
                 yaml.load(dag_file.read_text(), yaml.FullLoader)
-            ).make_dag()
+            )
         except ValidationError as e:
             result[dag_file.name.split('.yml')[0]] = e.errors()
 
