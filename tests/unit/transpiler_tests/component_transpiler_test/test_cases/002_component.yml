@@ -27,7 +27,7 @@ expects: |
 
   from typhoon.core import DagContext
   from typhoon.contrib.hooks.hook_factory import get_hook
-  from typhoon.runtime import ComponentInterface, BrokerInterface, TaskInterface, ComponentArgs
+  from typhoon.core.runtime import ComponentInterface, BrokerInterface, TaskInterface, ComponentArgs
 
   import functions.debug
   import typhoon.contrib.functions.flow_control as typhoon_functions_flow_control
@@ -75,8 +75,8 @@ expects: |
           self.parent_component = parent_component
 
       def get_args(self, dag_context: DagContext, source: Optional[str], batch_num: int, batch: Any) -> dict:
-          component_args = self.parent_component.args_class(source, batch_num, batch)
-          args = []
+          component_args = self.parent_component.args_class(dag_context, source, batch_num, batch)
+          args = {}
           args['branches'] = ['a', 'b', 'c']
           return args
 
@@ -90,8 +90,8 @@ expects: |
           self.parent_component = parent_component
 
       def get_args(self, dag_context: DagContext, source: Optional[str], batch_num: int, batch: Any) -> dict:
-          component_args = self.parent_component.args_class(source, batch_num, batch)
-          args = []
+          component_args = self.parent_component.args_class(dag_context, source, batch_num, batch)
+          args = {}
           args['greeting'] = component_args.greeting
           args['name'] = batch
           return args

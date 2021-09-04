@@ -31,7 +31,7 @@ class TaskInterface(Protocol):
 
     def run(self, dag_context: DagContext, source: Optional[str],  batch_num: int, batch: Any):
         args = self.get_args(dag_context, source, batch_num, batch)
-        for batch_num, batch in enumerate(self.function(**args)):
+        for batch_num, batch in enumerate(self.function(**args), start=1):
             if batch is SKIP_BATCH:
                 print(f'Skipping batch {batch_num} for {self.task_id}')
                 continue
@@ -40,21 +40,26 @@ class TaskInterface(Protocol):
 
 
 class ComponentArgs(Protocol):
-    static_args: dict
+    dag_context: DagContext
+    source: str
+    batch_num: int
+    batch: Any
+    parent_component: Optional['ComponentInterface']
+    _args_cache: Optional[dict]
 
-    def __init__(self, source: str, batch_num: int, batch: Any):
+    def __init__(self, dag_context: DagContext, source: str, batch_num: int, batch: Any):
+        self.dag_context = dag_context
         self.source = source
         self.batch = batch
         self.batch_num = batch_num
 
-    def get_batch_dependent_args(self) -> dict:
+    def get_args(self) -> dict:
         ...
 
     def __getattr__(self, item):
-        if item in self.static_args.keys():
-            return self.static_args[item]
-        else:
-            return self.get_batch_dependent_args()[item]
+        if self._args_cache is None:
+            self._args_cache = self.get_args()
+        return self._args_cache[item]
 
 
 @runtime_checkable
@@ -68,6 +73,6 @@ class ComponentInterface(Protocol):
     def get_batch_dependent_args(self, source: str, batch_num: int, batch: Any) -> dict:
         ...
 
-    def run(self, source: Optional[str],  batch_num: int, batch: Any):
+    def run(self, dag_context: DagContext, source: Optional[str],  batch_num: int, batch: Any):
         for component_source in self.component_sources:
-            component_source.run(source, batch_num, batch)
+            component_source.run(dag_context, source, batch_num, batch)

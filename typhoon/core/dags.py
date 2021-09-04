@@ -478,15 +478,6 @@ class TaskDefinition(BaseModel):
         default=None,
         description='Task or tasks that will send their output as input to the current node'
     )
-    function: Optional[str] = Field(
-        default=None,
-        regex=r'(typhoon\.\w+\.\w+|functions\.\w+\.\w+)',
-        description="""Python function that will get called when the task runs.
-                    If it is a built-in typhoon function it will have the following structure:
-                      typhoon.[MODULE_NAME].[FUNCTION_NAME]
-                    Whereas if it is a user defined function it will have the following structure:
-                      functions.[MODULE_NAME].[FUNCTION_NAME]"""
-    )
     component: Optional[str] = Field(
         default=None,
         regex=r'(typhoon\.\w+|components\.\w+)',
@@ -495,6 +486,15 @@ class TaskDefinition(BaseModel):
                       typhoon.[COMPONENT_NAME]
                     Whereas if it is a user defined component it will have the following structure:
                       components.[COMPONENT_NAME]"""
+    )
+    function: Optional[str] = Field(
+        default=None,
+        regex=r'(typhoon\.\w+\.\w+|functions\.\w+\.\w+)',
+        description="""Python function that will get called when the task runs.
+                    If it is a built-in typhoon function it will have the following structure:
+                      typhoon.[MODULE_NAME].[FUNCTION_NAME]
+                    Whereas if it is a user defined function it will have the following structure:
+                      functions.[MODULE_NAME].[FUNCTION_NAME]"""
     )
     asynchronous: bool = Field(
         default=True,
@@ -516,9 +516,9 @@ class TaskDefinition(BaseModel):
 
     @validator('function')
     def validate_function(cls, val, values, **kwargs):
-        if val is not None and 'component' in values.keys():
+        if val is not None and 'component' in values.keys() and values['component'] is not None:
             raise ValueError('Function and component are mutually exclusive')
-        elif val is None and 'component' not in values.keys():
+        elif val is None and ('component' not in values.keys() or values['component'] is None):
             raise ValueError('Either function or component is necessary')
         return val
 

@@ -12,11 +12,11 @@ expects: |
         def __init__(self, broker: BrokerInterface, parent_component: Optional[ComponentInterface]=None):
             self.broker = broker
             self.task_id = 'example'
-            self.function = typhoon_function_flow_control.branch
+            self.function = typhoon_functions_flow_control.branch
             self.destinations = []
             self.parent_component = parent_component
 
         def get_args(self, dag_context: DagContext, source: Optional[str], batch_num: int, batch: Any) -> dict:
-            args = []
+            args = {}
             args['branches'] = [1, 2, 'a', 'b']
             return args

@@ -12,9 +12,11 @@ from typing import Optional, List
 
 import pkg_resources
 
-from typhoon.core.dags import DagDeployment, DAG, DAGDefinitionV2
-from typhoon.core.glue import load_dags, transpile_dag_and_store, load_dag_definitions
+from typhoon.core.components import Component
+from typhoon.core.dags import DagDeployment, DAGDefinitionV2
+from typhoon.core.glue import transpile_dag_and_store, load_dag_definitions, load_components
 from typhoon.core.settings import Settings
+from typhoon.core.transpiler.component_transpiler import ComponentFile
 from typhoon.deployment.deploy import deploy_dag_requirements, copy_local_typhoon, copy_user_defined_code
 
 
@@ -125,8 +127,23 @@ def build_all_dags(remote: Optional[str], matching: Optional[str] = None) -> Lis
             dag_files.append(dag_file)
             build_dag(dag, dag_file, deployment_date, remote)
 
+        # TODO: We can optimize this by only building the ones we need
+        for component, _ in load_components(ignore_errors=False, kind='custom'):
+            print(f'Building component {component.name}...')
+            build_component(dag.name, component, remote)
+
     print('Finished building DAGs\n')
     return dag_files
+
+
+def build_component(dag_name: str, component: Component, remote: Optional[str]):
+    components_folder_path = Settings.out_directory / dag_name / 'components'
+    components_folder_path.mkdir(parents=True, exist_ok=True)
+    init_path = (components_folder_path / '__init__.py')
+    if not init_path.exists():
+        init_path.write_text('')
+    component_code = ComponentFile(component).render()
+    (components_folder_path / f'{component.name}.py').write_text(component_code)
 
 
 def build_dag(dag: DAGDefinitionV2, dag_file: Path, deployment_date: datetime, remote: Optional[str]):

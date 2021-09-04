@@ -1,5 +1,5 @@
 input:
-  name: simple_dag
+  name: dag_with_component
   schedule_interval: '@daily'
   tasks:
     a:
@@ -12,20 +12,54 @@ input:
 
     b:
       input: a
+      component: typhoon.if
+      args:
+        condition: !Py "lambda x: x == 'a'"
+        data: !Py $BATCH
+
+    c:
+      input: b.then
       function: typhoon.debug.echo
       args:
-        x: !Py $BATCH
+        x: We found a!
+
+    d:
+      input: b.else
+      function: typhoon.debug.echo
+      args:
+        x: !Py f'We found {$BATCH} instead'
 
 expects:
   dag: |
-    # DAG name: simple_dag
+    # DAG name: dag_with_component
     from typhoon.core import setup_logging, DagContext
     from typhoon.core.runtime import SequentialBroker, ComponentArgs
 
-    from tasks import ATask, BTask
+    from tasks import ATask, CTask, DTask
+    from components.if import IfComponent
 
 
-    def simple_dag_main(event, context):
+    class BComponentArgs(ComponentArgs):
+        def __init__(self, dag_context: DagContext, source: str, batch_num: int, batch: Any):
+            self.dag_context = dag_context
+            self.source = source
+            self.batch = batch
+            self.batch_num = batch_num
+
+        def get_args(self) -> dict:
+            dag_context = self.dag_context
+            batch = self.batch
+            batch_num = self.batch_num
+
+            if self.source == 'a':
+                args = {}
+                args['condition'] = lambda x: x == 'a'
+                args['data'] = batch
+                return args
+            assert False, 'Compiler error'
+
+
+    def dag_with_component_main(event, context):
         setup_logging()
         # if event.get('type'):     # TODO: Async execution
 
@@ -43,12 +77,23 @@ expects:
         a_task = ATask(
             async_broker,
         )
-        b_task = BTask(
+        b_task = IfComponent(
+            'b',
+            BComponentArgs,
+            async_broker,
+            sync_broker,
+        )
+        c_task = CTask(
+            async_broker,
+        )
+        d_task = DTask(
             async_broker,
         )
 
         # Set dependencies
         a_task.set_destination(b_task)
+        b_task.output.then.set_destination(c_task)
+        b_task.output.else.set_destination(d_task)
 
         # Sources
         a_task.run(dag_context, None, -1, None)
@@ -60,7 +105,7 @@ expects:
         }
         example_event_task = {
             'type': 'task',
-            'dag_name': 'simple_dag',
+            'dag_name': 'dag_with_component',
             'task_name': 'a',
             'trigger': 'dag',
             'attempt': 1,
@@ -74,7 +119,7 @@ expects:
             },
         }
 
-        simple_dag_main(example_event, None)
+        dag_with_component_main(example_event, None)
 
   tasks: |
     from typing import Any, Optional
@@ -100,15 +145,29 @@ expects:
             return args
 
 
-    class BTask(TaskInterface):
+    class CTask(TaskInterface):
         def __init__(self, broker: BrokerInterface, parent_component: Optional[ComponentInterface]=None):
             self.broker = broker
-            self.task_id = 'b'
+            self.task_id = 'c'
             self.function = typhoon_functions_debug.echo
             self.destinations = []
             self.parent_component = parent_component
 
         def get_args(self, dag_context: DagContext, source: Optional[str], batch_num: int, batch: Any) -> dict:
             args = {}
-            args['x'] = batch
+            args['x'] = 'We found a!'
+            return args
+
+
+    class DTask(TaskInterface):
+        def __init__(self, broker: BrokerInterface, parent_component: Optional[ComponentInterface]=None):
+            self.broker = broker
+            self.task_id = 'd'
+            self.function = typhoon_functions_debug.echo
+            self.destinations = []
+            self.parent_component = parent_component
+
+        def get_args(self, dag_context: DagContext, source: Optional[str], batch_num: int, batch: Any) -> dict:
+            args = {}
+            args['x'] = f'We found {batch} instead'
             return args

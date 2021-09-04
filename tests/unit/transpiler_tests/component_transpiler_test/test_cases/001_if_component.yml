@@ -30,7 +30,7 @@ expects: |
 
   from typhoon.core import DagContext
   from typhoon.contrib.hooks.hook_factory import get_hook
-  from typhoon.runtime import ComponentInterface, BrokerInterface, TaskInterface, ComponentArgs
+  from typhoon.core.runtime import ComponentInterface, BrokerInterface, TaskInterface, ComponentArgs
 
   import typhoon.contrib.functions.flow_control as typhoon_functions_flow_control
 
@@ -76,8 +76,8 @@ expects: |
           self.parent_component = parent_component
 
       def get_args(self, dag_context: DagContext, source: Optional[str], batch_num: int, batch: Any) -> dict:
-          component_args = self.parent_component.args_class(source, batch_num, batch)
-          args = []
+          component_args = self.parent_component.args_class(dag_context, source, batch_num, batch)
+          args = {}
           args['filter_func'] = component_args.condition
           args['data'] = component_args.data
           return args
@@ -92,8 +92,8 @@ expects: |
           self.parent_component = parent_component
 
       def get_args(self, dag_context: DagContext, source: Optional[str], batch_num: int, batch: Any) -> dict:
-          component_args = self.parent_component.args_class(source, batch_num, batch)
-          args = []
+          component_args = self.parent_component.args_class(dag_context, source, batch_num, batch)
+          args = {}
           args['filter_func'] = lambda x: not component_args.condition(x)
           args['data'] = component_args.data
           return args

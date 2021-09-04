@@ -99,7 +99,7 @@ def expand_function(function: str) -> str:
 
 
 def camel_case(s: str) -> str:
-    return s.title().replace('-', '_')
+    return s.title().replace('-', '').replace('_', '')
 
 
 @dataclass
@@ -136,11 +136,19 @@ def render_dependencies(dependencies: List[Tuple[str, str]]) -> str:
     return DependenciesTemplate(dependencies).render()
 
 
+def is_component_task(task: TaskDefinition) -> bool:
+    return task.component is not None
+
+
 @dataclass
 class DependenciesTemplate(Templated):
     template = '''
     {% for a, b in dependencies %}
+    {% if '.' in a %}
+    {{ a.split('.')[0] }}_task.output.{{ a.split('.')[1] }}.set_destination({{ b }}_task)
+    {% else %}
     {{ a }}_task.set_destination({{ b }}_task)
+    {% endif %}
     {% endfor %}
     '''
     dependencies: List[Tuple[str, str]]
@@ -152,7 +160,7 @@ def extract_dependencies(tasks: Dict[str, TaskDefinition]):
         (task.input, task_id)
         for task_id, task
         in tasks.items()
-        if task.input is not None and task.input in task_ids
+        if task.input is not None and task.input.split('.')[0] in task_ids
     ]
 
 
@@ -231,3 +239,7 @@ def get_transformations_item(item) -> Set[ImportDefinition]:
         return import_definitions
     else:
         return set()
+
+
+def render_args(args: dict) -> str:
+    return TaskArgs(args).render()

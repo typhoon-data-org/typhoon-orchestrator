@@ -4,21 +4,56 @@ from dataclasses import dataclass
 
 from typhoon.core.dags import DAGDefinitionV2, TaskDefinition
 from typhoon.core.templated import Templated
-from typhoon.core.transpiler.transpiler_helpers import extract_dependencies, camel_case, render_dependencies
+from typhoon.core.transpiler.transpiler_helpers import extract_dependencies, camel_case, render_dependencies, \
+    is_component_task, render_args
 
 
 @dataclass
 class DagFile(Templated):
     template = '''
     # DAG name: {{ dag.name }}
+    from typing import Any
     from typhoon.core import setup_logging, DagContext
     from typhoon.core.runtime import SequentialBroker, ComponentArgs
-    {% if tasks %}
+    {% if non_component_tasks %}
     
-    from tasks import {% for task_name in tasks.keys() %}{{ task_name | camel_case }}Task{% if not loop.last %}, {% endif %}{% endfor %}
+    from tasks import {% for task_name in non_component_tasks.keys() %}{{ task_name | camel_case }}Task{% if not loop.last %}, {% endif %}{% endfor %}
+    
     {% endif %}
+    {% for task_name, task in component_tasks.items() %}
+    from components.{{ task.component.split('.')[-1] }} import {{ task.component.split('.')[-1] | camel_case }}Component
+    {% endfor %}
     
     
+    {% for task_name, task in component_tasks.items() %}
+    class {{ task_name | camel_case }}ComponentArgs(ComponentArgs):
+        def __init__(self, dag_context: DagContext, source: str, batch_num: int, batch: Any):
+            self.dag_context = dag_context
+            self.source = source
+            self.batch = batch
+            self.batch_num = batch_num
+            self.parent_component = None
+            self._args_cache = None
+
+        def get_args(self) -> dict:
+            dag_context = self.dag_context
+            batch = self.batch
+            batch_num = self.batch_num
+            
+            {% if task.input %}
+            if self.source == '{{ task.input }}':
+                args = {}
+                {{ task.args | render_args | indent(12, False) }}
+                return args
+            {% else %}
+            args = {}
+            {{ task.args | render_args | indent(8, False) }}
+            return args
+            {% endif %}
+            assert False, 'Compiler error'
+    
+    
+    {% endfor %}
     def {{ dag.name }}_main(event, context):
         setup_logging()
         # if event.get('type'):     # TODO: Async execution
@@ -34,7 +69,15 @@ class DagFile(Templated):
         async_broker = SequentialBroker()
         
         # Initialize tasks
-        {% for task_name, task in tasks.items() %}
+        {% for task_name, task in dag.tasks.items() %}
+        {% if task | is_component_task %}
+        {{ task_name }}_task = {{ task.component.split('.')[-1] | camel_case }}Component(
+            '{{ task_name }}',
+            {{ task_name | camel_case }}ComponentArgs,
+            async_broker,
+            sync_broker,
+        )
+        {% else %}
         {{ task_name }}_task = {{ task_name | camel_case }}Task(
             {% if task.asynchronous %}
             async_broker,
@@ -42,11 +85,12 @@ class DagFile(Templated):
             sync_broker,
             {% endif %}
         )
+        {% endif %}
         {% endfor %}
         {% if dependencies %}
         
         # Set dependencies
-        {{ dependencies | render_dependencies }}
+        {{ dependencies | render_dependencies | indent(4, False) }}
         {% endif %}
         
         # Sources
@@ -79,7 +123,7 @@ class DagFile(Templated):
     '''
     dag: DAGDefinitionV2
     debug_mode: bool = False
-    _filters = [camel_case, render_dependencies, list]
+    _filters = [camel_case, render_dependencies, list, is_component_task, render_args]
     _dependencies = None
 
     @property
@@ -89,5 +133,9 @@ class DagFile(Templated):
         return self._dependencies
 
     @property
-    def tasks(self) -> Dict[str, TaskDefinition]:
+    def non_component_tasks(self) -> Dict[str, TaskDefinition]:
         return {k: v for k, v in self.dag.tasks.items() if v.function is not None}
+
+    @property
+    def component_tasks(self) -> Dict[str, TaskDefinition]:
+        return {k: v for k, v in self.dag.tasks.items() if v.component is not None}

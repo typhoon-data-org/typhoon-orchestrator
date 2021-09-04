@@ -17,7 +17,7 @@ expects: |
             self.parent_component = parent_component
 
         def get_args(self, dag_context: DagContext, source: Optional[str], batch_num: int, batch: Any) -> dict:
-            args = []
+            args = {}
             args['func'] = lambda x: x % 2 == 0
             data_1 = 10
             data_2 = batch * batch_num * data_1
