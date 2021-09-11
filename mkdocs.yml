@@ -44,7 +44,7 @@ nav:
   - Example Walkthroughs:
       - Hello World: 'examples/hello-world.md'
       - MySql to Snowflake: 'examples/mysql-to-snowflake.md'
-      - Pandas automation: 'examples/automating-pandas.md'
+      - Pandas automation: 'examples/pandas-examples.md'
       - Airflow examples: 'examples/airflow-examples.md'
   - Contributing: 'contributing.md'
   - Licence: 'licence.md'

@@ -111,3 +111,44 @@ tests:
       df: !Py "pd.DataFrame({'a': [1,2,3,4], 'b': [6,7,8,9]})"
       table_name: "clients"
 ```
+
+
+## If statements
+
+You can use the if component to do if-else logic:
+
+```yaml
+name: test_if
+schedule_interval: rate(1 hour)
+
+tasks:
+  names:
+    function: typhoon.flow_control.branch
+    args:
+      branches:
+        - John
+        - Martha
+        - Mathew
+        - Karla
+
+  is_girl:
+    input: names
+    component: typhoon.if
+    args:
+      condition: !Py "lambda name: name.endswith('a')"
+      data: !Py $BATCH
+
+  print_girl:
+    input: is_girl.then
+    function: functions.debug.echo
+    args:
+      data: !Py f'{$BATCH} is a girl'
+
+  print_boy:
+    input: is_girl.else
+    function: functions.debug.echo
+    args:
+      data: !Py f'{$BATCH} is a boy'
+```
+
+The key parts above are the use of the `typhoon.if` component and that the tasks are linked using the `condition.if` and `condition.else`.

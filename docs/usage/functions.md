@@ -1,6 +1,6 @@
 # Functions
 
-Functions are the key building blocks of DAG tasks. Each task has to have a function to apply to data. 
+Functions are the key building blocks of DAG tasks. Each task has to have a function to apply to data. Usually functions act on Hooks to extract or load data. 
 
 In the example below we are using a custom function `exchange_rates_api.get_history` that would in the file `exchange_rates_api.py` in the `functions` directory. In this file you would put any function that your custom ExchangeRate Hook might need. 
 

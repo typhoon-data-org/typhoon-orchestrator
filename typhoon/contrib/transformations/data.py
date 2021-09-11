@@ -35,3 +35,4 @@ def to_dataframe(data):
 def json_array_to_json_records(data: list) -> str:
     result = [json.dumps(x) for x in data]
     return '\n'.join(result)
+

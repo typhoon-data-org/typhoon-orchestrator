@@ -47,7 +47,48 @@ In the typhoon cli use:
 
 You will get a response of `Variable weekday_of_archive added`.
 
-You can reference in a DAG using `!Py $DAG_CONTEXT.interval_start.weekday() == $VARIABLE.weekday_of_archive` to test if the DAG start day is the archive day. 
+You can reference in a DAG using `!Py $DAG_CONTEXT.interval_start.weekday() == $VARIABLE.weekday_of_archive`.
+
+For example can be used to control if a process runs on a certain weekday with the if component. 
+
+```yaml
+name: conditional_process
+schedule_interval: rate(10 minutes)
+
+tasks:
+
+  list_tables:
+    function: typhoon.flow_control.branch
+    args:
+      branches: 
+        - customers
+        - transactions      
+
+  choose_preprocessing:
+    input: list_tables
+    component: typhoon.if
+    args:
+      data: !Py $BATCH
+      condition: !Py "lambda table: $DAG_CONTEXT.interval_start.weekday() == $VARIABLE.weekday_of_archive"
+
+  archive_day:
+    input: choose_preprocessing.then
+    function: typhoon.debug.echo
+    args:
+      data: !MultiStep
+        - !Py print('processing archive')
+        - !Py $BATCH
+
+
+  otherday_processing_task:
+    input: choose_preprocessing.else
+    function: typhoon.debug.echo
+    args:
+      data: !MultiStep
+        - !Py print('processing normal day')
+        - !Py $BATCH
+
+```
 
 #### List of tables
 
