@@ -6,13 +6,13 @@ Typhoon is a Data workflow tool (i.e. ETL / ELT pipelines) for composing **Airfl
 
 === "Why Typhoon"
 
-    Write Airflow DAGS 10x faster :rocket:.
+    Write Airflow DAGS 10x faster :rocket:
 
-    Make creating reliable data pipelines easy for the whole team :raised_hands:.
+    Make creating reliable data pipelines easy for the whole team :raised_hands:
 
-    Simplicity and re-usability; a toolkit designed to be loved by Data Engineers :heart:.
+    Simplicity and re-usability; a toolkit designed to be loved by Data Engineers :heart:
     
-    Deploying to your existing Airflow with zero risk and no migration work :relaxed:.
+    Deploying to your existing Airflow with zero risk and no migration work :relaxed:
     
     **Workflow**: Typhoon YAML DAG --> transpile --> Airflow DAG 
 
