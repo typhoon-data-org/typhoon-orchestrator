@@ -2,29 +2,17 @@
 
 ## What is a component?
 
-Components are ways of packaging up sets of regularly used tasks. This encourages modularity and re-use. 
+[Components][2] are ways of packaging sets of regularly used tasks. This encourages modularity and re-use.
 
-This means a library of powerful workflows that are then simple dropping in  2-3 line YAML fragments.
+This page focuses on using some packaged example components (rather than [how to construct one][2])
 
-Components can be structured as complete workflows or to slot into larger ones:
-
-- **'In-flow'** using previous steps as inputs 
-    - e.g. 'if', 'singer_multiplexer' 
-- **'Standalone'** ones can be built as DAG full templates. The difference is this structure can use the Component Builder UI.   
-    - e.g. 'db_to_snowflake', 'csv_my_pandas_transform'
-
-<img src="../img/component-descriptor.png">
-
- 
- @TODO - screenshot of UI
-
-## Example In-flow component
+## Example: Archive on Mondays 
 
 Trivial example to choose a different path based on if its a Monday.
 
 `$DAG_CONTEXT.ts` is a datetime object representing the [timestamp][1] of runtime in the context. 
 
-Calling `component: typhoon.if` imports the template structure defined in the component YAML. Your constributed components would be referenced `component: components.my_component`.
+Calling **`component: typhoon.if`** imports the template structure defined in the component YAML. Your constributed components would be referenced `component: components.my_component`.
 
 This `if` component defines two outputs. These are accessed in the line `choose_preprocessing.then` and `choose_preprocessing.else`.
 
@@ -63,11 +51,11 @@ tasks:
   ...
 ```
 
-## Example Standalone Component
+## Example: Source DB to Snowflake DWH
 
 This is a non-trivial example of a full DWH load from multipler tables across 3 separate ERP systems.
 
-This calls the entire end to end flow that is packaged in the  `typhoon.db_to_snowflake` flow. This component example is idempotence, and encapsulating the management of the DHW staging metadata.
+This calls the entire end to end flow that is packaged in the  **`typhoon.db_to_snowflake`** flow. This component example is fully [idempotent][3], and encapsulating the  of the DHW staging metadata.
 
 ```YAML
 name: source_to_snowflake
@@ -119,3 +107,5 @@ tasks:
 ```
 
 [1]:https://docs.python.org/3/library/datetime.html#datetime.datetime.weekday
+[2]:../usage/components.md
+[3]:https://medium.com/ssense-tech/lets-get-idempotence-right-59f227178bb8

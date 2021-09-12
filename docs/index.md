@@ -1,16 +1,21 @@
-# Typhoon Orchestrator
+# Typhoon Orchestrator Documentation
 
-Typhoon is a Data Worfklow tool (ETL / ELT pipelines) for composing **Airflow** or AWS Lambda DAGs in YAML.
+Welcome to Typhoon!
 
-### Overview
+Typhoon is a Data workflow tool (i.e. ETL / ELT pipelines) for composing **Airflow** or AWS Lambda DAGs in YAML. 
 
 === "Why Typhoon"
 
-    To make creating batch ELT pipelines for the whole team supported by a Data Engineer friendly toolkit.
+    Write Airflow DAGS 10x faster :rocket:.
+
+    Make creating reliable data pipelines easy for the whole team :raised_hands:.
+
+    Simplicity and re-usability; a toolkit designed to be loved by Data Engineers :heart:.
     
-    **Supercharge your existing Airflow workflow**. Use Typhoon to create your DAGs with complete simplicity and re-usability. Deploying to your existing Airflow you can upgrade with zero risk and no migration work.
+    Deploying to your existing Airflow with zero risk and no migration work :relaxed:.
     
     **Workflow**: Typhoon YAML DAG --> transpile --> Airflow DAG 
+
 
 === "Key Principles"
 
@@ -32,6 +37,11 @@ Typhoon is a Data Worfklow tool (ETL / ELT pipelines) for composing **Airflow** 
     - **Core**: Python (OSS) core 
         - Extensible and hackable.
         - Components allow you to share extensions widely in the Pristine layer.    
+
+
+!!! note "[Installing Typhoon - quick start][1]"
+
+!!! note "[Hello World - 5 min walkthrough][1]"
 
 
 ## Example DAG
@@ -60,7 +70,7 @@ Typhoon is a Data Worfklow tool (ETL / ELT pipelines) for composing **Airflow** 
           path: xr_data.csv
     ```
 
-=== "Airflow DAG (python)"
+=== "Equivalent Airflow DAG (python)"
 
     ```python linenums="1"
     import datetime
@@ -146,3 +156,4 @@ Airflow UI will then show:
 Put in screenshot of UI
 
 
+[1]:./getting-started/installation.md
