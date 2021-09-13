@@ -77,6 +77,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#hooks" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -352,6 +357,18 @@
   
   
     <li class="md-nav__item">
+      <a href="../examples/hello-world.html" class="md-nav__link">
+        Hello World
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../getting-started/connections.html" class="md-nav__link">
         Adding connections
       </a>
@@ -570,11 +587,132 @@
       <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
       
       
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Hooks
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="hooks.html" class="md-nav__link md-nav__link--active">
         Hooks
       </a>
       
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#hook-interface-parameters" class="md-nav__link">
+    Hook Interface &amp; Parameters
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#existing-hooks" class="md-nav__link">
+    Existing Hooks
+  </a>
+  
+    <nav class="md-nav" aria-label="Existing Hooks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#debug" class="md-nav__link">
+    Debug
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#file-system" class="md-nav__link">
+    File system
+  </a>
+  
+    <nav class="md-nav" aria-label="File system">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#localstoragehook" class="md-nav__link">
+    LocalStorageHook
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#http" class="md-nav__link">
+    Http
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#aws-hooks" class="md-nav__link">
+    AWS hooks
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#db-api-20" class="md-nav__link">
+    DB API 2.0
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sql-alchemy" class="md-nav__link">
+    SQL Alchemy
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#singer" class="md-nav__link">
+    Singer
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kafka" class="md-nav__link">
+    Kafka
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#elasticsearch" class="md-nav__link">
+    ElasticSearch
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -584,20 +722,8 @@
   
   
     <li class="md-nav__item">
-      <a href="templates.md" class="md-nav__link">
-        Tempaltes
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="variables.md" class="md-nav__link">
-        Variables
+      <a href="templates.html" class="md-nav__link">
+        Variables & Templates
       </a>
     </li>
   
@@ -662,20 +788,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../examples/automating-pandas.html" class="md-nav__link">
+      <a href="../examples/pandas-examples.html" class="md-nav__link">
         Pandas automation
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../examples/airflow-examples.html" class="md-nav__link">
-        Airflow examples
       </a>
     </li>
   
@@ -724,6 +838,127 @@
               </div>
             
             
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#hook-interface-parameters" class="md-nav__link">
+    Hook Interface &amp; Parameters
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#existing-hooks" class="md-nav__link">
+    Existing Hooks
+  </a>
+  
+    <nav class="md-nav" aria-label="Existing Hooks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#debug" class="md-nav__link">
+    Debug
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#file-system" class="md-nav__link">
+    File system
+  </a>
+  
+    <nav class="md-nav" aria-label="File system">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#localstoragehook" class="md-nav__link">
+    LocalStorageHook
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#http" class="md-nav__link">
+    Http
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#aws-hooks" class="md-nav__link">
+    AWS hooks
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#db-api-20" class="md-nav__link">
+    DB API 2.0
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sql-alchemy" class="md-nav__link">
+    SQL Alchemy
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#singer" class="md-nav__link">
+    Singer
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kafka" class="md-nav__link">
+    Kafka
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#elasticsearch" class="md-nav__link">
+    ElasticSearch
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
           
           <div class="md-content" data-md-component="content">
             <article class="md-content__inner md-typeset">
@@ -734,9 +969,87 @@
                   </a>
                 
                 
-                  <h1>Hooks</h1>
-                
-                
+                <h1 id="hooks">Hooks</h1>
+<h2 id="hook-interface-parameters">Hook Interface &amp; Parameters</h2>
+<p>The minimum you must specify for all conecctions in your <code>connections.yml</code> file is the <code>conn_type</code>:</p>
+<div class="highlight"><pre><span></span><code>    <span class="nt">conn_type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">echo</span>
+</code></pre></div>
+<p>Most Hooks have parameters as well. The default ones which are common in the DB hooks:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">conn</span><span class="p">:</span>
+  <span class="nt">conn_type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">mysql</span>
+  <span class="nt">login</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">my_login</span>
+  <span class="nt">password</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">my_pass</span>
+  <span class="nt">host</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">localhost</span>
+  <span class="nt">port</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">3306</span>
+</code></pre></div>
+<p>In addition, many have <code>extra</code> parameters which you can list as follows: 
+<div class="highlight"><pre><span></span><code><span class="nt">data_lake</span><span class="p">:</span>
+  <span class="nt">test</span><span class="p">:</span>
+    <span class="nt">conn_type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">s3</span>
+    <span class="nt">extra</span><span class="p">:</span>
+      <span class="nt">bucket</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">my-typhoon-test-bucket</span>
+</code></pre></div></p>
+<h2 id="existing-hooks">Existing Hooks</h2>
+<h3 id="debug">Debug</h3>
+<ul>
+<li>EchoHook - This simply echo's to the prompt what would be written to the file system. </li>
+</ul>
+<h3 id="file-system">File system</h3>
+<h4 id="localstoragehook">LocalStorageHook</h4>
+<ul>
+<li>Local file system / disk. Wrapper around <a href="https://docs.pyfilesystem.org/en/latest/reference/osfs.html?highlight=OSFS#fs.osfs.OSFS">PyFileSystem</a></li>
+<li>FTPHook</li>
+<li>S3Hook</li>
+<li>GCSHook</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="nt">example_file_system_hooks</span><span class="p">:</span>
+  <span class="nt">local_storage</span><span class="p">:</span>
+    <span class="nt">conn_type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">local_storage</span>
+    <span class="nt">extra</span><span class="p">:</span>
+      <span class="nt">base_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/tmp/data_lake/</span>
+      <span class="nt">create</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span> 
+
+  <span class="nt">s3_hook</span><span class="p">:</span>
+    <span class="nt">conn_type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">s3</span>
+    <span class="nt">extra</span><span class="p">:</span>
+      <span class="nt">bucket</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">my-typhoon-test-bucket</span>
+</code></pre></div>
+<h3 id="http">Http</h3>
+<ul>
+<li>Basic Authentication (URL)</li>
+</ul>
+<h3 id="aws-hooks">AWS hooks</h3>
+<ul>
+<li>AwsSessionHook</li>
+<li>DynamoDbHook</li>
+</ul>
+<h3 id="db-api-20">DB API 2.0</h3>
+<p>Hooks and functions related to databases compatible with the <a href="https://www.python.org/dev/peps/pep-0249/">Python Database API Specification v2.0</a>.</p>
+<p>You need to install the <a href="https://github.com/typhoon-data-org/typhoon-dbapi">Typhoon DbAPI</a> contrib package with:</p>
+<div class="codehilite"><pre><span></span><code><span class="err">pip install typhoon-dbapi</span>
+</code></pre></div>
+
+<ul>
+<li>EchoDb (default install)</li>
+<li>SQLite (default install)</li>
+<li>Snowflake: pip install typhoon-dbapi[snowflake]</li>
+<li>Big Query: pip install typhoon-dbapi[bigquery]</li>
+<li>Postgres: pip install typhoon-dbapi[postgres]</li>
+<li>DuckDB: pip install typhoon-dbapi[duckdb]</li>
+<li>MySQL: pip install typhoon-dbapi[mysql]</li>
+</ul>
+<p>Any other DB that complies with this DBAPI 2.0 is very simple to add with minor customisation. Should cover vast majority of relational DBs.  </p>
+<h3 id="sql-alchemy">SQL Alchemy</h3>
+<p><a href="https://www.sqlalchemy.org/features.html">SQL Alchemy</a> supports anything with DB API 2.0. </p>
+<h3 id="singer">Singer</h3>
+<p><a href="https://www.singer.io/#taps">Singer taps</a> can be used in tasks expanding the range of sources enourmously.</p>
+<h3 id="kafka">Kafka</h3>
+<ul>
+<li>KafkaConsumerHook</li>
+<li>KafkaProducerHook</li>
+</ul>
+<h3 id="elasticsearch">ElasticSearch</h3>
+<p><a href="/getting-started/creating-hooks.html">See tutorial</a> for quickly creating your own in less than 10 mins.</p>
                 
               
               
@@ -772,13 +1085,13 @@
       
       
         
-        <a href="../examples/hello-world.html" class="md-footer__link md-footer__link--next" aria-label="Next: Hello World" rel="next">
+        <a href="templates.html" class="md-footer__link md-footer__link--next" aria-label="Next: Variables &amp; Templates" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
                 Next
               </span>
-              Hello World
+              Variables & Templates
             </div>
           </div>
           <div class="md-footer__button md-icon">

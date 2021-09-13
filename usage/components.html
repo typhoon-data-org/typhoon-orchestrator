@@ -77,6 +77,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#components" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -352,6 +357,18 @@
   
   
     <li class="md-nav__item">
+      <a href="../examples/hello-world.html" class="md-nav__link">
+        Hello World
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../getting-started/connections.html" class="md-nav__link">
         Adding connections
       </a>
@@ -558,10 +575,49 @@
       <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
       
       
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Components
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="components.html" class="md-nav__link md-nav__link--active">
         Components
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-a-component" class="md-nav__link">
+    What is a component?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#component-structure" class="md-nav__link">
+    Component structure
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -584,20 +640,8 @@
   
   
     <li class="md-nav__item">
-      <a href="templates.md" class="md-nav__link">
-        Tempaltes
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="variables.md" class="md-nav__link">
-        Variables
+      <a href="templates.html" class="md-nav__link">
+        Variables & Templates
       </a>
     </li>
   
@@ -662,20 +706,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../examples/automating-pandas.html" class="md-nav__link">
+      <a href="../examples/pandas-examples.html" class="md-nav__link">
         Pandas automation
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../examples/airflow-examples.html" class="md-nav__link">
-        Airflow examples
       </a>
     </li>
   
@@ -724,6 +756,45 @@
               </div>
             
             
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-a-component" class="md-nav__link">
+    What is a component?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#component-structure" class="md-nav__link">
+    Component structure
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
           
           <div class="md-content" data-md-component="content">
             <article class="md-content__inner md-typeset">
@@ -734,9 +805,58 @@
                   </a>
                 
                 
-                  <h1>Components</h1>
-                
-                
+                <h1 id="components">Components</h1>
+<h2 id="what-is-a-component">What is a component?</h2>
+<p>Components are ways of packaging sets of regularly used tasks. This encourages modularity and re-use. </p>
+<p>This means a library of powerful workflows that are then simple dropping in  2-3 line YAML fragments.</p>
+<p>Components can be structured as complete workflows or to slot into larger ones:</p>
+<ul>
+<li><strong>'In-flow'</strong> using previous steps as inputs <ul>
+<li>e.g. 'if', 'singer_multiplexer' </li>
+</ul>
+</li>
+<li><strong>'Standalone'</strong> ones can be built as DAG full templates. The difference is this structure can use the Component Builder UI.   <ul>
+<li>e.g. 'db_to_snowflake'</li>
+</ul>
+</li>
+</ul>
+<p><img src="../img/component-descriptor.png"></p>
+<p>@TODO - screenshot of UI</p>
+<p>The rest of this page will focus on how to build a Component. See <a href="../getting-started/using-components.html">Using Components</a> for examples on how to use existing components.</p>
+<h2 id="component-structure">Component structure</h2>
+<p>As components are simply packaging a set of tasks they are simply a normal DAG but with some optional concepts:</p>
+<ul>
+<li><code>name:</code>:    Descriptive name for the component.</li>
+<li><code>args:</code>:    Any number of arguements that you need as inputs for teh parameter (e.g. table names, source hooks, target hooks etc.)</li>
+<li><code>$COMPONENT_INPUT</code>:  (Optional) If you are making a in-flow component, this is assigns that input </li>
+<li><code>output</code>:    (Optional) If the component results in output to downstream tasks (rather than writing to a target hook) this allows you to assign them.   </li>
+</ul>
+<p>This example component shows the usage of all the above variables. </p>
+<div class="highlight"><pre><span></span><code><span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">if</span>
+
+<span class="nt">args</span><span class="p">:</span>
+  <span class="nt">condition</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Callable[[T], bool]</span>
+  <span class="nt">data</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">T</span>
+
+<span class="nt">tasks</span><span class="p">:</span>
+  <span class="nt">then</span><span class="p">:</span>
+    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">$COMPONENT_INPUT</span>
+    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.flow_control.filter</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">filter_func</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$ARG.condition</span>
+      <span class="nt">data</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$ARG.data</span>
+
+  <span class="nt">else</span><span class="p">:</span>
+    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">$COMPONENT_INPUT</span>
+    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.flow_control.filter</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">filter_func</span><span class="p">:</span> <span class="kt">!Py</span> <span class="s">&quot;lambda</span><span class="nv"> </span><span class="s">x:</span><span class="nv"> </span><span class="s">not</span><span class="nv"> </span><span class="s">$ARG.condition(x)&quot;</span>
+      <span class="nt">data</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$ARG.data</span>
+
+<span class="nt">output</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">then</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">else</span>
+</code></pre></div>
                 
               
               

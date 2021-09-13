@@ -357,6 +357,91 @@
   
   
     <li class="md-nav__item">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Hello World
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="hello-world.html" class="md-nav__link md-nav__link--active">
+        Hello World
+      </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#creating-a-task" class="md-nav__link">
+    Creating a Task
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#connections-typhoon-status" class="md-nav__link">
+    Connections &amp; typhoon status
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#build-run-and-debug" class="md-nav__link">
+    Build, Run and debug
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#writing-to-a-file" class="md-nav__link">
+    Writing to a file
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#introducing-our-built-in-context-variables" class="md-nav__link">
+    Introducing our built in context variables
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#passing-data" class="md-nav__link">
+    Passing data
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../getting-started/connections.html" class="md-nav__link">
         Adding connections
       </a>
@@ -579,20 +664,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../usage/templates.md" class="md-nav__link">
-        Tempaltes
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../usage/variables.md" class="md-nav__link">
-        Variables
+      <a href="../usage/templates.html" class="md-nav__link">
+        Variables & Templates
       </a>
     </li>
   
@@ -734,20 +807,8 @@
   
   
     <li class="md-nav__item">
-      <a href="automating-pandas.html" class="md-nav__link">
+      <a href="pandas-examples.html" class="md-nav__link">
         Pandas automation
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="airflow-examples.html" class="md-nav__link">
-        Airflow examples
       </a>
     </li>
   
@@ -958,9 +1019,9 @@
 <p><img alt="typhoon connectioin --help" src="img/helloworld_3.png" /></p>
 <p>Finally, we can use <code>typhoon connection add --help</code></p>
 <p><img alt="typhoon connectioin add --help" src="img/helloworld_4.png" /></p>
-<p>So now we can see how to add our connections from the <code>connections.yml</code>file. </p>
-<p><code>typhoon connection add --conn-id data_lake --conn-env **local**</code></p>
-<p><code>typhoon connection add --conn-id echo --conn-env **local**</code></p>
+<p>So now we can see how to add our connections from the <code>connections.yml</code>file. Note the <strong>local</strong> environment. </p>
+<p><code>typhoon connection add --conn-id data_lake --conn-env local</code></p>
+<p><code>typhoon connection add --conn-id echo --conn-env local</code></p>
 <p><img alt="typhoon connectioin add --con-id data_lake --conn-env local" src="img/helloworld_5.png" /></p>
 <p>Now again <code>typhoon status</code></p>
 <p><img alt="typhoon status" src="img/helloworld_6.png" /></p>
@@ -1047,7 +1108,7 @@
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
         
-        <a href="../usage/hooks.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Hooks" rel="prev">
+        <a href="../usage/templates.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Variables &amp; Templates" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -1056,7 +1117,7 @@
               <span class="md-footer__direction">
                 Previous
               </span>
-              Hooks
+              Variables & Templates
             </div>
           </div>
         </a>

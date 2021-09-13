@@ -77,6 +77,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#testing" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -352,6 +357,18 @@
   
   
     <li class="md-nav__item">
+      <a href="../examples/hello-world.html" class="md-nav__link">
+        Hello World
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../getting-started/connections.html" class="md-nav__link">
         Adding connections
       </a>
@@ -522,10 +539,42 @@
       <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
       
       
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Task testing
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="task-testing.html" class="md-nav__link md-nav__link--active">
         Task testing
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#dag-task-test" class="md-nav__link">
+    DAG Task Test
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -584,20 +633,8 @@
   
   
     <li class="md-nav__item">
-      <a href="templates.md" class="md-nav__link">
-        Tempaltes
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="variables.md" class="md-nav__link">
-        Variables
+      <a href="templates.html" class="md-nav__link">
+        Variables & Templates
       </a>
     </li>
   
@@ -662,20 +699,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../examples/automating-pandas.html" class="md-nav__link">
+      <a href="../examples/pandas-examples.html" class="md-nav__link">
         Pandas automation
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../examples/airflow-examples.html" class="md-nav__link">
-        Airflow examples
       </a>
     </li>
   
@@ -724,6 +749,38 @@
               </div>
             
             
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#dag-task-test" class="md-nav__link">
+    DAG Task Test
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
           
           <div class="md-content" data-md-component="content">
             <article class="md-content__inner md-typeset">
@@ -734,9 +791,36 @@
                   </a>
                 
                 
-                  <h1>Task testing</h1>
-                
-                
+                <h1 id="testing">Testing</h1>
+<p>With Typhoon you can test your DAG tasks by including tests into the YAML. This is very helpful for development. It allows you to see how the task might react to different data structures. </p>
+<p>You can also write <a href="https://docs.pytest.org">PyTest</a> tests for you functions, transformations, and hooks in the normal way that you would for any other code. This is allows you to write robust flows. These are included in the <code>tests</code> folder, either as a unit or integration test.   </p>
+<p>You can also debug and test the DAG compiled python code in the normal way. </p>
+<h2 id="dag-task-test">DAG Task Test</h2>
+<p>You can add a set of tests (as many as you like) in the DAG at the bottom using the key <code>tests</code> and then the name of the task you are testing.</p>
+<p>You need to provide the input data into <code>batch</code> and the <code>interval_start</code> and <code>interval_end</code>. The test then runs using this input (i.e. not running data from preceding tasks) and compares the output to the <code>expected</code> key. In <code>expected</code> you need to assign the keys that the function outputs. </p>
+<h1 id="todo-below-fix-after-refactor-and-get-a-better-examples">@TODO BELOW - Fix after refactor and get a better examples</h1>
+<div class="highlight"><pre><span></span><code>  <span class="nt">write_csv</span><span class="p">:</span>
+    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">exchange_rate</span>
+    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.filesystem.write_data</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">hook</span><span class="p">:</span> <span class="kt">!Hook</span> <span class="l l-Scalar l-Scalar-Plain">echo</span>
+      <span class="nt">data</span><span class="p">:</span> <span class="kt">!MultiStep</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">transformations.xr.flatten_response($BATCH)</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.data.dicts_to_csv($1, delimiter=&#39;|&#39;)</span>
+      <span class="nt">path</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">f&#39;{$DAG_CONTEXT.interval_start.isoformat()}_xr_data.csv&#39;</span>
+
+
+<span class="nt">tests</span><span class="p">:</span>
+  <span class="nt">write_csv</span><span class="p">:</span>
+    <span class="nt">batch</span><span class="p">:</span>
+      <span class="nt">a</span><span class="p">:</span> <span class="s">&quot;a_pay&quot;</span>
+      <span class="nt">b</span><span class="p">:</span> <span class="s">&quot;b_pay&quot;</span>
+    <span class="nt">interval_start</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">2021-02-03T01:01:01</span>
+    <span class="nt">interval_end</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">2021-02-03T02:01:01</span>
+    <span class="nt">expected</span><span class="p">:</span>
+      <span class="nt">data</span><span class="p">:</span> <span class="s">&#39;[{&quot;cola&quot;:</span><span class="nv"> </span><span class="s">1,</span><span class="nv"> </span><span class="s">&quot;colb&quot;:</span><span class="nv"> </span><span class="s">2,</span><span class="nv"> </span><span class="s">&quot;colc&quot;:</span><span class="nv"> </span><span class="s">3},</span><span class="nv"> </span><span class="s">{&quot;cola&quot;:</span><span class="nv"> </span><span class="s">2,</span><span class="nv"> </span><span class="s">&quot;colb&quot;:</span><span class="nv"> </span><span class="s">4,</span><span class="nv"> </span><span class="s">&quot;colc&quot;:</span><span class="nv"> </span><span class="s">5}]&#39;</span>
+      <span class="nt">path</span><span class="p">:</span> <span class="s">&#39;data_abc_batch_num_2_2021-02-03T01_01_01.json&#39;</span>
+</code></pre></div>
                 
               
               

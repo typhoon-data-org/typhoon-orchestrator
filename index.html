@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#typhoon-orchestrator" class="md-skip">
+        <a href="#typhoon-orchestrator-documentation" class="md-skip">
           Skip to content
         </a>
       
@@ -342,13 +342,6 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
-    Overview
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#example-dag" class="md-nav__link">
     Example DAG
   </a>
@@ -408,6 +401,18 @@
     <li class="md-nav__item">
       <a href="getting-started/installation.html" class="md-nav__link">
         Installation
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="examples/hello-world.html" class="md-nav__link">
+        Hello World
       </a>
     </li>
   
@@ -640,20 +645,8 @@
   
   
     <li class="md-nav__item">
-      <a href="usage/templates.md" class="md-nav__link">
-        Tempaltes
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="usage/variables.md" class="md-nav__link">
-        Variables
+      <a href="usage/templates.html" class="md-nav__link">
+        Variables & Templates
       </a>
     </li>
   
@@ -718,20 +711,8 @@
   
   
     <li class="md-nav__item">
-      <a href="examples/automating-pandas.html" class="md-nav__link">
+      <a href="examples/pandas-examples.html" class="md-nav__link">
         Pandas automation
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="examples/airflow-examples.html" class="md-nav__link">
-        Airflow examples
       </a>
     </li>
   
@@ -799,13 +780,6 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
-    Overview
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#example-dag" class="md-nav__link">
     Example DAG
   </a>
@@ -843,12 +817,14 @@
                   </a>
                 
                 
-                <h1 id="typhoon-orchestrator">Typhoon Orchestrator</h1>
-<p>Typhoon is a Data Worfklow tool (ETL / ELT pipelines) for composing <strong>Airflow</strong> or AWS Lambda DAGs in YAML.</p>
-<h3 id="overview">Overview</h3>
+                <h1 id="typhoon-orchestrator-documentation">Typhoon Orchestrator Documentation</h1>
+<p>Welcome to Typhoon!</p>
+<p>Typhoon is a Data workflow tool (i.e. ETL / ELT pipelines) for composing <strong>Airflow</strong> or AWS Lambda DAGs in YAML. </p>
 <div class="tabbed-set" data-tabs="1:3"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><label for="__tabbed_1_1">Why Typhoon</label><div class="tabbed-content">
-<p>To make creating batch ELT pipelines for the whole team supported by a Data Engineer friendly toolkit.</p>
-<p><strong>Supercharge your existing Airflow workflow</strong>. Use Typhoon to create your DAGs with complete simplicity and re-usability. Deploying to your existing Airflow you can upgrade with zero risk and no migration work.</p>
+<p>Write Airflow DAGS 10x faster <img alt="🚀" class="twemoji" src="https://twemoji.maxcdn.com/v/latest/svg/1f680.svg" title=":rocket:" /></p>
+<p>Make creating reliable data pipelines easy for the whole team <img alt="🙌" class="twemoji" src="https://twemoji.maxcdn.com/v/latest/svg/1f64c.svg" title=":raised_hands:" /></p>
+<p>Simplicity and re-usability; a toolkit designed to be loved by Data Engineers <img alt="❤" class="twemoji" src="https://twemoji.maxcdn.com/v/latest/svg/2764.svg" title=":heart:" /></p>
+<p>Deploying to your existing Airflow with zero risk and no migration work <img alt="☺" class="twemoji" src="https://twemoji.maxcdn.com/v/latest/svg/263a.svg" title=":relaxed:" /></p>
 <p><strong>Workflow</strong>: Typhoon YAML DAG --&gt; transpile --&gt; Airflow DAG </p>
 </div>
 <input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><label for="__tabbed_1_2">Key Principles</label><div class="tabbed-content">
@@ -859,7 +835,8 @@
 <li><strong>Components</strong> - reduce complex tasks (e.g. CSV→S3→Snowflake) to 1 re-usable task.</li>
 <li><strong>UI</strong>: Component UI for sharing DAG configuration with your DWH, Analyst or Data Sci. teams.</li>
 <li><strong>Rich Cli</strong>: Inspired by other great command line interfaces and instantly familiar. Intelligent bash/zsh completion.</li>
-<li><strong>Testable Python</strong> - automated PyTest to for more robust flows.</li>
+<li><strong>Testable Tasks</strong> - automate DAG task tests.</li>
+<li><strong>Testable Python</strong> - test functions or full DAGs with PyTest.</li>
 <li><strong>Flexible deployment</strong>:<ul>
 <li>deploy to Airflow - large reduction in effort, without breaking existing production.</li>
 <li>deploy to AWS Lambda - completely serverless</li>
@@ -877,6 +854,12 @@
 </li>
 </ul>
 </div>
+</div>
+<div class="admonition note">
+<p class="admonition-title"><a href="getting-started/installation.html">Installing Typhoon - quick start</a></p>
+</div>
+<div class="admonition note">
+<p class="admonition-title"><a href="examples/hello-world.html">Hello World - 5 min walkthrough</a></p>
 </div>
 <h2 id="example-dag">Example DAG</h2>
 <div class="tabbed-set" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><label for="__tabbed_2_1">Typhoon DAG (YAML)</label><div class="tabbed-content">
@@ -920,7 +903,7 @@
 </code></pre></div>
 </td></tr></table>
 </div>
-<input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><label for="__tabbed_2_2">Airflow DAG (python)</label><div class="tabbed-content">
+<input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><label for="__tabbed_2_2">Equivalent Airflow DAG (python)</label><div class="tabbed-content">
 <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
  2
  3

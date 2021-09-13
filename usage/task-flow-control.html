@@ -357,6 +357,18 @@
   
   
     <li class="md-nav__item">
+      <a href="../examples/hello-world.html" class="md-nav__link">
+        Hello World
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../getting-started/connections.html" class="md-nav__link">
         Adding connections
       </a>
@@ -555,6 +567,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#if-statements" class="md-nav__link">
+    If statements
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -628,20 +647,8 @@
   
   
     <li class="md-nav__item">
-      <a href="templates.md" class="md-nav__link">
-        Tempaltes
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="variables.md" class="md-nav__link">
-        Variables
+      <a href="templates.html" class="md-nav__link">
+        Variables & Templates
       </a>
     </li>
   
@@ -706,20 +713,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../examples/automating-pandas.html" class="md-nav__link">
+      <a href="../examples/pandas-examples.html" class="md-nav__link">
         Pandas automation
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../examples/airflow-examples.html" class="md-nav__link">
-        Airflow examples
       </a>
     </li>
   
@@ -796,6 +791,13 @@
         <li class="md-nav__item">
   <a href="#filter" class="md-nav__link">
     Filter
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#if-statements" class="md-nav__link">
+    If statements
   </a>
   
 </li>
@@ -915,6 +917,41 @@
       <span class="nt">df</span><span class="p">:</span> <span class="kt">!Py</span> <span class="s">&quot;pd.DataFrame({&#39;a&#39;:</span><span class="nv"> </span><span class="s">[1,2,3,4],</span><span class="nv"> </span><span class="s">&#39;b&#39;:</span><span class="nv"> </span><span class="s">[6,7,8,9]})&quot;</span>
       <span class="nt">table_name</span><span class="p">:</span> <span class="s">&quot;clients&quot;</span>
 </code></pre></div>
+<h2 id="if-statements">If statements</h2>
+<p>You can use the if component to do if-else logic:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">test_if</span>
+<span class="nt">schedule_interval</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">rate(1 hour)</span>
+
+<span class="nt">tasks</span><span class="p">:</span>
+  <span class="nt">names</span><span class="p">:</span>
+    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.flow_control.branch</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">branches</span><span class="p">:</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">John</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">Martha</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">Mathew</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">Karla</span>
+
+  <span class="nt">is_girl</span><span class="p">:</span>
+    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">names</span>
+    <span class="nt">component</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.if</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">condition</span><span class="p">:</span> <span class="kt">!Py</span> <span class="s">&quot;lambda</span><span class="nv"> </span><span class="s">name:</span><span class="nv"> </span><span class="s">name.endswith(&#39;a&#39;)&quot;</span>
+      <span class="nt">data</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$BATCH</span>
+
+  <span class="nt">print_girl</span><span class="p">:</span>
+    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">is_girl.then</span>
+    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">functions.debug.echo</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">data</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">f&#39;{$BATCH} is a girl&#39;</span>
+
+  <span class="nt">print_boy</span><span class="p">:</span>
+    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">is_girl.else</span>
+    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">functions.debug.echo</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">data</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">f&#39;{$BATCH} is a boy&#39;</span>
+</code></pre></div>
+<p>The key parts above are the use of the <code>typhoon.if</code> component and that the tasks are linked using the <code>condition.if</code> and <code>condition.else</code>.</p>
                 
               
               

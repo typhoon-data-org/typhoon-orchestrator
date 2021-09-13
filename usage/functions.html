@@ -77,6 +77,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#functions" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -352,6 +357,18 @@
   
   
     <li class="md-nav__item">
+      <a href="../examples/hello-world.html" class="md-nav__link">
+        Hello World
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../getting-started/connections.html" class="md-nav__link">
         Adding connections
       </a>
@@ -534,10 +551,49 @@
       <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
       
       
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Functions
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="functions.html" class="md-nav__link md-nav__link--active">
         Functions
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#example-built-in-contrib-function" class="md-nav__link">
+    Example built-in / contrib. function
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-project-function" class="md-nav__link">
+    Example project function
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -584,20 +640,8 @@
   
   
     <li class="md-nav__item">
-      <a href="templates.md" class="md-nav__link">
-        Tempaltes
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="variables.md" class="md-nav__link">
-        Variables
+      <a href="templates.html" class="md-nav__link">
+        Variables & Templates
       </a>
     </li>
   
@@ -662,20 +706,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../examples/automating-pandas.html" class="md-nav__link">
+      <a href="../examples/pandas-examples.html" class="md-nav__link">
         Pandas automation
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../examples/airflow-examples.html" class="md-nav__link">
-        Airflow examples
       </a>
     </li>
   
@@ -724,6 +756,45 @@
               </div>
             
             
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#example-built-in-contrib-function" class="md-nav__link">
+    Example built-in / contrib. function
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-project-function" class="md-nav__link">
+    Example project function
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
           
           <div class="md-content" data-md-component="content">
             <article class="md-content__inner md-typeset">
@@ -734,9 +805,42 @@
                   </a>
                 
                 
-                  <h1>Functions</h1>
-                
-                
+                <h1 id="functions">Functions</h1>
+<p>Functions are the key building blocks of DAG tasks. Each task has to have a function. Usually functions act on Hooks to extract or load data. </p>
+<p>In the example below we are using a custom function <code>exchange_rates_api.get_history</code> that would in the file <code>exchange_rates_api.py</code> in the <code>functions</code> directory. In this file you would put any function that your custom ExchangeRate Hook might need. </p>
+<ul>
+<li><code>typhoon.function_file.function_name</code> for built-in / contrib functions.</li>
+<li><code>functions.my_function_file.function_name</code> for accessing your project functions. </li>
+</ul>
+<p>The two main task keys that interact with the function are the <code>input</code> (if required) and the <code>args</code>. These match the input paramater names of the function. So if you are unsure of how to make the task you can always check the function code. </p>
+<p>For example the write_data function has the following parameters that are matched in the YAML DAG below it. Optional ones are omitted. </p>
+<div class="highlight"><pre><span></span><code>    <span class="k">def</span> <span class="nf">write_data</span><span class="p">(</span>
+            <span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">BytesIO</span><span class="p">],</span>
+            <span class="n">hook</span><span class="p">:</span> <span class="n">FileSystemHookInterface</span><span class="p">,</span>
+            <span class="n">path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+            <span class="n">create_intermediate_dirs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="n">metadata</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">return_path_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;relative&#39;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+</code></pre></div>
+<h3 id="example-built-in-contrib-function">Example built-in / contrib. function</h3>
+<div class="highlight"><pre><span></span><code>  <span class="nt">write_csv</span><span class="p">:</span>
+    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">exchange_rate</span>
+    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.filesystem.write_data</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">hook</span><span class="p">:</span> <span class="kt">!Hook</span> <span class="l l-Scalar l-Scalar-Plain">echo</span>
+      <span class="nt">data</span><span class="p">:</span> <span class="kt">!MultiStep</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">transformations.xr.flatten_response($BATCH)</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.data.dicts_to_csv($1, delimiter=&#39;|&#39;)</span>
+      <span class="nt">path</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">f&#39;{$DAG_CONTEXT.interval_start.isoformat()}_xr_data.csv&#39;</span>
+</code></pre></div>
+<h3 id="example-project-function">Example project function</h3>
+<div class="highlight"><pre><span></span><code>  <span class="nt">exchange_rate</span><span class="p">:</span>
+    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">functions.exchange_rates_api.get_history</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">start_at</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$DAG_CONTEXT.interval_start</span>
+      <span class="nt">end_at</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$DAG_CONTEXT.interval_end</span>
+</code></pre></div>
                 
               
               

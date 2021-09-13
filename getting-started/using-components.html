@@ -359,6 +359,18 @@
   
   
     <li class="md-nav__item">
+      <a href="../examples/hello-world.html" class="md-nav__link">
+        Hello World
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="connections.html" class="md-nav__link">
         Adding connections
       </a>
@@ -447,15 +459,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#example-in-flow-component" class="md-nav__link">
-    Example In-flow component
+  <a href="#example-archive-on-mondays" class="md-nav__link">
+    Example: Archive on Mondays
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#example-standalone-component" class="md-nav__link">
-    Example Standalone Component
+  <a href="#example-source-db-to-snowflake-dwh" class="md-nav__link">
+    Example: Source DB to Snowflake DWH
   </a>
   
 </li>
@@ -635,20 +647,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../usage/templates.md" class="md-nav__link">
-        Tempaltes
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../usage/variables.md" class="md-nav__link">
-        Variables
+      <a href="../usage/templates.html" class="md-nav__link">
+        Variables & Templates
       </a>
     </li>
   
@@ -713,20 +713,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../examples/automating-pandas.html" class="md-nav__link">
+      <a href="../examples/pandas-examples.html" class="md-nav__link">
         Pandas automation
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../examples/airflow-examples.html" class="md-nav__link">
-        Airflow examples
       </a>
     </li>
   
@@ -801,15 +789,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#example-in-flow-component" class="md-nav__link">
-    Example In-flow component
+  <a href="#example-archive-on-mondays" class="md-nav__link">
+    Example: Archive on Mondays
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#example-standalone-component" class="md-nav__link">
-    Example Standalone Component
+  <a href="#example-source-db-to-snowflake-dwh" class="md-nav__link">
+    Example: Source DB to Snowflake DWH
   </a>
   
 </li>
@@ -833,25 +821,12 @@
                 
                 <h1 id="using-components">Using Components</h1>
 <h2 id="what-is-a-component">What is a component?</h2>
-<p>Components are ways of packaging up sets of regularly used tasks. This encourages modularity and re-use. </p>
-<p>This means a library of powerful workflows that are then simple dropping in  2-3 line YAML fragments.</p>
-<p>Components can be structured as complete workflows or to slot into larger ones:</p>
-<ul>
-<li><strong>'In-flow'</strong> using previous steps as inputs <ul>
-<li>e.g. 'if', 'singer_multiplexer' </li>
-</ul>
-</li>
-<li><strong>'Standalone'</strong> ones can be built as DAG full templates. The difference is this structure can use the Component Builder UI.   <ul>
-<li>e.g. 'db_to_snowflake', 'csv_my_pandas_transform'</li>
-</ul>
-</li>
-</ul>
-<p><img src="../img/component-descriptor.png"></p>
-<p>@TODO - screenshot of UI</p>
-<h2 id="example-in-flow-component">Example In-flow component</h2>
+<p><a href="../usage/components.html">Components</a> are ways of packaging sets of regularly used tasks. This encourages modularity and re-use.</p>
+<p>This page focuses on using some packaged example components (rather than <a href="../usage/components.html">how to construct one</a>)</p>
+<h2 id="example-archive-on-mondays">Example: Archive on Mondays</h2>
 <p>Trivial example to choose a different path based on if its a Monday.</p>
 <p><code>$DAG_CONTEXT.ts</code> is a datetime object representing the <a href="https://docs.python.org/3/library/datetime.html#datetime.datetime.weekday">timestamp</a> of runtime in the context. </p>
-<p>Calling <code>component: typhoon.if</code> imports the template structure defined in the component YAML. Your constributed components would be referenced <code>component: components.my_component</code>.</p>
+<p>Calling <strong><code>component: typhoon.if</code></strong> imports the template structure defined in the component YAML. Your constributed components would be referenced <code>component: components.my_component</code>.</p>
 <p>This <code>if</code> component defines two outputs. These are accessed in the line <code>choose_preprocessing.then</code> and <code>choose_preprocessing.else</code>.</p>
 <div class="highlight"><pre><span></span><code><span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">conditional_process</span>
 <span class="nt">schedule_interval</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">rate(10 minutes)</span>
@@ -886,9 +861,9 @@
 
   <span class="l l-Scalar l-Scalar-Plain">...</span>
 </code></pre></div>
-<h2 id="example-standalone-component">Example Standalone Component</h2>
+<h2 id="example-source-db-to-snowflake-dwh">Example: Source DB to Snowflake DWH</h2>
 <p>This is a non-trivial example of a full DWH load from multipler tables across 3 separate ERP systems.</p>
-<p>This calls the entire end to end flow that is packaged in the  <code>typhoon.db_to_snowflake</code> flow. This component example is idempotence, and encapsulating the management of the DHW staging metadata.</p>
+<p>This calls the entire end to end flow that is packaged in the  <strong><code>typhoon.db_to_snowflake</code></strong> flow. This component example is fully <a href="https://medium.com/ssense-tech/lets-get-idempotence-right-59f227178bb8">idempotent</a>, and encapsulating the  of the DHW staging metadata.</p>
 <div class="highlight"><pre><span></span><code><span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">source_to_snowflake</span>
 <span class="nt">schedule_interval</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">rate(1 day)</span>
 
