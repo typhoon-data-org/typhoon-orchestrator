@@ -46,7 +46,6 @@ nav:
     - Hooks: 'usage/hooks.md'
     - Variables & Templates : 'usage/templates.md'
   - Contributing: 'contributing.md'
-  - Licence: 'licence.md'
 
 markdown_extensions:
   - markdown.extensions.codehilite:
