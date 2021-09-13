@@ -51,7 +51,7 @@ We will see in the next section 'Connections' how to add these.
 
 ## With Docker
 
-@TODO DOCKER update - also in Readme.
+@TODO - waiting until Docker with Airflow is clean, then finalise. 
 
 
 ## With Docker and Airflow
@@ -68,10 +68,13 @@ TYPHOON_PROJECTS_HOME="/tmp/typhoon_projects" # Or any other path you prefer
 mkdir -p $TYPHOON_PROJECTS_HOME/typhoon_airflow_test
 cd $TYPHOON_PROJECTS_HOME/typhoon_airflow_test
 mkdir src
-curl -LfO 'https://typhoon-data-org.github.io/getting-started/docker-compose.yml'
+curl -LfO 'https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/docker-compose.yml'
 
 docker compose up -d airflow-init  # initiates airflow 
-docker exec -it typhoon-af bash   # Then you're in the typhoon home. Try typhoon status
+docker exec -it typhoon-af bash   # Then you're in the typhoon home.
+ 
+airflow initdb # !! To initiate Airflow DB !!
+typhoon status # To see status of dags & connections
 ```
 
 You should be able to then check `typhoon status` and also the airlfow UI at [http://localhost:8088](http://localhost:8088)
@@ -79,7 +82,7 @@ You should be able to then check `typhoon status` and also the airlfow UI at [ht
 This runs a container with only 1 service, `typhoon-af`. This has both Airflow and Typhoon installed on it ready to work with.
 
 #### Directories
-Some directories in the container are mounted, which means that their contents are synchronized between your computer and the container.
+Some directories are mounted which synchronizes files between your computer and the container.
 
 - ./data_lake - for landing files (as a local dev environment)
 - ./airflow_dags - where typhoon compiles your Airflow DAGs to
@@ -102,6 +105,9 @@ typhoon dag build --all
 ```
 
 If they successfully compile they will appear in ./airflow_dags, and also in the Airflow UI.
+
+**You may also need to restart the Airflow Container to see this list update.** 
+
 ![DAG list](../img/airflow_ui_list_after_install.png)
 
 !!! important "Next steps: add connections shown in typhoon status before running - [Hello World - 5 min walkthrough][2]"
@@ -111,6 +117,7 @@ If they successfully compile they will appear in ./airflow_dags, and also in the
     ```bash
     typhoon connection add --conn-id data_lake --conn-env local
     typhoon connection add --conn-id echo --conn-env local
+    typhoon dag build --all
     ```
 
 [1]:./docker-compose.yml

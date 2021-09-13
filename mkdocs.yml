@@ -24,14 +24,17 @@ nav:
   - Getting Started:
     - Installation: 'getting-started/installation.md'
     - Hello World: 'examples/hello-world.md'
-    - Adding connections: 'getting-started/connections.md'
-    - Creating your DAG: 'getting-started/creating-a-dag.md'
     - Typhoon Cli: 'getting-started/typhoon-cli.md'
+    - Creating your DAG: 'getting-started/creating-a-dag.md'
+    - Adding connections: 'getting-started/connections.md'
     - Deployment: 'getting-started/deployment.md'
     - Using Components: 'getting-started/using-components.md'
     - UI configurator: 'getting-started/using-component-ui.md'
-    - Creating Components: 'getting-started/creating-components.md'
     - New Hooks (connections): 'getting-started/creating-hooks.md'
+  - Example Walkthroughs:
+      - Hello World: 'examples/hello-world.md'
+      - MySql to Snowflake: 'examples/mysql-to-snowflake.md'
+      - Pandas automation: 'examples/pandas-examples.md'
   - Usage:
     - Dag Context: 'usage/dag-context.md'
     - "!Py & !Multistep": 'usage/py-multistep.md'
@@ -42,10 +45,6 @@ nav:
     - Components: 'usage/components.md'
     - Hooks: 'usage/hooks.md'
     - Variables & Templates : 'usage/templates.md'
-  - Example Walkthroughs:
-      - Hello World: 'examples/hello-world.md'
-      - MySql to Snowflake: 'examples/mysql-to-snowflake.md'
-      - Pandas automation: 'examples/pandas-examples.md'
   - Contributing: 'contributing.md'
   - Licence: 'licence.md'
 
