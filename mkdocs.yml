@@ -23,6 +23,7 @@ nav:
   - Overview: 'index.md'
   - Getting Started:
     - Installation: 'getting-started/installation.md'
+    - Hello World: 'examples/hello-world.md'
     - Adding connections: 'getting-started/connections.md'
     - Creating your DAG: 'getting-started/creating-a-dag.md'
     - Typhoon Cli: 'getting-started/typhoon-cli.md'

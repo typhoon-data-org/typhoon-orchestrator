@@ -1,0 +1,21 @@
+version: "3.3"
+services:
+  typhoon-af:
+    container_name: typhoon-af
+    image: typhoondata/typhoon-orchestrator_airflow1.10
+    environment:
+      - FERNET_KEY=
+    ports:
+      - "8088:8080"
+    volumes:
+      - "typhoon_vol:/opt/typhoon/typhoon_project/"
+      - "./data_lake:/tmp/data_lake/"
+      - "./airflow_dags:/usr/local/airflow/dags"
+
+volumes:
+  typhoon_vol:
+    driver: local
+    driver_opts:
+      type: none
+      device: \${PWD}/src
+      o: bind

@@ -41,7 +41,7 @@ Typhoon is a Data workflow tool (i.e. ETL / ELT pipelines) for composing **Airfl
 
 !!! note "[Installing Typhoon - quick start][1]"
 
-!!! note "[Hello World - 5 min walkthrough][1]"
+!!! note "[Hello World - 5 min walkthrough][2]"
 
 
 ## Example DAG
@@ -157,3 +157,4 @@ Put in screenshot of UI
 
 
 [1]:./getting-started/installation.md
+[2]:./examples/hello-world.md
