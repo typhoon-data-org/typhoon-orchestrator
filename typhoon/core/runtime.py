@@ -1,17 +1,34 @@
 from types import SimpleNamespace
 from typing import Callable, Any, List, Optional, Union, Type
+from uuid import uuid4
 
 from typhoon.core import DagContext, SKIP_BATCH
 from typing_extensions import Protocol, runtime_checkable
 
 
 class BrokerInterface(Protocol):
-    def send(self, dag_context: DagContext, source_id: str, destination: 'TaskInterface', batch_num: int, batch: Any):
+    def send(
+            self,
+            dag_context: DagContext,
+            source_id: str,
+            destination: 'TaskInterface',
+            batch_num: int,
+            batch: Any,
+            batch_group_id: int,    # Since a batch_number is not enough to guarantee uniqueness
+    ):
         ...
 
 
 class SequentialBroker(BrokerInterface):
-    def send(self, dag_context: DagContext, source_id: str, destination: 'TaskInterface', batch_num: int, batch: Any):
+    def send(
+            self,
+            dag_context: DagContext,
+            source_id: str,
+            destination: 'TaskInterface',
+            batch_num: int,
+            batch: Any,
+            batch_group_id: int,
+    ):
         destination.run(dag_context, source_id, batch_num, batch)
 
 
@@ -31,12 +48,13 @@ class TaskInterface(Protocol):
 
     def run(self, dag_context: DagContext, source: Optional[str],  batch_num: int, batch: Any):
         args = self.get_args(dag_context, source, batch_num, batch)
+        batch_group_id = uuid4()
         for batch_num, batch in enumerate(self.function(**args), start=1):
             if batch is SKIP_BATCH:
                 print(f'Skipping batch {batch_num} for {self.task_id}')
                 continue
             for destination in self.destinations:
-                self.broker.send(dag_context, self.task_id, destination, batch_num, batch)
+                self.broker.send(dag_context, self.task_id, destination, batch_num, batch, batch_group_id)
 
 
 class ComponentArgs(Protocol):

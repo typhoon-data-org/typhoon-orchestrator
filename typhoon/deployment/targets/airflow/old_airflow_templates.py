@@ -228,7 +228,6 @@ class AirflowDag(Templated):
             self._extensions_info = get_typhoon_extensions_info()
         return self._extensions_info
 
-
     @property
     def typhoon_functions_modules(self):
         function_modules_in_use = get_typhoon_functions_modules(self.dag.nodes)

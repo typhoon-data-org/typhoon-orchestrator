@@ -6,7 +6,9 @@ from typing_extensions import Literal
 
 from typhoon.core.components import Component
 from typhoon.core.dags import DAGDefinitionV2, MultiStep, Py, TaskDefinition
+from typhoon.core.old_transpiler import typhoon_import_function_as, typhoon_import_transformation_as
 from typhoon.core.templated import Templated
+from typhoon.introspection.introspect_extensions import ExtensionsInfo, get_typhoon_extensions_info
 
 
 def get_transformations_modules(dag_or_component: Union[DAGDefinitionV2, Component]) -> Iterable[str]:
@@ -191,21 +193,40 @@ def extract_imports(tasks: Dict[str, TaskDefinition]) -> List[ImportDefinition]:
 @dataclass
 class ImportsTemplate(Templated):
     template = '''
+    {% for import_from, import_as in typhoon_functions_modules %}
+    import {{ import_from }} as {{ import_as }}
+    {% endfor %}
+    {% for import_from, import_as in typhoon_transformations_modules %}
+    import {{ import_from }} as {{ import_as }}
+    {% endfor %}
     {% for _import in imports %}
-    {% if _import.module == 'typhoon' %}
-    import typhoon.contrib.{{_import.type}}s.{{_import.submodule}} as typhoon_{{ _import.type }}s_{{ _import.submodule }}
-    {% elif _import.module is none %}
+    {% if _import.module is none %}
     import {{ _import.type }}s.{{ _import.submodule }}
-    {% else %}
-    from {{ _import.module }}.{{ _import.submodule }} import {{ _import.type }}s_{{ _import.submodule }}
     {% endif %}
     {% endfor %}
     '''
     imports: List[ImportDefinition]
+    _extensions_info: ExtensionsInfo = None
+
+    @property
+    def extensions_info(self):
+        if self._extensions_info is None:
+            self._extensions_info = get_typhoon_extensions_info()
+        return self._extensions_info
+
+    @property
+    def typhoon_functions_modules(self):
+        function_modules_in_use = [x.submodule for x in self.imports if x.type == 'function' and x.module == 'typhoon']
+        return [(v, typhoon_import_function_as(k)) for k, v in self.extensions_info['functions'].items() if k in function_modules_in_use]
+
+    @property
+    def typhoon_transformations_modules(self):
+        transformation_modules_in_use = [x.submodule for x in self.imports if x.type == 'transformation' and x.module == 'typhoon']
+        return [(v, typhoon_import_transformation_as(k)) for k, v in self.extensions_info['transformations'].items() if k in transformation_modules_in_use]
 
 
 def get_transformations_item(item) -> Set[ImportDefinition]:
-    if isinstance(item, Py) and 'transformations.' in item.value:
+    if isinstance(item, Py) and ('transformations.' in item.value or 'typhoon.' in item.value):
         import_definitions = set()
         typhoon_transformations = re.findall(r'typhoon\.(\w+)\.\w+', item.value)
         for submodule in typhoon_transformations:

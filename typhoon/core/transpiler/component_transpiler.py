@@ -39,7 +39,6 @@ class ComponentFile(Templated):
             self.task_id = task_id
             self.args_class = args_class
             
-            parent_component = self
             {% for task_name, task in component_tasks.items() %}
             class {{ task_name | camel_case }}ComponentArgs(ComponentArgs):
                 def __init__(self, dag_context: DagContext, source: str, batch_num: int, batch: Any):
@@ -72,8 +71,8 @@ class ComponentFile(Templated):
             {{ task_id }}_task = {{ task.component.split('.')[-1] | camel_case }}Component(
                 '{{ task_name }}',
                 {{ task_id | camel_case }}ComponentArgs,
-                async_broker,
                 sync_broker,
+                async_broker,
             )
             {% else %}
             {{ task_id }}_task = {{ task_id | camel_case }}Task(

@@ -74,8 +74,8 @@ class DagFile(Templated):
         {{ task_name }}_task = {{ task.component.split('.')[-1] | camel_case }}Component(
             '{{ task_name }}',
             {{ task_name | camel_case }}ComponentArgs,
-            async_broker,
             sync_broker,
+            async_broker,
         )
         {% else %}
         {{ task_name }}_task = {{ task_name | camel_case }}Task(

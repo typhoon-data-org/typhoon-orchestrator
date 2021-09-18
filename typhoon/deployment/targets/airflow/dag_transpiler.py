@@ -68,7 +68,7 @@ class AirflowDagFile(Templated):
     
     {% endfor %}
     sync_broker = SequentialBroker()
-    async_broker = AirflowBroker()
+    async_broker = AirflowBroker(dag_id='{{ dag.name }}')
     
     # Initialize typhoon tasks
     {% for task_name, task in dag.tasks.items() %}
@@ -76,8 +76,8 @@ class AirflowDagFile(Templated):
     {{ task_name }}_task = {{ task.component.split('.')[-1] | camel_case }}Component(
         '{{ task_name }}',
         {{ task_name | camel_case }}ComponentArgs,
-        async_broker,
         sync_broker,
+        async_broker,
     )
     {% else %}
     {{ task_name }}_task = {{ task_name | camel_case }}Task(
@@ -96,21 +96,22 @@ class AirflowDagFile(Templated):
     {{ dependencies | render_dependencies }}
     {% endif %}
     
-    # Create airflow tasks for each source
     with DAG(
         dag_id='{{ dag.name }}',
         default_args={'owner': '{{ owner }}'{% if dag.airflow_default_args %}, **{{ dag.airflow_default_args }}{% endif %}},
         schedule_interval='{{ cron_expression }}',
         start_date={{ start_date.__repr__() }},
     ) as dag:
+        # Create airflow tasks for each source
         {% for source_task_name in dag.sources.keys() %}
-        make_airflow_tasks(dag, {{ source_task_name }}_task, is_source_task=True, airflow_version={{ airflow_version }})
+        make_airflow_tasks(dag, {{ source_task_name }}_task, airflow_version={{ airflow_version }})
         {% endfor %}
     
         {% if debug_mode %}
+        # Run this in IDE to debug
         if __name__ == '__main__':
             d = pendulum.datetime.now()
-            # ti = TaskInstance(dag['my_task'], d)
+            # ti = TaskInstance(dag.task_dict['my_task'], d)
             # ti.run(ignore_all_deps=True, test_mode=True)
             
         {% endif %}
