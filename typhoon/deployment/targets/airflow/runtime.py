@@ -1,11 +1,13 @@
 from datetime import datetime
 from typing import Any, Union, Optional
+from uuid import uuid4
 
 from airflow import settings
 from airflow.models import XCom, DAG
 from airflow.operators.python_operator import PythonOperator
 from dataclasses import dataclass
 
+from typhoon.contrib.functions import flow_control
 from typhoon.core import DagContext
 from typhoon.core.runtime import BrokerInterface, TaskInterface, SequentialBroker, ComponentInterface
 
@@ -91,6 +93,20 @@ def make_airflow_tasks(
     if isinstance(task, ComponentInterface):
         for source_task in task.component_sources:
             make_airflow_tasks(dag, source_task, source_airflow_task, custom_source_id, airflow_version, prefix + f'{task.task_id}_')
+    elif isinstance(task, TaskInterface) and task.function is flow_control.branch and source_airflow_task is None:
+        def dict_with_name(x):
+            return isinstance(x, dict) and x.get('name', False)
+        # We are in a source task and we are a branch function
+        # The branches should not depend on dag context so we can safely mock it
+        mock_dag_context = DagContext.from_cron_and_event_time('0 0 * * *', datetime.now(), 'day')
+        branches = task.get_args(mock_dag_context, None, -1, None)['branches']
+        if all(isinstance(x, str) or dict_with_name(x) for x in branches):
+            # We can safely replace each branch with its tasks
+            for branch in branches:
+                airflow_task = make_airflow_branch_task(prefix, branch, dag.dag_id)
+                new_prefix = prefix + f'{get_branch_name(branch)}_'
+                for destination in task.destinations:
+                    make_airflow_tasks(dag, destination, airflow_task, airflow_version=airflow_version, prefix=new_prefix)
     elif isinstance(task.broker, SequentialBroker):
         for destination in task.destinations:
             task_id = f'{task.task_id}_then_{destination.task_id}'
@@ -111,3 +127,37 @@ def make_airflow_tasks(
             source_airflow_task >> airflow_task
         for destination in task.destinations:
             make_airflow_tasks(dag, destination, airflow_task, prefix=prefix)
+
+
+def get_branch_name(branch):
+    text = branch if isinstance(branch, str) else branch['name']
+    illegal_chars = r' $\'",-/&'
+    for c in illegal_chars:
+        text = text.replace(c, '_')
+    return text
+
+
+def run_airflow_branch_task(dag_id: str, task_id: str, batch: Any, **context):
+    batch_num = 1
+    dag_context = make_typhoon_dag_context(context)
+    XCom.set(
+        key=f'{uuid4()}:{batch_num}',
+        value=(batch_num, batch),
+        execution_date=dag_context.execution_time,
+        task_id=task_id,
+        dag_id=dag_id,
+    )
+
+
+def make_airflow_branch_task(prefix: str, branch, dag_id: str) -> PythonOperator:
+    task_id = prefix + get_branch_name(branch)
+    return PythonOperator(
+        task_id=task_id,
+        python_callable=run_airflow_branch_task,
+        provide_context=True,
+        op_kwargs={
+            'dag_id': dag_id,
+            'task_id': task_id,
+            'batch': branch,
+        }
+    )

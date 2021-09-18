@@ -26,6 +26,7 @@ class AirflowDagFile(Templated):
     {% endif %}
     from typing import Any
     from typhoon.core import setup_logging, DagContext
+    from typhoon.contrib.hooks.hook_factory import get_hook
     from typhoon.core.runtime import SequentialBroker, ComponentArgs
     from typhoon.deployment.targets.airflow.runtime import AirflowBroker, make_airflow_tasks
     {% if non_component_tasks %}

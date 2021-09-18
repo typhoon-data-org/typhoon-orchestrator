@@ -45,12 +45,12 @@ class DagFile(Templated):
                 args = {}
                 {{ task.args | render_args | indent(12, False) }}
                 return args
+            assert False, 'Compiler error'
             {% else %}
             args = {}
             {{ task.args | render_args | indent(8, False) }}
             return args
             {% endif %}
-            assert False, 'Compiler error'
     
     
     {% endfor %}
