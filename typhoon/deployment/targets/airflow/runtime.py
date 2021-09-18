@@ -67,9 +67,9 @@ def run_airflow_task(source: Optional[str], task: TaskInterface, **context):
         task.run(dag_context, None, 1, None)
 
 
-def make_airflow_task(source: str, task: TaskInterface, custom_task_id: str = None) -> PythonOperator:
+def make_airflow_task(prefix: str, source: str, task: TaskInterface, custom_task_id: str = None) -> PythonOperator:
     return PythonOperator(
-        task_id=custom_task_id or task.task_id,
+        task_id=prefix + (custom_task_id or task.task_id),
         python_callable=run_airflow_task,
         provide_context=True,
         op_kwargs={
@@ -85,28 +85,29 @@ def make_airflow_tasks(
         source_airflow_task: PythonOperator = None,
         custom_source_id: str = None,
         airflow_version: int = 1,
+        prefix: str = '',
 ):
     source_id = custom_source_id or (source_airflow_task.task_id if source_airflow_task is not None else None)
     if isinstance(task, ComponentInterface):
         for source_task in task.component_sources:
-            make_airflow_tasks(dag, source_task, source_airflow_task, custom_source_id, airflow_version)
+            make_airflow_tasks(dag, source_task, source_airflow_task, custom_source_id, airflow_version, prefix + f'{task.task_id}_')
     elif isinstance(task.broker, SequentialBroker):
         for destination in task.destinations:
             task_id = f'{task.task_id}_then_{destination.task_id}'
-            airflow_task = make_airflow_task(source_id, destination, custom_task_id=task_id)
+            airflow_task = make_airflow_task(prefix, source_id, destination, custom_task_id=task_id)
             if source_airflow_task is None:
                 if airflow_version == 1:
                     dag >> airflow_task
             else:
                 source_airflow_task >> airflow_task
             for other_destination in destination.destinations:
-                make_airflow_tasks(dag, other_destination, airflow_task, custom_source_id=destination.task_id, airflow_version=airflow_version)
+                make_airflow_tasks(dag, other_destination, airflow_task, custom_source_id=destination.task_id, airflow_version=airflow_version, prefix=prefix)
     else:
-        airflow_task = make_airflow_task(source_id, task)
+        airflow_task = make_airflow_task(prefix, source_id, task)
         if source_airflow_task is None:
             if airflow_version == 1:
                 dag >> airflow_task
         else:
             source_airflow_task >> airflow_task
         for destination in task.destinations:
-            make_airflow_tasks(dag, destination, airflow_task)
+            make_airflow_tasks(dag, destination, airflow_task, prefix=prefix)
