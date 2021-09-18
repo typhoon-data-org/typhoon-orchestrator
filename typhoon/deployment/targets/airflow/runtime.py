@@ -93,6 +93,7 @@ def make_airflow_tasks(
     if isinstance(task, ComponentInterface):
         for source_task in task.component_sources:
             make_airflow_tasks(dag, source_task, source_airflow_task, custom_source_id, airflow_version, prefix + f'{task.task_id}_')
+        return
     elif isinstance(task, TaskInterface) and task.function is flow_control.branch and source_airflow_task is None:
         def dict_with_name(x):
             return isinstance(x, dict) and x.get('name', False)
@@ -107,7 +108,9 @@ def make_airflow_tasks(
                 new_prefix = prefix + f'{get_branch_name(branch)}_'
                 for destination in task.destinations:
                     make_airflow_tasks(dag, destination, airflow_task, airflow_version=airflow_version, prefix=new_prefix)
-    elif isinstance(task.broker, SequentialBroker):
+            return
+
+    if isinstance(task.broker, SequentialBroker):
         for destination in task.destinations:
             task_id = f'{task.task_id}_then_{destination.task_id}'
             airflow_task = make_airflow_task(prefix, source_id, destination, custom_task_id=task_id)

@@ -108,7 +108,7 @@ class AirflowMetadataStore(MetadataStoreInterface):
             if var is None:
                 raise MetadataObjectNotFound(f'Variable "{variable_id}" is not set')
             contents = json.loads(var)
-        return Variable(id=contents['name'], type=VariableType(contents['type']), contents=contents['contents'])
+        return Variable(id=contents['id'], type=VariableType(contents['type']), contents=contents['contents'])
 
     def get_variables(self, to_dict: bool = False) -> List[Union[dict, Variable]]:
         result = []

@@ -18,6 +18,7 @@ class ComponentFile(Templated):
     from typing import Optional, Any, Type
     
     from typhoon.core import DagContext
+    from typhoon.core.settings import Settings
     from typhoon.contrib.hooks.hook_factory import get_hook
     from typhoon.core.runtime import ComponentInterface, BrokerInterface, TaskInterface, ComponentArgs
     

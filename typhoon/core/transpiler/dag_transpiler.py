@@ -13,6 +13,7 @@ class DagFile(Templated):
     template = '''
     # DAG name: {{ dag.name }}
     from typing import Any
+    from typhoon.core.settings import Settings
     from typhoon.core import setup_logging, DagContext
     from typhoon.core.runtime import SequentialBroker, ComponentArgs
     {% if non_component_tasks %}

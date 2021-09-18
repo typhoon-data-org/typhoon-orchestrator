@@ -25,6 +25,7 @@ class AirflowDagFile(Templated):
     from airflow.operators.python_operator import PythonOperator
     {% endif %}
     from typing import Any
+    from typhoon.core.settings import Settings
     from typhoon.core import setup_logging, DagContext
     from typhoon.contrib.hooks.hook_factory import get_hook
     from typhoon.core.runtime import SequentialBroker, ComponentArgs
@@ -59,12 +60,12 @@ class AirflowDagFile(Templated):
                 args = {}
                 {{ task.args | render_args | indent(12, False) }}
                 return args
+            assert False, 'Compiler error'
             {% else %}
             args = {}
             {{ task.args | render_args | indent(8, False) }}
             return args
             {% endif %}
-            assert False, 'Compiler error'
     
     
     {% endfor %}
