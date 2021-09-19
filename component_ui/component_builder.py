@@ -144,6 +144,13 @@ for arg in component_definition['args']:
             key=arg,
             help='Type ' + str((component_definition['args'][arg]))
         )
+    else:
+        return_vals['component_arguments'][arg] = st.text_input(
+            label=arg,
+            value='<my_value>',
+            key=str(arg),
+            help='Your environment name - underscore_lowercase'
+        )
 
 
 if st.button('Create DAG'):
@@ -154,6 +161,6 @@ expander = st.beta_expander("Component Raw Definition")
 expander.write(component_definition)
 
 return_val_expander = st.beta_expander("DAG return Values")
-return_val_expander.write(return_vals)
+return_val_expander.json(json.dumps(return_vals))
 
 
