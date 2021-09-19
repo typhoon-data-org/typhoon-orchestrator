@@ -153,7 +153,16 @@ Airflow UI will then show:
 
 ## Component UI
 
-Put in screenshot of UI
+Give your team autonomy by sharing templated flows them to configure.
+
+![Component UI](img/component_ui.gif)
+
+
+## API
+
+Develop against the API.
+
+![Swagger API](img/api_swagger.png)
 
 
 [1]:./getting-started/installation.md
