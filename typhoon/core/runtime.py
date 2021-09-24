@@ -56,6 +56,22 @@ class TaskInterface(Protocol):
             for destination in self.destinations:
                 self.broker.send(dag_context, self.task_id, destination, batch_num, batch, batch_group_id)
 
+    def copy(
+            self,
+            task_id: str = None,
+            function: Callable = None,
+            broker: BrokerInterface = None,
+            destinations: List['TaskInterface'] = None,
+            parent_component: Optional['ComponentInterface'] = None,
+    ) -> 'TaskInterface':
+        new_task = self.__class__.__new__(self.__class__)
+        new_task.task_id = task_id if task_id is not None else self.task_id
+        new_task.function = function if function is not None else self.function
+        new_task.broker = broker if broker is not None else self.broker
+        new_task.destinations = destinations if destinations is not None else self.destinations
+        new_task.parent_component = parent_component if parent_component is not None else self.parent_component
+        return new_task
+
 
 class ComponentArgs(Protocol):
     dag_context: DagContext

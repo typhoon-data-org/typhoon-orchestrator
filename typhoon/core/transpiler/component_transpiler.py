@@ -40,14 +40,17 @@ class ComponentFile(Templated):
             self.task_id = task_id
             self.args_class = args_class
             
+            save_self = self
+            
             {% for task_name, task in component_tasks.items() %}
             class {{ task_name | camel_case }}ComponentArgs(ComponentArgs):
+                parent_component = save_self
+                
                 def __init__(self, dag_context: DagContext, source: str, batch_num: int, batch: Any):
                     self.dag_context = dag_context
                     self.source = source
                     self.batch = batch
                     self.batch_num = batch_num
-                    self.parent_component = parent_component
                     self._args_cache = None
         
                 def get_args(self) -> dict:

@@ -26,7 +26,7 @@ class AirflowBroker(BrokerInterface):
             batch_group_id: int,
     ):
         XCom.set(
-            key=f'{batch_group_id}:{batch_num}',
+            key=f'{batch_group_id}:{batch_num:04d}',
             value=(batch_num, batch),
             execution_date=dag_context.execution_time,
             task_id=source_id,
@@ -69,9 +69,26 @@ def run_airflow_task(source: Optional[str], task: TaskInterface, **context):
         task.run(dag_context, None, 1, None)
 
 
-def make_airflow_task(prefix: str, source: str, task: TaskInterface, custom_task_id: str = None) -> PythonOperator:
+def airflow_task_id(task: TaskInterface, branch: str = '', sync_destination_task: TaskInterface = None) -> str:
+    task_id = ''
+    parent_component = task.parent_component
+    while parent_component is not None:
+        task_id += parent_component.task_id + '_'
+        parent_component = parent_component.args_class.parent_component
+
+    if branch:
+        task_id += get_branch_name(branch) + '_'
+
+    task_id += task.__dict__.get('original_task_id', task.task_id)
+    if sync_destination_task:
+        destination_task_id = sync_destination_task.__dict__.get('original_task_id', sync_destination_task.task_id)
+        task_id += f'_then_{destination_task_id}'
+    return task_id
+
+
+def make_airflow_task(source: str, task: TaskInterface, custom_task_id: str = None) -> PythonOperator:
     return PythonOperator(
-        task_id=prefix + (custom_task_id or task.task_id),
+        task_id=custom_task_id or task.task_id,
         python_callable=run_airflow_task,
         provide_context=True,
         op_kwargs={
@@ -87,12 +104,14 @@ def make_airflow_tasks(
         source_airflow_task: PythonOperator = None,
         custom_source_id: str = None,
         airflow_version: int = 1,
-        prefix: str = '',
+        branch: str = '',
+        source_task: Union[TaskInterface, ComponentInterface, None] = None,
 ):
-    source_id = custom_source_id or (source_airflow_task.task_id if source_airflow_task is not None else None)
+    # source_id = custom_source_id or (source_airflow_task.task_id if source_airflow_task is not None else None)
+    source_id = source_task.task_id if source_task is not None else None
     if isinstance(task, ComponentInterface):
         for source_task in task.component_sources:
-            make_airflow_tasks(dag, source_task, source_airflow_task, custom_source_id, airflow_version, prefix + f'{task.task_id}_')
+            make_airflow_tasks(dag, source_task, source_airflow_task, custom_source_id, airflow_version, branch=branch, source_task=task)
         return
     elif isinstance(task, TaskInterface) and task.function is flow_control.branch and source_airflow_task is None:
         def dict_with_name(x):
@@ -103,33 +122,66 @@ def make_airflow_tasks(
         branches = task.get_args(mock_dag_context, None, -1, None)['branches']
         if all(isinstance(x, str) or dict_with_name(x) for x in branches):
             # We can safely replace each branch with its tasks
+            orig_task = task
             for branch in branches:
-                airflow_task = make_airflow_branch_task(prefix, branch, dag.dag_id)
-                new_prefix = prefix + f'{get_branch_name(branch)}_'
-                for destination in task.destinations:
-                    make_airflow_tasks(dag, destination, airflow_task, airflow_version=airflow_version, prefix=new_prefix)
+                task = orig_task
+                save_destinations = task.destinations
+                task_id = airflow_task_id(task, branch)
+                task = task.copy(task_id=task_id, destinations=[])
+                airflow_task = make_airflow_branch_task(branch, dag.dag_id, task_id)
+                for destination in save_destinations:
+                    make_airflow_tasks(
+                        dag,
+                        destination,
+                        airflow_task,
+                        airflow_version=airflow_version,
+                        branch=get_branch_name(branch),
+                        source_task=task,
+                    )
             return
 
     if isinstance(task.broker, SequentialBroker):
-        for destination in task.destinations:
-            task_id = f'{task.task_id}_then_{destination.task_id}'
-            airflow_task = make_airflow_task(prefix, source_id, destination, custom_task_id=task_id)
+        save_destinations = task.destinations
+        original_task_id = task.task_id
+        if branch:
+            task = task.copy(task_id=airflow_task_id(task, branch), destinations=[])
+            task.original_task_id = original_task_id
+            source_task.set_destination(task)
+
+        if len(save_destinations) > 1:
+            raise ValueError('COMPILER LIMITATION: There can currently only be one synchronous destination for each task in airflow')
+        for destination in save_destinations:
+            task_id = airflow_task_id(task, branch, destination)
+            save_destination_destinations = destination.destinations
+            original_destination_task_id = destination.task_id
+            if branch:
+                destination = destination.copy(task_id=airflow_task_id(destination, branch), destinations=[])
+                destination.original_task_id = original_destination_task_id
+                task.set_destination(destination)
+            airflow_task = make_airflow_task(source_id, task, custom_task_id=task_id)
             if source_airflow_task is None:
                 if airflow_version == 1:
                     dag >> airflow_task
             else:
                 source_airflow_task >> airflow_task
-            for other_destination in destination.destinations:
-                make_airflow_tasks(dag, other_destination, airflow_task, custom_source_id=destination.task_id, airflow_version=airflow_version, prefix=prefix)
+            for other_destination in save_destination_destinations:
+                make_airflow_tasks(dag, other_destination, airflow_task, airflow_version=airflow_version, branch=branch, source_task=destination)
     else:
-        airflow_task = make_airflow_task(prefix, source_id, task)
+        task_id = airflow_task_id(task, branch)
+        save_destinations = task.destinations
+        original_task_id = task.task_id
+        if branch:
+            task = task.copy(task_id=task_id, destinations=[])
+            task.original_task_id = original_task_id
+            source_task.set_destination(task)
+        airflow_task = make_airflow_task(source_id, task)
         if source_airflow_task is None:
             if airflow_version == 1:
                 dag >> airflow_task
         else:
             source_airflow_task >> airflow_task
-        for destination in task.destinations:
-            make_airflow_tasks(dag, destination, airflow_task, prefix=prefix)
+        for destination in save_destinations:
+            make_airflow_tasks(dag, destination, airflow_task, branch=branch, source_task=task)
 
 
 def get_branch_name(branch):
@@ -152,8 +204,7 @@ def run_airflow_branch_task(dag_id: str, task_id: str, batch: Any, **context):
     )
 
 
-def make_airflow_branch_task(prefix: str, branch, dag_id: str) -> PythonOperator:
-    task_id = prefix + get_branch_name(branch)
+def make_airflow_branch_task(branch, dag_id: str, task_id: str) -> PythonOperator:
     return PythonOperator(
         task_id=task_id,
         python_callable=run_airflow_branch_task,
