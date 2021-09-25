@@ -227,9 +227,13 @@ class TestCase(BaseModel):
         default=1,
         description='Batch number for the test. If more than one is provided it will run the tests for each')
     interval_start: datetime = Field(
-        ..., description='Date representing the start of the interval for which we want to get data')
+        default=None,
+        description='Date representing the start of the interval for which we want to get data',
+    )
     interval_end: datetime = Field(
-        ..., description='Date representing the end of the interval for which we want to get data')
+        default=None,
+        description='Date representing the end of the interval for which we want to get data',
+    )
 
     @property
     def dag_context(self) -> DagContext:
