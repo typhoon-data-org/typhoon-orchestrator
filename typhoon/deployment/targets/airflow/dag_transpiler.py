@@ -5,7 +5,7 @@ from croniter import croniter
 from dataclasses import dataclass
 
 from typhoon.core.cron_utils import aws_schedule_to_cron
-from typhoon.core.dags import DAGDefinitionV2, TaskDefinition, DAG
+from typhoon.core.dags import DAGDefinitionV2, TaskDefinition
 from typhoon.core.templated import Templated
 from typhoon.core.transpiler.transpiler_helpers import extract_dependencies, camel_case, render_dependencies, \
     is_component_task, render_args
@@ -129,7 +129,7 @@ class AirflowDagFile(Templated):
 
     def __post_init__(self):
         if isinstance(self.dag, dict):
-            self.dag = DAG.parse_obj(self.dag)
+            self.dag = DAGDefinitionV2.parse_obj(self.dag)
         if not self.start_date:
             cron = aws_schedule_to_cron(self.cron_expression)
             iterator = croniter(cron, datetime.now())

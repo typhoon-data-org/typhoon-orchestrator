@@ -6,7 +6,6 @@ from typing import List, Any, Union
 from dataclasses import dataclass
 
 from typhoon.core import DagContext
-from typhoon.core.dags import Edge
 from typhoon.core.settings import Settings
 
 

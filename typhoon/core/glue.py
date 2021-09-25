@@ -10,7 +10,7 @@ import yaml
 from pydantic import ValidationError
 from typhoon.core.components import Component
 
-from typhoon.core.dags import DAG, DAGDefinitionV2, add_yaml_constructors
+from typhoon.core.dags import DAGDefinitionV2, add_yaml_constructors
 from typhoon.core.settings import Settings
 from typing_extensions import Literal
 
@@ -30,10 +30,6 @@ def transpile_dag_and_store(dag: dict, output_folder_path: Union[str, Path], deb
     (output_folder_path / 'tasks.py').write_text(tasks_code)
 
 
-def load_dags(ignore_errors: bool = False) -> List[Tuple[DAG, Path]]:
-    return [(dd.make_dag(), df) for dd, df in load_dag_definitions(ignore_errors)]
-
-
 def load_dag_definitions(ignore_errors: bool = False) -> List[Tuple[DAGDefinitionV2, Path]]:
     add_yaml_constructors()
     dags = []
@@ -50,13 +46,6 @@ def load_dag_definitions(ignore_errors: bool = False) -> List[Tuple[DAGDefinitio
         dags.append((dag, dag_file))
 
     return dags
-
-
-def load_dag(dag_name: str, ignore_errors: bool = False) -> Optional[DAG]:
-    dags = load_dags(ignore_errors)
-    matching_dags = [(dag, _) for dag, _ in dags if dag.name == dag_name]
-    assert len(matching_dags) <= 1, f'Found {len(matching_dags)} dags with name "{dag_name}"'
-    return matching_dags[0] if len(matching_dags) == 1 else None
 
 
 def load_dag_definition(dag_name: str, ignore_errors: bool = False) -> Optional[DAGDefinitionV2]:
