@@ -6,7 +6,6 @@ from typing_extensions import Literal
 
 from typhoon.core.components import Component
 from typhoon.core.dags import DAGDefinitionV2, MultiStep, Py, TaskDefinition
-from typhoon.core.old_transpiler import typhoon_import_function_as, typhoon_import_transformation_as
 from typhoon.core.templated import Templated
 from typhoon.introspection.introspect_extensions import ExtensionsInfo, get_typhoon_extensions_info
 
@@ -68,7 +67,7 @@ def get_typhoon_transformations_modules(dag_or_component: Union[DAGDefinitionV2,
 
     items = set()
     for task in dag_or_component.tasks.values():
-        adapter, config = task.make_adapter_and_config()
+        adapter, _ = task.make_adapter_and_config()
         for val in adapter.values():
             items = items.union(x.split('.')[0] for x in get_typhoon_transformations_item(val))
     return list(items)
@@ -264,3 +263,11 @@ def get_transformations_item(item) -> Set[ImportDefinition]:
 
 def render_args(args: dict) -> str:
     return TaskArgs(args).render()
+
+
+def typhoon_import_function_as(module_name: str) -> str:
+    return f'typhoon_functions_{module_name}'
+
+
+def typhoon_import_transformation_as(module_name: str) -> str:
+    return f'typhoon_transformations_{module_name}'

@@ -3,7 +3,7 @@ from typing import List
 
 import yaml
 
-from typhoon.core.glue import load_dags, load_dag
+from typhoon.core.glue import load_dag_definitions, load_dag_definition
 from typhoon.core.settings import Settings
 from typhoon.remotes import Remotes
 from typhoon.variables import VariableType
@@ -25,27 +25,16 @@ def get_remote_names(ctx, args, incomplete) -> List[str]:
 
 
 def get_dag_names(ctx, args, incomplete) -> List[str]:
-    return [dag.name for dag, _ in load_dags(ignore_errors=True) if incomplete in dag.name]
+    return [dag.name for dag, _ in load_dag_definitions(ignore_errors=True) if incomplete in dag.name]
 
 
-def get_node_names(ctx, args, incomplete) -> List[str]:
+def get_task_names(ctx, args, incomplete) -> List[str]:
     dag_name_index = args.index('--dag-name') + 1
     dag_name = args[dag_name_index]
-    result = load_dag(dag_name, ignore_errors=True)
-    if result is None:
+    dag = load_dag_definition(dag_name, ignore_errors=True)
+    if dag is None:
         return []
-    dag, _ = result
-    return [x for x in dag.nodes.keys() if incomplete in x]
-
-
-def get_edge_names(ctx, args, incomplete) -> List[str]:
-    dag_name_index = args.index('--dag-name') + 1
-    dag_name = args[dag_name_index]
-    result = load_dag(dag_name, ignore_errors=True)
-    if result is None:
-        return []
-    dag, _ = result
-    return [x for x in dag.edges.keys() if incomplete in x]
+    return [x for x in dag.tasks.keys() if incomplete in x]
 
 
 def get_conn_ids(ctx, args, incomplete) -> List[str]:
