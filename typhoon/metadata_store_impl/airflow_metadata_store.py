@@ -11,8 +11,12 @@ from typhoon.deployment.targets.airflow.airflow_database import set_airflow_db
 from typhoon.variables import Variable, VariableType
 
 
-def typhoon_airflow_variable_name(name: str) -> str:
-    return f'typhoon#{name}'
+def typhoon_airflow_variable_name_for_info(name: str) -> str:
+    return f'typhoon:info#{name}'
+
+
+def typhoon_airflow_variable_name_for_value(name: str) -> str:
+    return f'typhoon:value#{name}'
 
 
 def typhoon_airflow_conn_name(name: str) -> str:
@@ -102,13 +106,15 @@ class AirflowMetadataStore(MetadataStoreInterface):
                 pass
 
     def get_variable(self, variable_id: str) -> Variable:
-        af_name = typhoon_airflow_variable_name(variable_id)
+        info_var = typhoon_airflow_variable_name_for_info(variable_id)
+        value_var = typhoon_airflow_variable_name_for_value(variable_id)
         with set_airflow_db(self.db_path, self.fernet_key) as db:
-            var = db.get_variable(af_name)
-            if var is None:
+            info = db.get_variable(info_var)
+            if info is None:
                 raise MetadataObjectNotFound(f'Variable "{variable_id}" is not set')
-            contents = json.loads(var)
-        return Variable(id=contents['id'], type=VariableType(contents['type']), contents=contents['contents'])
+            contents = json.loads(info)
+            value = db.get_variable(value_var)
+        return Variable(id=contents['id'], type=VariableType(contents['type']), contents=value)
 
     def get_variables(self, to_dict: bool = False) -> List[Union[dict, Variable]]:
         result = []
@@ -132,16 +138,21 @@ class AirflowMetadataStore(MetadataStoreInterface):
         }
         Following the same schema as the typhoon variable
         """
-        af_name = typhoon_airflow_variable_name(variable.id)
-        contents = json.dumps(variable.dict_contents())
+        info_var = typhoon_airflow_variable_name_for_info(variable.id)
+        value_var = typhoon_airflow_variable_name_for_value(variable.id)
+        info = variable.dict_contents()
+        del info['contents']
         with set_airflow_db(self.db_path, self.fernet_key) as db:
-            db.set_variable(af_name, contents)
+            db.set_variable(info_var, json.dumps(info))
+            db.set_variable(value_var, variable.contents)
 
     def delete_variable(self, variable: Union[str, Variable]):
         var_name = variable.id if isinstance(variable, Variable) else variable
-        af_name = typhoon_airflow_variable_name(var_name)
+        info_var = typhoon_airflow_variable_name_for_info(var_name)
+        value_var = typhoon_airflow_variable_name_for_value(var_name)
         with set_airflow_db(self.db_path, self.fernet_key) as db:
-            db.delete_variable(af_name)
+            db.delete_variable(info_var)
+            db.delete_variable(value_var)
 
     def get_dag_deployment(self, deployment_hash: str) -> DagDeployment:
         return self.sqlite_store.get_dag_deployment(deployment_hash)
