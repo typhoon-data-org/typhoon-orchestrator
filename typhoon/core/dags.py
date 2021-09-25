@@ -236,7 +236,7 @@ class TestCase(BaseModel):
         interval_start = self.interval_start or datetime.now()
         return DagContext(
             interval_start=interval_start,
-            interval_end=interval_end or (interval_start - timedelta(days=1))
+            interval_end=self.interval_end or (interval_start - timedelta(days=1))
         )
 
     @property

@@ -50,7 +50,7 @@ def load_dag_definitions(ignore_errors: bool = False) -> List[Tuple[DAGDefinitio
 
 def load_dag_definition(dag_name: str, ignore_errors: bool = False) -> Optional[DAGDefinitionV2]:
     dags = load_dag_definitions(ignore_errors)
-    matching_dags = [(dag, _) for dag, _ in dags if dag.name == dag_name]
+    matching_dags = [dag for dag, _ in dags if dag.name == dag_name]
     assert len(matching_dags) <= 1, f'Found {len(matching_dags)} dags with name "{dag_name}"'
     return matching_dags[0] if len(matching_dags) == 1 else None
 

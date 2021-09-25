@@ -31,7 +31,7 @@ from typhoon.connections import Connection
 from typhoon.core import DagContext
 from typhoon.core.components import Component
 from typhoon.core.dags import DAGDefinitionV2, ArgEvaluationError
-from typhoon.core.glue import get_dag_errors
+from typhoon.core.glue import get_dag_errors, load_dag_definition
 from typhoon.core.settings import Settings
 from typhoon.deployment.packaging import build_all_dags
 from typhoon.handler import run_dag
@@ -427,7 +427,7 @@ def task_sample(
 ):
     """Test transformations for task"""
     set_settings_from_remote(remote)
-    dag = _get_dag_definition(remote, dag_name)
+    dag = load_dag_definition(dag_name)
     if task_name not in dag.tasks.keys():
         print(f'FATAL: No tasks found matching the name "{task_name}" in dag {dag_name}', file=sys.stderr)
         sys.exit(-1)
@@ -470,7 +470,7 @@ def task_sample(
 @click.option('--dag-name', autocompletion=get_dag_names, required=True)
 def dag_test(remote: Optional[str], dag_name: str):
     set_settings_from_remote(remote)
-    dag = _get_dag_definition(remote, dag_name)
+    dag = load_dag_definition(dag_name)
     if dag.tests is None:
         print(f'No tests found for DAG {dag_name}')
         return
@@ -518,7 +518,7 @@ def dag_test(remote: Optional[str], dag_name: str):
                 passed += 1
             except AssertionError as e:
                 print(e)
-                excluded_from_diff = (str,)
+                excluded_from_diff = (str, int)
                 if isinstance(expected_value, excluded_from_diff) or isinstance(result, excluded_from_diff):
                     print(f'Expected "{expected_value}" but found "{result}"')
                 else:
