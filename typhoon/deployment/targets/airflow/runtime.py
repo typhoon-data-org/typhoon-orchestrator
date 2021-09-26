@@ -23,7 +23,7 @@ class AirflowBroker(BrokerInterface):
             destination: 'TaskInterface',
             batch_num: int,
             batch: Any,
-            batch_group_id: int,
+            batch_group_id: str,
     ):
         XCom.set(
             key=f'{batch_group_id}:{batch_num:04d}',

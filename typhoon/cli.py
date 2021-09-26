@@ -30,7 +30,7 @@ from typhoon.cli_helpers.status import dags_with_changes, dags_without_deploy, c
 from typhoon.connections import Connection
 from typhoon.core import DagContext
 from typhoon.core.components import Component
-from typhoon.core.dags import DAGDefinitionV2, ArgEvaluationError
+from typhoon.core.dags import DAGDefinitionV2, ArgEvaluationError, load_module_from_path
 from typhoon.core.glue import get_dag_errors, load_dag_definition
 from typhoon.core.settings import Settings
 from typhoon.deployment.packaging import build_all_dags
@@ -770,6 +770,56 @@ def webserver():
     finally:
         frontend.kill()
 
+
+def transformations_locals():
+        custom_transformation_modules = {}
+        transformations_path = str(Settings.transformations_directory)
+        for filename in os.listdir(transformations_path):
+            if filename == '__init__.py' or not filename.endswith('.py'):
+                continue
+            module_name = filename[:-3]
+            module = load_module_from_path(
+                module_path=os.path.join(transformations_path, filename),
+                module_name=module_name,
+            )
+            custom_transformation_modules[module_name] = module
+        custom_transformations = SimpleNamespace(**custom_transformation_modules)
+        return custom_transformations
+
+
+@cli.command()
+@click.option('--dag-name', autocompletion=get_dag_names, required=False, default=None)
+def shell(dag_name: Optional[str]):
+    from IPython import start_ipython
+    from traitlets.config import Config
+    c = Config()
+    c.InteractiveShellApp.extensions = [
+        'typhoon.shell_extensions'
+    ]
+    c.InteractiveShellApp.exec_lines = [
+        'import typhoon',
+    ]
+    if dag_name:
+        c.InteractiveShellApp.exec_lines.append(f'%load_dag {dag_name}')
+    c.TerminalInteractiveShell.banner2 = f"""
+{ascii_art_logo}
+Pre-loaded variables:
+    - tasks: Task objects generated from dag definition, ready to execute
+    - dag_context: Pre-loaded DAG context to test with
+    - dag: Dag definition (parsed from YAML)
+Example usage:
+    - tasks.example.function?
+    - tasks.example.echo.get_args(dag_context, None, batch_num=1, batch='Hello world!')
+    - tasks.example.echo.run(dag_context, None, batch_num=1, batch='Hello world!')
+    # After changes in the YAML we can reload the DAG
+    - %reload_dag
+    """
+    user_ns = {
+        'dag_context': DagContext.from_cron_and_event_time('@daily', datetime.now(), granularity='day'),
+        'transformations': transformations_locals(),
+        'SimpleNamespace': SimpleNamespace,
+    }
+    start_ipython(argv=[], user_ns=user_ns, config=c)
 
 # @cli.command()
 # @click.argument('remote', autocompletion=get_remote_names)

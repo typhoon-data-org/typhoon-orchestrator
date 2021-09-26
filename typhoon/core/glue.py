@@ -22,7 +22,6 @@ from typhoon.introspection.introspect_extensions import get_typhoon_extensions_i
 def transpile_dag_and_store(dag: dict, output_folder_path: Union[str, Path], debug_mode: bool):
     output_folder_path = Path(output_folder_path)
     output_folder_path.mkdir(parents=True, exist_ok=True)
-    print(dag)
     dag = DAGDefinitionV2.parse_obj(dag)
     dag_code = DagFile(dag, debug_mode=debug_mode).render()
     (output_folder_path / f'{dag.name}.py').write_text(dag_code)

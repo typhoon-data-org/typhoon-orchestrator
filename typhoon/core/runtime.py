@@ -1,5 +1,5 @@
 from types import SimpleNamespace
-from typing import Callable, Any, List, Optional, Union, Type
+from typing import Callable, Any, List, Optional, Union, Type, Dict
 from uuid import uuid4
 
 from typhoon.core import DagContext, SKIP_BATCH
@@ -14,9 +14,30 @@ class BrokerInterface(Protocol):
             destination: 'TaskInterface',
             batch_num: int,
             batch: Any,
-            batch_group_id: int,    # Since a batch_number is not enough to guarantee uniqueness
+            batch_group_id: str,    # Since a batch_number is not enough to guarantee uniqueness
     ):
         ...
+
+
+class DebugBroker(BrokerInterface):
+    batches: Dict[str, Dict[int, Any]]
+
+    def __init__(self):
+        self.batches = {}
+
+    def send(
+            self,
+            dag_context: DagContext,
+            source_id: str,
+            destination: 'TaskInterface',
+            batch_num: int,
+            batch: Any,
+            batch_group_id: str,
+    ):
+        if batch_group_id not in self.batches.keys():
+            self.batches[batch_group_id] = {}
+        self.batches[batch_group_id][batch_num] = batch
+        print(f'# Batch group {batch_group_id}\n# Batch number {batch_num}\n{batch}\n')
 
 
 class SequentialBroker(BrokerInterface):
@@ -27,7 +48,7 @@ class SequentialBroker(BrokerInterface):
             destination: 'TaskInterface',
             batch_num: int,
             batch: Any,
-            batch_group_id: int,
+            batch_group_id: str,
     ):
         destination.run(dag_context, source_id, batch_num, batch)
 
@@ -48,7 +69,7 @@ class TaskInterface(Protocol):
 
     def run(self, dag_context: DagContext, source: Optional[str],  batch_num: int, batch: Any):
         args = self.get_args(dag_context, source, batch_num, batch)
-        batch_group_id = uuid4()
+        batch_group_id = str(uuid4())
         for batch_num, batch in enumerate(self.function(**args), start=1):
             if batch is SKIP_BATCH:
                 print(f'Skipping batch {batch_num} for {self.task_id}')
