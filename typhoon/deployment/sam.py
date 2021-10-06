@@ -4,7 +4,7 @@ from typing import Sequence, Optional, Union
 import jinja2
 import pkg_resources
 
-from typhoon.core.dags import DAG
+from typhoon.core.dags import DAGDefinitionV2
 from typhoon.core.settings import Settings
 from typhoon.deployment.deploy import write_to_out
 
@@ -24,9 +24,9 @@ def to_camelcase(s: str):
 templateEnv.filters.update(to_camelcase=to_camelcase)
 
 
-def deploy_sam_template(dags: Sequence[Union[dict, DAG]], remote: Optional[str] = None):
+def deploy_sam_template(dags: Sequence[Union[dict, DAGDefinitionV2]], remote: Optional[str] = None):
     sam_template = generate_sam_template(
-        dags=[dag.dict() if isinstance(dag, DAG) else dag for dag in dags],
+        dags=[dag.dict() if isinstance(dag, DAGDefinitionV2) else dag for dag in dags],
         lambda_function_timeout=10*60,
         connections_table_name=Settings.connections_table_name,
         variables_table_name=Settings.variables_table_name,

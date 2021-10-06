@@ -25,7 +25,7 @@ class Component(BaseModel):
     name: str = Field(..., regex=IDENTIFIER_REGEX, description='Name of your DAG')
     args: Dict[str, Union[str, ComponentArgument]]
     tasks: Dict[str, TaskDefinition]
-    output: List[str]
+    output: List[str] = ()
 
     def replace_input_and_args(self, name_in_dag: str, task: TaskDefinition, input_task: str, input_arg_values: dict) -> TaskDefinition:
         if task.input == '$COMPONENT_INPUT':
@@ -91,4 +91,4 @@ class Component(BaseModel):
 
     @property
     def source_tasks(self) -> Dict[str, TaskDefinition]:
-        return {k: v for k, v in self.tasks.items() if v.input is None}
+        return {k: v for k, v in self.tasks.items() if v.input is None or v.input == '$COMPONENT_INPUT'}

@@ -1,0 +1,114 @@
+input:
+  name: simple_dag
+  schedule_interval: '@daily'
+  tasks:
+    a:
+      function: typhoon.flow_control.branch
+      args:
+        branches:
+          - a
+          - b
+          - c
+
+    b:
+      input: a
+      function: typhoon.debug.echo
+      args:
+        x: !Py $BATCH
+
+expects:
+  dag: |
+    # DAG name: simple_dag
+    from typhoon.core import setup_logging, DagContext
+    from typhoon.core.runtime import SequentialBroker, ComponentArgs
+
+    from tasks import ATask, BTask
+
+
+    def simple_dag_main(event, context):
+        setup_logging()
+        # if event.get('type'):     # TODO: Async execution
+
+        # Main execution
+        dag_context = DagContext.from_cron_and_event_time(
+            schedule_interval='@daily',
+            event_time=event['time'],
+            granularity='day',
+        )
+
+        sync_broker = SequentialBroker()
+        async_broker = SequentialBroker()
+
+        # Initialize tasks
+        a_task = ATask(
+            async_broker,
+        )
+        b_task = BTask(
+            async_broker,
+        )
+
+        # Set dependencies
+        a_task.set_destination(b_task)
+
+        # Sources
+        a_task.run(dag_context, None, -1, None)
+
+
+    if __name__ == '__main__':
+        example_event = {
+            'time': '2019-02-05T00:00:00Z'
+        }
+        example_event_task = {
+            'type': 'task',
+            'dag_name': 'simple_dag',
+            'task_name': 'a',
+            'trigger': 'dag',
+            'attempt': 1,
+            'args': [],
+            'kwargs': {
+                'dag_context': DagContext.from_cron_and_event_time(
+                    schedule_interval='rate(1 day)',
+                    event_time=example_event['time'],
+                    granularity='day',
+                ).dict()
+            },
+        }
+
+        simple_dag_main(example_event, None)
+
+  tasks: |
+    from typing import Any, Optional
+
+    from typhoon.core.runtime import TaskInterface, BrokerInterface, ComponentInterface
+    from typhoon.core import DagContext
+
+    import typhoon.contrib.functions.debug as typhoon_functions_debug
+    import typhoon.contrib.functions.flow_control as typhoon_functions_flow_control
+
+
+    class ATask(TaskInterface):
+        def __init__(self, broker: BrokerInterface, parent_component: Optional[ComponentInterface]=None):
+            self.broker = broker
+            self.task_id = 'a'
+            self.function = typhoon_functions_flow_control.branch
+            self.destinations = []
+            self.parent_component = parent_component
+
+        def get_args(self, dag_context: DagContext, source: Optional[str], batch_num: int, batch: Any) -> dict:
+            args = {}
+            args['branches'] = ['a', 'b', 'c']
+            return args
+
+
+    class BTask(TaskInterface):
+        def __init__(self, broker: BrokerInterface, parent_component: Optional[ComponentInterface]=None):
+            self.broker = broker
+            self.task_id = 'b'
+            self.function = typhoon_functions_debug.echo
+            self.destinations = []
+            self.parent_component = parent_component
+
+        def get_args(self, dag_context: DagContext, source: Optional[str], batch_num: int, batch: Any) -> dict:
+            args = {}
+            args['x'] = batch
+            return args

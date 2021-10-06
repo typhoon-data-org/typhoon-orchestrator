@@ -38,6 +38,7 @@ class Py:
         code = re.sub(r'\$HOOK(\.(\w+))', r'get_hook("\g<2>")', code)
         code = re.sub(r'\$VARIABLE(\.(\w+))', r'Settings.metadata_store().get_variable("\g<2>").get_contents()', code)
         code = re.sub(r'typhoon\.(\w+)\.(\w+)', r'typhoon_transformations_\g<1>.\g<2>', code)
+        code = code.replace('$ARG', 'component_args')
         return code
 
     @staticmethod
@@ -96,7 +97,7 @@ def construct_variable(loader: yaml.Loader, node: yaml.Node) -> Py:
 class MultiStep:
     value: list
     key: Optional[str] = None
-    config_name: str = 'config'
+    config_name: str = 'args'
 
     @staticmethod
     def construct(loader: yaml.Loader, node: yaml.Node):
@@ -152,50 +153,6 @@ class SpecialCronString(str, Enum):
     yearly = '@yearly'
 
 
-class Node(BaseModel):
-    function: str = Field(
-        ...,
-        regex=r'(typhoon\.\w+\.\w+|functions\.\w+\.\w+)',
-        description="""Python function that will get called when the node runs.
-                    If it is a built-in typhoon function it will have the following structure:
-                      typhoon.[MODULE_NAME].[FUNCTION_NAME]
-                    Whereas if it is a user defined function it will have the following structure:
-                      functions.[MODULE_NAME].[FUNCTION_NAME]"""
-    )
-    asynchronous: bool = Field(
-        True,
-        description="""If set to TRUE it will run the function in a different lambda instance.
-                    This is useful when you want to increase parallelism. There is currently no framework cap on
-                    parallelism though so if that is an issue set it to FALSE so it will run the batches one by one."""
-    )
-    config: Dict[str, Any] = Field(default={})
-
-    @validator('config')
-    def validate_config_keys(cls, v):
-        for k in v.keys():
-            if not re.match(r'\w+(\s*=>\s*APPLY)?', k):
-                raise ValueError(f'Config key "{k}" does not match pattern. Must be identifier with optional => APPLY')
-        return v
-
-
-class Edge(BaseModel):
-    source: str = Field(..., regex=IDENTIFIER_REGEX, description='ID of source node')
-    adapter: Dict[str, Item] = Field(
-        ...,
-        description='Adapts the output of the source node to the input of the destination node'
-    )
-    destination: str = Field(..., regex=IDENTIFIER_REGEX, description='ID of destination node')
-    args_dict_name: Optional[str] = Field(default=None)
-    component_args: Dict[str, Any] = Field(default={})
-
-    @validator('adapter')
-    def validate_adapter_keys(cls, v):
-        for k in v.keys():
-            if not re.match(r'\w+(\s*=>\s*APPLY)?', k):
-                raise ValueError(f'Config key "{k}" does not match pattern. Must be identifier with optional => APPLY')
-        return v
-
-
 class Granularity(str, Enum):
     YEAR = 'year'
     MONTH = 'month'
@@ -203,103 +160,6 @@ class Granularity(str, Enum):
     HOUR = 'hour'
     MINUTE = 'minute'
     SECOND = 'second'
-
-
-class DAG(BaseModel):
-    name: str = Field(..., regex=IDENTIFIER_REGEX, description='Name of your DAG')
-    schedule_interval: str = Field(
-        ...,
-        regex='(' + '@hourly|@daily|@weekly|@monthly|@yearly|' +
-              r'((\*|\?|\d+((\/|\-){0,1}(\d+))*)\s*){5,6}' + '|' +
-              r'rate\(\s*1\s+minute\s*\)' + '|' +
-              r'rate\(\s*\d+\s+minutes\s*\)' + '|' +
-              r'rate\(\s1*\d+\s+hour\s*\)' + '|' +
-              r'rate\(\s*\d+\s+hours\s*\)' + '|' +
-              ')',
-        description='Schedule or frequency on which the DAG should run'
-    )
-    granularity: Granularity = Field(default=Granularity.DAY, description='Granularity of DAG')
-    nodes: Dict[str, Node]
-    edges: Dict[str, Edge]
-    active: bool = Field(True, description='Whether to deploy the DAG or not')
-    airflow_default_args: Optional[dict] = Field(
-        None, description='Arguments passed to generated Airflow DAG. Ignored if deploy target is not airflow.')
-
-    @root_validator
-    def validate_undefined_nodes_in_edges(cls, values):
-        if 'nodes' not in values.keys() or 'edges' not in values.keys():
-            return values       # Nodes did not pass upstream validations
-        node_names = values['nodes'].keys()
-        for edge_name, edge in values['edges'].items():
-            if edge.source not in node_names:
-                raise ValueError(f'Source for edge "{edge_name}" is not defined: "{edge.source}"')
-            if edge.destination not in node_names:
-                raise ValueError(f'Destination for edge "{edge_name}" is not defined: "{edge.destination}"')
-        return values
-
-    @property
-    def structure(self) -> Dict[str, List[str]]:
-        """For every node all the nodes it's connected to"""
-        structure = {}
-        for _, edge in self.edges.items():
-            if edge.source not in structure.keys():
-                structure[edge.source] = [edge.destination]
-            else:
-                structure[edge.source].append(edge.destination)
-
-        return structure
-
-    @property
-    def non_source_nodes(self) -> List[str]:
-        """All nodes that are the destination of an edge"""
-        return [node for x in self.structure.values() for node in x]
-
-    @property
-    def sources(self) -> List[str]:
-        """Nodes that are sources of the DAG"""
-        if len(self.edges) == 0:
-            return list(self.nodes.keys())
-        sources = set(self.structure.keys())
-        destinations = set(self.non_source_nodes)
-        return list(sources.difference(destinations))
-
-    def get_edge(self, source: str, destination: str) -> Edge:
-        for edge_name, edge in self.edges.items():
-            if edge.source == source and edge.destination == destination:
-                return edge
-        assert False
-
-    def get_edge_name(self, source: str, destination: str) -> str:
-        for edge_name, edge in self.edges.items():
-            if edge.source == source and edge.destination == destination:
-                return edge_name
-        assert False
-
-    def get_edges_for_source(self, source: str) -> List[str]:
-        return [edge_name for edge_name, edge in self.edges.items() if edge.source == source]
-
-    def out_nodes(self, source: str) -> List[str]:
-        return self.structure.get(source, ())
-
-    @property
-    def has_cycle(self):
-        white, gray, black = 0, 1, 2
-        color = {n: white for n in self.nodes.keys()}
-
-        def dfs(node):
-            color[node] = gray
-            for dest in self.structure.get(node, []):
-                if color[dest] == gray:
-                    return True
-                elif color[dest] == white and dfs(dest):
-                    return True
-            color[node] = black
-            return False
-
-        for n in self.nodes:
-            if color[n] == white and dfs(n):
-                return True
-        return False
 
 
 class DagContext(BaseModel):
@@ -367,16 +227,20 @@ class TestCase(BaseModel):
         default=1,
         description='Batch number for the test. If more than one is provided it will run the tests for each')
     interval_start: datetime = Field(
-        ..., description='Date representing the start of the interval for which we want to get data')
+        default=None,
+        description='Date representing the start of the interval for which we want to get data',
+    )
     interval_end: datetime = Field(
-        ..., description='Date representing the end of the interval for which we want to get data')
+        default=None,
+        description='Date representing the end of the interval for which we want to get data',
+    )
 
     @property
     def dag_context(self) -> DagContext:
         interval_start = self.interval_start or datetime.now()
         return DagContext(
             interval_start=interval_start,
-            interval_end=interval_end or (interval_start - timedelta(days=1))
+            interval_end=self.interval_end or (interval_start - timedelta(days=1))
         )
 
     @property
@@ -477,15 +341,6 @@ class TaskDefinition(BaseModel):
         default=None,
         description='Task or tasks that will send their output as input to the current node'
     )
-    function: Optional[str] = Field(
-        default=None,
-        regex=r'(typhoon\.\w+\.\w+|functions\.\w+\.\w+)',
-        description="""Python function that will get called when the task runs.
-                    If it is a built-in typhoon function it will have the following structure:
-                      typhoon.[MODULE_NAME].[FUNCTION_NAME]
-                    Whereas if it is a user defined function it will have the following structure:
-                      functions.[MODULE_NAME].[FUNCTION_NAME]"""
-    )
     component: Optional[str] = Field(
         default=None,
         regex=r'(typhoon\.\w+|components\.\w+)',
@@ -494,6 +349,15 @@ class TaskDefinition(BaseModel):
                       typhoon.[COMPONENT_NAME]
                     Whereas if it is a user defined component it will have the following structure:
                       components.[COMPONENT_NAME]"""
+    )
+    function: Optional[str] = Field(
+        default=None,
+        regex=r'(typhoon\.\w+\.\w+|functions\.\w+\.\w+)',
+        description="""Python function that will get called when the task runs.
+                    If it is a built-in typhoon function it will have the following structure:
+                      typhoon.[MODULE_NAME].[FUNCTION_NAME]
+                    Whereas if it is a user defined function it will have the following structure:
+                      functions.[MODULE_NAME].[FUNCTION_NAME]"""
     )
     asynchronous: bool = Field(
         default=True,
@@ -515,9 +379,9 @@ class TaskDefinition(BaseModel):
 
     @validator('function')
     def validate_function(cls, val, values, **kwargs):
-        if val is not None and 'component' in values.keys():
+        if val is not None and 'component' in values.keys() and values['component'] is not None:
             raise ValueError('Function and component are mutually exclusive')
-        elif val is None and 'component' not in values.keys():
+        elif val is None and ('component' not in values.keys() or values['component'] is None):
             raise ValueError('Either function or component is necessary')
         return val
 
@@ -730,41 +594,9 @@ class DAGDefinitionV2(BaseModel):
         else:
             return Granularity.YEAR
 
-    # noinspection PyProtectedMember
-    def make_dag(self) -> DAG:
-        self.substitute_components()
-        nodes = {}
-        edges = {}
-        edge_id = 1
-        for task_name, task in self.tasks.items():
-            adapter, config = task.make_adapter_and_config()
-            nodes[task_name] = Node(
-                function=task.function,
-                asynchronous=task.asynchronous,
-                config=config,
-            )
-            if task.input:
-                inp = task.input if isinstance(task.input, list) else [task.input]
-                for source_task_id in inp:
-                    edges[f'e{edge_id}'] = Edge(
-                        source=source_task_id,
-                        destination=task_name,
-                        adapter=adapter,
-                    )
-                    edge_id += 1
-            elif adapter:
-                raise ValueError(
-                    f'The task {task_name} in dag {self.name} is trying to use $BATCH or $BATCH_NUM but it has no input')
-
-        return DAG(
-            name=self.name,
-            schedule_interval=self.schedule_interval,
-            granularity=self.granularity if self.granularity is not None else self.guess_granularity(),
-            active=self.active,
-            nodes=nodes,
-            edges=edges,
-            airflow_default_args=self.airflow_default_args,
-        )
+    @property
+    def sources(self) -> Dict[str, TaskDefinition]:
+        return {k: v for k, v in self.tasks.items() if v.input is None}
 
     def assert_tests(self, task_name, batch, batch_num, dag_context):
         task = self.tasks[task_name]

@@ -12,9 +12,11 @@ from typing import Optional, List
 
 import pkg_resources
 
-from typhoon.core.dags import DagDeployment, DAG
-from typhoon.core.glue import load_dags, transpile_dag_and_store
+from typhoon.core.components import Component
+from typhoon.core.dags import DagDeployment, DAGDefinitionV2
+from typhoon.core.glue import transpile_dag_and_store, load_dag_definitions, load_components
 from typhoon.core.settings import Settings
+from typhoon.core.transpiler.component_transpiler import ComponentFile
 from typhoon.deployment.deploy import deploy_dag_requirements, copy_local_typhoon, copy_user_defined_code
 
 
@@ -117,7 +119,7 @@ def build_all_dags(remote: Optional[str], matching: Optional[str] = None) -> Lis
 
     print('Build all DAGs...')
     deployment_date = datetime.now()
-    dags = load_dags(ignore_errors=True)
+    dags = load_dag_definitions(ignore_errors=True)
     deploy_sam_template([dag for dag, _ in dags], remote=remote)
     dag_files = []
     for dag, dag_file in dags:
@@ -125,14 +127,29 @@ def build_all_dags(remote: Optional[str], matching: Optional[str] = None) -> Lis
             dag_files.append(dag_file)
             build_dag(dag, dag_file, deployment_date, remote)
 
+            # TODO: We can optimize this by only building the ones we need
+            for component, _ in load_components(ignore_errors=False, kind='custom'):
+                print(f'Building component {component.name}...')
+                build_component(dag.name, component, remote)
+
     print('Finished building DAGs\n')
     return dag_files
 
 
-def build_dag(dag: DAG, dag_file: Path, deployment_date: datetime, remote: Optional[str]):
+def build_component(dag_name: str, component: Component, remote: Optional[str]):
+    components_folder_path = Settings.out_directory / dag_name / 'components'
+    components_folder_path.mkdir(parents=True, exist_ok=True)
+    init_path = (components_folder_path / '__init__.py')
+    if not init_path.exists():
+        init_path.write_text('')
+    component_code = ComponentFile(component).render()
+    (components_folder_path / f'{component.name}.py').write_text(component_code)
+
+
+def build_dag(dag: DAGDefinitionV2, dag_file: Path, deployment_date: datetime, remote: Optional[str]):
     dag = dag.dict()
     dag_folder = Settings.out_directory / dag['name']
-    transpile_dag_and_store(dag, dag_folder / f"{dag['name']}.py", debug_mode=remote is None)
+    transpile_dag_and_store(dag, dag_folder, debug_mode=remote is None)
     deploy_dag_requirements(dag, typhoon_version_is_local(), Settings.typhoon_version)
     if typhoon_version_is_local():
         print('Typhoon package is in editable mode. Copying to lambda package...')

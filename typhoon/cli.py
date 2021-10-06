@@ -4,7 +4,7 @@ import shutil
 import subprocess
 import sys
 from builtins import AssertionError
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Optional
@@ -13,7 +13,6 @@ import click
 import jinja2
 import pkg_resources
 import pygments
-import yaml
 from dataclasses import asdict
 from datadiff import diff
 from datadiff.tools import assert_equal
@@ -25,20 +24,20 @@ from termcolor import colored
 
 from typhoon import connections
 from typhoon.cli_helpers.cli_completion import get_remote_names, get_dag_names, get_conn_envs, get_conn_ids, \
-    get_var_types, get_node_names, get_edge_names, get_deploy_targets, PROJECT_TEMPLATES
+    get_var_types, get_deploy_targets, PROJECT_TEMPLATES, get_task_names
 from typhoon.cli_helpers.status import dags_with_changes, dags_without_deploy, check_connections_yaml, \
     check_connections_dags, check_variables_dags
 from typhoon.connections import Connection
 from typhoon.core import DagContext
 from typhoon.core.components import Component
-from typhoon.core.dags import DAG, DAGDefinitionV2, ArgEvaluationError
-from typhoon.core.glue import get_dag_errors, load_dag, load_dag_definition
+from typhoon.core.dags import DAGDefinitionV2, ArgEvaluationError, load_module_from_path
+from typhoon.core.glue import get_dag_errors, load_dag_definition
 from typhoon.core.settings import Settings
 from typhoon.deployment.packaging import build_all_dags
 from typhoon.handler import run_dag
 from typhoon.introspection.introspect_extensions import get_typhoon_extensions, get_typhoon_extensions_info, \
     get_hooks_info
-from typhoon.introspection.introspect_transformations import run_transformations, TransformationResult
+from typhoon.introspection.introspect_transformations import TransformationResult
 from typhoon.local_config import EXAMPLE_CONFIG
 from typhoon.metadata_store_impl.sqlite_metadata_store import SQLiteMetadataStore
 from typhoon.remotes import Remotes
@@ -385,82 +384,6 @@ def dag_definition(dag_name: str):
     print(matching_dags[0])
 
 
-@cli_dags.group(name='node')
-def cli_nodes():
-    """Manage Typhoon DAG nodes"""
-    pass
-
-
-def _get_dag(remote: str, dag_name: str) -> DAG:
-    if remote is None:
-        result = load_dag(dag_name, ignore_errors=True)
-        if not result:
-            print(f'FATAL: No dags found matching the name "{dag_name}"', file=sys.stderr)
-            sys.exit(-1)
-        dag, _ = result
-    else:
-        metadata_db = Settings.metadata_store(Remotes.aws_profile(remote))
-        dag_deployments = metadata_db.get_dag_deployments()
-        matching_dag_deployments = [x for x in dag_deployments if x.dag_name == dag_name]
-        if not matching_dag_deployments:
-            print(f'FATAL: No dags found matching the name "{dag_name}"', file=sys.stderr)
-            sys.exit(-1)
-        latest_dag_deployment = max(*matching_dag_deployments, key=lambda x: x.deployment_date)
-        dag = DAG.parse_obj(yaml.safe_load(latest_dag_deployment.dag_code))
-    return dag
-
-
-def _get_dag_definition(remote: str, dag_name: str) -> DAGDefinitionV2:
-    if remote is None:
-        result = load_dag_definition(dag_name, ignore_errors=True)
-        if not result:
-            print(f'FATAL: No dags found matching the name "{dag_name}"', file=sys.stderr)
-            sys.exit(-1)
-        dag, _ = result
-        return dag
-    assert False
-
-@cli_nodes.command(name='ls')
-@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
-@click.option('--dag-name', autocompletion=get_dag_names)
-@click.option('-l', '--long', is_flag=True, default=False)
-def list_nodes(remote: Optional[str], dag_name: str, long: bool):
-    """List nodes for DAG"""
-    set_settings_from_remote(remote)
-    dag = _get_dag(remote, dag_name)
-    if long:
-        header = ['NODE_NAME', 'FUNCTION', 'ASYNCHRONOUS']
-        table_body = [
-            [node_name, node.function, node.asynchronous]
-            for node_name, node in dag.nodes.items()
-        ]
-        print(tabulate(table_body, header, 'plain'))
-    else:
-        for node_name, _ in dag.nodes.items():
-            print(node_name)
-
-
-@cli_nodes.command(name='definition')
-@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
-@click.option('--dag-name', autocompletion=get_dag_names)
-@click.option('--node-name', autocompletion=get_node_names)
-def node_definition(remote: Optional[str], dag_name: str, node_name: str):
-    """Show node definition"""
-    print(colored(ascii_art_logo, 'cyan'))
-    set_settings_from_remote(remote)
-    dag = _get_dag(remote, dag_name)
-    if node_name not in dag.nodes.keys():
-        print(f'FATAL: No nodes found matching the name "{node_name}" in dag {dag_name}', file=sys.stderr)
-        sys.exit(-1)
-    print(
-        pygments.highlight(
-            code=yaml.dump(dag.nodes[node_name].dict(), default_flow_style=False, sort_keys=False),
-            lexer=YamlLexer(),
-            formatter=Terminal256Formatter()
-        )
-    )
-
-
 @cli_dags.group(name='task')
 def cli_tasks():
     """Manage Typhoon DAG tasks"""
@@ -486,8 +409,8 @@ def eval_batch(batch: str):
 @cli_tasks.command(name='sample')
 @click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
 @click.option('--dag-name', autocompletion=get_dag_names, required=True)
-@click.option('--task-name', autocompletion=get_edge_names, required=True)
-@click.option('--batch', help='Input batch to node transformations', required=True)
+@click.option('--task-name', autocompletion=get_task_names, required=True)
+@click.option('--batch', help='Input batch to task transformations', required=True)
 @click.option('--batch-num', help='Batch number', type=int, required=False, default=1)
 @click.option('--interval-start', type=click.DateTime(), default=None)
 @click.option('--interval-end', type=click.DateTime(), default=None)
@@ -504,7 +427,7 @@ def task_sample(
 ):
     """Test transformations for task"""
     set_settings_from_remote(remote)
-    dag = _get_dag_definition(remote, dag_name)
+    dag = load_dag_definition(dag_name)
     if task_name not in dag.tasks.keys():
         print(f'FATAL: No tasks found matching the name "{task_name}" in dag {dag_name}', file=sys.stderr)
         sys.exit(-1)
@@ -547,7 +470,7 @@ def task_sample(
 @click.option('--dag-name', autocompletion=get_dag_names, required=True)
 def dag_test(remote: Optional[str], dag_name: str):
     set_settings_from_remote(remote)
-    dag = _get_dag_definition(remote, dag_name)
+    dag = load_dag_definition(dag_name)
     if dag.tests is None:
         print(f'No tests found for DAG {dag_name}')
         return
@@ -595,7 +518,7 @@ def dag_test(remote: Optional[str], dag_name: str):
                 passed += 1
             except AssertionError as e:
                 print(e)
-                excluded_from_diff = (str,)
+                excluded_from_diff = (str, int)
                 if isinstance(expected_value, excluded_from_diff) or isinstance(result, excluded_from_diff):
                     print(f'Expected "{expected_value}" but found "{result}"')
                 else:
@@ -604,108 +527,6 @@ def dag_test(remote: Optional[str], dag_name: str):
     if failed > 0:
         print(colored(f'{failed} tests failed', 'red'))
     print(colored(f'{passed} tests passed', 'green'))
-
-
-@cli_dags.group(name='edge')
-def cli_edges():
-    """Manage Typhoon DAG edges"""
-    pass
-
-
-@cli_edges.command(name='ls')
-@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
-@click.option('--dag-name', autocompletion=get_dag_names, required=True)
-@click.option('-l', '--long', is_flag=True, default=False)
-def list_edges(remote: Optional[str], dag_name: str, long: bool):
-    """List edges for DAG"""
-    set_settings_from_remote(remote)
-    dag = _get_dag(remote, dag_name)
-    if long:
-        header = ['EDGE_NAME', 'SOURCE', 'DESTINATION']
-        table_body = [
-            [edge_name, edge.source, edge.destination]
-            for edge_name, edge in dag.edges.items()
-        ]
-        print(tabulate(table_body, header, 'plain'))
-    else:
-        for edge_name, _ in dag.edges.items():
-            print(edge_name)
-
-
-@cli_edges.command(name='definition')
-@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
-@click.option('--dag-name', autocompletion=get_dag_names)
-@click.option('--edge-name', autocompletion=get_edge_names)
-def edge_definition(remote: Optional[str], dag_name: str, edge_name: str):
-    """Show edge definition"""
-    print(colored(ascii_art_logo, 'cyan'))
-    set_settings_from_remote(remote)
-    dag = _get_dag(remote, dag_name)
-    if edge_name not in dag.edges.keys():
-        print(f'FATAL: No edges found matching the name "{edge_name}" in dag {dag_name}', file=sys.stderr)
-        sys.exit(-1)
-    print(
-        pygments.highlight(
-            code=yaml.dump(dag.edges[edge_name].dict(), default_flow_style=False, sort_keys=False),
-            lexer=YamlLexer(),
-            formatter=Terminal256Formatter()
-        )
-    )
-
-
-@cli_edges.command(name='test')
-@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
-@click.option('--dag-name', autocompletion=get_dag_names, required=True)
-@click.option('--edge-name', autocompletion=get_edge_names, required=True)
-@click.option('--input', 'input_', help='Input batch to node transformations', required=True)
-@click.option('--interval-start', type=click.DateTime(), default=None)
-@click.option('--interval-end', type=click.DateTime(), default=None)
-@click.option('--eval', 'eval_', is_flag=True, default=False, help='If true evaluate the input string')
-def edge_test(
-        remote: Optional[str],
-        dag_name: str,
-        edge_name: str,
-        input_,
-        interval_start: datetime,
-        interval_end: datetime,
-        eval_: bool,
-):
-    """Show node definition"""
-    set_settings_from_remote(remote)
-    dag = _get_dag(remote, dag_name)
-    if edge_name not in dag.edges.keys():
-        print(f'FATAL: No edges found matching the name "{edge_name}" in dag {dag_name}', file=sys.stderr)
-        sys.exit(-1)
-    if eval_:
-        input_ = eval(input_)
-    if interval_start and interval_end:
-        dag_context = DagContext(
-            schedule_interval=dag.schedule_interval,
-            interval_start=interval_start,
-            interval_end=interval_end,
-            granularity=dag.granularity,
-        )
-    else:
-        dag_context = DagContext.from_cron_and_event_time(
-            schedule_interval=dag.schedule_interval,
-            event_time=datetime.now(),
-            granularity=dag.granularity,
-        )
-    transformation_results = run_transformations(
-        dag.edges[edge_name],
-        input_,
-        dag_context,
-    )
-    for result in transformation_results:
-        if isinstance(result, TransformationResult):
-            highlighted_result = pygments.highlight(
-                    code=result.pretty_result,
-                    lexer=PythonLexer(),
-                    formatter=Terminal256Formatter()
-                )
-            print(colored(f'{result.config_item}:', 'green'), highlighted_result, end='')
-        else:
-            print(f'{result.config_item}: Error {result.error_type} {result.message}', file=sys.stderr)
 
 
 @cli.group(name='connection')
@@ -914,7 +735,6 @@ def list_extension_components(remote: Optional[str]):
     # set_settings_from_remote(remote)
     header = ['Component', 'Path']
     table_body = []
-    extensions_info = get_typhoon_extensions_info()
     for component_name, component_path in get_typhoon_extensions_info()['components'].items():
         table_body.append([component_name, component_path])
     print(tabulate(table_body, header, 'plain'))
@@ -950,6 +770,56 @@ def webserver():
     finally:
         frontend.kill()
 
+
+def transformations_locals():
+        custom_transformation_modules = {}
+        transformations_path = str(Settings.transformations_directory)
+        for filename in os.listdir(transformations_path):
+            if filename == '__init__.py' or not filename.endswith('.py'):
+                continue
+            module_name = filename[:-3]
+            module = load_module_from_path(
+                module_path=os.path.join(transformations_path, filename),
+                module_name=module_name,
+            )
+            custom_transformation_modules[module_name] = module
+        custom_transformations = SimpleNamespace(**custom_transformation_modules)
+        return custom_transformations
+
+
+@cli.command()
+@click.option('--dag-name', autocompletion=get_dag_names, required=False, default=None)
+def shell(dag_name: Optional[str]):
+    from IPython import start_ipython
+    from traitlets.config import Config
+    c = Config()
+    c.InteractiveShellApp.extensions = [
+        'typhoon.shell_extensions'
+    ]
+    c.InteractiveShellApp.exec_lines = [
+        'import typhoon',
+    ]
+    if dag_name:
+        c.InteractiveShellApp.exec_lines.append(f'%load_dag {dag_name}')
+    c.TerminalInteractiveShell.banner2 = f"""
+{ascii_art_logo}
+Pre-loaded variables:
+    - tasks: Task objects generated from dag definition, ready to execute
+    - dag_context: Pre-loaded DAG context to test with
+    - dag: Dag definition (parsed from YAML)
+Example usage:
+    - tasks.example.function?
+    - tasks.example.echo.get_args(dag_context, None, batch_num=1, batch='Hello world!')
+    - tasks.example.echo.run(dag_context, None, batch_num=1, batch='Hello world!')
+    # After changes in the YAML we can reload the DAG
+    - %reload_dag
+    """
+    user_ns = {
+        'dag_context': DagContext.from_cron_and_event_time('@daily', datetime.now(), granularity='day'),
+        'transformations': transformations_locals(),
+        'SimpleNamespace': SimpleNamespace,
+    }
+    start_ipython(argv=[], user_ns=user_ns, config=c)
 
 # @cli.command()
 # @click.argument('remote', autocompletion=get_remote_names)

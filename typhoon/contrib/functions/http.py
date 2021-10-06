@@ -12,7 +12,14 @@ class GetResponse(NamedTuple):
 
 
 def get(hook: BasicAuthHook, path: str, metadata: dict = None) -> GetResponse:
-    return GetResponse(
+    yield GetResponse(
         response=requests.get(hook.url(path), auth=hook.basic_auth_params),
+        metadata=metadata or {},
+    )
+
+
+def get_raw(url: str, metadata: dict = None) -> GetResponse:
+    yield GetResponse(
+        response=requests.get(url),
         metadata=metadata or {},
     )

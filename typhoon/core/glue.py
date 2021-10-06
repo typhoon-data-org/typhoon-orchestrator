@@ -10,23 +10,23 @@ import yaml
 from pydantic import ValidationError
 from typhoon.core.components import Component
 
-from typhoon.core.dags import DAG, DAGDefinitionV2, add_yaml_constructors
+from typhoon.core.dags import DAGDefinitionV2, add_yaml_constructors
 from typhoon.core.settings import Settings
-from typhoon.core.transpiler import TyphoonFileTemplate
 from typing_extensions import Literal
 
+from typhoon.core.transpiler.dag_transpiler import DagFile
+from typhoon.core.transpiler.task_transpiler import TasksFile
 from typhoon.introspection.introspect_extensions import get_typhoon_extensions_info
 
 
-def transpile_dag_and_store(dag: dict, output_path: Union[str, Path], debug_mode: bool):
-    output_path = Path(output_path)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    dag_code = TyphoonFileTemplate(DAG.parse_obj(dag), debug_mode=debug_mode).render()
-    Path(output_path).write_text(dag_code)
-
-
-def load_dags(ignore_errors: bool = False) -> List[Tuple[DAG, Path]]:
-    return [(dd.make_dag(), df) for dd, df in load_dag_definitions(ignore_errors)]
+def transpile_dag_and_store(dag: dict, output_folder_path: Union[str, Path], debug_mode: bool):
+    output_folder_path = Path(output_folder_path)
+    output_folder_path.mkdir(parents=True, exist_ok=True)
+    dag = DAGDefinitionV2.parse_obj(dag)
+    dag_code = DagFile(dag, debug_mode=debug_mode).render()
+    (output_folder_path / f'{dag.name}.py').write_text(dag_code)
+    tasks_code = TasksFile(dag.tasks).render()
+    (output_folder_path / 'tasks.py').write_text(tasks_code)
 
 
 def load_dag_definitions(ignore_errors: bool = False) -> List[Tuple[DAGDefinitionV2, Path]]:
@@ -47,16 +47,9 @@ def load_dag_definitions(ignore_errors: bool = False) -> List[Tuple[DAGDefinitio
     return dags
 
 
-def load_dag(dag_name: str, ignore_errors: bool = False) -> Optional[DAG]:
-    dags = load_dags(ignore_errors)
-    matching_dags = [(dag, _) for dag, _ in dags if dag.name == dag_name]
-    assert len(matching_dags) <= 1, f'Found {len(matching_dags)} dags with name "{dag_name}"'
-    return matching_dags[0] if len(matching_dags) == 1 else None
-
-
 def load_dag_definition(dag_name: str, ignore_errors: bool = False) -> Optional[DAGDefinitionV2]:
     dags = load_dag_definitions(ignore_errors)
-    matching_dags = [(dag, _) for dag, _ in dags if dag.name == dag_name]
+    matching_dags = [dag for dag, _ in dags if dag.name == dag_name]
     assert len(matching_dags) <= 1, f'Found {len(matching_dags)} dags with name "{dag_name}"'
     return matching_dags[0] if len(matching_dags) == 1 else None
 
@@ -68,7 +61,7 @@ def get_dag_errors() -> Dict[str, List[dict]]:
         try:
             DAGDefinitionV2.parse_obj(
                 yaml.load(dag_file.read_text(), yaml.FullLoader)
-            ).make_dag()
+            )
         except ValidationError as e:
             result[dag_file.name.split('.yml')[0]] = e.errors()
 

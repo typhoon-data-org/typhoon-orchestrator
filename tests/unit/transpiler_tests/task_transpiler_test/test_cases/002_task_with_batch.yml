@@ -1,0 +1,25 @@
+input:
+    example2:
+        input: my_source
+        function: functions.flow_control.filter
+        args:
+            func: !Py 'lambda x: x % 2 == 0'
+            data: !MultiStep
+                - 10
+                - !Py $BATCH * $BATCH_NUM * $1
+expects: |
+    class Example2Task(TaskInterface):
+        def __init__(self, broker: BrokerInterface, parent_component: Optional[ComponentInterface]=None):
+            self.broker = broker
+            self.task_id = 'example2'
+            self.function = functions.flow_control.filter
+            self.destinations = []
+            self.parent_component = parent_component
+
+        def get_args(self, dag_context: DagContext, source: Optional[str], batch_num: int, batch: Any) -> dict:
+            args = {}
+            args['func'] = lambda x: x % 2 == 0
+            data_1 = 10
+            data_2 = batch * batch_num * data_1
+            args['data'] = data_2
+            return args
