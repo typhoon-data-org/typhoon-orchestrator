@@ -153,14 +153,14 @@ Airflow UI will then show:
 
 ## Component UI
 
-Give your team autonomy by sharing templated flows them to configure.
+Give your team autonomy by sharing templated flows they can configure.
 
 ![Component UI](img/component_ui.gif)
 
 
 ## API
 
-Develop against the API.
+Develop against Typhoon's API.
 
 ![Swagger API](img/api_swagger.png)
 
