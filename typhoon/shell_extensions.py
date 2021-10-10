@@ -16,6 +16,7 @@ def load_ipython_extension(ipython):
     def load_dag(dag_name):
         tasks_path = str((Settings.out_directory/dag_name/'tasks.py').resolve())
         tasks_module = load_module_from_path(tasks_path, module_name='tasks')
+        build_all_dags(None, matching=dag_name)
         dag = load_dag_definition(dag_name)
         ipython.user_ns['dag'] = dag
         task_instances = SimpleNamespace()
@@ -34,7 +35,6 @@ def load_ipython_extension(ipython):
         if not dag:
             print(f'Cannot reload because no dags are currently loaded.')
             return
-        build_all_dags(None, matching=dag.name)
         load_dag(dag.name)
 
 
