@@ -4,7 +4,7 @@ services:
     container_name: typhoon-af
     image: typhoondata/typhoon-orchestrator_airflow1.10
     environment:
-      - FERNET_KEY=TZwG3UoZChYsneMImfjZJM2wK6LnVcrcbGNc8d511xs=
+      - FERNET_KEY=
     ports:
       - "8088:8080"
     volumes:

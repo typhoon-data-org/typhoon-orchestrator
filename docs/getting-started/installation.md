@@ -14,6 +14,13 @@ Typhoon can be installed locally with pip or using docker. To test airflow (espe
 
 ## with pip 
 
+Optionally -  Install and activate virtualenv
+```bash
+python3 -m venv typhoon_venv
+source ./typhoon_venv/bin/activate
+```
+
+Install typhoon: 
 ```bash
 pip install typhoon-orchestrator[dev]
 ```
@@ -49,10 +56,33 @@ We will see in the next section 'Connections' how to add these.
     - zsh eval "$(_TYPHOON_COMPLETE=source_zsh typhoon)"
     - fish eval "$(_TYPHOON_COMPLETE=source_fish typhoon)"
 
-## With Docker
+## With Docker (Standalone, without Airflow)
 
-@TODO - waiting until Docker with Airflow is clean, then finalise. 
+To deploy Typhoon: 
 
+- Docker / Docker Desktop (You must use WSL2 on Windows) 
+- Download the [docker-compose.yaml][1]  (or use curl below)
+- Create a directory for your TYPHOON_PROJECTS_HOME
+
+The following sets up your project directory and gets the docker-compose.yml:
+```bash
+TYPHOON_PROJECTS_HOME="/tmp/typhoon_projects" # Or any other path you prefer
+mkdir -p $TYPHOON_PROJECTS_HOME/typhoon_standalone_test
+cd $TYPHOON_PROJECTS_HOME/typhoon_standalone_test
+mkdir src
+curl -LfO 'https://github.com/typhoon-data-org/typhoon-orchestrator/blob/master/docker-compose-37-no-airflow.yml'
+
+docker compose up -d # bring up the container 
+docker exec -it typhoon bash   # Then you're in the typhoon home.
+ 
+typhoon status # To see status of dags & connections
+```
+
+You should be able to then check `typhoon status`.
+
+This runs a container with only 1 service, `typhoon-37-standalone`. This has Typhoon installed on it ready to work with. 
+
+**Please read the 'Directories' and 'Development hints' below for how to work with it. 
 
 ## With Docker and Airflow
 
@@ -68,7 +98,7 @@ TYPHOON_PROJECTS_HOME="/tmp/typhoon_projects" # Or any other path you prefer
 mkdir -p $TYPHOON_PROJECTS_HOME/typhoon_airflow_test
 cd $TYPHOON_PROJECTS_HOME/typhoon_airflow_test
 mkdir src
-curl -LfO 'https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/docker-compose.yml'
+curl -LfO 'https://github.com/typhoon-data-org/typhoon-orchestrator/blob/master/docker-compose-af.yml'
 
 docker compose up -d airflow-init  # initiates airflow 
 docker exec -it typhoon-af bash   # Then you're in the typhoon home.
@@ -120,5 +150,6 @@ If they successfully compile they will appear in ./airflow_dags, and also in the
     typhoon dag build --all
     ```
 
-[1]:./docker-compose.yml
+[1]:/docker-compose-af.yml
 [2]:../examples/hello-world.md
+[3]:/docker-compose-37-no-airflow.yml

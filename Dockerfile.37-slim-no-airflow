@@ -1,0 +1,16 @@
+FROM python:3.7-slim
+
+ENV PROJECT_NAME="typhoon_project"
+ENV TYPHOON_BASE="/opt/typhoon"
+ENV TYPHOON_HOME="$TYPHOON_BASE/$PROJECT_NAME/"
+ENV PYTHONPATH="$PYTHONPATH:$TYPHOON_HOME"
+
+COPY . /
+RUN pip install -e ./[dev]
+
+WORKDIR $TYPHOON_BASE
+RUN typhoon init $PROJECT_NAME && cd $PROJECT_NAME
+WORKDIR $TYPHOON_HOME
+
+# command to run on container start
+CMD ["bash"]

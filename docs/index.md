@@ -35,8 +35,8 @@ Typhoon is a Data workflow tool (i.e. ETL / ELT pipelines) for composing **Airfl
 
     - **Pristine**: Pre-built (OSS) components and UI that can be shared to your team    
     - **Core**: Python (OSS) core 
-        - Extensible and hackable.
-        - Components allow you to share extensions widely in the Pristine layer.    
+        - Extensible and hackable. 
+        - Components allow you to share extensions widely in the Pristine layer
 
 
 !!! note "[Installing Typhoon - quick start][1]"
@@ -156,14 +156,3 @@ Airflow UI will then show:
 Give your team autonomy by sharing templated flows they can configure.
 
 ![Component UI](img/component_ui.gif)
-
-
-## API
-
-Develop against Typhoon's API.
-
-![Swagger API](img/api_swagger.png)
-
-
-[1]:./getting-started/installation.md
-[2]:./examples/hello-world.md
