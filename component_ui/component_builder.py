@@ -108,16 +108,20 @@ for arg in component_definition['args']:
     elif 'Hook' in component_definition['args'][arg]:
         c1_h, c2_h, = st.beta_columns((1, 1))
         with c1_h:
-            hook_list[arg] = st.selectbox(
-                label=arg,
-                options=get_connections(),
-                help='Choose from available connection of Type ' + (component_definition['args'][arg])
-            )
+            if get_connections() == []:
+                st.error("Please add hooks using typhoon cli - typhoon connections add.")
+                hook_list[arg] = ' ... '
+            else:
+                hook_list[arg] = st.selectbox(
+                    label=arg,
+                    options=get_connections(),
+                    help='Choose from available connection of Type ' + (component_definition['args'][arg])
+                )
 
         with c2_h:
             return_vals['component_arguments'][arg] = st.text_input(
                 label=arg,
-                value='!Hook ' + hook_list[arg],
+                value='!Hook ' + str(hook_list[arg] or ''),
                 key=arg,
                 help='''Example:
                           !Hook my_env_db_hook'
