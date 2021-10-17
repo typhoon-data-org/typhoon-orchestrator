@@ -1,6 +1,5 @@
 import json
-from pathlib import Path
-from typing import Optional, List, Dict
+from typing import Optional
 
 import yaml
 from fastapi import FastAPI
@@ -11,9 +10,6 @@ from typhoon.core.dags import IDENTIFIER_REGEX, Granularity, DAGDefinitionV2, Ta
 from typhoon.core.glue import load_components, load_component
 from typhoon.core.settings import Settings
 from typhoon.deployment.packaging import build_all_dags
-import uvicorn
-from typhoon.deployment.packaging import build_all_dags, local_typhoon_path
-from typhoon.introspection.introspect_extensions import get_typhoon_extensions_info
 
 app = FastAPI()
 
