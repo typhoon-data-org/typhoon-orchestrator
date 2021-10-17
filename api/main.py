@@ -1,5 +1,6 @@
 import json
-from typing import Optional
+from pathlib import Path
+from typing import Optional, List, Dict
 
 import yaml
 from fastapi import FastAPI
@@ -9,15 +10,23 @@ from typhoon.core.components import Component
 from typhoon.core.dags import IDENTIFIER_REGEX, Granularity, DAGDefinitionV2, TaskDefinition
 from typhoon.core.glue import load_components, load_component
 from typhoon.core.settings import Settings
-from typhoon.deployment.packaging import build_all_dags
+from typhoon.deployment.packaging import build_all_dags, local_typhoon_path
+from typhoon.introspection.introspect_extensions import get_typhoon_extensions_info
 
 app = FastAPI()
 
 
 @app.get("/api/v1/components")
 def get_components():
-    component_names = [x.name for x, _ in load_components(kind='all')]
-    return {'components': component_names}
+    typhoon_components = {
+        component.name: 'typhoon'
+        for component, _ in load_components(kind='typhoon')
+    }
+    local_components = {
+        component.name: 'components'
+        for component, _ in load_components(kind='custom')
+    }
+    return {'components': {**typhoon_components, **local_components}}
 
 
 @app.get("/api/v1/component/{component_name}")

@@ -22,6 +22,7 @@ from pygments.lexers.python import PythonLexer
 from tabulate import tabulate
 from termcolor import colored
 
+from api.main import app
 from typhoon import connections
 from typhoon.cli_helpers.cli_completion import get_remote_names, get_dag_names, get_conn_envs, get_conn_ids, \
     get_var_types, get_deploy_targets, PROJECT_TEMPLATES, get_task_names
@@ -760,15 +761,18 @@ def run_in_subprocess(command: str, cwd: str):
 
 @cli.command()
 def webserver():
-    frontend = subprocess.Popen(
-        ["npm", "run", "serve"],
-        cwd=str(Path(__file__).parent.parent/'webserver/typhoon_webserver/frontend'))
-    try:
-        sys.path.append(str(Path(__file__).parent.parent / 'webserver/typhoon_webserver/backend/'))
-        from core import app
-        app.run()
-    finally:
-        frontend.kill()
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # frontend = subprocess.Popen(
+    #     ["npm", "run", "serve"],
+    #     cwd=str(Path(__file__).parent.parent/'webserver/typhoon_webserver/frontend'))
+    # try:
+    #     sys.path.append(str(Path(__file__).parent.parent / 'webserver/typhoon_webserver/backend/'))
+    #     from core import app
+    #     app.run()
+    # finally:
+    #     frontend.kill()
 
 
 def transformations_locals():
