@@ -1,12 +1,18 @@
+
+
 site_name: Typhoon Orchestrator
 
 repo_name: typhoon-orchestrator
-repo_url: https://github.com/biellls/typhoon-orchestrator
+repo_url: https://github.com/typhoon-data-org/typhoon-orchestrator
 
 theme:
     name: 'material'
+    features:
+      - navigation.tabs
+      - navigation.tabs.sticky
+      - navigation.sections
     palette:
-      primary: 'brown'
+      primary: 'deep purple'
     logo: 'img/typhoon_solo_inverted2.png'
 
 google_analytics:
@@ -15,10 +21,32 @@ google_analytics:
 
 nav:
   - Overview: 'index.md'
-  - Getting Started: 'getting-started.md'
-  - DAG Development:
-    - Tutorial: 'dag-development-tutorial.md'
-    - Improving the tutorial DAG: 'dag-development-improving.md'
+  - Getting Started:
+    - Installation: 'getting-started/installation.md'
+    - Connections: 'getting-started/connections.md'
+    - Creating your DAG: 'getting-started/creating-a-dag.md'
+    - Typhoon Cli: 'getting-started/typhoon-cli.md'
+    - Deployment: 'getting-started/deployment.md'
+    - Using Components: 'getting-started/using-components.md'
+    - UI configurator: 'getting-started/using-component-ui.md'
+    - Creating Components: 'getting-started/creating-components.md'
+    - Hooks (connections): 'getting-started/creating-hooks.md'
+  - Usage:
+    - Dag Context: 'usage/dag-context.md'
+    - Tasks: 'usage/tasks.md'
+    - Functions: 'usage/functions.md'
+    - Transformations: 'usage/transformations.md'
+    - Components: 'usage/components.md'
+    - Hooks: 'usage/hooks.md'
+    - Tempaltes: 'usage/templates.md'
+    - Variables: 'usage/variables.md'
+  - Example Walkthroughs:
+      - Hello World: 'examples/hello-world.md'
+      - MySql to Snowflake: 'examples/mysql-to-snowflake.md'
+      - Pandas automation: 'examples/automating-pandas.md'
+      - Airflow examples: 'examples/airflow-examples.md'
+  - Contributing: 'contributing.md'
+  - Licence: 'licence.md'
 
 markdown_extensions:
   - markdown.extensions.codehilite:
@@ -26,6 +54,8 @@ markdown_extensions:
   - admonition
   - codehilite
   - extra
+  - pymdownx.tabbed
+  - pymdownx.details
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid
