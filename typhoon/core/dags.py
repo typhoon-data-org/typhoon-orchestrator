@@ -668,6 +668,12 @@ class DAGDefinitionV2(BaseModel):
             del self.tasks[task_name]
         self.tasks.update(**tasks_to_add)
 
+    class Config:
+        json_encoders = {
+            Py: lambda v: {'__typhoon__': 'Py', 'value': v.value},
+            MultiStep: lambda v: {'__typhoon__': 'MultiStep', 'value': v.value},
+        }
+
 
 def uses_batch(item):
     if isinstance(item, Py):
