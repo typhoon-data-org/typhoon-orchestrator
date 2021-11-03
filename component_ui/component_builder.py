@@ -41,10 +41,15 @@ def get_connections():
     return [ c['conn_id'] for c in conns_list['connections'] ]
 
 
-def post_create_dag(dag_json):
-    endpoint = "/".join([api_str, 'components'])
-    success = make_request(endpoint, 'get')
-    return success
+def post_create_dag_from_component(dag__from_component_json):
+    endpoint = "/".join([api_str, 'dag-from-component'])
+    response = make_request(endpoint, 'post', body=dag__from_component_json)
+    return response
+
+def put_create_dag(dag_json):
+    endpoint = "/".join([api_str, 'dag'])
+    response = make_request(endpoint, 'put', body=dag_json)
+    return response
 
 
 st.sidebar.header('DAG configuration')
@@ -53,12 +58,13 @@ component_lst = get_components()
 
 component = st.sidebar.selectbox(
     label='Select Component',
-    options=component_lst['components'],
+    options=list(component_lst['components'].keys()),
     help='You can follow docs here to create a component and use this UI to build a DAG from it.'
 )
 
 
 component_definition = get_component_definition(component)
+
 
 st.header('Component config:  ' + component_definition['name'])
 
@@ -87,7 +93,7 @@ with c3:
     )
 
 return_vals = {}
-return_vals['base_component'] = component
+return_vals['base_component'] = component_lst['components'][component] + '.' + component
 return_vals['name'] = dag_name
 return_vals['schedule_interval'] = schedule_value
 return_vals['granularity'] = schedule_granularity
@@ -156,15 +162,30 @@ for arg in component_definition['args']:
             help='Your environment name - underscore_lowercase'
         )
 
+dag_from_component = json.loads("{}")
+dag_success = json.loads("{}")
 
 if st.button('Create DAG'):
-    st.write('Success!')
+    # First create dag from component
+    dag_from_component = post_create_dag_from_component(return_vals)
+    # st.write(dag_from_component)
+    # Create the Dag
+    dag_success = put_create_dag(dag_from_component)
+    st.write(dag_success)
 
+#
+# expander = st.beta_expander("Component Raw Definition")
+# expander.write(component_definition)
 
-expander = st.beta_expander("Component Raw Definition")
-expander.write(component_definition)
+# return_val_expander = st.beta_expander("DAG return Values")
+# return_val_expander.json(json.dumps(return_vals))
+#
+# expander = st.beta_expander("Resulting DAG from API")
+# expander.write(dag_from_component)
+#
+# expander = st.beta_expander("Result of DAG Creation")
+# expander.write(dag_success)
+#
 
-return_val_expander = st.beta_expander("DAG return Values")
-return_val_expander.json(json.dumps(return_vals))
 
 
