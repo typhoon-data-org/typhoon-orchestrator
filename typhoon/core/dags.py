@@ -393,6 +393,11 @@ class TaskDefinition(BaseModel):
                 raise ValueError(f'Arg "{k}" should be an identifier')
             if isinstance(v, MultiStep):
                 v.key = k
+            # HACK: We don't have custom JSON decoders so we need to create Py and MultiStep objects here if applicable
+            if isinstance(v, dict) and v.get('__typhoon__') == 'Py':
+                val[k] = Py(v['value'])
+            elif isinstance(v, dict) and v.get('__typhoon__') == 'MultiStep':
+                val[k] = MultiStep(v['value'])
         return val
 
     @validator('function')
