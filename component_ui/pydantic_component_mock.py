@@ -1,5 +1,6 @@
 from pydantic import BaseModel
-from typing import Literal, Union
+from typing import Union
+from typing_extensions import Literal
 
 """
 name: glob_compress_and_copy

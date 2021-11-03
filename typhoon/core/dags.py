@@ -45,6 +45,10 @@ class Py:
     def construct(loader: yaml.Loader, node: yaml.Node):
         return construct_custom_class(Py, loader, node)
 
+    @staticmethod
+    def represent(dumper: yaml.Dumper, data: 'Py'):
+        return dumper.represent_scalar('!Py', data.value)
+
     @classmethod
     def __get_validators__(cls):
         yield cls.validate
@@ -102,6 +106,10 @@ class MultiStep:
     @staticmethod
     def construct(loader: yaml.Loader, node: yaml.Node):
         return construct_custom_class(MultiStep, loader, node)
+
+    @staticmethod
+    def represent(dumper: yaml.Dumper, data: 'MultiStep'):
+        return dumper.represent_sequence('MultiStep', data.value)
 
     @classmethod
     def __get_validators__(cls):
@@ -304,6 +312,11 @@ def add_yaml_constructors():
     yaml.add_constructor('!PyObj', construct_python_object)
     yaml.add_constructor('!DataFrame', construct_dataframe)
     yaml.add_constructor('!Template', construct_template)
+
+
+def add_yaml_representers(dumper: yaml.Dumper):
+    yaml.add_representer(Py, Py.represent, dumper)
+    yaml.add_representer(MultiStep, MultiStep.represent, dumper)
 
 
 def get_deps_uses_batch_and_warnings(item):
@@ -661,34 +674,10 @@ def uses_batch(item):
 
 
 if __name__ == '__main__':
-    add_yaml_constructors()
-    dag_v2 = """
-name: example_v2
-schedule_interval: "@hourly"
-
-tasks:
-    tables:
-        function: typhoon.flow_control.branch
-        args:
-            branches:
-                - sheep
-                - dog
-    
-    extract:
-        input: tables
-        function: typhoon.relational.query
-        asynchronous: False
-        args:
-            sql: !Py f'select * from {$BATCH}'
-            hook: !Py $HOOKS.oracle_db
-            batch_size: 500
-    
-    load:
-        input: extract
-        function: typhoon.filesystem.write_data
-        args:
-            hook: !Py $HOOKS.data_lake
-            data: !Py typhoon.transformations.write_csv($BATCH.data)
-            path: !Py f'{$BATCH.table_name}/part{$BATCH_NUM}.csv'
-    """
-    print(yaml.dump(DAGDefinitionV2.parse_obj(yaml.load(dag_v2, yaml.FullLoader)).make_dag().dict(), Dumper=yaml.Dumper, sort_keys=False))
+    add_yaml_representers(yaml.SafeDumper)
+    print(yaml.safe_dump({
+        'a': 'abc',
+        'b': [1, 2, 3],
+        'c': Py('abcd'),
+        'd': MultiStep([1, 'a', 2]),
+    }))

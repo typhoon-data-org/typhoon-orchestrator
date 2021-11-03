@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
 from typhoon.core.components import Component
-from typhoon.core.dags import IDENTIFIER_REGEX, Granularity, DAGDefinitionV2, TaskDefinition
+from typhoon.core.dags import IDENTIFIER_REGEX, Granularity, DAGDefinitionV2, TaskDefinition, add_yaml_representers
 from typhoon.core.glue import load_components, load_component
 from typhoon.core.settings import Settings
 from typhoon.deployment.packaging import build_all_dags
@@ -85,7 +85,8 @@ def dag_from_component(build_args: BuildArgs):
 @app.put("/api/v1/dag")
 def create_dag(dag: DAGDefinitionV2):
     dag_file = Settings.dags_directory / f'{dag.name}.yml'
-    dag_file.write_text(yaml.safe_dump(json.loads(dag.json())))
+    add_yaml_representers(yaml.SafeDumper)
+    dag_file.write_text(yaml.safe_dump(dag.dict()))
     return str(dag_file)
 
 
