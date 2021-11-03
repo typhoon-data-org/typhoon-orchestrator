@@ -1,10 +1,8 @@
 import streamlit as st
-from unittest.mock import Mock
 import json
-import urllib
 import pydantic_component_mock as mock_comps
 import requests
-import sys
+import yaml
 
 api_url = "http://localhost:8000/api"
 api_version = "v1"
@@ -134,12 +132,18 @@ for arg in component_definition['args']:
                 '''
             )
     elif component_definition['args'][arg] == 'List[str]':
-        return_vals['component_arguments'][arg] = st.text_area(
+         list_input = st.text_area(
             label=arg,
             value='- table_1 \n- table_2 \n- table_3',
             key=arg,
             help='Type ' + (component_definition['args'][arg]) + ' \n Example \n- <my_value_1> \n- <my_value_2> \n- <my_value_3>'
-        )
+         )
+         try:
+             parsed_list = yaml.safe_load(list_input)
+         except:
+             st.error("Please add hooks using typhoon cli - typhoon connections add.")
+             parsed_list = None
+         return_vals['component_arguments'][arg] = parsed_list
     elif type(component_definition['args'][arg]) == dict:
         return_vals['component_arguments'][arg] = st.text_input(
             label=arg,
