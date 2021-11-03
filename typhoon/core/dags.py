@@ -314,9 +314,14 @@ def add_yaml_constructors():
     yaml.add_constructor('!Template', construct_template)
 
 
+def represent_granularity(dumper: yaml.Dumper, data: Granularity):
+    return dumper.represent_str(data.value)
+
+
 def add_yaml_representers(dumper: yaml.Dumper):
     yaml.add_representer(Py, Py.represent, dumper)
     yaml.add_representer(MultiStep, MultiStep.represent, dumper)
+    yaml.add_representer(Granularity, represent_granularity, dumper)
 
 
 def get_deps_uses_batch_and_warnings(item):

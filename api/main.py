@@ -86,7 +86,8 @@ def dag_from_component(build_args: BuildArgs):
 def create_dag(dag: DAGDefinitionV2):
     dag_file = Settings.dags_directory / f'{dag.name}.yml'
     add_yaml_representers(yaml.SafeDumper)
-    dag_file.write_text(yaml.safe_dump(dag.dict()))
+    dag_yaml = yaml.safe_dump(dag.dict())
+    dag_file.write_text(dag_yaml)
     return str(dag_file)
 
 
