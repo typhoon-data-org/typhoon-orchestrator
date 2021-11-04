@@ -29,6 +29,7 @@ from typhoon.cli_helpers.cli_completion import get_remote_names, get_dag_names, 
 from typhoon.cli_helpers.status import dags_with_changes, dags_without_deploy, check_connections_yaml, \
     check_connections_dags, check_variables_dags
 from typhoon.connections import Connection
+from typhoon.contrib.hooks.hook_factory import get_hook
 from typhoon.core import DagContext
 from typhoon.core.components import Component
 from typhoon.core.dags import DAGDefinitionV2, ArgEvaluationError, load_module_from_path
@@ -822,6 +823,7 @@ Example usage:
         'dag_context': DagContext.from_cron_and_event_time('@daily', datetime.now(), granularity='day'),
         'transformations': transformations_locals(),
         'SimpleNamespace': SimpleNamespace,
+        'get_hook': get_hook,
     }
     start_ipython(argv=[], user_ns=user_ns, config=c)
 
