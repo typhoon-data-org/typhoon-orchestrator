@@ -114,7 +114,7 @@ for arg in component_definition['args']:
         with c1_h:
             if get_connections() == []:
                 st.error("Please add hooks using typhoon cli - typhoon connections add.")
-                hook_list[arg] = ' ... '
+                hook_list[arg] = 'my_hook_name'
             else:
                 hook_list[arg] = st.selectbox(
                     label=arg,
@@ -123,14 +123,15 @@ for arg in component_definition['args']:
                 )
 
         with c2_h:
-            return_vals['component_arguments'][arg] = st.text_input(
+             hook_raw = st.text_input(
                 label=arg,
-                value='!Hook ' + str(hook_list[arg] or ''),
+                value=str(hook_list[arg] or ''),
                 key=arg,
                 help='''Example:
-                          !Hook my_env_db_hook'
+                           my_env_db_hook
                 '''
             )
+        return_vals['component_arguments'][arg] = {"__typhoon__": "Py", "value": "$HOOK." + hook_raw}
     elif component_definition['args'][arg] == 'List[str]':
          list_input = st.text_area(
             label=arg,
@@ -141,7 +142,7 @@ for arg in component_definition['args']:
          try:
              parsed_list = yaml.safe_load(list_input)
          except:
-             st.error("Please add hooks using typhoon cli - typhoon connections add.")
+             st.error("Please input a YAML style list. \n- table_1 \n- table_2 \n- table_3")
              parsed_list = None
          return_vals['component_arguments'][arg] = parsed_list
     elif type(component_definition['args'][arg]) == dict:
