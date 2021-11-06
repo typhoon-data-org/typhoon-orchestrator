@@ -11,5 +11,7 @@ pydantic
 fs
 fs-s3fs
 croniter
-
+streamlit
+graphviz
+requests
 
