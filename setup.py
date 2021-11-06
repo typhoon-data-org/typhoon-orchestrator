@@ -18,7 +18,7 @@ test_required = ['pytest', 'moto']
 kafka = ['kafka-python']
 
 all_requirements = kafka
-dev_requirements = all_requirements + ['termcolor', 'watchdog', 'tabulate', 'pygments', 'sqlitedict', 'datadiff', 'ipython', 'jedi==0.17.2']
+dev_requirements = all_requirements + ['termcolor', 'watchdog', 'tabulate', 'pygments', 'sqlitedict', 'datadiff', 'ipython', 'jedi==0.17.2', 'streamlit', 'fastapi']
 
 setup(
     name='typhoon-orchestrator',
