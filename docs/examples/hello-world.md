@@ -114,11 +114,11 @@ Finally, we can use `typhoon connection add --help`
 
 ![typhoon connectioin add --help](img/helloworld_4.png)
 
-So now we can see how to add our connections from the `connections.yml`file. 
+So now we can see how to add our connections from the `connections.yml`file. Note the **local** environment. 
 
-`typhoon connection add --conn-id data_lake --conn-env **local**`
+`typhoon connection add --conn-id data_lake --conn-env local`
 
-`typhoon connection add --conn-id echo --conn-env **local**`
+`typhoon connection add --conn-id echo --conn-env local`
 
 ![typhoon connectioin add --con-id data_lake --conn-env local](img/helloworld_5.png)
 

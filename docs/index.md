@@ -1,31 +1,47 @@
-# Typhoon Orchestrator
+# Typhoon Orchestrator Documentation
 
-Typhoon is a Data Worfklow tool (ETL / ELT pipelines) for composing **Airflow** or AWS Lambda DAGs in YAML. 
+Welcome to Typhoon!
 
-**Supercharge your existing Airflow workflow** by using Typhoon to create your DAGs with complete simplicity and re-usability. Deploying to your existing Airflow you can upgrade with zero risk, migrations or loss of existing Airflow functionality.
+Typhoon is a Data workflow tool (i.e. ETL / ELT pipelines) for composing **Airflow** or AWS Lambda DAGs in YAML. 
 
-*If you like Airflow, you will Ariflow + Typhoon more.*
+=== "Why Typhoon"
 
-**Workflow**: Typhoon YAML DAG --> transpile --> Airflow deployment 
+    Write Airflow DAGS 10x faster :rocket:
 
-??? info "Key Principles"     
+    Make creating reliable data pipelines easy for the whole team :raised_hands:
+
+    Simplicity and re-usability; a toolkit designed to be loved by Data Engineers :heart:
+    
+    Deploying to your existing Airflow with zero risk and no migration work :relaxed:
+    
+    **Workflow**: Typhoon YAML DAG --> transpile --> Airflow DAG 
+
+
+=== "Key Principles"
+
     - **Elegant**:  YAML; low-code and easy to pick up.
     - **Data sharing** - data flows between tasks making it intuitive and easy to build tasks.
     - **Composability** - Functions combine like Lego. Effortless to extend for more sources and connections.
     - **Components** - reduce complex tasks (e.g. CSV→S3→Snowflake) to 1 re-usable task.
     - **UI**: Component UI for sharing DAG configuration with your DWH, Analyst or Data Sci. teams.
     - **Rich Cli**: Inspired by other great command line interfaces and instantly familiar. Intelligent bash/zsh completion.
-    - **Testable Python** - automated PyTest to for more robust flows.
+    - **Testable Tasks** - automate DAG task tests.
+    - **Testable Python** - test functions or full DAGs with PyTest.
     - **Flexible deployment**:
         - deploy to Airflow - large reduction in effort, without breaking existing production.
         - deploy to AWS Lambda - completely serverless
 
-### Layers 
+=== "Layers" 
 
-- **Pristine**: Pre-built (OSS) components and UI that can be shared to your team    
-- **Core**: Python (OSS) core 
-    - Extensible and hackable.
-    - Components allow you to share extensions widely in the Pristine layer.    
+    - **Pristine**: Pre-built (OSS) components and UI that can be shared to your team    
+    - **Core**: Python (OSS) core 
+        - Extensible and hackable. 
+        - Components allow you to share extensions widely in the Pristine layer
+
+
+!!! note "[Installing Typhoon - quick start][1]"
+
+!!! note "[Hello World - 5 min walkthrough][2]"
 
 
 ## Example DAG
@@ -54,7 +70,7 @@ Typhoon is a Data Worfklow tool (ETL / ELT pipelines) for composing **Airflow** 
           path: xr_data.csv
     ```
 
-=== "Airflow DAG (python)"
+=== "Equivalent Airflow DAG (python)"
 
     ```python linenums="1"
     import datetime
@@ -137,6 +153,6 @@ Airflow UI will then show:
 
 ## Component UI
 
-Put in screenshot of UI
+Give your team autonomy by sharing templated flows they can configure.
 
-
+![Component UI](img/component_ui.gif)

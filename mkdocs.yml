@@ -23,30 +23,29 @@ nav:
   - Overview: 'index.md'
   - Getting Started:
     - Installation: 'getting-started/installation.md'
-    - Connections: 'getting-started/connections.md'
-    - Creating your DAG: 'getting-started/creating-a-dag.md'
+    - Hello World: 'examples/hello-world.md'
     - Typhoon Cli: 'getting-started/typhoon-cli.md'
+    - Creating your DAG: 'getting-started/creating-a-dag.md'
+    - Adding connections: 'getting-started/connections.md'
     - Deployment: 'getting-started/deployment.md'
     - Using Components: 'getting-started/using-components.md'
     - UI configurator: 'getting-started/using-component-ui.md'
-    - Creating Components: 'getting-started/creating-components.md'
-    - Hooks (connections): 'getting-started/creating-hooks.md'
+    - New Hooks (connections): 'getting-started/creating-hooks.md'
+  - Example Walkthroughs:
+      - Hello World: 'examples/hello-world.md'
+      - MySql to Snowflake: 'examples/mysql-to-snowflake.md'
+      - Pandas automation: 'examples/pandas-examples.md'
   - Usage:
     - Dag Context: 'usage/dag-context.md'
-    - Tasks: 'usage/tasks.md'
+    - "!Py & !Multistep": 'usage/py-multistep.md'
+    - Task flow control: 'usage/task-flow-control.md'
+    - Task testing: 'usage/task-testing.md'
     - Functions: 'usage/functions.md'
     - Transformations: 'usage/transformations.md'
     - Components: 'usage/components.md'
     - Hooks: 'usage/hooks.md'
-    - Tempaltes: 'usage/templates.md'
-    - Variables: 'usage/variables.md'
-  - Example Walkthroughs:
-      - Hello World: 'examples/hello-world.md'
-      - MySql to Snowflake: 'examples/mysql-to-snowflake.md'
-      - Pandas automation: 'examples/automating-pandas.md'
-      - Airflow examples: 'examples/airflow-examples.md'
+    - Variables & Templates : 'usage/templates.md'
   - Contributing: 'contributing.md'
-  - Licence: 'licence.md'
 
 markdown_extensions:
   - markdown.extensions.codehilite:
@@ -61,6 +60,9 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_div_format
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
 
 extra_css:
   - https://unpkg.com/mermaid@7.1.2/dist/mermaid.css
