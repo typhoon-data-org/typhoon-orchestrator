@@ -1,0 +1,121 @@
+name: db_to_snowflake
+args:
+  source_schema_name: str
+  source_hook: DbApiHook
+  snowflake_hook: SnowflakeHook
+  source_tables: List[str]
+  quote_tables:
+    type: bool
+    default: false
+
+tasks:
+  tables:
+    function: typhoon.flow_control.branch
+    args:
+      branches: !Py $ARG.source_tables
+
+  clean_warehouse:
+    input: tables
+    function: typhoon.relational.execute_query
+    args:
+      hook: !Py $ARG.snowflake_hook
+      multi_query: true
+      query: !MultiStep
+        - |
+          CREATE TABLE {schema}.{table} IF NOT EXISTS (
+            src VARIANT,
+            _interval_start TIMESTAMP_NTZ,
+            _interval_end TIMESTAMP_NTZ,
+            _loaded_at TIMESTAMP_NTZ,
+            _loaded_from VARCHAR
+          );
+          DELETE FROM {schema}.{table}
+          WHERE _interval_start = '{interval_start}' AND _interval_end = '{interval_end}';
+          USE SCHEMA {schema};
+          REMOVE {stage_location}
+        - !Py >
+          $1.format(
+            table=f'"{$BATCH}"' if $ARG.quote_tables else $BATCH,
+            schema=$ARG.source_name,
+            ds=$DAG_CONTEXT.interval_start.date().isoformat(),
+            interval_start=$DAG_CONTEXT.interval_start,
+            interval_end=$DAG_CONTEXT.interval_end,
+            stage_location=f"@staging/{typhoon.url.quote($BATCH)}/{$DAG_CONTEXT.interval_start.date().isoformat()}/"
+          )
+      metadata:
+        table: !Py $BATCH
+        stage_location: !Py f"@staging/{typhoon.url.quote($BATCH)}/{$DAG_CONTEXT.interval_start.date().isoformat()}/"
+
+  read_table:
+    input: clean_warehouse
+    function: typhoon.relational.execute_query
+    asynchronous: false
+    args:
+      hook: !Py $ARG.source_hook
+      query: !Py >
+        'SELECT * FROM {table}'.format(
+            table=f'"{$BATCH.metadata["table"]}"' if $ARG.quote_tables else $BATCH.metadata["table"],
+        )
+      metadata: !Py $BATCH.metadata
+      batch_size: 100_000
+
+  put_data:
+    input: read_table
+    function: typhoon.relational.execute_query
+    args:
+      hook: !Py $ARG.snowflake_hook
+      multi_query: true
+      query: !MultiStep
+        - |
+          USE SCHEMA {schema};
+          PUT file://{table}_part{batch_num:03d}.json.gz {stage_location}
+        - !Py >
+          $1.format(
+            table=typhoon.url.quote($BATCH.metadata['table']),
+            schema=$ARG.source_name,
+            batch_num=$BATCH_NUM,
+            stage_location=$BATCH.metadata["stage_location"],
+          )
+      file_stream: !MultiStep
+        - !Py typhoon.db_result.to_json_records($BATCH.columns, $BATCH.batch)
+        - !Py typhoon.compression.gzip($1)
+      metadata: !Py >
+        {
+          'file': '{table}_part{batch_num:03d}.json.gz'.format(
+            table=typhoon.url.quote($BATCH.metadata['table']),
+            batch_num=$BATCH_NUM,
+          ),
+          **$BATCH.metadata
+        }
+
+  copy_data:
+    input: put_data
+    function: typhoon.relational.execute_query
+    args:
+      hook: !Hook data_warehouse
+      multi_query: true
+      query: !MultiStep
+        - |
+          USE SCHEMA {schema};
+          COPY INTO {table} FROM (
+            SELECT
+              $1 src,
+              '{interval_start}' _interval_start,
+              '{interval_end}' _interval_end,
+              '{loaded_at}' _loaded_at,
+              metadata$filename _loaded_from
+            FROM {stage_location}{file}
+          ) force = true
+        - !Py >
+          $1.format(
+            table=f'"{$BATCH.metadata["table"]}"' if $ARG.quote_tables else $BATCH.metadata["table"],
+            schema=$ARG.source_name,
+            interval_start=$DAG_CONTEXT.interval_start,
+            interval_end=$DAG_CONTEXT.interval_end,
+            stage_location=$BATCH.metadata['stage_location'],
+            file=$BATCH.metadata['file'],
+            loaded_at=$DAG_CONTEXT.execution_time,
+          )
+
+output:
+  - copy_data
