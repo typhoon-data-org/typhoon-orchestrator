@@ -5,6 +5,7 @@ import subprocess
 import sys
 from builtins import AssertionError
 from datetime import datetime
+from multiprocessing import Process
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Optional
@@ -19,10 +20,11 @@ from datadiff.tools import assert_equal
 from pygments.formatters.terminal256 import Terminal256Formatter
 from pygments.lexers.data import YamlLexer
 from pygments.lexers.python import PythonLexer
+from streamlit import bootstrap
 from tabulate import tabulate
 from termcolor import colored
 
-from api.main import app
+from api.main import app, run_api
 from typhoon import connections
 from typhoon.cli_helpers.cli_completion import get_remote_names, get_dag_names, get_conn_envs, get_conn_ids, \
     get_var_types, get_deploy_targets, PROJECT_TEMPLATES, get_task_names
@@ -35,7 +37,7 @@ from typhoon.core.components import Component
 from typhoon.core.dags import DAGDefinitionV2, ArgEvaluationError, load_module_from_path
 from typhoon.core.glue import get_dag_errors, load_dag_definition
 from typhoon.core.settings import Settings
-from typhoon.deployment.packaging import build_all_dags
+from typhoon.deployment.packaging import build_all_dags, local_typhoon_path
 from typhoon.handler import run_dag
 from typhoon.introspection.introspect_extensions import get_typhoon_extensions, get_typhoon_extensions_info, \
     get_hooks_info
@@ -762,34 +764,30 @@ def run_in_subprocess(command: str, cwd: str):
 
 @cli.command()
 def webserver():
-    import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-    # frontend = subprocess.Popen(
-    #     ["npm", "run", "serve"],
-    #     cwd=str(Path(__file__).parent.parent/'webserver/typhoon_webserver/frontend'))
-    # try:
-    #     sys.path.append(str(Path(__file__).parent.parent / 'webserver/typhoon_webserver/backend/'))
-    #     from core import app
-    #     app.run()
-    # finally:
-    #     frontend.kill()
+    api_process = Process(target=run_api)
+    api_process.start()
+    ui_script = Path(local_typhoon_path()).parent/'component_ui/component_builder.py'
+    try:
+        bootstrap.run(str(ui_script), f'run.py {ui_script}', [], {})
+    finally:
+        api_process.terminate()
+        api_process.join()
 
 
 def transformations_locals():
-        custom_transformation_modules = {}
-        transformations_path = str(Settings.transformations_directory)
-        for filename in os.listdir(transformations_path):
-            if filename == '__init__.py' or not filename.endswith('.py'):
-                continue
-            module_name = filename[:-3]
-            module = load_module_from_path(
-                module_path=os.path.join(transformations_path, filename),
-                module_name=module_name,
-            )
-            custom_transformation_modules[module_name] = module
-        custom_transformations = SimpleNamespace(**custom_transformation_modules)
-        return custom_transformations
+    custom_transformation_modules = {}
+    transformations_path = str(Settings.transformations_directory)
+    for filename in os.listdir(transformations_path):
+        if filename == '__init__.py' or not filename.endswith('.py'):
+            continue
+        module_name = filename[:-3]
+        module = load_module_from_path(
+            module_path=os.path.join(transformations_path, filename),
+            module_name=module_name,
+        )
+        custom_transformation_modules[module_name] = module
+    custom_transformations = SimpleNamespace(**custom_transformation_modules)
+    return custom_transformations
 
 
 @cli.command()
