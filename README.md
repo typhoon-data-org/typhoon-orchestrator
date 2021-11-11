@@ -1,25 +1,26 @@
-# Typhoon Orchestrator
+# Typhoon Orchestrator Documentation
 
-![Alt text](docs/img/typhoon_temp_logo.png "Typhoon Orchestrator")
+Welcome to Typhoon!
 
-**Typhoon** is a task orchestrator (like Apache Airflow). 
+Typhoon is a Data workflow tool (i.e. ETL / ELT pipelines) for composing **Airflow** DAGs in YAML. 
 
-Use simple YAML code to easily build **asynchronous** data pipelines for your ELT workflows. 
+*Write Airflow DAGS faster*:
 
-Save effort by building your data pipelines in Typhoon and then **deploy them to run on Airflow.** This is risk-free with no-lock-in. 
+`Typhoon YAML DAG --> transpile --> Airflow DAG`
 
-This project is in **pre-alpha** and subject to fast changes
+# Help
+See the [documentation](https://typhoon-data-org.github.io/typhoon-orchestrator/index.html) or ask in the community [forum](https://typhoon.talkyard.net/latest). 
 
-# Why Typhoon for data flows?
+## Key Principles
 
-- Elegant YAML and Components - low-code, easy to pick up.
-- Compile to testable Python - robust flows.
-- Functions combine like Lego - effortless to extend for more sources and connections.
-- Compose *Components* - reduce complex tasks (e.g. CSV→S3→Snowflake) to 1 task.
-- Data flows between tasks - intuitive and easy to build tasks.
-- Flexible deployment options:
-    - **deploy to Airflow** - large reduction in effort, without breaking existing production.
-    - deploy to AWS Lambda - **completely serverless**
+- **Elegant** -  YAML; low-code and easy to pick up.
+- **Data sharing** -  data flows between tasks making it intuitive and easy to build tasks.
+- **Composability** -  Functions combine like Lego. Effortless to extend for more sources and connections.
+- **Components** - reduce complex tasks (e.g. CSV→S3→Snowflake) to 1 re-usable task.
+- **UI**: Component UI for sharing DAG configuration with your DWH, Analyst or Data Sci. teams.
+- **Testable Tasks** - automate DAG task tests.
+- **Testable Python** - test functions or full DAGs with PyTest.
+
 
 ```yaml
 name: exchange_rates
@@ -50,75 +51,63 @@ Above is an example of two tasks:
     1. It flattens the data 
     2. Then transforms it from a dict to a pipe delimited CSV.
 
-The syntax and functionality is covered fully in the tutorials 1 & 2 below.
-
-# Tutorials & Examples included
-
-- hello_world.yml  -  list of lists → to CSV     [**(Tutorial Part 1)**](https://www.notion.so/Part-1-Typhoon-HelloWorld-6d4b6a6e778e4906ac7e502dce69fd13)
-- dwh_flow  -  Production ready MySQL  tables → Snowflake DWH pattern)    [(Tutorial Part 2)](https://www.notion.so/Part-2-MySQL-to-Snowflake-8cfaeac1f5334138b93a981d82c9532f)
-- exchange_rates.yml  -   (above) API → CSV on S3
-- telegram_scraper.yml  -  telegram group → CSV
 
 # Getting started
 
-## Docker
+See [documentation](https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/installation.html) for detailed guidance. 
 
+## with pip (typhoon standalone)
+
+Install typhoon: 
 ```bash
-docker run -it biellls/typhoon bash
+pip install typhoon-orchestrator[dev]
+```
+Optionally, install and activate virtualenv.
 
-# Running isolated commands
-docker run --rm biellls/typhoon typhoon status
+Then: 
+```bash 
+typhoon init hello_world
+cd hello_world
+typhoon status
 ```
 
-## Local installation
+This will create a directory named hello_world that serves as an example project. As in git, when we cd into the directory it will detect that it's a Typhoon project and consider that directory the base directory for Typhoon (TYPHOON_HOME).
 
+## With Docker and Airflow
+
+To deploy Typhoon with Airflow you need: 
+
+- Docker / Docker Desktop (You must use WSL2 on Windows) 
+- Download the [docker-compose.yaml][1]  (or use curl below)
+- Create a directory for your TYPHOON_PROJECTS_HOME
+
+The following sets up your project directory and gets the docker-compose.yml:
 ```bash
-# Install and activate virtualenv
-python3 -m venv typhoon_venv
-./typhoon_venv/bin/activate
-
-# Clone and install from source
-git clone https://github.com/biellls/typhoon-orchestrator.git
-cd typhoon-orchestrator
-python -m pip install ./typhoon-orchestrator[dev]
-# Activate bash complete
-eval "$(_TYPHOON_COMPLETE=source typhoon)"
-
-# Create a typhoon project
-typhoon init typhoon_project
-cd typhoon_project
-```
-
-### Testing with Airflow
-
-```bash
-git clone https://github.com/biellls/typhoon-orchestrator.git
-cd typhoon-orchestrator
-docker build -f Dockerfile.af -t typhoon-af .
-
-TYPHOON_PROJECTS_HOME = "~/typhoon_projects" # Or any other path you prefer
+TYPHOON_PROJECTS_HOME="/tmp/typhoon_projects" # Or any other path you prefer
 mkdir -p $TYPHOON_PROJECTS_HOME/typhoon_airflow_test
 cd $TYPHOON_PROJECTS_HOME/typhoon_airflow_test
+mkdir src
+curl -LfO https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/master/docker-compose-af.yml
 
-typhoon init my_typhoon_project --deploy-target airflow --template airflow_docker
-cd my_typhoon_project
-docker compose up -d
-docker exec -it typhoon-af bash   # Then you're in the typhoon home. Try typhoon status
-
+docker compose -f docker-compose-af.yml up -d  
+docker exec -it typhoon-af bash   # Then you're in the typhoon home.
+ 
+airflow initdb # !! To initiate Airflow DB !!
+typhoon status # To see status of dags & connections
+typhoon dag build --all # Build the example DAGS
+exit # exits docker 
+docker restart typhoon-af bash # Wait while docker restarts
 ```
 
-### Example compiling to Airlfow
+This runs a container with only 1 service, `typhoon-af`. This has both Airflow and Typhoon installed on it ready to work with.
 
-To compile a DAG to Airflow you need to change the Typhoon.cfg deployment:
+You should be able to then check `typhoon status` and also the airlfow UI at [http://localhost:8088](http://localhost:8088)
 
-``` cfg
-TYPHOON_PROJECT_NAME=typhoon_project
-TYPHOON_DEPLOY_TARGET=airflow
-```
-Or when you initialise a project:
-``` bash
-init typhoon_project --target airflow 
-```
-**Building your YAML DAG in using `typhoon dag build --all` you get:**  
+<img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/master/docs/img/airflow_ui_list_after_install.png" width="400">
+
+**Development hints are [in the docs](https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/installation.html#directories).**
+
+
+
 <img src="https://user-images.githubusercontent.com/2353804/112546625-f1cad480-8db9-11eb-8dfb-11e2c8d18a48.jpeg" width="300">
 

@@ -2,11 +2,11 @@
 
 Welcome to Typhoon!
 
-Typhoon is a Data workflow tool (i.e. ETL / ELT pipelines) for composing **Airflow** or AWS Lambda DAGs in YAML. 
+Typhoon is a Data workflow tool (i.e. ETL / ELT pipelines) for composing **Airflow** DAGs in YAML. 
 
 === "Why Typhoon"
 
-    Write Airflow DAGS 10x faster :rocket:
+    *Write Airflow DAGS faster* :rocket:
 
     Make creating reliable data pipelines easy for the whole team :raised_hands:
 
@@ -27,9 +27,7 @@ Typhoon is a Data workflow tool (i.e. ETL / ELT pipelines) for composing **Airfl
     - **Rich Cli**: Inspired by other great command line interfaces and instantly familiar. Intelligent bash/zsh completion.
     - **Testable Tasks** - automate DAG task tests.
     - **Testable Python** - test functions or full DAGs with PyTest.
-    - **Flexible deployment**:
-        - deploy to Airflow - large reduction in effort, without breaking existing production.
-        - deploy to AWS Lambda - completely serverless
+    - **Flexible deployment**: deploy to Airflow - large reduction in effort, without breaking existing production.
 
 === "Layers" 
 
