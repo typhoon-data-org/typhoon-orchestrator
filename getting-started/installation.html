@@ -234,18 +234,6 @@
   
 
       
-        
-  
-  
-
-
-  <li class="md-tabs__item">
-    <a href="../contributing.md" class="md-tabs__link">
-      Contributing
-    </a>
-  </li>
-
-      
     </ul>
   </div>
 </nav>
@@ -391,13 +379,6 @@
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#with-docker" class="md-nav__link">
-    With Docker
-  </a>
   
 </li>
       
@@ -742,21 +723,6 @@
   
 
     
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../contributing.md" class="md-nav__link">
-        Contributing
-      </a>
-    </li>
-  
-
-    
   </ul>
 </nav>
                   </div>
@@ -806,13 +772,6 @@
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#with-docker" class="md-nav__link">
-    With Docker
-  </a>
   
 </li>
       
@@ -875,8 +834,13 @@
 <p>After installation we recommend following <a href="../examples/hello-world.html">Hello World</a> example. You can use the rest of 'Getting Started' section here for details in each step should you need it. </p>
 </div>
 <h2 id="with-pip">with pip</h2>
+<p>Optionally -  Install and activate virtualenv
+<div class="highlight"><pre><span></span><code>python3 -m venv typhoon_venv
+<span class="nb">source</span> ./typhoon_venv/bin/activate
+</code></pre></div></p>
+<p>Install typhoon: 
 <div class="highlight"><pre><span></span><code>pip install typhoon-orchestrator<span class="o">[</span>dev<span class="o">]</span>
-</code></pre></div>
+</code></pre></div></p>
 <h4 id="creating-your-new-project">Creating your new project</h4>
 <p>Inside your terminal navigate to where you want to create your new project directory. Then run:</p>
 <div class="highlight"><pre><span></span><code>typhoon init hello_world
@@ -898,13 +862,11 @@
 <li>fish eval "$(_TYPHOON_COMPLETE=source_fish typhoon)"</li>
 </ul>
 </div>
-<h2 id="with-docker">With Docker</h2>
-<p>@TODO - waiting until Docker with Airflow is clean, then finalise. </p>
 <h2 id="with-docker-and-airflow">With Docker and Airflow</h2>
 <p>To deploy Typhoon with Airflow you need: </p>
 <ul>
 <li>Docker / Docker Desktop (You must use WSL2 on Windows) </li>
-<li>Download the <a href="docker-compose.yml">docker-compose.yaml</a>  (or use curl below)</li>
+<li>Download the <a href="/docker-compose-af.yml">docker-compose.yaml</a>  (or use curl below)</li>
 <li>Create a directory for your TYPHOON_PROJECTS_HOME</li>
 </ul>
 <p>The following sets up your project directory and gets the docker-compose.yml:
@@ -912,7 +874,7 @@
 mkdir -p <span class="nv">$TYPHOON_PROJECTS_HOME</span>/typhoon_airflow_test
 <span class="nb">cd</span> <span class="nv">$TYPHOON_PROJECTS_HOME</span>/typhoon_airflow_test
 mkdir src
-curl -LfO <span class="s1">&#39;https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/docker-compose.yml&#39;</span>
+curl -LfO <span class="s1">&#39;https://github.com/typhoon-data-org/typhoon-orchestrator/blob/master/docker-compose-af.yml&#39;</span>
 
 docker compose up -d airflow-init  <span class="c1"># initiates airflow </span>
 docker <span class="nb">exec</span> -it typhoon-af bash   <span class="c1"># Then you&#39;re in the typhoon home.</span>
