@@ -1,11 +1,14 @@
+import importlib
 import inspect
 import pkgutil
 from importlib import import_module
+from inspect import Parameter
 from pathlib import Path
 from pkgutil import ModuleInfo
 from types import ModuleType
-from typing import List, Tuple, Dict, Type
+from typing import List, Tuple, Dict, Type, Mapping
 
+import dataclasses
 from typing_extensions import TypedDict
 
 from typhoon.contrib.hooks.hook_interface import HookInterface
@@ -77,3 +80,19 @@ def get_hooks_info(extensions_info: ExtensionsInfo = None) -> Dict[str, Type[Hoo
             if conn_type:
                 hooks_info[conn_type] = cls
     return hooks_info
+
+
+@dataclasses.dataclass
+class FunctionInfo:
+    module: str
+    name: str
+    args: Mapping[str, Parameter]
+
+
+def functions_info_in_module_path(module_name: str, module_path: str) -> List[FunctionInfo]:
+    functions_module = importlib.import_module(module_path)
+    functions_info = []
+    for function_name, function in inspect.getmembers(functions_module, inspect.isfunction):
+        signature = inspect.signature(function)
+        functions_info.append(FunctionInfo(module=f'typhoon.{module_name}', name=function_name, args=signature.parameters))
+    return functions_info

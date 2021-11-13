@@ -1,3 +1,4 @@
+import json
 import os
 import pydoc
 import shutil
@@ -28,6 +29,7 @@ from api.main import app, run_api
 from typhoon import connections
 from typhoon.cli_helpers.cli_completion import get_remote_names, get_dag_names, get_conn_envs, get_conn_ids, \
     get_var_types, get_deploy_targets, PROJECT_TEMPLATES, get_task_names
+from typhoon.cli_helpers.json_schema import generate_json_schemas
 from typhoon.cli_helpers.status import dags_with_changes, dags_without_deploy, check_connections_yaml, \
     check_connections_dags, check_variables_dags
 from typhoon.connections import Connection
@@ -107,7 +109,10 @@ def init(project_name: str, deploy_target: str, template: str):
             component_schema_path = (dest / 'component_schema.json')
 
         cfg_path.write_text(EXAMPLE_CONFIG.format(project_name=project_name, deploy_target=deploy_target))
-        dag_schema_path.write_text(DAGDefinitionV2.schema_json(indent=2))
+        Settings.typhoon_home = dest
+        dag_schema = generate_json_schemas()
+        dag_json_schema = json.dumps(dag_schema, indent=2)
+        dag_schema_path.write_text(dag_json_schema)
         component_schema_path.write_text(Component.schema_json(indent=2))
 
         print(f'Project created in {dest}')
@@ -659,6 +664,14 @@ def remove_variable(remote: Optional[str], var_id: str):
     metadata_store = Settings.metadata_store(Remotes.aws_profile(remote))
     metadata_store.delete_variable(var_id)
     print(f'Variable {var_id} deleted')
+
+
+@cli.command(name='generate-json-schemas')
+def cli_generate_json_schemas():
+    """Generate JSON schemas using function data"""
+    dag_schema = generate_json_schemas()
+    dag_json_schema = json.dumps(dag_schema, indent=2)
+    (Settings.typhoon_home/'dag_schema.json').write_text(dag_json_schema)
 
 
 @cli.group(name='extension')
