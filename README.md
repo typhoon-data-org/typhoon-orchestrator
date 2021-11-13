@@ -1,15 +1,15 @@
 
 <p align="center">
 ➡️
-<a href="http://discord.skerritt.blog">Forum</a> |
- <a href="https://github.com/RustScan/RustScan/wiki/Installation-Guide">Installation</a> |
- <a href="https://github.com/RustScan/RustScan#-usage">Documentation</a>
+<a href="http://discord.skerritt.blog">Forum :wave:</a> |
+ <a href="https://github.com/RustScan/RustScan/wiki/Installation-Guide">Installation :floppy_disk:</a> |
+ <a href="https://github.com/RustScan/RustScan#-usage">Documentation :notebook: </a>
  ⬅️
-<br>
-<img src="docs/img/typhoon_logo_large_tagline.png" width=400px>
+
+<img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/typhoon_logo_large_tagline.png" style="padding:50px; margin: 0px; ">
 </p>
 
-<h2 align="center"><b>Elegant YAML DAGS for Data Pipelines</br>Deploy to your existing Airflow.</b></h2>
+<h2 align="center" style="padding-top:0px; margin-top:0px"><b>Elegant YAML DAGS for Data Pipelines</br>Deploy to your existing Airflow.</b></h2>
 
 <p align="center">
 <img alt="AUR version" src="https://img.shields.io/aur/version/rustscan">
@@ -20,7 +20,7 @@
 <img alt="Actions" src="https://github.com/RustScan/RustScan/workflows/Continuous%20integration/badge.svg?branch=master">
 </p>
 
-<br>
+
 <hr>
 
 # Typhoon Data Pipeline Orchestrator
@@ -29,7 +29,7 @@
   
     **Workflow**: Typhoon YAML DAG --> Typhoon build --> Airflow DAG 
   
-<table>
+<table style="border: none" cellspacing="0" cellpadding="0">
 <tr>
 <td width="50%">
 
