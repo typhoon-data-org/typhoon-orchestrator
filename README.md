@@ -9,11 +9,9 @@
 <br>️
 <img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/typhoon_logo_large_tagline.png" >
 </p>
-<br>️
 <br>
-<h2 align="center"><b>Elegant YAML DAGS for Data Pipelines</br>Deploy to your existing Airflow.</b></h2>
+<p align="center"><b>Elegant YAML DAGS for Data Pipelines</br>Deploy to your existing Airflow.</b></p>
 <br>️
-
 <p align="center">
 <img alt="AUR version" src="https://img.shields.io/aur/version/rustscan">
 <img src="https://img.shields.io/badge/Built%20with-Rust-Purple">
