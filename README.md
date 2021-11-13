@@ -1,9 +1,9 @@
 
 <p align="center">
 <br>
-<a href="http://discord.skerritt.blog">Forum :wave:</a> |
- <a href="https://github.com/RustScan/RustScan/wiki/Installation-Guide">Installation :floppy_disk:</a> |
- <a href="https://github.com/RustScan/RustScan#-usage">Documentation :notebook: </a>
+<a href="https://typhoon.talkyard.net/">Forum :wave:</a> |
+ <a href="https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/installation.html#with-pip">Installation :floppy_disk:</a> |
+ <a href="https://typhoon-data-org.github.io/typhoon-orchestrator/index.html">Documentation :notebook: </a>
 <br>️
 <br>
 <br>️
@@ -13,20 +13,15 @@
 <p align="center"><b>Elegant YAML DAGS for Data Pipelines</br>Deploy to your existing Airflow.</b></p>
 <br>️
 <p align="center">
-<img alt="AUR version" src="https://img.shields.io/aur/version/rustscan">
-<img src="https://img.shields.io/badge/Built%20with-Rust-Purple">
-<img alt="GitHub All Releases" src="https://img.shields.io/github/downloads/rustscan/rustscan/total?label=GitHub%20Downloads">
-<img alt="Crates.io" src="https://img.shields.io/crates/d/rustscan?label=Cargo%20Downloads">
-<img alt="Discord" src="https://img.shields.io/discord/754001738184392704">
-<img alt="Actions" src="https://github.com/RustScan/RustScan/workflows/Continuous%20integration/badge.svg?branch=master">
+@todo Badges here
 </p>
 
 <p align="center">
-<br>
-<a href="http://discord.skerritt.blog">Why Typhoon</a> |
- <a href="https://github.com/RustScan/RustScan/wiki/Installation-Guide">Key Features</a> |
- <a href="https://github.com/RustScan/RustScan#-usage">Example YAML</a> |
- <a href="https://github.com/RustScan/RustScan#-usage">Installation</a>
+<br> 
+<a href="https://github.com/typhoon-data-org/typhoon-orchestrator/">Why Typhoon?</a> |  
+ <a href="https://github.com/typhoon-data-org/typhoon-orchestrator/">Key Features</a> |
+ <a href="https://github.com/typhoon-data-org/typhoon-orchestrator/">Example YAML</a> |
+ <a href="https://github.com/typhoon-data-org/typhoon-orchestrator/">Installation</a>
 <br>️
 
 
@@ -49,7 +44,7 @@ Simplicity and re-usability; a toolkit designed to be loved by Data Engineers :h
 
 **Elegant** -  YAML; low-code and easy to learn.
 
-**Code-completion** - Fast to compose.
+**Code-completion** - Fast to compose. (VS Code recommended).
 
 **Data sharing** -  data flows between tasks making it super intuitive.
 
@@ -76,9 +71,11 @@ Simplicity and re-usability; a toolkit designed to be loved by Data Engineers :h
 <tr>
 <td width="50%">
 
-- **Rich CLI & Shell**: Inspired by others; instantly familiar.
-- **Testable Tasks** - automate DAG task tests.
-- **Testable Python** - test functions or full DAGs with PyTest.
+**Rich CLI & Shell**: Inspired by others; instantly familiar.
+
+**Testable Tasks** - automate DAG task tests.
+
+**Testable Python** - test functions or full DAGs with PyTest.
 
 </td>
 <td><img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/component_ui.gif" alt="UI Component" width="400px" align="right" style="max-width: 100%;">
@@ -87,7 +84,6 @@ Simplicity and re-usability; a toolkit designed to be loved by Data Engineers :h
 
 </table>
 
-See the [documentation](https://typhoon-data-org.github.io/typhoon-orchestrator/index.html) or ask in the community [forum](https://typhoon.talkyard.net/latest). 
 
 # Example YAML DAG
 ```yaml
@@ -120,7 +116,7 @@ Above is an example of two tasks:
     2. Then transforms it from a dict to a pipe delimited CSV.
 
 
-# Getting started
+# Installation
 
 See [documentation](https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/installation.html) for detailed guidance on installation and walkthroughs. 
 
@@ -178,4 +174,3 @@ You should be able to then check `typhoon status` and also the airlfow UI at [ht
 
 
 <img src="https://user-images.githubusercontent.com/2353804/112546625-f1cad480-8db9-11eb-8dfb-11e2c8d18a48.jpeg" width="300">
-

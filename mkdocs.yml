@@ -12,8 +12,16 @@ theme:
       - navigation.tabs.sticky
       - navigation.sections
     palette:
-      primary: 'deep purple'
-    logo: 'img/typhoon_solo_inverted2.png'
+      scheme: typhoon
+    logo: 'img/typhoon_flat_icon_white.png'
+
+extra_css:
+  - stylesheets/extra.css
+  - https://unpkg.com/mermaid@7.1.2/dist/mermaid.css
+
+extra_javascript:
+  - https://unpkg.com/mermaid@7.1.2/dist/mermaid.min.js
+
 
 google_analytics:
     - 'UA-154972398-1'
@@ -63,7 +71,3 @@ markdown_extensions:
       emoji_index: !!python/name:materialx.emoji.twemoji
       emoji_generator: !!python/name:materialx.emoji.to_svg
 
-extra_css:
-  - https://unpkg.com/mermaid@7.1.2/dist/mermaid.css
-extra_javascript:
-  - https://unpkg.com/mermaid@7.1.2/dist/mermaid.min.js

@@ -1,8 +1,8 @@
-# Typhoon Orchestrator Documentation
+<img src="img/typhoon_logo_large_tagline.png" width="200px" align="left">
 
-Welcome to Typhoon!
+<p align="center"><b>Elegant YAML DAGS for Data Pipelines</br>Deploy to your existing Airflow.</b></p>
 
-Typhoon is a Data workflow tool (i.e. ETL / ELT pipelines) for composing **Airflow** DAGs in YAML. 
+# 
 
 === "Why Typhoon"
 
