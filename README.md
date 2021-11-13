@@ -6,10 +6,13 @@
  <a href="https://github.com/RustScan/RustScan#-usage">Documentation :notebook: </a>
 <br>️
 <br>
+<br>️
 <img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/typhoon_logo_large_tagline.png" >
 </p>
-
+<br>️
+<br>
 <h2 align="center"><b>Elegant YAML DAGS for Data Pipelines</br>Deploy to your existing Airflow.</b></h2>
+<br>️
 
 <p align="center">
 <img alt="AUR version" src="https://img.shields.io/aur/version/rustscan">
@@ -22,22 +25,24 @@
 
 <p align="center">
 <br>
-<a href="http://discord.skerritt.blog">Overview</a> |
- <a href="https://github.com/RustScan/RustScan/wiki/Installation-Guide">Features</a> |
+<a href="http://discord.skerritt.blog">Why Typhoon</a> |
+ <a href="https://github.com/RustScan/RustScan/wiki/Installation-Guide">Key Features</a> |
  <a href="https://github.com/RustScan/RustScan#-usage">Example YAML</a> |
- <a href="https://github.com/RustScan/RustScan#-usage">Intallation</a>
+ <a href="https://github.com/RustScan/RustScan#-usage">Installation</a>
 <br>️
 
 
 <hr>
 
-# Typhoon Data Pipeline Orchestrator
+# Why Typhoon (+ Airflow)?
 
-*Write Airflow DAGS faster* :rocket::
+Airflow is great!
+
+***Typhoon lets you write Airflow DAGS faster*** :rocket::
   
     **Workflow**: Typhoon YAML DAG --> Typhoon build --> Airflow DAG 
   
-
+# Key features
 <table style="border: none" cellspacing="0" cellpadding="0">
 <tr>
 <td width="50%">
