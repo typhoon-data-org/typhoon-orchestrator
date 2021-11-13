@@ -1,27 +1,74 @@
-# Typhoon Orchestrator Documentation
 
-Welcome to Typhoon!
+<p align="center">
+➡️
+<a href="http://discord.skerritt.blog">Forum</a> |
+ <a href="https://github.com/RustScan/RustScan/wiki/Installation-Guide">Installation</a> |
+ <a href="https://github.com/RustScan/RustScan#-usage">Documentation</a>
+ ⬅️
+<br>
+<img src="docs/img/typhoon_logo_large_tagline.png" width=400px>
+</p>
 
-Typhoon is a Data workflow tool (i.e. ETL / ELT pipelines) for composing **Airflow** DAGs in YAML. 
+<h2 align="center"><b>Elegant YAML DAGS for Data Pipelines</br>Deploy to your existing Airflow.</b></h2>
 
-*Write Airflow DAGS faster*:
+<p align="center">
+<img alt="AUR version" src="https://img.shields.io/aur/version/rustscan">
+<img src="https://img.shields.io/badge/Built%20with-Rust-Purple">
+<img alt="GitHub All Releases" src="https://img.shields.io/github/downloads/rustscan/rustscan/total?label=GitHub%20Downloads">
+<img alt="Crates.io" src="https://img.shields.io/crates/d/rustscan?label=Cargo%20Downloads">
+<img alt="Discord" src="https://img.shields.io/discord/754001738184392704">
+<img alt="Actions" src="https://github.com/RustScan/RustScan/workflows/Continuous%20integration/badge.svg?branch=master">
+</p>
 
-`Typhoon YAML DAG --> transpile --> Airflow DAG`
+<br>
+<hr>
 
-# Help
-See the [documentation](https://typhoon-data-org.github.io/typhoon-orchestrator/index.html) or ask in the community [forum](https://typhoon.talkyard.net/latest). 
+# Typhoon Data Pipeline Orchestrator
 
-## Key Principles
+*Write Airflow DAGS faster* :rocket::
+  
+    **Workflow**: Typhoon YAML DAG --> Typhoon build --> Airflow DAG 
+  
+<table>
+<tr>
+<td width="50%">
 
 - **Elegant** -  YAML; low-code and easy to pick up.
-- **Data sharing** -  data flows between tasks making it intuitive and easy to build tasks.
-- **Composability** -  Functions combine like Lego. Effortless to extend for more sources and connections.
-- **Components** - reduce complex tasks (e.g. CSV→S3→Snowflake) to 1 re-usable task.
-- **UI**: Component UI for sharing DAG configuration with your DWH, Analyst or Data Sci. teams.
+- **Code-completion** - .
+- **Data sharing** -  data flows between tasks making it super intuitive.
+- **Composability** -  Functions and connections combine like Lego. 
+
+</td>
+<td>a gif 
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+- **Components** - reduce complex tasks to 1 re-usable task (e.g. CSV→S3→Snowflake).
+- **UI**: sharing data pipelines for your team to use.
+
+</td>
+<td>a gif 
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+- **Rich CLI & Shell**: Inspired by others; instantly familiar.
 - **Testable Tasks** - automate DAG task tests.
 - **Testable Python** - test functions or full DAGs with PyTest.
 
+</td>
+<td>a gif 
+</td>
+</tr>
 
+</table>
+
+See the [documentation](https://typhoon-data-org.github.io/typhoon-orchestrator/index.html) or ask in the community [forum](https://typhoon.talkyard.net/latest). 
+
+# Example YAML DAG
 ```yaml
 name: exchange_rates
 schedule_interval: rate(1 day)
@@ -37,7 +84,7 @@ tasks:
     input: exchange_rate
     function: typhoon.filesystem.write_data
     args:
-      hook: !Hook echo
+      hook: !Hook xr_s3_bucket
       data: !MultiStep
         - !Py transformations.xr.flatten_response($BATCH)
         - !Py typhoon.data.dicts_to_csv($1, delimiter='|')
@@ -47,14 +94,14 @@ tasks:
 Above is an example of two tasks:
 
 1. Extracting the exchange rates from an API call function for a 1-day range
-2. Writing CSV to a filesystem. This example actually echos it;  to put it to S3 change the Hook connection name. Within the edge between task 1 and 2 it transforms the data:
+2. Writing CSV to a filesystem; S3 in this case. Within the edge between task 1 and 2 it transforms the data:
     1. It flattens the data 
     2. Then transforms it from a dict to a pipe delimited CSV.
 
 
 # Getting started
 
-See [documentation](https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/installation.html) for detailed guidance. 
+See [documentation](https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/installation.html) for detailed guidance on installation and walkthroughs. 
 
 ## with pip (typhoon standalone)
 
