@@ -13,3 +13,6 @@ Run `typhoon build-dags`. This will create the folder `out/` in your Typhoon Hom
 
 ### Run the Hello World DAG
 Do `typhoon run --dag-name example_dag` to run the example DAG.
+
+## Generate the schemas after changing files
+If you want the dag schema and the component schema to be generated after every change to your code (functions, transformations and connections) you need to install the extension `Run on Save` by emeraldwalk and edit the path to your typhoon executable in `generate_schemas.sh`. You can find out the path by running the following command in the terminal: `which typhoon`.

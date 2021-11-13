@@ -86,7 +86,7 @@ def get_dag_filenames():
 def load_component(
         component_name: str,
         ignore_errors: bool = False,
-        kind: Union[Literal['typhoon'], Literal['custom'], Literal['all']] = 'all',
+        kind: Literal['typhoon', 'custom', 'all'] = 'all',
 ) -> Optional[Component]:
     components = load_components(ignore_errors, kind)
     matching_components = [(component, code) for component, code in components if component.name == component_name]
@@ -96,7 +96,7 @@ def load_component(
 
 def load_components(
         ignore_errors: bool = False,
-        kind: Union[Literal['typhoon'], Literal['custom'], Literal['all']] = 'all',
+        kind: Literal['typhoon', 'custom', 'all'] = 'all',
 ) -> List[Tuple[Component, str]]:
     if kind == 'all':
         return [(c, cs) for c, cs in load_component_definitions(ignore_errors, kind='typhoon')] + \
@@ -107,7 +107,7 @@ def load_components(
 
 def load_component_definitions(
         ignore_errors,
-        kind=Union[Literal['typhoon'], Literal['custom']],
+        kind=Literal['typhoon', 'custom'],
 ) -> List[Tuple[Component, str]]:
     add_yaml_constructors()
     if kind == 'custom':

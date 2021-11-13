@@ -1,0 +1,19 @@
+name: filesystem_to_db
+args:
+  filesystem_hook: FileSystemHook
+  pattern: str
+  db_hook: DBApiHook
+  table_name: str
+
+tasks:
+  glob_files:
+    function: typhoon.filesystem.glob
+    args:
+      hook: !Py $ARG.filesystem_hook
+      pattern: !Py $ARG.pattern
+
+  write_to_db:
+    function: typhoon.pandas.write_sql
+
+output:
+  - write_to_db

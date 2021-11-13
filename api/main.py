@@ -1,6 +1,7 @@
 import json
 from typing import Optional
 
+import uvicorn
 import yaml
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
@@ -97,7 +98,9 @@ def build_dags():
     return 'Ok'
 
 
-if __name__ == '__main__':
-    import uvicorn
-
+def run_api():
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+if __name__ == '__main__':
+    run_api()

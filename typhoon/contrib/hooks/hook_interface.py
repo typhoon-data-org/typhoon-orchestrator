@@ -1,8 +1,9 @@
-from typing_extensions import Protocol
+from typing_extensions import Protocol, runtime_checkable
 
 from typhoon.connections import ConnectionParams
 
 
+@runtime_checkable
 class HookInterface(Protocol):
     conn_type: str
     conn_params: ConnectionParams
