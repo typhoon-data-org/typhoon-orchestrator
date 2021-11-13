@@ -39,7 +39,9 @@ Airflow is great!
 ***Typhoon lets you write Airflow DAGS faster*** :rocket::
   
     **Workflow**: Typhoon YAML DAG --> Typhoon build --> Airflow DAG 
-  
+
+Simplicity and re-usability; a toolkit designed to be loved by Data Engineers :heart:
+
 # Key features
 <table style="border: none" cellspacing="0" cellpadding="0">
 <tr>
@@ -65,7 +67,7 @@ Airflow is great!
 
 (e.g. CSV → S3 → Snowflake).
 
-**UI**: share your pre-built components (data pipelines) for your team to use.
+**UI**: Share pre-built components (data pipelines) with your team :raised_hands:
 
 </td>
 <td><img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/component_ui.gif" alt="UI Component" width="400px" align="right" style="max-width: 100%;">
