@@ -1,15 +1,15 @@
 
 <p align="center">
-➡️
+<br>
 <a href="http://discord.skerritt.blog">Forum :wave:</a> |
  <a href="https://github.com/RustScan/RustScan/wiki/Installation-Guide">Installation :floppy_disk:</a> |
  <a href="https://github.com/RustScan/RustScan#-usage">Documentation :notebook: </a>
- ⬅️
-
-<img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/typhoon_logo_large_tagline.png" style="padding:50px; margin: 0px; ">
+<br>️
+<br>
+<img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/typhoon_logo_large_tagline.png" >
 </p>
 
-<h2 align="center" style="padding-top:0px; margin-top:0px"><b>Elegant YAML DAGS for Data Pipelines</br>Deploy to your existing Airflow.</b></h2>
+<h2 align="center"><b>Elegant YAML DAGS for Data Pipelines</br>Deploy to your existing Airflow.</b></h2>
 
 <p align="center">
 <img alt="AUR version" src="https://img.shields.io/aur/version/rustscan">
@@ -20,6 +20,14 @@
 <img alt="Actions" src="https://github.com/RustScan/RustScan/workflows/Continuous%20integration/badge.svg?branch=master">
 </p>
 
+<p align="center">
+<br>
+<a href="http://discord.skerritt.blog">Overview</a> |
+ <a href="https://github.com/RustScan/RustScan/wiki/Installation-Guide">Features</a> |
+ <a href="https://github.com/RustScan/RustScan#-usage">Example YAML</a> |
+ <a href="https://github.com/RustScan/RustScan#-usage">Intallation</a>
+<br>️
+
 
 <hr>
 
@@ -29,27 +37,35 @@
   
     **Workflow**: Typhoon YAML DAG --> Typhoon build --> Airflow DAG 
   
+
 <table style="border: none" cellspacing="0" cellpadding="0">
 <tr>
 <td width="50%">
 
-- **Elegant** -  YAML; low-code and easy to pick up.
-- **Code-completion** - .
-- **Data sharing** -  data flows between tasks making it super intuitive.
-- **Composability** -  Functions and connections combine like Lego. 
+**Elegant** -  YAML; low-code and easy to learn.
+
+**Code-completion** - Fast to compose.
+
+**Data sharing** -  data flows between tasks making it super intuitive.
+
+**Composability** -  Functions and connections combine like Lego.
+
 
 </td>
-<td>a gif 
+<td><img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/component_ui.gif" alt="UI Component" width="400px" align="right" style="max-width: 100%;">
 </td>
 </tr>
 <tr>
 <td width="50%">
 
-- **Components** - reduce complex tasks to 1 re-usable task (e.g. CSV→S3→Snowflake).
-- **UI**: sharing data pipelines for your team to use.
+**Components** - reduce complex tasks to 1 re-usable tasks
+
+(e.g. CSV → S3 → Snowflake).
+
+**UI**: share your pre-built components (data pipelines) for your team to use.
 
 </td>
-<td>a gif 
+<td><img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/component_ui.gif" alt="UI Component" width="400px" align="right" style="max-width: 100%;">
 </td>
 </tr>
 <tr>
@@ -60,7 +76,7 @@
 - **Testable Python** - test functions or full DAGs with PyTest.
 
 </td>
-<td>a gif 
+<td><img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/component_ui.gif" alt="UI Component" width="400px" align="right" style="max-width: 100%;">
 </td>
 </tr>
 
