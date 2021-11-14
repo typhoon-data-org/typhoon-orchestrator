@@ -4,6 +4,8 @@ site_name: TYPHOON
 
 repo_name: typhoon-orchestrator
 repo_url: https://github.com/typhoon-data-org/typhoon-orchestrator
+edit_uri: ""
+
 
 theme:
     name: 'material'
