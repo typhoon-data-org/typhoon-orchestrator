@@ -28,6 +28,11 @@
     vertical-align: text-top;
     text-align: center;
     padding: 20px;
+    position: relative;
+    top: -20px;
+    margin-bottom: -40px;
 }
 
-
+h1:empty {
+  display: none;
+}
