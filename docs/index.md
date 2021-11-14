@@ -1,4 +1,4 @@
-<img src="img/typhoon_logo_large_tagline.png" width="200px" align="left">
+<img src="img/typhoon_logo_large_tagline.png" width="250px" align="left">
 
 <p align="center"><b>Elegant YAML DAGS for Data Pipelines</br>Deploy to your existing Airflow.</b></p>
 
