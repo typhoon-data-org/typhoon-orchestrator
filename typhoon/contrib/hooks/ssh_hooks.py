@@ -1,5 +1,3 @@
-from sshtunnel import open_tunnel
-
 from typhoon.connections import ConnectionParams
 from typhoon.contrib.hooks.hook_factory import get_hook
 from typhoon.contrib.hooks.hook_interface import HookInterface
@@ -21,6 +19,8 @@ class SSHTunnel(HookInterface):
         self.tunneled_conn = None
 
     def __enter__(self):
+        from sshtunnel import open_tunnel
+
         wrapped_conn = get_hook(self.wrapped_conn_id)
         self.tunnel = open_tunnel(
             (self.remote_ip, self.remote_port),
