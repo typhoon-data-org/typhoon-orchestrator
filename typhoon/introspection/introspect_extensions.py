@@ -1,12 +1,13 @@
 import importlib
 import inspect
 import pkgutil
+import re
 from importlib import import_module
 from inspect import Parameter
 from pathlib import Path
 from pkgutil import ModuleInfo
 from types import ModuleType
-from typing import List, Tuple, Dict, Type, Mapping
+from typing import List, Tuple, Dict, Type, Mapping, Optional
 
 import dataclasses
 from typing_extensions import TypedDict
@@ -87,6 +88,19 @@ class FunctionInfo:
     module: str
     name: str
     args: Mapping[str, Parameter]
+    docstring: Optional[str]
+    _arg_docs: dict = None
+
+    def __post_init__(self):
+        self._arg_docs = {}
+        if self.docstring:
+            for k, v in re.findall(r':param (\w+):\s*(.*)', self.docstring):
+                self._arg_docs[k] = v
+
+    @property
+    def arg_docs(self) -> dict:
+        return self._arg_docs or {}
+
 
 
 def functions_info_in_module_path(module_name: str, module_path: str) -> List[FunctionInfo]:
@@ -94,5 +108,10 @@ def functions_info_in_module_path(module_name: str, module_path: str) -> List[Fu
     functions_info = []
     for function_name, function in inspect.getmembers(functions_module, inspect.isfunction):
         signature = inspect.signature(function)
-        functions_info.append(FunctionInfo(module=f'typhoon.{module_name}', name=function_name, args=signature.parameters))
+        functions_info.append(FunctionInfo(
+            module=f'typhoon.{module_name}',
+            name=function_name,
+            args=signature.parameters,
+            docstring=function.__doc__,
+        ))
     return functions_info

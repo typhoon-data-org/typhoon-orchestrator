@@ -8,6 +8,9 @@
   "yaml.schemas": {
     "./dag_schema.json": [
       "/dags/*.yml"
+    ],
+    "./component_schema.json": [
+      "/components/*.yml"
     ]
   },
   "emeraldwalk.runonsave": {

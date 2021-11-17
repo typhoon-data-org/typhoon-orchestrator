@@ -14,5 +14,10 @@ def local_functions_info() -> List[FunctionInfo]:
         spec.loader.exec_module(functions_module)
         for function_name, function in inspect.getmembers(functions_module, inspect.isfunction):
             signature = inspect.signature(function)
-            functions_info.append(FunctionInfo(module=f'functions.{functions_module_path.stem}', name=function_name, args=signature.parameters))
+            functions_info.append(FunctionInfo(
+                module=f'functions.{functions_module_path.stem}',
+                name=function_name,
+                args=signature.parameters,
+                docstring=function.__doc__,
+            ))
     return functions_info

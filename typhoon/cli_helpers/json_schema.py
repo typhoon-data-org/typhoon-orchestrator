@@ -1,12 +1,14 @@
 import inspect
+import logging
 from functools import lru_cache
 from inspect import Parameter
-from typing import List, Type
+from typing import List, Type, Optional, Tuple
 
 import yaml
 from typing_extensions import Literal
 
 from typhoon.contrib.hooks.hook_interface import HookInterface
+from typhoon.core.components import Component
 from typhoon.core.dags import DAGDefinitionV2
 from typhoon.core.settings import Settings
 from typhoon.introspection.introspect_extensions import get_typhoon_extensions_info, functions_info_in_module_path, \
@@ -17,6 +19,7 @@ from typhoon.introspection.introspect_local_project import local_functions_info
 def make_function_snippet(function_info: FunctionInfo) -> dict:
     return {
         'label': f'{function_info.module}.{function_info.name}',
+        'markdownDescription': function_info.docstring,
         'body': f'{function_info.module}.{function_info.name}',
     }
 
@@ -37,11 +40,12 @@ def get_connection_names() -> List[str]:
 def is_literal(t) -> bool:
     try:
         return t.__class__
-    except Exception:
+    except Exception as e:
+        logging.debug(e)
         return False
 
 
-def make_arg_completion(arg: Parameter) -> dict:
+def make_arg_completion(arg: Parameter, arg_docs: Optional[str]) -> dict:
     completion = {
         'title': arg.name,
         # "default": [],
@@ -59,10 +63,12 @@ def make_arg_completion(arg: Parameter) -> dict:
         conn_names = get_connection_names()
         choice = '|' + ','.join(conn_names) + '|' if conn_names else ':foo'
         completion['defaultSnippets'] = [{'label': '$Hook', 'body': r'\$Hook ${1' + f'{choice}' + '}'}]
-    elif arg.annotation.__class__ == Literal.__class__:
-        completion['enum'] = list(arg.annotation.__values__)
+    elif getattr(arg.annotation, '__origin__', None) is Literal:
+        completion['enum'] = list(arg.annotation.__args__)
     if arg.default != inspect._empty:
         completion['default'] = arg.default
+    if arg_docs:
+        completion['description'] = arg_docs
     return completion
 
 
@@ -79,31 +85,32 @@ def make_function_args_completions(function_info: FunctionInfo) -> dict:
                 'properties': {
                     'args': {
                         'properties': {
-                            arg_name: make_arg_completion(arg)
+                            arg_name: make_arg_completion(arg, function_info.arg_docs.get(arg.name))
                             for arg_name, arg in function_info.args.items()
                         }
-                    }
-                }
+                    },
+                },
             }
         }
 
 
-def generate_json_schemas() -> dict:
+def generate_json_schemas() -> Tuple[dict, dict]:
     """Generate schema with pydantic then customise it to add better completion for VS Code"""
-    schema = DAGDefinitionV2.schema()
+    dag_schema = DAGDefinitionV2.schema()
+    component_schema = Component.schema()
     extensions_info = get_typhoon_extensions_info()
 
     function_snippets = []
     function_args_completion = []
     for module_name, module_path in extensions_info['functions'].items():
-        completion = f'typhoon.{module_name}' if module_path.startswith('typhoon') else f'functions.{module_name}'
-        function_snippets.append({'label': completion, 'body': completion})
         for function_info in functions_info_in_module_path(module_name, module_path):
             function_snippets.append(make_function_snippet(function_info))
             function_args_completion.append(make_function_args_completions(function_info))
     for function_info in local_functions_info():
         function_snippets.append(make_function_snippet(function_info))
         function_args_completion.append(make_function_args_completions(function_info))
-    schema['definitions']['TaskDefinition']['properties']['function']['defaultSnippets'] = function_snippets
-    schema['definitions']['TaskDefinition']['allOf'] = function_args_completion
-    return schema
+    dag_schema['definitions']['TaskDefinition']['properties']['function']['defaultSnippets'] = function_snippets
+    dag_schema['definitions']['TaskDefinition']['allOf'] = function_args_completion
+    component_schema['definitions']['TaskDefinition']['properties']['function']['defaultSnippets'] = function_snippets
+    component_schema['definitions']['TaskDefinition']['allOf'] = function_args_completion
+    return dag_schema, component_schema

@@ -90,7 +90,7 @@ def load_component(
 ) -> Optional[Component]:
     components = load_components(ignore_errors, kind)
     matching_components = [(component, code) for component, code in components if component.name == component_name]
-    assert len(matching_components) <= 1, f'Found {len(matching_components)} dags with name "{component_name}"'
+    assert len(matching_components) <= 1, f'Found {len(matching_components)} components with name "{component_name}"'
     return matching_components[0][0] if len(matching_components) == 1 else None
 
 

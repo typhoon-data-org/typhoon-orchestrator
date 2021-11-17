@@ -19,11 +19,14 @@ def make_request(url, method, query_params=None, body=None):
         return "Error: " + str(e)
     return response.json()
 
+
 @st.cache
 def get_components():
     endpoint = "/".join([api_str, 'components'])
     components = make_request(endpoint, 'get')
     return components
+
+
 @st.cache
 def get_component_definition(component_name):
     endpoint = "/".join([api_str, 'component'])
@@ -53,6 +56,7 @@ st.sidebar.header('DAG configuration')
 
 component_lst = get_components()
 components = {}
+print(component_lst)
 for component in component_lst['components']:
     c_definition = get_component_definition(component)
     show = True
@@ -92,6 +96,30 @@ expander = st.expander("Component Raw Definition")
 expander.write(component_definition)
 st.markdown("""---""")
 
+if "initialized" not in st.session_state:
+    st.session_state.initialized = True
+    st.session_state.valid_schedule_interval = True
+
+
+def validate_schedule_interval():
+    print(st.session_state.schedule_value)
+    global valid_schedule_interval
+    schedule_interval_regex = (
+            '(' + '@hourly|@daily|@weekly|@monthly|@yearly|' +
+            r'((\*|\?|\d+((\/|\-){0,1}(\d+))*)\s*){5,6}' + '|' +
+            r'rate\(\s*1\s+minute\s*\)' + '|' +
+            r'rate\(\s*\d+\s+minutes\s*\)' + '|' +
+            r'rate\(\s*1\s+hour\s*\)' + '|' +
+            r'rate\(\s*\d+\s+hours\s*\)' + '|' +
+            r'rate\(\s*1\s+day\s*\)' + '|' +
+            r'rate\(\s*\d+\s+days\s*\)' +
+            ')'
+    )
+    st.session_state.valid_schedule_interval = re.match(schedule_interval_regex, st.session_state.schedule_value) is not None
+    print('*** match', bool(re.match(schedule_interval_regex, st.session_state.schedule_value)))
+    print('*** valid_sched_interval', st.session_state.valid_schedule_interval)
+
+
 with st.container():
     c1, c2, c3 = st.columns((4, 3, 3))
     with c1:
@@ -110,12 +138,15 @@ with st.container():
             help='Rate interval type'
         )
     with c3:
-        schedule_value = st.number_input(
+        schedule_value = st.text_input(
             label='Schedule interval',
-            value=1,
+            value='rate(1 day)',
             key='schedule_value',
-            help='Rate interval'
+            help='Rate interval',
+            on_change=validate_schedule_interval,
         )
+    if not st.session_state.valid_schedule_interval:
+        st.warning('Schedule interval is not valid')
 
 
 
@@ -259,13 +290,10 @@ if st.button('Create DAG'):
         # st.write(dag_from_component)
         # Create the Dag
         dag_success = put_create_dag(dag_from_component)
+    component_def = make_request(f'{api_str}/dags-build')
 
     st.success('Done! \n\n Created DAG path' + dag_success)
     st.balloons()
-
-#
-
-
 
 # return_val_expander = st.expander("DAG return Values")
 # return_val_expander.json(json.dumps(return_vals))

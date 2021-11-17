@@ -583,8 +583,10 @@ class DAGDefinitionV2(BaseModel):
               r'((\*|\?|\d+((\/|\-){0,1}(\d+))*)\s*){5,6}' + '|' +
               r'rate\(\s*1\s+minute\s*\)' + '|' +
               r'rate\(\s*\d+\s+minutes\s*\)' + '|' +
-              r'rate\(\s1*\d+\s+hour\s*\)' + '|' +
+              r'rate\(\s*1\s+hour\s*\)' + '|' +
               r'rate\(\s*\d+\s+hours\s*\)' + '|' +
+              r'rate\(\s*1\s+day\s*\)' + '|' +
+              r'rate\(\s*\d+\s+days\s*\)' +
               ')',
         description='Schedule or frequency on which the DAG should run'
     )

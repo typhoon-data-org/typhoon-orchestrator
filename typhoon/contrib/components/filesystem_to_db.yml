@@ -13,7 +13,11 @@ tasks:
       pattern: !Py $ARG.pattern
 
   write_to_db:
+    input: glob_files
     function: typhoon.pandas.write_sql
+    args:
+      a: a
+
 
 output:
   - write_to_db

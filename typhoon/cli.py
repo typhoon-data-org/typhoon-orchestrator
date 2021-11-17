@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import pydoc
 import shutil
@@ -25,7 +26,7 @@ from streamlit import bootstrap
 from tabulate import tabulate
 from termcolor import colored
 
-from api.main import app, run_api
+from api.main import run_api
 from typhoon import connections
 from typhoon.cli_helpers.cli_completion import get_remote_names, get_dag_names, get_conn_envs, get_conn_ids, \
     get_var_types, get_deploy_targets, PROJECT_TEMPLATES, get_task_names
@@ -35,8 +36,7 @@ from typhoon.cli_helpers.status import dags_with_changes, dags_without_deploy, c
 from typhoon.connections import Connection
 from typhoon.contrib.hooks.hook_factory import get_hook
 from typhoon.core import DagContext
-from typhoon.core.components import Component
-from typhoon.core.dags import DAGDefinitionV2, ArgEvaluationError, load_module_from_path
+from typhoon.core.dags import ArgEvaluationError, load_module_from_path
 from typhoon.core.glue import get_dag_errors, load_dag_definition
 from typhoon.core.settings import Settings
 from typhoon.deployment.packaging import build_all_dags, local_typhoon_path
@@ -76,7 +76,7 @@ def set_settings_from_remote(remote: str):
 @click.group()
 def cli():
     """Typhoon CLI"""
-    pass
+    logging.getLogger('sqlitedict').setLevel(logging.CRITICAL)
 
 
 @cli.command()
@@ -110,10 +110,11 @@ def init(project_name: str, deploy_target: str, template: str):
 
         cfg_path.write_text(EXAMPLE_CONFIG.format(project_name=project_name, deploy_target=deploy_target))
         Settings.typhoon_home = dest
-        dag_schema = generate_json_schemas()
+        dag_schema, component_schema = generate_json_schemas()
         dag_json_schema = json.dumps(dag_schema, indent=2)
         dag_schema_path.write_text(dag_json_schema)
-        component_schema_path.write_text(Component.schema_json(indent=2))
+        component_json_schema = json.dumps(component_schema, indent=2)
+        component_schema_path.write_text(component_json_schema)
 
         print(f'Project created in {dest}')
         print('If you want auto completion run the following:')
@@ -669,9 +670,11 @@ def remove_variable(remote: Optional[str], var_id: str):
 @cli.command(name='generate-json-schemas')
 def cli_generate_json_schemas():
     """Generate JSON schemas using function data"""
-    dag_schema = generate_json_schemas()
+    dag_schema, component_schema = generate_json_schemas()
     dag_json_schema = json.dumps(dag_schema, indent=2)
     (Settings.typhoon_home/'dag_schema.json').write_text(dag_json_schema)
+    component_json_schema = json.dumps(component_schema, indent=2)
+    (Settings.typhoon_home/'component_schema.json').write_text(component_json_schema)
 
 
 @cli.group(name='extension')
