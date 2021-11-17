@@ -15,6 +15,11 @@ from typhoon.deployment.packaging import build_all_dags
 app = FastAPI()
 
 
+@app.get("/api/v1/health-check")
+def health_check():
+    return 'Ok'
+
+
 @app.get("/api/v1/components")
 def get_components():
     typhoon_components = {

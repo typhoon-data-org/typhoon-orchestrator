@@ -1,14 +1,27 @@
-import streamlit as st
 import json
-import requests
-import yaml
-import graphviz
 import re
+from time import sleep
 
+import graphviz
+import requests
+import streamlit as st
+import yaml
 
 api_url = "http://localhost:8000/api"
 api_version = "v1"
 api_str = "/".join([api_url, api_version])
+
+if 'initialised' not in st.session_state:
+    with st.spinner('Waiting for API...'):
+        retry_seconds = 1
+        healthy = False
+        while not healthy:
+            try:
+                requests.get(f'{api_str}/health-check').raise_for_status()
+                healthy = True
+            except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError):
+                print(f'Failed health check, retry in {retry_seconds} seconds')
+                sleep(retry_seconds)
 
 
 def make_request(url, method, query_params=None, body=None):
