@@ -96,6 +96,7 @@ def glob(hook: FileSystemHookInterface, pattern: str, path: Union[Path, str] = '
     :param path: Optional directory path
     :param exclude_dirs: An optional list of patterns to exclude when searching e.g. ["*.git"]
     :return fs.info.Info
+        path: str - A string with the matched file
         raw_info (dict) – A dict containing resource info.
             accessed: datetime. The resource last access time, or None.
             copy(to_datetime=None)[source]: Create a copy of this resource info object.

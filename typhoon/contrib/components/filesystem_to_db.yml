@@ -2,7 +2,7 @@ name: filesystem_to_db
 args:
   filesystem_hook: FileSystemHook
   pattern: str
-  db_hook: DBApiHook
+  db_hook: SQLAlchemyHook
   table_name: str
 
 tasks:
@@ -12,12 +12,20 @@ tasks:
       hook: !Py $ARG.filesystem_hook
       pattern: !Py $ARG.pattern
 
-  write_to_db:
+  read_file:
     input: glob_files
-    function: typhoon.pandas.write_sql
+    function: typhoon.filesystem.read_data
     args:
-      a: a
+      hook: !Py $ARG.filesystem_hook
+      path: !Py $BATCH.path
 
+  write_to_db:
+    input: read_file
+    function: typhoon.pandas.df_write
+    args:
+      hook: !Py $ARG.db_hook
+      table_name: !Py $ARG.table_name
+      df: !Py typhoon.pandas.from_csv($BATCH.data)
 
 output:
   - write_to_db
