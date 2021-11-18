@@ -16,6 +16,7 @@ class DagFile(Templated):
     from typhoon.core.settings import Settings
     from typhoon.core import setup_logging, DagContext
     from typhoon.core.runtime import SequentialBroker, ComponentArgs
+    from typhoon.contrib.hooks.hook_factory import get_hook
     {% if non_component_tasks %}
     
     from tasks import {% for task_name in non_component_tasks.keys() %}{{ task_name | camel_case }}Task{% if not loop.last %}, {% endif %}{% endfor %}

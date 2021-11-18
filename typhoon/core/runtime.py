@@ -1,4 +1,4 @@
-from types import SimpleNamespace
+from types import SimpleNamespace, GeneratorType
 from typing import Callable, Any, List, Optional, Union, Type, Dict
 from uuid import uuid4
 
@@ -70,7 +70,10 @@ class TaskInterface(Protocol):
     def run(self, dag_context: DagContext, source: Optional[str],  batch_num: int, batch: Any):
         args = self.get_args(dag_context, source, batch_num, batch)
         batch_group_id = str(uuid4())
-        for batch_num, batch in enumerate(self.function(**args), start=1):
+        batches = self.function(**args)
+        if not isinstance(batches, GeneratorType):
+            batches = [batches]
+        for batch_num, batch in enumerate(batches, start=1):
             if batch is SKIP_BATCH:
                 print(f'Skipping batch {batch_num} for {self.task_id}')
                 continue
