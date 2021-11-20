@@ -1,3 +1,5 @@
+# !Deprecated. API is no longer Open and requires a key
+
 name: exchange_rates
 schedule_interval: rate(1 day)
 

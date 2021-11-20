@@ -29,22 +29,4 @@ tasks:
         - !Py f'/authors/{$1}.json'
       create_intermediate_dirs: True
 
-  get_works:
-    input: get_author
-    function: functions.open_library_api.get_works
-    args:
-      limit: 50
-      author_key: !Py $BATCH['docs'][0]['key']
 
-  write_works_json:
-      input: get_works
-      function: typhoon.filesystem.write_data
-      args:
-        hook: !Hook data_lake
-        data:  !MultiStep
-          - !Py $BATCH['entries']
-          - !Py typhoon.data.json_array_to_json_records($1)
-        path: !MultiStep
-          - !Py $BATCH['links']['author'].replace('/authors/', '')
-          - !Py f'/works/{$1}.json'
-        create_intermediate_dirs: True
