@@ -62,7 +62,7 @@ def make_arg_completion(arg: Parameter, arg_docs: Optional[str]) -> dict:
     elif is_hook(arg.annotation):
         conn_names = get_connection_names()
         choice = '|' + ','.join(conn_names) + '|' if conn_names else ':foo'
-        completion['defaultSnippets'] = [{'label': '$Hook', 'body': r'\$Hook ${1' + f'{choice}' + '}'}]
+        completion['defaultSnippets'] = [{'label': '!Hook', 'body': r'!Hook ${1' + f'{choice}' + '}'}]
     elif getattr(arg.annotation, '__origin__', None) is Literal:
         completion['enum'] = list(arg.annotation.__args__)
     if arg.default != inspect._empty:

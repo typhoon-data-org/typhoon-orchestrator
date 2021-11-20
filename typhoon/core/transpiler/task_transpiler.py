@@ -46,6 +46,7 @@ class TasksFile(Templated):
     template = '''
     from typing import Any, Optional
     
+    from typhoon.core.settings import Settings
     from typhoon.contrib.hooks.hook_factory import get_hook
     from typhoon.core.runtime import TaskInterface, BrokerInterface, ComponentInterface
     from typhoon.core import DagContext
