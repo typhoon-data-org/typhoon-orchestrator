@@ -65,6 +65,7 @@ def get_typhoon_extensions_info(extensions: ExtensionsList = None) -> Extensions
             info[ext_folder][function_module_name] = str(sub_module_path.relative_to(typhoon_contrib_path.parent.parent)) \
                 .replace('.py', '').replace('/', '.')
     for component_path in (typhoon_contrib_path / 'components').rglob('*.yml'):
+        # TODO: Fix if component name isn't the same as the filename
         component_name = component_path.stem
         info['components'][component_name] = str(component_path)
     return info

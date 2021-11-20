@@ -1,0 +1,29 @@
+name: db_to_filesystem
+args:
+  db_hook: DBApiHook
+  table_name: str
+  batch_size:
+    type: int
+    default: 10_000
+  filesystem_hook: FileSystemHook
+  path_template: str
+  create_intermediate_dirs:
+    type: bool
+    default: true
+
+tasks:
+  read_data:
+    function: typhoon.relational.execute_query
+    args:
+      hook: !Py $ARG.db_hook
+      query: !Py f'SELECT * FROM {$ARG.table_name}'
+      batch_size: !Py $ARG.batch_size
+
+  write_data:
+    input: read_data
+    function: typhoon.filesystem.write_data
+    args:
+      hook: !Py $ARG.filesystem_hook
+      data: !Py typhoon.db_result.to_csv($BATCH.columns, $BATCH.batch)
+      path: !Py $ARG.path_template.format(table=$ARG.table_name, file_num=$BATCH_NUM)
+      create_intermediate_dirs: !Py $ARG.create_intermediate_dirs

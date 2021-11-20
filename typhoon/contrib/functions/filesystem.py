@@ -4,6 +4,7 @@ from typing import Iterable, NamedTuple, Union, List, Optional
 
 from fs.copy import copy_fs
 from fs.info import Info
+from typing_extensions import Literal
 
 from typhoon.contrib.hooks.filesystem_hooks import FileSystemHookInterface
 
@@ -35,7 +36,7 @@ def write_data(
         path: Union[Path, str],
         create_intermediate_dirs: bool = False,
         metadata: Optional[dict] = None,
-        return_path_format: str = 'relative',
+        return_path_format: Literal['relative', 'absolute', 'url'] = 'relative',
 ) -> Iterable[str]:
     """
     Write the given data to the path specified.
