@@ -14,12 +14,6 @@ tasks:
         - filename: fruits.csv
           contents: apple,pear,apricot
 
-#  echo_my_output:
-#    input: send_data
-#    function: typhoon.debug.echo
-#    args:
-#      mydata: !Py $BATCH
-
   write_data:
     input: send_data
     function: typhoon.filesystem.write_data

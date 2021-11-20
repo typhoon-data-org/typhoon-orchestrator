@@ -41,31 +41,46 @@
 
 !!! note "[Hello World - 5 min walkthrough][2]"
 
+[1]:./getting-started/installation.md
+[2]:./examples/hello-world.md
 
 ## Example DAG
+
 
 === "Typhoon DAG (YAML)"
 
     ```yaml linenums="1"
-    name: exchange_rates
-    schedule_interval: rate(1 day)
-    
-    tasks:
-      exchange_rate:
-        function: functions.exchange_rates_api.get_history
-        args:
-          start_at: !Py $DAG_CONTEXT.interval_start
-          end_at: !Py $DAG_CONTEXT.interval_end
-    
-      write_csv:
-        input: exchange_rate
-        function: typhoon.filesystem.write_data
-        args:
-          hook: !Hook echo
-          data: !MultiStep
-            - !Py transformations.xr.flatten_response($BATCH)
-            - !Py typhoon.data.dicts_to_csv($1, delimiter='|')
-          path: xr_data.csv
+      name: favorite_authors
+      schedule_interval: rate(1 day)
+      
+      tasks:
+        choose_favorites:
+          function: typhoon.flow_control.branch
+          args:
+            branches:
+              - J. K. Rowling
+              - George R. R. Martin
+              - James Clavell
+      
+        get_author:
+          input: choose_favorites
+          function: functions.open_library_api.get_author
+          args:
+            author: !Py $BATCH
+      
+        write_author_json:
+          input: get_author
+          function: typhoon.filesystem.write_data    
+          args:
+            hook: !Hook data_lake
+            data:  !MultiStep
+              - !Py $BATCH['docs']
+              - !Py typhoon.data.json_array_to_json_records($1)
+            path: !MultiStep 
+              - !Py $BATCH['docs'][0]['key']
+              - !Py f'/authors/{$1}.json'
+            create_intermediate_dirs: True
+
     ```
 
 === "Equivalent Airflow DAG (python)"
@@ -135,13 +150,11 @@
             exchange_rate_task >> write_csv_task
     ```
 
-Above is an example of two tasks:
+<figure markdown> 
+   ![Favorite Authors](img/open_library_example_dag.png){ width="400" }
+   <figcaption>Getting the works of my favorite authors from Open Library API</figcaption>
+</figure>
 
-1. Extracting the exchange rates from an API call function for a 1-day range
-2. Writing CSV to a filesystem. This example actually echos it;  to put it to S3 change the Hook connection name. Within the edge between task 1 and 2 it transforms the data:
-    1. It flattens the data 
-    2. Then transforms it from a dict to a pipe delimited CSV.
-    
 ## Using with Airflow
 
 Building the above DAG using `typhoon dag build --all`. 
