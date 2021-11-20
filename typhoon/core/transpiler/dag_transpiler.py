@@ -1,8 +1,10 @@
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Any
 
 from dataclasses import dataclass
 
+from typhoon.core.components import Component
 from typhoon.core.dags import DAGDefinitionV2, TaskDefinition
+from typhoon.core.glue import load_component
 from typhoon.core.templated import Templated
 from typhoon.core.transpiler.transpiler_helpers import extract_dependencies, camel_case, render_dependencies, \
     is_component_task, render_args
@@ -51,6 +53,7 @@ class DagFile(Templated):
             {% else %}
             args = {}
             {{ task.args | render_args | indent(8, False) }}
+            {{ task | default_args_not_set | render_args | indent(8, False) }}
             return args
             {% endif %}
     
@@ -141,3 +144,15 @@ class DagFile(Templated):
     @property
     def component_tasks(self) -> Dict[str, TaskDefinition]:
         return {k: v for k, v in self.dag.tasks.items() if v.component is not None}
+
+    @staticmethod
+    def default_args_not_set(component_task: TaskDefinition) -> Dict[str, Any]:
+        kind, component_name = component_task.component.split('.')
+        if kind == 'components':
+            kind = 'custom'
+        component: Component = load_component(component_name, kind=kind)
+        return {
+            arg: val.default
+            for arg, val in component.args.items()
+            if arg not in component_task.args
+        }
