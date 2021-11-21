@@ -29,7 +29,7 @@ def get_works(
 
     print(f'Calling endpoint {full_endpoint} for author key ' + author_key)
     response = requests.get(full_endpoint, params=params)
-    yield response.json()
+    return response.json()
 
 
 if __name__ == '__main__':

@@ -1,3 +1,7 @@
+# See docs:
+#     https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/connections.html
+#     https://typhoon-data-org.github.io/typhoon-orchestrator/usage/hooks.html#db-api-20
+
 data_lake:
   test:
     conn_type: s3
@@ -12,3 +16,15 @@ data_lake:
 echo:
   local:
     conn_type: echo
+
+relational_db:
+  local:
+    conn_type: mysql
+    login: my_login
+    password: my_pass
+    host: localhost
+    port: 3306
+
+
+
+
