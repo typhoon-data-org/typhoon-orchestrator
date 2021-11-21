@@ -78,7 +78,7 @@ Simplicity and re-usability; a toolkit designed to be loved by Data Engineers :h
 **Testable Python** - test functions or full DAGs with PyTest.
 
 </td>
-<td><img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/component_ui.gif" alt="UI Component" width="400px" align="right" style="max-width: 100%;">
+<td><img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/shell_example.gif" alt="UI Component" width="400px" align="right" style="max-width: 100%;">
 </td>
 </tr>
 
