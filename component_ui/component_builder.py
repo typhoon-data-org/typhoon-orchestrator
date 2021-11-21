@@ -205,7 +205,7 @@ for arg in component_definition['args']:
                 )
                 return_vals['component_arguments'][arg] = True if bool_input=="True" else False
 
-    elif component_definition['args'][arg].startswith('Literal') and '|' in component_definition['args'][arg]:
+    elif str(component_definition['args'][arg]).startswith('Literal') and '|' in component_definition['args'][arg]:
 
         regex = r"Literal\[\'(.*?)\'\]\s*\|*\s*"
         matches = re.findall(regex, component_definition['args'][arg], re.MULTILINE)
