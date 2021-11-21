@@ -39,7 +39,7 @@ nav:
     - Adding connections: 'getting-started/connections.md'
     - Deployment: 'getting-started/deployment.md'
     - Using Components: 'getting-started/using-components.md'
-    - UI configurator: 'getting-started/using-component-ui.md'
+    - Component UI: 'getting-started/using-component-ui.md'
     - New Hooks (connections): 'getting-started/creating-hooks.md'
   - Example Walkthroughs:
       - Hello World: 'examples/hello-world.md'
