@@ -60,7 +60,11 @@ Simplicity and re-usability; a toolkit designed to be loved by Data Engineers :h
 
 **Components** - reduce complex tasks to 1 re-usable tasks
 
-(e.g. CSV → S3 → Snowflake).
+Packaged examples:
+- Glob & Compress  
+- FileSystem to DB
+- DB to FileSystem
+- DB to Snowlfake
 
 **UI**: Share pre-built components (data pipelines) with your team :raised_hands:
 
