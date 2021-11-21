@@ -167,7 +167,7 @@ def extract_dependencies(tasks: Dict[str, TaskDefinition]):
 
 class ImportDefinition(NamedTuple):
     module: Optional[str]
-    type: Union[Literal['function'], Literal['component'], Literal['transformation']]
+    type: Literal['function', 'component', 'transformation']
     submodule: str
 
 

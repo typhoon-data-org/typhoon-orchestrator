@@ -39,7 +39,7 @@ class Connection:
     def __post_init__(self):
         self.port = replace_decimals(self.port)
         self.extra = replace_decimals(self.extra)
-        if not isinstance(self.password, str):
+        if not isinstance(self.password, str) and self.password is not None:
             self.password = str(self.password)
 
     def get_connection_params(self) -> ConnectionParams:

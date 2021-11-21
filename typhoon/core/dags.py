@@ -45,6 +45,10 @@ class Py:
     def construct(loader: yaml.Loader, node: yaml.Node):
         return construct_custom_class(Py, loader, node)
 
+    @staticmethod
+    def represent(dumper: yaml.Dumper, data: 'Py'):
+        return dumper.represent_scalar('!Py', data.value)
+
     @classmethod
     def __get_validators__(cls):
         yield cls.validate
@@ -102,6 +106,10 @@ class MultiStep:
     @staticmethod
     def construct(loader: yaml.Loader, node: yaml.Node):
         return construct_custom_class(MultiStep, loader, node)
+
+    @staticmethod
+    def represent(dumper: yaml.Dumper, data: 'MultiStep'):
+        return dumper.represent_sequence('MultiStep', data.value)
 
     @classmethod
     def __get_validators__(cls):
@@ -306,6 +314,16 @@ def add_yaml_constructors():
     yaml.add_constructor('!Template', construct_template)
 
 
+def represent_granularity(dumper: yaml.Dumper, data: Granularity):
+    return dumper.represent_str(data.value)
+
+
+def add_yaml_representers(dumper: yaml.Dumper):
+    yaml.add_representer(Py, Py.represent, dumper)
+    yaml.add_representer(MultiStep, MultiStep.represent, dumper)
+    yaml.add_representer(Granularity, represent_granularity, dumper)
+
+
 def get_deps_uses_batch_and_warnings(item):
     deps = []
     warnings = []
@@ -375,6 +393,11 @@ class TaskDefinition(BaseModel):
                 raise ValueError(f'Arg "{k}" should be an identifier')
             if isinstance(v, MultiStep):
                 v.key = k
+            # HACK: We don't have custom JSON decoders so we need to create Py and MultiStep objects here if applicable
+            if isinstance(v, dict) and v.get('__typhoon__') == 'Py':
+                val[k] = Py(v['value'])
+            elif isinstance(v, dict) and v.get('__typhoon__') == 'MultiStep':
+                val[k] = MultiStep(v['value'])
         return val
 
     @validator('function')
@@ -560,8 +583,10 @@ class DAGDefinitionV2(BaseModel):
               r'((\*|\?|\d+((\/|\-){0,1}(\d+))*)\s*){5,6}' + '|' +
               r'rate\(\s*1\s+minute\s*\)' + '|' +
               r'rate\(\s*\d+\s+minutes\s*\)' + '|' +
-              r'rate\(\s1*\d+\s+hour\s*\)' + '|' +
+              r'rate\(\s*1\s+hour\s*\)' + '|' +
               r'rate\(\s*\d+\s+hours\s*\)' + '|' +
+              r'rate\(\s*1\s+day\s*\)' + '|' +
+              r'rate\(\s*\d+\s+days\s*\)' +
               ')',
         description='Schedule or frequency on which the DAG should run'
     )
@@ -645,6 +670,12 @@ class DAGDefinitionV2(BaseModel):
             del self.tasks[task_name]
         self.tasks.update(**tasks_to_add)
 
+    class Config:
+        json_encoders = {
+            Py: lambda v: {'__typhoon__': 'Py', 'value': v.value},
+            MultiStep: lambda v: {'__typhoon__': 'MultiStep', 'value': v.value},
+        }
+
 
 def uses_batch(item):
     if isinstance(item, Py):
@@ -661,34 +692,10 @@ def uses_batch(item):
 
 
 if __name__ == '__main__':
-    add_yaml_constructors()
-    dag_v2 = """
-name: example_v2
-schedule_interval: "@hourly"
-
-tasks:
-    tables:
-        function: typhoon.flow_control.branch
-        args:
-            branches:
-                - sheep
-                - dog
-    
-    extract:
-        input: tables
-        function: typhoon.relational.query
-        asynchronous: False
-        args:
-            sql: !Py f'select * from {$BATCH}'
-            hook: !Py $HOOKS.oracle_db
-            batch_size: 500
-    
-    load:
-        input: extract
-        function: typhoon.filesystem.write_data
-        args:
-            hook: !Py $HOOKS.data_lake
-            data: !Py typhoon.transformations.write_csv($BATCH.data)
-            path: !Py f'{$BATCH.table_name}/part{$BATCH_NUM}.csv'
-    """
-    print(yaml.dump(DAGDefinitionV2.parse_obj(yaml.load(dag_v2, yaml.FullLoader)).make_dag().dict(), Dumper=yaml.Dumper, sort_keys=False))
+    add_yaml_representers(yaml.SafeDumper)
+    print(yaml.safe_dump({
+        'a': 'abc',
+        'b': [1, 2, 3],
+        'c': Py('abcd'),
+        'd': MultiStep([1, 'a', 2]),
+    }))

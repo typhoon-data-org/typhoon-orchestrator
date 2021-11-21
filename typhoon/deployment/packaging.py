@@ -127,10 +127,14 @@ def build_all_dags(remote: Optional[str], matching: Optional[str] = None) -> Lis
             dag_files.append(dag_file)
             build_dag(dag, dag_file, deployment_date, remote)
 
-            # TODO: We can optimize this by only building the ones we need
-            for component, _ in load_components(ignore_errors=False, kind='custom'):
-                print(f'Building component {component.name}...')
-                build_component(dag.name, component, remote)
+            used_components = set()
+            for node in dag.tasks.values():
+                if node.component is not None:
+                    used_components.add(node.component.split('.')[-1])
+            for component, _ in load_components(ignore_errors=False):
+                if component.name in used_components:
+                    print(f'Building component {component.name}...')
+                    build_component(dag.name, component, remote)
 
     print('Finished building DAGs\n')
     return dag_files

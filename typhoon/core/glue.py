@@ -14,12 +14,13 @@ from typhoon.core.dags import DAGDefinitionV2, add_yaml_constructors
 from typhoon.core.settings import Settings
 from typing_extensions import Literal
 
-from typhoon.core.transpiler.dag_transpiler import DagFile
-from typhoon.core.transpiler.task_transpiler import TasksFile
 from typhoon.introspection.introspect_extensions import get_typhoon_extensions_info
 
 
 def transpile_dag_and_store(dag: dict, output_folder_path: Union[str, Path], debug_mode: bool):
+    from typhoon.core.transpiler.dag_transpiler import DagFile
+    from typhoon.core.transpiler.task_transpiler import TasksFile
+
     output_folder_path = Path(output_folder_path)
     output_folder_path.mkdir(parents=True, exist_ok=True)
     dag = DAGDefinitionV2.parse_obj(dag)
@@ -86,17 +87,18 @@ def get_dag_filenames():
 def load_component(
         component_name: str,
         ignore_errors: bool = False,
-        kind: Union[Literal['typhoon'], Literal['custom'], Literal['all']] = 'all',
+        kind: Literal['typhoon', 'custom', 'all'] = 'all',
 ) -> Optional[Component]:
+    assert kind in ['typhoon', 'custom', 'all'], f'Kind should be one of ["typhoon", "custom", "all"]. Found: {kind}'
     components = load_components(ignore_errors, kind)
     matching_components = [(component, code) for component, code in components if component.name == component_name]
-    assert len(matching_components) <= 1, f'Found {len(matching_components)} dags with name "{component_name}"'
+    assert len(matching_components) <= 1, f'Found {len(matching_components)} components with name "{component_name}"'
     return matching_components[0][0] if len(matching_components) == 1 else None
 
 
 def load_components(
         ignore_errors: bool = False,
-        kind: Union[Literal['typhoon'], Literal['custom'], Literal['all']] = 'all',
+        kind: Literal['typhoon', 'custom', 'all'] = 'all',
 ) -> List[Tuple[Component, str]]:
     if kind == 'all':
         return [(c, cs) for c, cs in load_component_definitions(ignore_errors, kind='typhoon')] + \
@@ -107,7 +109,7 @@ def load_components(
 
 def load_component_definitions(
         ignore_errors,
-        kind=Union[Literal['typhoon'], Literal['custom']],
+        kind=Literal['typhoon', 'custom'],
 ) -> List[Tuple[Component, str]]:
     add_yaml_constructors()
     if kind == 'custom':

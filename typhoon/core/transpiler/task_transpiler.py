@@ -1,10 +1,10 @@
-from dataclasses import dataclass
 from typing import Dict
 
-from typhoon.core.dags import DAGDefinitionV2, TaskDefinition
+from dataclasses import dataclass
+
+from typhoon.core.dags import TaskDefinition
 from typhoon.core.templated import Templated
-from typhoon.core.transpiler.transpiler_helpers import expand_function, get_transformations_modules, \
-    get_typhoon_transformations_modules, get_functions_modules, get_typhoon_functions_modules, camel_case, \
+from typhoon.core.transpiler.transpiler_helpers import expand_function, camel_case, \
     extract_imports, ImportsTemplate, render_args
 
 
@@ -46,6 +46,8 @@ class TasksFile(Templated):
     template = '''
     from typing import Any, Optional
     
+    from typhoon.core.settings import Settings
+    from typhoon.contrib.hooks.hook_factory import get_hook
     from typhoon.core.runtime import TaskInterface, BrokerInterface, ComponentInterface
     from typhoon.core import DagContext
     
