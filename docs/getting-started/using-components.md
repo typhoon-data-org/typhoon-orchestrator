@@ -47,7 +47,7 @@ tasks:
     component: typhoon.if
     args:
       data: !Py $BATCH
-      condition: !Py $DAG_CONTEXT.ts.weekday() == 0
+      condition: !Py $DAG_CONTEXT.ts.isoweekday() == 0
 
   monday_processing_task:
     input: choose_preprocessing.then
@@ -71,7 +71,7 @@ This is a non-trivial example of a full DWH load from multipler tables across 3 
 
 This calls the entire end to end flow that is packaged in the  **`typhoon.db_to_snowflake`** flow. This component example is fully [idempotent][3] with added DHW staging metadata.
 
-Note even more productive is to have the table names as typhoon variables, keeping the YAML very clean and easy to read. We have kept this simple for the example by using a list.
+Note even more productive is to have the [table names as typhoon variables][5], keeping the YAML very clean and easy to read. We have kept this simple for the example by using a list.
 
 ```YAML
 name: source_to_snowflake
@@ -124,3 +124,4 @@ tasks:
 [2]:../usage/components.md
 [3]:https://medium.com/ssense-tech/lets-get-idempotence-right-59f227178bb8
 [4]:./using-component-ui.md
+[5]:https://typhoon-data-org.github.io/typhoon-orchestrator/usage/templates.html#list-of-tables
