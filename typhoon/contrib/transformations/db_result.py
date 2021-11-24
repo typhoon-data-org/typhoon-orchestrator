@@ -7,8 +7,8 @@ from typing import Sequence
 
 
 def to_csv(description: Sequence, data: Sequence[Sequence]) -> str:
-    csv_data = StringIO()
-    writer = csv.writer(csv_data)
+    csv_data = StringIO(newline='')
+    writer = csv.writer(csv_data, lineterminator='\n')
     writer.writerow(description)
     for row in data:
         writer.writerow(row)
