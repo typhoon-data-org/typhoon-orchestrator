@@ -1,18 +1,18 @@
-name: if
+name: ifthen
 
 args:
   condition: Callable[[T], bool]
   data: T
 
 tasks:
-  then:
+  ifthen:
     input: $COMPONENT_INPUT
     function: typhoon.flow_control.filter
     args:
       filter_func: !Py $ARG.condition
       data: !Py $ARG.data
 
-  else:
+  ifelse:
     input: $COMPONENT_INPUT
     function: typhoon.flow_control.filter
     args:
@@ -20,5 +20,5 @@ tasks:
       data: !Py $ARG.data
 
 output:
-  - then
-  - else
+  - ifthen
+  - ifelse
