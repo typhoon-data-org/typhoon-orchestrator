@@ -404,7 +404,7 @@
   
     <li class="md-nav__item">
       <a href="../getting-started/using-component-ui.html" class="md-nav__link">
-        UI configurator
+        Component UI
       </a>
     </li>
   
@@ -417,6 +417,18 @@
     <li class="md-nav__item">
       <a href="../getting-started/creating-hooks.html" class="md-nav__link">
         New Hooks (connections)
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/typhoon-shell.html" class="md-nav__link">
+        Typhoon Shell
       </a>
     </li>
   
@@ -724,9 +736,10 @@
 <p>You can do this inline using !Py, in multi-line snippets using !Multistep or encapsulated in a normal python function.  The difference between transformations and functions is that transformations are applied before and can be to a specific argument.</p>
 <p>In-line and Multi-line are described in depth in <a href="py-multistep.html">!Py and !Multistep</a>.</p>
 <p>Similarly to functions, transformations can be included in the project or referenced from the contributed / built-in repos. </p>
-<p>@ TODO Check this
-- <code>typhoon.transformation_file.transformation_name</code> for built-in / contrib transformations.
-- <code>transformations.my_transformation_file.transformation_name</code> for accessing your project transformations. </p>
+<ul>
+<li><code>typhoon.transformation_file.transformation_name</code> for built-in / contrib transformations.</li>
+<li><code>transformations.my_transformation_file.transformation_name</code> for accessing your project transformations. </li>
+</ul>
 <h3 id="transformation-example">Transformation example</h3>
 <p>Applying a regex transformation to the data (element 1 which is the path) before its passed to the function. 
 <div class="highlight"><pre><span></span><code>  <span class="nt">write_df_to_sql</span><span class="p">:</span>

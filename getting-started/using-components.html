@@ -430,6 +430,19 @@
     What is a component?
   </a>
   
+    <nav class="md-nav" aria-label="What is a component?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#included-components" class="md-nav__link">
+    Included components:
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -460,7 +473,7 @@
   
     <li class="md-nav__item">
       <a href="using-component-ui.html" class="md-nav__link">
-        UI configurator
+        Component UI
       </a>
     </li>
   
@@ -473,6 +486,18 @@
     <li class="md-nav__item">
       <a href="creating-hooks.html" class="md-nav__link">
         New Hooks (connections)
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="typhoon-shell.html" class="md-nav__link">
+        Typhoon Shell
       </a>
     </li>
   
@@ -718,6 +743,19 @@
     What is a component?
   </a>
   
+    <nav class="md-nav" aria-label="What is a component?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#included-components" class="md-nav__link">
+    Included components:
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -750,7 +788,20 @@
                 <h1 id="using-components">Using Components</h1>
 <h2 id="what-is-a-component">What is a component?</h2>
 <p><a href="../usage/components.html">Components</a> are ways of packaging sets of regularly used tasks. This encourages modularity and re-use.</p>
-<p>This page focuses on using some packaged example components (rather than <a href="../usage/components.html">how to construct one</a>)</p>
+<p>This page focuses on using some packaged example components (rather than <a href="../usage/components.html">how to construct one</a>).</p>
+<h3 id="included-components">Included components:</h3>
+<ul>
+<li><strong>Glob &amp; Compress</strong>: To glob (e.g. '*.csv') files and compress them to gzip or zlib.  </li>
+<li><strong>FileSystem to DB</strong>: To read (glob) files on a schedule into an existing table. </li>
+<li><strong>DB to FileSystem</strong>: To write a table to a file pattern. </li>
+<li><strong>DB to Snowlfake</strong>: Multiple tables landed to snowflake (<a href="https://medium.com/ssense-tech/lets-get-idempotence-right-59f227178bb8">idempotent</a> with added DHW staging metadata). Fully end-to-end production ready flow. </li>
+</ul>
+<figure>
+<p><img alt="Component UI" src="../img/component_ui.gif" width="800" />
+   </p>
+<figcaption>Example of using the Component UI. Team members can self-serve complex DAGs quickly.</figcaption>
+</figure>
+<p>See the next section for using the <a href="using-component-ui.html">Component UI</a>.</p>
 <h2 id="example-archive-on-mondays">Example: Archive on Mondays</h2>
 <p>Trivial example to choose a different path based on if its a Monday.</p>
 <p><code>$DAG_CONTEXT.ts</code> is a datetime object representing the <a href="https://docs.python.org/3/library/datetime.html#datetime.datetime.weekday">timestamp</a> of runtime in the context. </p>
@@ -772,7 +823,7 @@
     <span class="nt">component</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.if</span>
     <span class="nt">args</span><span class="p">:</span>
       <span class="nt">data</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$BATCH</span>
-      <span class="nt">condition</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$DAG_CONTEXT.ts.weekday() == 0</span>
+      <span class="nt">condition</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$DAG_CONTEXT.ts.isoweekday() == 0</span>
 
   <span class="nt">monday_processing_task</span><span class="p">:</span>
     <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">choose_preprocessing.then</span>
@@ -790,53 +841,52 @@
   <span class="l l-Scalar l-Scalar-Plain">...</span>
 </code></pre></div>
 <h2 id="example-source-db-to-snowflake-dwh">Example: Source DB to Snowflake DWH</h2>
-<p>This is a non-trivial example of a full DWH load from multipler tables across 3 separate ERP systems.</p>
-<p>This calls the entire end to end flow that is packaged in the  <strong><code>typhoon.db_to_snowflake</code></strong> flow. This component example is fully <a href="https://medium.com/ssense-tech/lets-get-idempotence-right-59f227178bb8">idempotent</a>, and encapsulating the  of the DHW staging metadata.</p>
+<p>This is a non-trivial example of a full DWH load from multipler tables across 3 separate ERP systems. </p>
+<p>This calls the entire end to end flow that is packaged in the  <strong><code>typhoon.db_to_snowflake</code></strong> flow. This component example is fully <a href="https://medium.com/ssense-tech/lets-get-idempotence-right-59f227178bb8">idempotent</a> with added DHW staging metadata.</p>
+<p>Note even more productive is to have the <a href="https://typhoon-data-org.github.io/typhoon-orchestrator/usage/templates.html#list-of-tables">table names as typhoon variables</a>, keeping the YAML very clean and easy to read. We have kept this simple for the example by using a list.</p>
 <div class="highlight"><pre><span></span><code><span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">source_to_snowflake</span>
 <span class="nt">schedule_interval</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">rate(1 day)</span>
 
 <span class="nt">tasks</span><span class="p">:</span>
-  <span class="nt">get_sku_erp</span><span class="p">:</span>
-    <span class="nt">component</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.db_to_snowflake</span>
+  <span class="nt">erps</span><span class="p">:</span>
+    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.flow_control.branch</span>
     <span class="nt">args</span><span class="p">:</span>
-      <span class="nt">source_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">sku_component_erp</span>
-      <span class="nt">source_hook</span><span class="p">:</span> <span class="kt">!Hook</span> <span class="l l-Scalar l-Scalar-Plain">ERP</span>
-      <span class="nt">snowflake_hook</span><span class="p">:</span> <span class="kt">!Hook</span> <span class="l l-Scalar l-Scalar-Plain">data_warehouse</span>
-      <span class="nt">quote_tables</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
-      <span class="nt">source_tables</span><span class="p">:</span>
-        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">sku_list</span>
-        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">sku_component</span>
-        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">build_master</span>
-        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">builds</span>
-        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">component_extended_desc</span>
+      <span class="nt">branches</span><span class="p">:</span>
+        <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">sku_component_erp</span>
+          <span class="nt">hook</span><span class="p">:</span> <span class="kt">!Hook</span> <span class="l l-Scalar l-Scalar-Plain">ERP</span>
+          <span class="nt">tables</span><span class="p">:</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">sku_list</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">sku_component</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">build_master</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">builds</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">component_extended_desc</span>
 
-  <span class="nt">get_transactions</span><span class="p">:</span>
-    <span class="nt">component</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.db_to_snowflake</span>
-    <span class="nt">args</span><span class="p">:</span>
-      <span class="nt">source_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">transactions_erp</span>
-      <span class="nt">source_hook</span><span class="p">:</span> <span class="kt">!Hook</span> <span class="l l-Scalar l-Scalar-Plain">trans_ERP</span>
-      <span class="nt">snowflake_hook</span><span class="p">:</span> <span class="kt">!Hook</span> <span class="l l-Scalar l-Scalar-Plain">data_warehouse</span>
-      <span class="nt">quote_tables</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
-      <span class="nt">source_tables</span><span class="p">:</span>
-        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">transactions</span>
-        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">client_master</span>
-        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">shipping</span>
-        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">supplers</span>
-        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">deliveries</span>
-        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">factory_productivity</span>
+        <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">transactions_erp</span>
+          <span class="nt">hook</span><span class="p">:</span> <span class="kt">!Hook</span> <span class="l l-Scalar l-Scalar-Plain">trans_ERP</span>
+          <span class="nt">tables</span><span class="p">:</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">transactions</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">client_master</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">shipping</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">supplers</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">deliveries</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">factory_productivity</span>
 
-  <span class="nt">get_financials_pnl</span><span class="p">:</span>
+        <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">finance_erp</span>
+          <span class="nt">hook</span><span class="p">:</span> <span class="kt">!Hook</span> <span class="l l-Scalar l-Scalar-Plain">fin_erp</span>
+          <span class="nt">tables</span><span class="p">:</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">payables</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">recievables</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">reconciliations</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">cost_to_serve</span>
+
+  <span class="nt">get_erp</span><span class="p">:</span>
     <span class="nt">component</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.db_to_snowflake</span>
     <span class="nt">args</span><span class="p">:</span>
-      <span class="nt">source_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">finance_erp</span>
-      <span class="nt">source_hook</span><span class="p">:</span> <span class="kt">!Hook</span> <span class="l l-Scalar l-Scalar-Plain">fin_erp</span>
+      <span class="nt">source_name</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$BATCH[&#39;name&#39;]</span>
+      <span class="nt">source_hook</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$BATCH[&#39;hook&#39;]</span>
       <span class="nt">snowflake_hook</span><span class="p">:</span> <span class="kt">!Hook</span> <span class="l l-Scalar l-Scalar-Plain">data_warehouse</span>
       <span class="nt">quote_tables</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
-      <span class="nt">source_tables</span><span class="p">:</span>
-        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">payables</span>
-        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">recievables</span>
-        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">reconciliations</span>
-        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">cost_to_serve</span>
+      <span class="nt">source_tables</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$BATCH[&#39;tables&#39;]</span>
 </code></pre></div>
                 
               
@@ -873,13 +923,13 @@
       
       
         
-        <a href="using-component-ui.html" class="md-footer__link md-footer__link--next" aria-label="Next: UI configurator" rel="next">
+        <a href="using-component-ui.html" class="md-footer__link md-footer__link--next" aria-label="Next: Component UI" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
                 Next
               </span>
-              UI configurator
+              Component UI
             </div>
           </div>
           <div class="md-footer__button md-icon">

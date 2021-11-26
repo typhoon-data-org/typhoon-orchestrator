@@ -14,7 +14,7 @@
     
     
       
-        <title>UI configurator - TYPHOON</title>
+        <title>Component UI - TYPHOON</title>
       
     
     
@@ -105,7 +105,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              UI configurator
+              Component UI
             
           </span>
         </div>
@@ -414,9 +414,81 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Component UI
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="using-component-ui.html" class="md-nav__link md-nav__link--active">
-        UI configurator
+        Component UI
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#included-components" class="md-nav__link">
+    Included components:
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-the-ui" class="md-nav__link">
+    Running the UI
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-the-ui" class="md-nav__link">
+    Using the UI
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#glob-compress" class="md-nav__link">
+    Glob &amp; Compress
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#filesystem-to-db" class="md-nav__link">
+    FileSystem to DB
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#db-to-filesystem" class="md-nav__link">
+    DB to FileSystem
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#db-to-snowlfake" class="md-nav__link">
+    DB to Snowlfake
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -429,6 +501,18 @@
     <li class="md-nav__item">
       <a href="creating-hooks.html" class="md-nav__link">
         New Hooks (connections)
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="typhoon-shell.html" class="md-nav__link">
+        Typhoon Shell
       </a>
     </li>
   
@@ -663,6 +747,63 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#included-components" class="md-nav__link">
+    Included components:
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-the-ui" class="md-nav__link">
+    Running the UI
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-the-ui" class="md-nav__link">
+    Using the UI
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#glob-compress" class="md-nav__link">
+    Glob &amp; Compress
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#filesystem-to-db" class="md-nav__link">
+    FileSystem to DB
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#db-to-filesystem" class="md-nav__link">
+    DB to FileSystem
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#db-to-snowlfake" class="md-nav__link">
+    DB to Snowlfake
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -675,15 +816,69 @@
                 
                 
                 <h1 id="using-the-component-builder-ui">Using the Component Builder UI</h1>
-<p>@TODO - here something short about what its for. </p>
-<p>@TODO - more extended demo and a few use cases</p>
+<figure>
+<p><img alt="Component UI" src="../img/component_ui.gif" width="800" />
+   </p>
+<figcaption>Team members can self-serve complex DAGs quickly.</figcaption>
+</figure>
+<h3 id="included-components">Included components:</h3>
 <ul>
-<li>
-<p>snowflake</p>
-</li>
-<li>
-<p>Pandas</p>
-</li>
+<li><strong>Glob &amp; Compress</strong>: To glob (e.g. '*.csv') files and compress them to gzip or zlib.  </li>
+<li><strong>FileSystem to DB</strong>: To read (glob) files on a schedule into an existing table. </li>
+<li><strong>DB to FileSystem</strong>: To write a table to a file pattern. </li>
+<li><strong>DB to Snowlfake</strong>: Multiple tables landed to snowflake ([idempotent][3] with added DHW staging metadata). Fully end-to-end production ready flow. </li>
+</ul>
+<h2 id="running-the-ui">Running the UI</h2>
+<p>In your terminal use 
+<div class="highlight"><pre><span></span><code>    typhoon webserver 
+</code></pre></div></p>
+<p>Resulting in a message:</p>
+<div class="highlight"><pre><span></span><code>  You can now view your Streamlit app in your browser.
+
+  Network URL: http://172.17.201.54:8501
+  External URL: http://31.13.188.150:8501
+</code></pre></div>
+<h2 id="using-the-ui">Using the UI</h2>
+<p>The UI uses the Typhoon API to configure a DAG that uses a particular Component.  </p>
+<p>This means the result of the UI use will be a normal DAG that has been built. You can then review and edit this DAG file as normal. </p>
+<p>Use the dynamic form (main screen) to enter the arguements (hooks etc) as you need. Note, you must add any connections to the connections.yml and add the connection to Typhoon using the CLI. </p>
+<p>Then you must click the <strong>'Create Dag'</strong> button to generate the file and build it. </p>
+<p>The success notice includes the path of the yaml DAG file generated for minor editing, testing and use. </p>
+<h2 id="glob-compress">Glob &amp; Compress</h2>
+<p>To glob (e.g. '*.csv') files and compress them to gzip or zlib.  </p>
+<ul>
+<li>source_hook:  FileSyestemHookInterface  (i.e. local file or S3 etc)</li>
+<li>destination_hook:  FileSyestemHookInterface</li>
+<li>pattern: str e.g. *.csv or a Jinja template that has been registered in Typhoon CLI</li>
+<li>destination_path: relative path to the hook root folder. </li>
+<li>compression: limited by menu to gzip | zlib. </li>
+</ul>
+<h2 id="filesystem-to-db">FileSystem to DB</h2>
+<p>To read (glob) files on a schedule into an existing table. </p>
+<ul>
+<li>filesystem_hook: FileSystemHook</li>
+<li>pattern: str e.g. *.csv </li>
+<li>db_hook: SQLAlchemyHook</li>
+<li>table_name: str</li>
+</ul>
+<h2 id="db-to-filesystem">DB to FileSystem</h2>
+<p>To write a single table to a file pattern. This is a whole table snapshot.  </p>
+<ul>
+<li>db_hook: DBApiHook</li>
+<li>table_name: str</li>
+<li>batch_size: int</li>
+<li>filesystem_hook: FileSystemHook</li>
+<li>path_template: str - very likely to be '{table}_{file_num}.csv' or similar.</li>
+<li>create_intermediate_dirs: true | false</li>
+</ul>
+<h2 id="db-to-snowlfake">DB to Snowlfake</h2>
+<p>Multiple tables landed to snowflake ([idempotent][3] with added DHW staging metadata). Fully end-to-end production ready flow. </p>
+<ul>
+<li>source_schema_name: str i.e. the db schema</li>
+<li>source_hook: DbApiHook</li>
+<li>snowflake_hook: SnowflakeHook</li>
+<li>source_tables: List[str]  - i.e. list all the tables in a Yaml string. </li>
+<li>quote_tables: true | false</li>
 </ul>
                 
               

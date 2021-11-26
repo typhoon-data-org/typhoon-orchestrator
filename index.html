@@ -330,8 +330,35 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#auto-completion" class="md-nav__link">
+    Auto-Completion
+  </a>
+  
+    <nav class="md-nav" aria-label="Auto-Completion">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#quick-start-with-vs-code" class="md-nav__link">
+    Quick start with VS Code.
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#component-ui" class="md-nav__link">
     Component UI
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shell-cli" class="md-nav__link">
+    Shell &amp; Cli
   </a>
   
 </li>
@@ -458,7 +485,7 @@
   
     <li class="md-nav__item">
       <a href="getting-started/using-component-ui.html" class="md-nav__link">
-        UI configurator
+        Component UI
       </a>
     </li>
   
@@ -471,6 +498,18 @@
     <li class="md-nav__item">
       <a href="getting-started/creating-hooks.html" class="md-nav__link">
         New Hooks (connections)
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="getting-started/typhoon-shell.html" class="md-nav__link">
+        Typhoon Shell
       </a>
     </li>
   
@@ -726,8 +765,35 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#auto-completion" class="md-nav__link">
+    Auto-Completion
+  </a>
+  
+    <nav class="md-nav" aria-label="Auto-Completion">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#quick-start-with-vs-code" class="md-nav__link">
+    Quick start with VS Code.
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#component-ui" class="md-nav__link">
     Component UI
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shell-cli" class="md-nav__link">
+    Shell &amp; Cli
   </a>
   
 </li>
@@ -782,10 +848,10 @@
 </div>
 </div>
 <div class="admonition note">
-<p class="admonition-title">[Installing Typhoon - quick start][1]</p>
+<p class="admonition-title"><a href="getting-started/installation.html">Installing Typhoon - quick start</a></p>
 </div>
 <div class="admonition note">
-<p class="admonition-title">[Hello World - 5 min walkthrough][2]</p>
+<p class="admonition-title"><a href="examples/hello-world.html">Hello World - 5 min walkthrough</a></p>
 </div>
 <h2 id="example-dag">Example DAG</h2>
 <div class="tabbed-set" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><label for="__tabbed_2_1">Typhoon DAG (YAML)</label><div class="tabbed-content">
@@ -807,25 +873,47 @@
 16
 17
 18
-19</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">exchange_rates</span>
-<span class="nt">schedule_interval</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">rate(1 day)</span>
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>  <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">favorite_authors</span>
+  <span class="nt">schedule_interval</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">rate(1 day)</span>
 
-<span class="nt">tasks</span><span class="p">:</span>
-  <span class="nt">exchange_rate</span><span class="p">:</span>
-    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">functions.exchange_rates_api.get_history</span>
-    <span class="nt">args</span><span class="p">:</span>
-      <span class="nt">start_at</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$DAG_CONTEXT.interval_start</span>
-      <span class="nt">end_at</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$DAG_CONTEXT.interval_end</span>
+  <span class="nt">tasks</span><span class="p">:</span>
+    <span class="nt">choose_favorites</span><span class="p">:</span>
+      <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.flow_control.branch</span>
+      <span class="nt">args</span><span class="p">:</span>
+        <span class="nt">branches</span><span class="p">:</span>
+          <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">J. K. Rowling</span>
+          <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">George R. R. Martin</span>
+          <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">James Clavell</span>
 
-  <span class="nt">write_csv</span><span class="p">:</span>
-    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">exchange_rate</span>
-    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.filesystem.write_data</span>
-    <span class="nt">args</span><span class="p">:</span>
-      <span class="nt">hook</span><span class="p">:</span> <span class="kt">!Hook</span> <span class="l l-Scalar l-Scalar-Plain">echo</span>
-      <span class="nt">data</span><span class="p">:</span> <span class="kt">!MultiStep</span>
-        <span class="p p-Indicator">-</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">transformations.xr.flatten_response($BATCH)</span>
-        <span class="p p-Indicator">-</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.data.dicts_to_csv($1, delimiter=&#39;|&#39;)</span>
-      <span class="nt">path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">xr_data.csv</span>
+    <span class="nt">get_author</span><span class="p">:</span>
+      <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">choose_favorites</span>
+      <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">functions.open_library_api.get_author</span>
+      <span class="nt">args</span><span class="p">:</span>
+        <span class="nt">author</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$BATCH</span>
+
+    <span class="nt">write_author_json</span><span class="p">:</span>
+      <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">get_author</span>
+      <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.filesystem.write_data</span>    
+      <span class="nt">args</span><span class="p">:</span>
+        <span class="nt">hook</span><span class="p">:</span> <span class="kt">!Hook</span> <span class="l l-Scalar l-Scalar-Plain">data_lake</span>
+        <span class="nt">data</span><span class="p">:</span>  <span class="kt">!MultiStep</span>
+          <span class="p p-Indicator">-</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$BATCH[&#39;docs&#39;]</span>
+          <span class="p p-Indicator">-</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.data.json_array_to_json_records($1)</span>
+        <span class="nt">path</span><span class="p">:</span> <span class="kt">!MultiStep</span> 
+          <span class="p p-Indicator">-</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$BATCH[&#39;docs&#39;][0][&#39;key&#39;]</span>
+          <span class="p p-Indicator">-</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">f&#39;/authors/{$1}.json&#39;</span>
+        <span class="nt">create_intermediate_dirs</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
 </code></pre></div>
 </td></tr></table>
 </div>
@@ -899,80 +987,104 @@
 <span class="kn">from</span> <span class="nn">airflow.hooks.base_hook</span> <span class="kn">import</span> <span class="n">BaseHook</span>
 <span class="kn">from</span> <span class="nn">airflow.operators.python_operator</span> <span class="kn">import</span> <span class="n">PythonOperator</span>
 
-<span class="kn">import</span> <span class="nn">transformations.xr</span>
-<span class="kn">from</span> <span class="nn">functions</span> <span class="kn">import</span> <span class="n">exchange_rates_api</span>
+<span class="kn">from</span> <span class="nn">functions</span> <span class="kn">import</span> <span class="n">open_library_api</span>
 <span class="kn">from</span> <span class="nn">out.new_people.typhoon.contrib.hooks.filesystem_hooks</span> <span class="kn">import</span> <span class="n">LocalStorageHook</span>
 
-<span class="k">def</span> <span class="nf">exchange_rate</span><span class="p">(</span><span class="n">base</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">context</span><span class="p">):</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">exchange_rates_api</span><span class="o">.</span><span class="n">get_history</span><span class="p">(</span>
-        <span class="n">start_at</span><span class="o">=</span><span class="n">context</span><span class="p">[</span><span class="s1">&#39;execution_date&#39;</span><span class="p">],</span>
-        <span class="n">end_at</span><span class="o">=</span><span class="n">context</span><span class="p">[</span><span class="s1">&#39;next_execution_date&#39;</span><span class="p">],</span>
-        <span class="n">base</span><span class="o">=</span><span class="n">base</span><span class="p">,</span>
+
+<span class="k">def</span> <span class="nf">get_author</span><span class="p">(</span><span class="n">author</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">context</span><span class="p">):</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">open_library_api</span><span class="o">.</span><span class="n">get_author</span><span class="p">(</span>
+        <span class="n">requested_author</span><span class="o">=</span><span class="n">author</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">context</span><span class="p">[</span><span class="s1">&#39;ti&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">xcom_push</span><span class="p">(</span><span class="s1">&#39;result&#39;</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">result</span><span class="p">))</span>
 
-<span class="k">def</span> <span class="nf">write_csv</span><span class="p">(</span><span class="n">source_task_id</span><span class="p">,</span> <span class="o">**</span><span class="n">context</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">write_author_json</span><span class="p">(</span><span class="n">source_task_id</span><span class="p">,</span> <span class="o">**</span><span class="n">context</span><span class="p">):</span>
     <span class="n">conn_params</span> <span class="o">=</span> <span class="n">BaseHook</span><span class="o">.</span><span class="n">get_connection</span><span class="p">(</span><span class="s1">&#39;data_lake&#39;</span><span class="p">)</span>
     <span class="n">hook</span> <span class="o">=</span> <span class="n">LocalStorageHook</span><span class="p">(</span><span class="n">conn_params</span><span class="p">)</span>       <span class="c1"># Note how we&#39;re hardcoding the class</span>
+    <span class="n">create_intermediate_dirs</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="n">batches</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s1">&#39;ti&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">xcom_pull</span><span class="p">(</span><span class="n">task_ids</span><span class="o">=</span><span class="n">source_task_id</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;result&#39;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">batches</span><span class="p">:</span>
-        <span class="n">flattened</span> <span class="o">=</span> <span class="n">transformations</span><span class="o">.</span><span class="n">xr</span><span class="o">.</span><span class="n">flatten_response</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">typhoon_transformations</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">dicts_to_csv</span><span class="p">(</span><span class="n">flattened</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;|&#39;</span><span class="p">)</span>
-        <span class="n">path</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s1">&#39;ds&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;_xr_data.csv&#39;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">typhoon_transformations</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">json_array_to_json_records</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="s1">&#39;docs&#39;</span><span class="p">])</span>
+        <span class="n">_key</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="s1">&#39;docs&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;key&#39;</span><span class="p">]</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;/authors/</span><span class="si">{</span><span class="n">_key</span><span class="si">}</span><span class="s1">.json&#39;</span>
         <span class="n">typhoon_functions</span><span class="o">.</span><span class="n">filesystem</span><span class="o">.</span><span class="n">write_data</span><span class="p">(</span>
             <span class="n">hook</span><span class="o">=</span><span class="n">hook</span><span class="p">,</span>
             <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
-            <span class="n">path</span><span class="o">=</span><span class="n">path</span>
+            <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
+            <span class="n">create_intermediate_dirs</span><span class="o">=</span><span class="n">create_intermediate_dirs</span><span class="p">,</span>
         <span class="p">)</span>
 
 <span class="k">with</span> <span class="n">DAG</span><span class="p">(</span>
-    <span class="n">dag_id</span><span class="o">=</span><span class="s1">&#39;exchange_rates&#39;</span><span class="p">,</span>
+    <span class="n">dag_id</span><span class="o">=</span><span class="s1">&#39;favorite_authors&#39;</span><span class="p">,</span>
     <span class="n">default_args</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;owner&#39;</span><span class="p">:</span> <span class="s1">&#39;typhoon&#39;</span><span class="p">},</span>
     <span class="n">schedule_interval</span><span class="o">=</span><span class="s1">&#39;*/1 * * * *&#39;</span><span class="p">,</span>
     <span class="n">start_date</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2021</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">21</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
 <span class="p">)</span> <span class="k">as</span> <span class="n">dag</span><span class="p">:</span>
-    <span class="k">for</span> <span class="n">base</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;EUR&#39;</span><span class="p">,</span> <span class="s1">&#39;USD&#39;</span><span class="p">,</span> <span class="s1">&#39;AUD&#39;</span><span class="p">]:</span>
-        <span class="n">exchange_rate_task_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;exchange_rate_</span><span class="si">{</span><span class="n">base</span><span class="si">}</span><span class="s1">&#39;</span>
-        <span class="n">exchange_rate_task</span> <span class="o">=</span> <span class="n">PythonOperator</span><span class="p">(</span>
-            <span class="n">task_id</span><span class="o">=</span><span class="n">exchange_rate_task_id</span><span class="p">,</span>
-            <span class="n">python_callable</span><span class="o">=</span><span class="n">exchange_rate</span><span class="p">,</span>
+    <span class="k">for</span> <span class="n">author</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;J. K. Rowling&#39;</span><span class="p">,</span> <span class="s1">&#39;George R. R. Martin&#39;</span><span class="p">,</span> <span class="s1">&#39;James Clavell&#39;</span><span class="p">]:</span>
+        <span class="n">get_author_task_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;get_author_</span><span class="si">{</span><span class="n">author</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="n">get_author_task</span> <span class="o">=</span> <span class="n">PythonOperator</span><span class="p">(</span>
+            <span class="n">task_id</span><span class="o">=</span><span class="n">get_author_task_id</span><span class="p">,</span>
+            <span class="n">python_callable</span><span class="o">=</span><span class="n">get_author</span><span class="p">,</span>
             <span class="n">op_kwargs</span><span class="o">=</span><span class="p">{</span>
-                <span class="s1">&#39;base&#39;</span><span class="p">:</span> <span class="n">base</span>
+                <span class="s1">&#39;author&#39;</span><span class="p">:</span> <span class="n">author</span><span class="p">,</span>
             <span class="p">},</span>
             <span class="n">provide_context</span><span class="o">=</span><span class="kc">True</span>
         <span class="p">)</span>
-        <span class="n">dag</span> <span class="o">&gt;&gt;</span> <span class="n">exchange_rate_task</span>
+        <span class="n">dag</span> <span class="o">&gt;&gt;</span> <span class="n">get_author_task</span>
 
-        <span class="n">write_csv_task</span> <span class="o">=</span> <span class="n">PythonOperator</span><span class="p">(</span>
-            <span class="n">task_id</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;write_csv_</span><span class="si">{</span><span class="n">base</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
-            <span class="n">python_callable</span><span class="o">=</span><span class="n">write_csv</span><span class="p">,</span>
+        <span class="n">write_author_json</span> <span class="o">=</span> <span class="n">PythonOperator</span><span class="p">(</span>
+            <span class="n">task_id</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;write_author_json_</span><span class="si">{</span><span class="n">author</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
+            <span class="n">python_callable</span><span class="o">=</span><span class="n">write_author_json</span><span class="p">,</span>
             <span class="n">op_kwargs</span><span class="o">=</span><span class="p">{</span>
-                <span class="s1">&#39;source_task_id&#39;</span><span class="p">:</span> <span class="n">exchange_rate_task_id</span>
+                <span class="s1">&#39;source_task_id&#39;</span><span class="p">:</span> <span class="n">get_author_task_id</span><span class="p">,</span>
             <span class="p">},</span>
             <span class="n">provide_context</span><span class="o">=</span><span class="kc">True</span>
         <span class="p">)</span>
-        <span class="n">exchange_rate_task</span> <span class="o">&gt;&gt;</span> <span class="n">write_csv_task</span>
+        <span class="n">get_author_task</span> <span class="o">&gt;&gt;</span> <span class="n">write_author_json</span>
 </code></pre></div>
 </td></tr></table>
 </div>
 </div>
-<p>Above is an example of two tasks:</p>
-<ol>
-<li>Extracting the exchange rates from an API call function for a 1-day range</li>
-<li>Writing CSV to a filesystem. This example actually echos it;  to put it to S3 change the Hook connection name. Within the edge between task 1 and 2 it transforms the data:<ol>
-<li>It flattens the data </li>
-<li>Then transforms it from a dict to a pipe delimited CSV.</li>
-</ol>
-</li>
-</ol>
+<figure>
+<p><img alt="Favorite Authors" src="img/open_library_example_dag.png" width="400" />
+   </p>
+<figcaption>Getting the works of my favorite authors from Open Library API</figcaption>
+</figure>
 <h2 id="using-with-airflow">Using with Airflow</h2>
 <p>Building the above DAG using <code>typhoon dag build --all</code>. </p>
 <p>Airflow UI will then show:<br />
 <img src="https://user-images.githubusercontent.com/2353804/112546625-f1cad480-8db9-11eb-8dfb-11e2c8d18a48.jpeg" width="300"></p>
+<h2 id="auto-completion">Auto-Completion</h2>
+<figure>
+<p><img alt="Code Completion" src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/auto-complete.gif" width="800" />
+   </p>
+<figcaption>Composing DAGs is really fast in VS Code with code completion.</figcaption>
+</figure>
+<h3 id="quick-start-with-vs-code">Quick start with VS Code.</h3>
+<p>If you want the dag schema and the component schema to be generated after every change to your code (functions, transformations and connections) you need to:</p>
+<ul>
+<li>
+<p>install the extension <code>Run on Save</code> by emeraldwalk and edit the path to your typhoon executable in <code>generate_schemas.sh</code>. You can find out the path by running the following command in the terminal: <code>which typhoon</code>.</p>
+</li>
+<li>
+<p>install the extension <code>YAML</code> by redhat.</p>
+</li>
+</ul>
 <h2 id="component-ui">Component UI</h2>
-<p>Give your team autonomy by sharing templated flows they can configure.</p>
-<p><img alt="Component UI" src="img/component_ui.gif" /></p>
+<p>The Component UI is a dynamic UI (Streamlit app) based on a Component DAG. This means you can make a component and your team can then generate specific DAGs from this template. </p>
+<p>e.g. DB -&gt; S3 -&gt; Snowflake.  They can then use this for any relational DB to export tables to Snowflake. </p>
+<figure>
+<p><img alt="Component UI" src="img/component_ui.gif" width="800" />
+   </p>
+<figcaption>Give your team autonomy by sharing templated flows they can configure.</figcaption>
+</figure>
+<h2 id="shell-cli">Shell &amp; Cli</h2>
+<p>The Interactive Shell is really useful for running tasks and understanding the data structure at each point. Here is a short demo of running the get_author task and seeing the data it returns which can then be explored.</p>
+<figure>
+<p><img alt="Shell" src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/shell_example.gif" width="800" />
+   </p>
+<figcaption>Inspired by others; instantly familiar.</figcaption>
+</figure>
                 
               
               
