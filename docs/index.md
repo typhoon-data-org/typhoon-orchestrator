@@ -87,67 +87,68 @@
 
     ```python linenums="1"
     import datetime
-    
+
     import typhoon.contrib.functions as typhoon_functions   # for a fair comparison
     import typhoon.contrib.transformations as typhoon_transformations
     from airflow import DAG
     from airflow.hooks.base_hook import BaseHook
     from airflow.operators.python_operator import PythonOperator
     
-    import transformations.xr
-    from functions import exchange_rates_api
+    from functions import open_library_api
     from out.new_people.typhoon.contrib.hooks.filesystem_hooks import LocalStorageHook
     
-    def exchange_rate(base: str, **context):
-        result = exchange_rates_api.get_history(
-            start_at=context['execution_date'],
-            end_at=context['next_execution_date'],
-            base=base,
+    
+    def get_author(author: str, **context):
+        result = open_library_api.get_author(
+            requested_author=author,
         )
         context['ti'].xcom_push('result', list(result))
     
-    def write_csv(source_task_id, **context):
+    def write_author_json(source_task_id, **context):
         conn_params = BaseHook.get_connection('data_lake')
         hook = LocalStorageHook(conn_params)       # Note how we're hardcoding the class
-        
+        create_intermediate_dirs = True
+    
         batches = context['ti'].xcom_pull(task_ids=source_task_id, key='result')
         for batch in batches:
-            flattened = transformations.xr.flatten_response(response)
-            data = typhoon_transformations.data.dicts_to_csv(flattened, delimiter='|')
-            path = context['ds'] + '_xr_data.csv'
+            data = typhoon_transformations.data.json_array_to_json_records(batch['docs'])
+            _key = batch['docs'][0]['key']
+            path = f'/authors/{_key}.json'
             typhoon_functions.filesystem.write_data(
                 hook=hook,
                 data=data,
-                path=path
+                path=path,
+                create_intermediate_dirs=create_intermediate_dirs,
             )
     
     with DAG(
-        dag_id='exchange_rates',
+        dag_id='favorite_authors',
         default_args={'owner': 'typhoon'},
         schedule_interval='*/1 * * * *',
         start_date=datetime.datetime(2021, 3, 25, 21, 10)
     ) as dag:
-        for base in ['EUR', 'USD', 'AUD']:
-            exchange_rate_task_id = f'exchange_rate_{base}'
-            exchange_rate_task = PythonOperator(
-                task_id=exchange_rate_task_id,
-                python_callable=exchange_rate,
+        for author in ['J. K. Rowling', 'George R. R. Martin', 'James Clavell']:
+            get_author_task_id = f'get_author_{author}'
+            get_author_task = PythonOperator(
+                task_id=get_author_task_id,
+                python_callable=get_author,
                 op_kwargs={
-                    'base': base
+                    'author': author,
                 },
                 provide_context=True
             )
-            dag >> exchange_rate_task
+            dag >> get_author_task
     
-            write_csv_task = PythonOperator(
-                task_id=f'write_csv_{base}',
-                python_callable=write_csv,
+            write_author_json = PythonOperator(
+                task_id=f'write_author_json_{author}',
+                python_callable=write_author_json,
                 op_kwargs={
-                    'source_task_id': exchange_rate_task_id
+                    'source_task_id': get_author_task_id,
                 },
                 provide_context=True
             )
-            exchange_rate_task >> write_csv_task
+            get_author_task >> write_author_json
+
     ```
 
 <figure markdown> 
@@ -162,8 +163,40 @@ Building the above DAG using `typhoon dag build --all`.
 Airflow UI will then show:  
 <img src="https://user-images.githubusercontent.com/2353804/112546625-f1cad480-8db9-11eb-8dfb-11e2c8d18a48.jpeg" width="300">
 
+## Auto-Completion 
+
+<figure markdown> 
+   ![Code Completion](https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/auto-complete.gif){ width="800" }
+   <figcaption>Composing DAGs is really fast in VS Code with code completion.</figcaption>
+</figure>
+
+### Quick start with VS Code.
+
+If you want the dag schema and the component schema to be generated after every change to your code (functions, transformations and connections) you need to:
+
+- install the extension `Run on Save` by emeraldwalk and edit the path to your typhoon executable in `generate_schemas.sh`. You can find out the path by running the following command in the terminal: `which typhoon`.
+
+- install the extension `YAML` by redhat.
+
 ## Component UI
 
-Give your team autonomy by sharing templated flows they can configure.
+The Component UI is a dynamic UI (Streamlit app) based on a Component DAG. This means you can make a component and your team can then generate specific DAGs from this template. 
 
-![Component UI](img/component_ui.gif)
+e.g. DB -> S3 -> Snowflake.  They can then use this for any relational DB to export tables to Snowflake. 
+
+<figure markdown> 
+   ![Component UI](img/component_ui.gif){ width="800" }
+   <figcaption>Give your team autonomy by sharing templated flows they can configure.</figcaption>
+</figure>
+
+
+## Shell & Cli
+
+The Interactive Shell is really useful for running tasks and understanding the data structure at each point. Here is a short demo of running the get_author task and seeing the data it returns which can then be explored.
+
+<figure markdown> 
+   ![Shell](https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/shell_example.gif){ width="800" }
+   <figcaption>Inspired by others; instantly familiar.</figcaption>
+</figure>
+
+

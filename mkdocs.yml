@@ -41,6 +41,7 @@ nav:
     - Using Components: 'getting-started/using-components.md'
     - Component UI: 'getting-started/using-component-ui.md'
     - New Hooks (connections): 'getting-started/creating-hooks.md'
+    - Typhoon Shell: 'getting-started/typhoon-shell.md'
   - Example Walkthroughs:
       - Hello World: 'examples/hello-world.md'
       - MySql to Snowflake: 'examples/mysql-to-snowflake.md'

@@ -8,7 +8,6 @@ In-line and Multi-line are described in depth in [!Py and !Multistep][1].
 
 Similarly to functions, transformations can be included in the project or referenced from the contributed / built-in repos. 
 
-@ TODO Check this
 - `typhoon.transformation_file.transformation_name` for built-in / contrib transformations.
 - `transformations.my_transformation_file.transformation_name` for accessing your project transformations. 
 
