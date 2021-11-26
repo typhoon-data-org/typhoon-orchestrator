@@ -14,7 +14,7 @@ tasks:
     input: choose_favorites
     function: functions.open_library_api.get_author
     args:
-      author: !Py $BATCH
+      requested_author: !Py $BATCH
 
   write_author_json:
     input: get_author
@@ -30,3 +30,12 @@ tasks:
       create_intermediate_dirs: True
 
 
+tests:
+  write_author_json:
+    batch: {"docs": [{"key": "mykey"}]}
+    batch_num: 1
+    interval_start: 2021-02-03T01:01:01
+    interval_end: 2021-02-03T02:01:01
+    expected:
+      data: WriteDataResponse(metadata=None, path='/authors/mykey.json')
+    
