@@ -5,7 +5,7 @@ args:
   destination_hook: FileSyestemHookInterface
   pattern: str
   destination_path: jinja2.Template
-  compression: Literal['gzip', 'zlib']
+  compression: Literal['gzip'] | Literal['zlib']
 
 tasks:
   glob_files:

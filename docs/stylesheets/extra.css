@@ -1,0 +1,38 @@
+[data-md-color-scheme="typhoon"] {
+  --md-primary-fg-color:        #008066;
+  --md-primary-fg-color--light: #67c5b2;
+  --md-primary-fg-color--dark:  #0a5344;
+}
+
+/*.md-header__topic {*/
+/*    font-family: Comfortaa;*/
+/*}*/
+
+
+.md-header__topic {
+    font-family: Comfortaa;
+    content: url('../img/typhoon_logo_small_flat_white.png') !important;
+    padding-top: 12px;
+    vertical-align: bottom;
+    height: 100%;
+    padding-bottom: 12px;
+}
+
+.md-header__button.md-logo {
+    display: none;
+}
+
+.header_sidebyside{
+    display: inline-block;
+    vertical-align: top;
+    vertical-align: text-top;
+    text-align: center;
+    padding: 20px;
+    position: relative;
+    top: -20px;
+    margin-bottom: -40px;
+}
+
+h1:empty {
+  display: none;
+}
