@@ -1,7 +1,7 @@
 import re
 from copy import deepcopy
 from types import SimpleNamespace
-from typing import Dict, List, Union, Any
+from typing import Dict, List, Union, Any, Optional
 
 from pydantic import BaseModel, Field
 
@@ -19,6 +19,7 @@ def config_arg_name(component_name: str, arg: str) -> str:
 class ComponentArgument(BaseModel):
     type: str = Field(..., description='Type of your argument')
     default: Any = Field(..., description='Default value for your argument')
+    description: Optional[str] = Field(None, description='Documentation fot the argument')
 
 
 class Component(BaseModel):

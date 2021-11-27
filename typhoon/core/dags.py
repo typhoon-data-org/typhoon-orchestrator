@@ -1,4 +1,5 @@
 import hashlib
+import importlib
 import itertools
 import os
 import re
@@ -16,6 +17,7 @@ from pydantic import BaseModel, validator, Field, root_validator
 
 from typhoon.core.cron_utils import aws_schedule_to_cron
 from typhoon.core.settings import Settings
+from typhoon.introspection.introspect_extensions import get_typhoon_extensions_info
 
 IDENTIFIER_REGEX = r'\w+'
 Identifier = Field(..., regex=r'\w+')
@@ -259,6 +261,16 @@ class TestCase(BaseModel):
             result['pd'] = pd
         except ImportError:
             print('Warning: could not import pandas. Run pip install pandas if you want to use dataframes')
+        result['SimpleNamespace'] = SimpleNamespace
+
+        # Import functions
+        from typhoon.core.transpiler.transpiler_helpers import extract_imports, typhoon_import_transformation_as
+
+        extensions_info = get_typhoon_extensions_info()
+        for k, v in extensions_info['transformations'].items():
+            import_from = importlib.import_module(v)
+            import_as = typhoon_import_transformation_as(k)
+            result[import_as] = import_from
         return result
 
     @property
@@ -487,6 +499,15 @@ class TaskDefinition(BaseModel):
         custom_locals['batch'] = batch
         custom_locals['batch_num'] = batch_num
         custom_locals['dag_context'] = dag_context
+
+        # Import functions
+        from typhoon.core.transpiler.transpiler_helpers import extract_imports, typhoon_import_transformation_as
+
+        extensions_info = get_typhoon_extensions_info()
+        for k, v in extensions_info['transformations'].items():
+            import_from = importlib.import_module(v)
+            import_as = typhoon_import_transformation_as(k)
+            custom_locals[import_as] = import_from
 
         os.environ['TYPHOON_ENV'] = 'dev'
 

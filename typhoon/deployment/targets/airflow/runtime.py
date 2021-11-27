@@ -77,6 +77,8 @@ def airflow_task_id(task: TaskInterface, branch: str = '', sync_destination_task
         parent_component = parent_component.args_class.parent_component
 
     if branch:
+        for c in ' #$%&/@"\'.,<>|*?!':
+            branch = branch.replace(c, '_')
         task_id += get_branch_name(branch) + '_'
 
     task_id += task.__dict__.get('original_task_id', task.task_id)

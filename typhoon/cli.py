@@ -363,13 +363,7 @@ def cli_run_dag(remote: Optional[str], dag_name: str, execution_date: Optional[d
             print(tabulate(table_body, header, 'plain'), file=sys.stderr)
             sys.exit(-1)
 
-        dag_files = build_all_dags(remote=None, matching=dag_name)
-        assert len(dag_files) == 1, f'Expected to find exactly one dag file matching {dag_name}'
-        dag_file = dag_files[0]
-        # Sets the env variable for metadata store to the sqlite in CWD if not set, because the CWD will be different at
-        # runtime
-        # Settings.deploy_target = 'typhoon'
-        # Settings.metadata_db_url = Settings.metadata_db_url
+        build_all_dags(remote=None, matching=dag_name)
         run_local_dag(dag_name, execution_date)
     else:
         # TODO: Run lambda function
