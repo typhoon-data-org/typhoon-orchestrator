@@ -7,7 +7,7 @@ from typhoon.core.dags import DAGDefinitionV2, TaskDefinition
 from typhoon.core.glue import load_component
 from typhoon.core.templated import Templated
 from typhoon.core.transpiler.transpiler_helpers import extract_dependencies, camel_case, render_dependencies, \
-    is_component_task, render_args
+    is_component_task, render_args, extract_imports, ImportsTemplate
 
 
 @dataclass
@@ -27,6 +27,8 @@ class DagFile(Templated):
     {% for task_name, task in component_tasks.items() %}
     from components.{{ task.component.split('.')[-1] }} import {{ task.component.split('.')[-1] | camel_case }}Component
     {% endfor %}
+    
+    {{ render_imports }}
     
     
     {% for task_name, task in component_tasks.items() %}
@@ -130,6 +132,12 @@ class DagFile(Templated):
     debug_mode: bool = False
     _filters = [camel_case, render_dependencies, list, is_component_task, render_args]
     _dependencies = None
+
+    @property
+    def render_imports(self) -> str:
+        imports = extract_imports(self.dag.tasks, task_kind='components')
+        print('****', imports, ImportsTemplate(imports).render())
+        return ImportsTemplate(imports).render()
 
     @property
     def dependencies(self) -> List[Tuple[str, str]]:

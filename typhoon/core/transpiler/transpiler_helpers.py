@@ -171,9 +171,11 @@ class ImportDefinition(NamedTuple):
     submodule: str
 
 
-def extract_imports(tasks: Dict[str, TaskDefinition]) -> List[ImportDefinition]:
+def extract_imports(tasks: Dict[str, TaskDefinition], task_kind: Literal['functions', 'components'] = 'functions') -> List[ImportDefinition]:
     imports = set()
     for task_name, task in tasks.items():
+        if task_kind == 'functions' and not task.function or task_kind == 'components' and not task.component:
+            continue
         if task.function:
             parts = task.function.split('.')
             module, submodule, _ = parts
