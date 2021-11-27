@@ -300,7 +300,11 @@ def build_dags(remote: Optional[str], dag_name: Optional[str], all_: bool):
         if Settings.deploy_target == 'typhoon':
             build_all_dags(remote=remote)
         else:
-            from typhoon.deployment.targets.airflow.airflow_build import build_all_dags_airflow
+            try:
+                from typhoon.deployment.targets.airflow.airflow_build import build_all_dags_airflow
+            except ModuleNotFoundError:
+                print('ERROR: Airflow is not installed. Try "pip install apache-airflow~=1.10"')
+                sys.exit(-1)
             build_all_dags_airflow(remote=remote)
     else:
         dag_errors = get_dag_errors().get(dag_name)
