@@ -1,128 +1,191 @@
-# Typhoon Orchestrator
 
-![Alt text](docs/img/typhoon_temp_logo.png "Typhoon Orchestrator")
+<p align="center">
+<br>
+<a href="https://typhoon.talkyard.net/">Forum :wave:</a> |
+ <a href="https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/installation.html#with-pip">Installation :floppy_disk:</a> |
+ <a href="https://typhoon-data-org.github.io/typhoon-orchestrator/index.html">Documentation :notebook: </a>
+<br>️
+<br>
+<br>️
+<img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/typhoon_logo_large_tagline.png" >
+</p>
+<br>
+<p align="center"><b>Elegant YAML DAGS for Data Pipelines</br>Deploy to your existing Airflow.</b></p>
+<br>️
+<p align="center">
+@todo Badges here
+</p>
 
-**Typhoon** is a task orchestrator (like Apache Airflow). 
+<p align="center">
+<br> 
+<a href="https://github.com/typhoon-data-org/typhoon-orchestrator/">Why Typhoon?</a> |  
+ <a href="https://github.com/typhoon-data-org/typhoon-orchestrator/">Key Features</a> |
+ <a href="https://github.com/typhoon-data-org/typhoon-orchestrator/">Example YAML</a> |
+ <a href="https://github.com/typhoon-data-org/typhoon-orchestrator/">Installation</a>
+<br>️
 
-Use simple YAML code to easily build **asynchronous** data pipelines for your ELT workflows. 
 
-Save effort by building your data pipelines in Typhoon and then **deploy them to run on Airflow.** This is risk-free with no-lock-in. 
+<hr>
 
-This project is in **pre-alpha** and subject to fast changes
+# Why Typhoon (+ Airflow)?
 
-# Why Typhoon for data flows?
+Airflow is great!
 
-- Elegant YAML and Components - low-code, easy to pick up.
-- Compile to testable Python - robust flows.
-- Functions combine like Lego - effortless to extend for more sources and connections.
-- Compose *Components* - reduce complex tasks (e.g. CSV→S3→Snowflake) to 1 task.
-- Data flows between tasks - intuitive and easy to build tasks.
-- Flexible deployment options:
-    - **deploy to Airflow** - large reduction in effort, without breaking existing production.
-    - deploy to AWS Lambda - **completely serverless**
+***Typhoon lets you write Airflow DAGS faster*** :rocket::
+  
+    **Workflow**: Typhoon YAML DAG --> Typhoon build --> Airflow DAG 
 
-```yaml
-name: exchange_rates
-schedule_interval: rate(1 day)
+Simplicity and re-usability; a toolkit designed to be loved by Data Engineers :heart:
 
-tasks:
-  exchange_rate:
-    function: functions.exchange_rates_api.get_history
-    args:
-      start_at: !Py $DAG_CONTEXT.interval_start
-      end_at: !Py $DAG_CONTEXT.interval_end
+# Key features
+<table style="border: none" cellspacing="0" cellpadding="0">
+<tr>
+<td width="50%">
 
-  write_csv:
-    input: exchange_rate
-    function: typhoon.filesystem.write_data
-    args:
-      hook: !Hook echo
-      data: !MultiStep
-        - !Py transformations.xr.flatten_response($BATCH)
-        - !Py typhoon.data.dicts_to_csv($1, delimiter='|')
-      path: xr_data.csv
+**Elegant** -  YAML; low-code and easy to learn.
+
+**Code-completion** - Fast to compose. (VS Code recommended).
+
+**Data sharing** -  data flows between tasks making it super intuitive.
+
+**Composability** -  Functions and connections combine like Lego.
+
+
+</td>
+<td><img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/auto-complete.gif" alt="UI Component" width="400px" align="right" style="max-width: 100%;">
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Components** - reduce complex tasks to 1 re-usable tasks
+
+Packaged examples:
+- Glob & Compress  
+- FileSystem to DB
+- DB to FileSystem
+- DB to Snowlfake
+
+**UI**: Share pre-built components (data pipelines) with your team :raised_hands:
+
+</td>
+<td><img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/component_ui.gif" alt="UI Component" width="400px" align="right" style="max-width: 100%;">
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Rich CLI & Shell**: Inspired by others; instantly familiar.
+
+**Testable Tasks** - automate DAG task tests.
+
+**Testable Python** - test functions or full DAGs with PyTest.
+
+</td>
+<td><img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/shell_example.gif" alt="UI Component" width="400px" align="right" style="max-width: 100%;">
+</td>
+</tr>
+
+</table>
+
+
+# Example YAML DAG
+    ```yaml linenums="1"
+      name: favorite_authors
+      schedule_interval: rate(1 day)
+      
+      tasks:
+        choose_favorites:
+          function: typhoon.flow_control.branch
+          args:
+            branches:
+              - J. K. Rowling
+              - George R. R. Martin
+              - James Clavell
+      
+        get_author:
+          input: choose_favorites
+          function: functions.open_library_api.get_author
+          args:
+            author: !Py $BATCH
+      
+        write_author_json:
+          input: get_author
+          function: typhoon.filesystem.write_data    
+          args:
+            hook: !Hook data_lake
+            data:  !MultiStep
+              - !Py $BATCH['docs']
+              - !Py typhoon.data.json_array_to_json_records($1)
+            path: !MultiStep 
+              - !Py $BATCH['docs'][0]['key']
+              - !Py f'/authors/{$1}.json'
+            create_intermediate_dirs: True
+
+    ```
+
+
+<figure markdown> 
+   ![Favorite Authors](img/open_library_example_dag.png){ width="400" }
+   <figcaption>Getting the works of my favorite authors from Open Library API</figcaption>
+</figure>
+
+
+# Installation
+
+See [documentation](https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/installation.html) for detailed guidance on installation and walkthroughs. 
+
+## with pip (typhoon standalone)
+
+Install typhoon: 
+```bash
+pip install typhoon-orchestrator[dev]
+```
+Optionally, install and activate virtualenv.
+
+Then: 
+```bash 
+typhoon init hello_world
+cd hello_world
+typhoon status
 ```
 
-Above is an example of two tasks:
+This will create a directory named hello_world that serves as an example project. As in git, when we cd into the directory it will detect that it's a Typhoon project and consider that directory the base directory for Typhoon (TYPHOON_HOME).
 
-1. Extracting the exchange rates from an API call function for a 1-day range
-2. Writing CSV to a filesystem. This example actually echos it;  to put it to S3 change the Hook connection name. Within the edge between task 1 and 2 it transforms the data:
-    1. It flattens the data 
-    2. Then transforms it from a dict to a pipe delimited CSV.
+## With Docker and Airflow
 
-The syntax and functionality is covered fully in the tutorials 1 & 2 below.
+To deploy Typhoon with Airflow you need: 
 
-# Tutorials & Examples included
+- Docker / Docker Desktop (You must use WSL2 on Windows) 
+- Download the [docker-compose.yaml][1]  (or use curl below)
+- Create a directory for your TYPHOON_PROJECTS_HOME
 
-- hello_world.yml  -  list of lists → to CSV     [**(Tutorial Part 1)**](https://www.notion.so/Part-1-Typhoon-HelloWorld-6d4b6a6e778e4906ac7e502dce69fd13)
-- dwh_flow  -  Production ready MySQL  tables → Snowflake DWH pattern)    [(Tutorial Part 2)](https://www.notion.so/Part-2-MySQL-to-Snowflake-8cfaeac1f5334138b93a981d82c9532f)
-- exchange_rates.yml  -   (above) API → CSV on S3
-- telegram_scraper.yml  -  telegram group → CSV
-
-# Getting started
-
-## Docker
-
+The following sets up your project directory and gets the docker-compose.yml:
 ```bash
-docker run -it biellls/typhoon bash
-
-# Running isolated commands
-docker run --rm biellls/typhoon typhoon status
-```
-
--- @TODO UPDATE this 
-
-## Local installation
-
-```bash
-# Install and activate virtualenv
-python3 -m venv typhoon_venv
-./typhoon_venv/bin/activate
-
-# Clone and install from source
-git clone https://github.com/biellls/typhoon-orchestrator.git
-cd typhoon-orchestrator
-python -m pip install ./typhoon-orchestrator[dev]
-# Activate bash complete
-eval "$(_TYPHOON_COMPLETE=source typhoon)"
-
-# Create a typhoon project
-typhoon init typhoon_project
-cd typhoon_project
-```
-
--- @TODO UPDATE this 
-
-### Testing with Airflow
-
-```bash
-git clone https://github.com/biellls/typhoon-orchestrator.git
-cd typhoon-orchestrator
-docker build -f Dockerfile.af -t typhoon-af .
-
-TYPHOON_PROJECTS_HOME = "~/typhoon_projects" # Or any other path you prefer
+TYPHOON_PROJECTS_HOME="/tmp/typhoon_projects" # Or any other path you prefer
 mkdir -p $TYPHOON_PROJECTS_HOME/typhoon_airflow_test
 cd $TYPHOON_PROJECTS_HOME/typhoon_airflow_test
+mkdir src
+curl -LfO https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/master/docker-compose-af.yml
 
-typhoon init my_typhoon_project --deploy-target airflow --template airflow_docker
-cd my_typhoon_project
-docker compose up -d
-docker exec -it typhoon-af bash   # Then you're in the typhoon home. Try typhoon status
-
+docker compose -f docker-compose-af.yml up -d  
+docker exec -it typhoon-af bash   # Then you're in the typhoon home.
+ 
+airflow initdb # !! To initiate Airflow DB !!
+typhoon status # To see status of dags & connections
+typhoon dag build --all # Build the example DAGS
+exit # exits docker 
+docker restart typhoon-af # Wait while docker restarts
 ```
 
-### Example compiling to Airlfow
+This runs a container with only 1 service, `typhoon-af`. This has both Airflow and Typhoon installed on it ready to work with.
 
-To compile a DAG to Airflow you need to change the Typhoon.cfg deployment:
+You should be able to then check `typhoon status` and also the airlfow UI at [http://localhost:8088](http://localhost:8088)
 
-``` cfg
-TYPHOON_PROJECT_NAME=typhoon_project
-TYPHOON_DEPLOY_TARGET=airflow
-```
-Or when you initialise a project:
-``` bash
-init typhoon_project --target airflow 
-```
-**Building your YAML DAG in using `typhoon dag build --all` you get:**  
+<img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/master/docs/img/airflow_ui_list_after_install.png" width="400">
+
+**Development hints are [in the docs](https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/installation.html#directories).**
+
+
+
 <img src="https://user-images.githubusercontent.com/2353804/112546625-f1cad480-8db9-11eb-8dfb-11e2c8d18a48.jpeg" width="300">
-
