@@ -3,7 +3,7 @@
 # Open Library is fuzzy matching and so not always correct. There is a validation step to check if the returned top result is valid.
 # It calls the 2nd API call to get the list of works on the 1st valid author key.
 
-name: favorite_authors_extended
+name: fav_authors_extended
 schedule_interval: rate(1 day)
 
 tasks:

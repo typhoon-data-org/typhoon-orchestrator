@@ -70,13 +70,16 @@ TYPHOON_PROJECTS_HOME="/tmp/typhoon_projects" # Or any other path you prefer
 mkdir -p $TYPHOON_PROJECTS_HOME/typhoon_airflow_test
 cd $TYPHOON_PROJECTS_HOME/typhoon_airflow_test
 mkdir src
-curl -LfO 'https://github.com/typhoon-data-org/typhoon-orchestrator/blob/master/docker-compose-af.yml'
+curl -LfO https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/master/docker-compose-af.yml
 
-docker compose up -d airflow-init  # initiates airflow 
+docker compose -f docker-compose-af.yml up -d  
 docker exec -it typhoon-af bash   # Then you're in the typhoon home.
  
 airflow initdb # !! To initiate Airflow DB !!
 typhoon status # To see status of dags & connections
+typhoon dag build --all # Build the example DAGS
+exit # exits docker 
+docker restart typhoon-af # Wait while docker restarts
 ```
 
 You should be able to then check `typhoon status` and also the airlfow UI at [http://localhost:8088](http://localhost:8088)

@@ -175,7 +175,7 @@ airflow initdb # !! To initiate Airflow DB !!
 typhoon status # To see status of dags & connections
 typhoon dag build --all # Build the example DAGS
 exit # exits docker 
-docker restart typhoon-af bash # Wait while docker restarts
+docker restart typhoon-af # Wait while docker restarts
 ```
 
 This runs a container with only 1 service, `typhoon-af`. This has both Airflow and Typhoon installed on it ready to work with.
