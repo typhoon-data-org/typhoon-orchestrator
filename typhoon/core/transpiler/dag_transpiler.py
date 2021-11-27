@@ -136,7 +136,6 @@ class DagFile(Templated):
     @property
     def render_imports(self) -> str:
         imports = extract_imports(self.dag.tasks, task_kind='components')
-        print('****', imports, ImportsTemplate(imports).render())
         return ImportsTemplate(imports).render()
 
     @property
