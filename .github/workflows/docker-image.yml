@@ -38,6 +38,6 @@ jobs:
           file: ./Dockerfile.af_pip
           push: true
           tags: |
-            - ${{ steps.meta.outputs.tags }}
-            - latest
+            ${{ steps.meta.outputs.tags }}
+            latest
           labels: ${{ steps.meta.outputs.labels }}
