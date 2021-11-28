@@ -31,7 +31,7 @@ jobs:
           images: |
             typhoondata/typhoon-orchestrator_airflow1.10
           flavor: |
-            latest=auto
+            latest=true
       
       - name: Build and push Docker images
         uses: docker/build-push-action@v2
