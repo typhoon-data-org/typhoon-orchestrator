@@ -190,7 +190,16 @@ e.g. DB -> S3 -> Snowflake.  They can then use this for any relational DB to exp
 </figure>
 
 
-## Shell & Cli
+## Cli, Testing & Shell
+
+The rich CLI should be instantly familiar to most users. Help is provided as you navigate with `--help` as well as auto-complete with most terminals. 
+
+**Built in tests** allow another level of robustness and automation and are easy and quick to make.   
+
+<figure markdown> 
+   ![Shell](https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/typhoon_cli_testing.gif){ width="800" }
+   <figcaption>Inspired by others; instantly familiar. Testable</figcaption>
+</figure>
 
 The Interactive Shell is really useful for running tasks and understanding the data structure at each point. Here is a short demo of running the get_author task and seeing the data it returns which can then be explored.
 
