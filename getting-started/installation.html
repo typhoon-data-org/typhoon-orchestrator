@@ -880,13 +880,16 @@
 mkdir -p <span class="nv">$TYPHOON_PROJECTS_HOME</span>/typhoon_airflow_test
 <span class="nb">cd</span> <span class="nv">$TYPHOON_PROJECTS_HOME</span>/typhoon_airflow_test
 mkdir src
-curl -LfO <span class="s1">&#39;https://github.com/typhoon-data-org/typhoon-orchestrator/blob/master/docker-compose-af.yml&#39;</span>
+curl -LfO https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/master/docker-compose-af.yml
 
-docker compose up -d airflow-init  <span class="c1"># initiates airflow </span>
+docker compose -f docker-compose-af.yml up -d  
 docker <span class="nb">exec</span> -it typhoon-af bash   <span class="c1"># Then you&#39;re in the typhoon home.</span>
 
 airflow initdb <span class="c1"># !! To initiate Airflow DB !!</span>
 typhoon status <span class="c1"># To see status of dags &amp; connections</span>
+typhoon dag build --all <span class="c1"># Build the example DAGS</span>
+<span class="nb">exit</span> <span class="c1"># exits docker </span>
+docker restart typhoon-af <span class="c1"># Wait while docker restarts</span>
 </code></pre></div></p>
 <p>You should be able to then check <code>typhoon status</code> and also the airlfow UI at <a href="http://localhost:8088">http://localhost:8088</a></p>
 <p>This runs a container with only 1 service, <code>typhoon-af</code>. This has both Airflow and Typhoon installed on it ready to work with.</p>
