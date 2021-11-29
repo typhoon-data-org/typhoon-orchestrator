@@ -377,6 +377,7 @@ def cli_run_dag(remote: Optional[str], dag_name: str, execution_date: Optional[d
 @cli_dags.command(name='definition')
 @click.option('--dag-name', autocompletion=get_dag_names)
 def dag_definition(dag_name: str):
+    """Show definition of DAG"""
     matching_dags = list(Settings.dags_directory.rglob(f'*{dag_name}.yml'))
     if not matching_dags:
         print(f'FATAL: No DAGs found matching {dag_name}.yml', file=sys.stderr)
@@ -477,6 +478,7 @@ def task_sample(
 @click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
 @click.option('--dag-name', autocompletion=get_dag_names, required=True)
 def dag_test(remote: Optional[str], dag_name: str):
+    """Run DAG YAML tests"""
     set_settings_from_remote(remote)
     dag = load_dag_definition(dag_name)
     if dag.tests is None:
@@ -778,6 +780,7 @@ def run_in_subprocess(command: str, cwd: str):
 
 @cli.command()
 def webserver():
+    """Start the Component UI and API"""
     api_process = Process(target=run_api)
     api_process.start()
     ui_script = Path(local_typhoon_path()).parent/'component_ui/component_builder.py'
@@ -807,6 +810,7 @@ def transformations_locals():
 @cli.command()
 @click.option('--dag-name', autocompletion=get_dag_names, required=False, default=None)
 def shell(dag_name: Optional[str]):
+    """Interactive (Ipython) shell for running tasks"""
     from IPython import start_ipython
     from traitlets.config import Config
     c = Config()
