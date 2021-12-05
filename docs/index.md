@@ -198,14 +198,14 @@ The rich CLI should be instantly familiar to most users. Help is provided as you
 
 <figure markdown> 
    ![Shell](https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/typhoon_cli_testing.gif){ width="800" }
-   <figcaption>Inspired by others; instantly familiar. Testable</figcaption>
+   <figcaption>YAML DAG Tests</figcaption>
 </figure>
 
 The Interactive Shell is really useful for running tasks and understanding the data structure at each point. Here is a short demo of running the get_author task and seeing the data it returns which can then be explored.
 
 <figure markdown> 
    ![Shell](https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/shell_example.gif){ width="800" }
-   <figcaption>Inspired by others; instantly familiar.</figcaption>
+   <figcaption>Speed up development by exploring tasks interactively.</figcaption>
 </figure>
 
 

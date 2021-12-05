@@ -1,3 +1,5 @@
+python-dotenv
+pydantic
 click
 jinja2
 PyYAML
@@ -6,8 +8,6 @@ dataclasses
 jsonpickle
 typing_extensions>=3.7.4.3
 python-dateutil
-pydantic[dotenv]
-pydantic
 fs
 fs-s3fs
 croniter
