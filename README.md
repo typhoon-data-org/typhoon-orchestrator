@@ -127,10 +127,8 @@ Packaged examples:
     ```
 
 
-<figure markdown> 
-   ![Favorite Authors](/docs/img/open_library_example_dag.png){ width="400" }
-   <figcaption>Getting the works of my favorite authors from Open Library API</figcaption>
-</figure>
+![Favorite Authors](docs/img/open_library_example_dag.png)
+*Getting the works of my favorite authors from Open Library API*
 
 
 # Installation
