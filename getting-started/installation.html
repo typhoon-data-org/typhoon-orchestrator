@@ -375,6 +375,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#adding-connnections" class="md-nav__link">
+    Adding connnections
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -589,6 +596,18 @@
   
 
           
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/favorite_author_extended.html" class="md-nav__link">
+        Favorite Author Extended
+      </a>
+    </li>
+  
+
+          
         </ul>
       </nav>
     </li>
@@ -780,6 +799,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#adding-connnections" class="md-nav__link">
+    Adding connnections
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -868,6 +894,16 @@
 <li>fish eval "$(_TYPHOON_COMPLETE=source_fish typhoon)"</li>
 </ul>
 </div>
+<h4 id="adding-connnections">Adding connnections</h4>
+<p>You can add the two default connections as follows in the cli</p>
+<div class="highlight"><pre><span></span><code>typhoon connection add --conn-id data_lake --conn-env <span class="nb">local</span>
+<span class="c1"># Check that it was added</span>
+typhoon connection ls -l
+
+<span class="c1"># add the echo one too for completeness</span>
+typhoon connection add --conn-id <span class="nb">echo</span> --conn-env <span class="nb">local</span>
+</code></pre></div>
+<p>Re-run <code>typhoon status</code> to see they are successfully added.  </p>
 <h2 id="with-docker-and-airflow">With Docker and Airflow</h2>
 <p>To deploy Typhoon with Airflow you need: </p>
 <ul>
@@ -893,6 +929,10 @@ docker restart typhoon-af <span class="c1"># Wait while docker restarts</span>
 </code></pre></div></p>
 <p>You should be able to then check <code>typhoon status</code> and also the airlfow UI at <a href="http://localhost:8088">http://localhost:8088</a></p>
 <p>This runs a container with only 1 service, <code>typhoon-af</code>. This has both Airflow and Typhoon installed on it ready to work with.</p>
+<div class="admonition tip">
+<p class="admonition-title">Remember to add the connections!</p>
+<p>Make sure you add in the <code>data_lake</code> connection before you try the examples.</p>
+</div>
 <h4 id="directories">Directories</h4>
 <p>Some directories are mounted which synchronizes files between your computer and the container.</p>
 <ul>
