@@ -152,6 +152,16 @@ typhoon status
 
 This will create a directory named hello_world that serves as an example project. As in git, when we cd into the directory it will detect that it's a Typhoon project and consider that directory the base directory for Typhoon (TYPHOON_HOME).
 
+#### Adding connnections
+
+You can add a default connections as follows in the cli
+
+```bash
+typhoon connection add --conn-id data_lake --conn-env local
+# Check that it was added
+typhoon connection ls -l
+```
+
 ## With Docker and Airflow
 
 To deploy Typhoon with Airflow you need: 
