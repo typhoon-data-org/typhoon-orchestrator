@@ -163,6 +163,12 @@ Building the above DAG using `typhoon dag build --all`.
 Airflow UI will then show:  
 <img src="https://user-images.githubusercontent.com/2353804/112546625-f1cad480-8db9-11eb-8dfb-11e2c8d18a48.jpeg" width="300">
 
+@Todo add the airflow of favorite_author
+
+We can extend the above task to give an example with more complexity. The tutorial for this has some more advanced tips. The airflow compiled DAG handles complex DAG structures very nicely:
+
+@Todo add the extended version.
+
 ## Auto-Completion 
 
 <figure markdown> 
