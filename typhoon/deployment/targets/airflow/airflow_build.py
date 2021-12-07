@@ -43,7 +43,7 @@ def build_all_dags_airflow(remote: Optional[str], matching: Optional[str] = None
             tasks_code = TasksFile(dag.tasks).render()
             (dag_target_folder / 'tasks.py').write_text(tasks_code)
 
-    for component, _ in load_components(ignore_errors=False, kind='custom'):
+    for component, _ in load_components(ignore_errors=False, kind='all'):
         print(f'Building component {component.name}...')
         build_component_for_airflow(component, target_folder)
 
