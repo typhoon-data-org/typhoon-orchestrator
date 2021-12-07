@@ -56,6 +56,22 @@ We will see in the next section 'Connections' how to add these.
     - zsh eval "$(_TYPHOON_COMPLETE=source_zsh typhoon)"
     - fish eval "$(_TYPHOON_COMPLETE=source_fish typhoon)"
 
+
+#### Adding connnections
+
+You can add the two default connections as follows in the cli
+
+```bash
+typhoon connection add --conn-id data_lake --conn-env local
+# Check that it was added
+typhoon connection ls -l
+
+# add the echo one too for completeness
+typhoon connection add --conn-id echo --conn-env local
+```
+
+Re-run `typhoon status` to see they are successfully added.  
+
 ## With Docker and Airflow
 
 To deploy Typhoon with Airflow you need: 
@@ -85,6 +101,9 @@ docker restart typhoon-af # Wait while docker restarts
 You should be able to then check `typhoon status` and also the airlfow UI at [http://localhost:8088](http://localhost:8088)
 
 This runs a container with only 1 service, `typhoon-af`. This has both Airflow and Typhoon installed on it ready to work with.
+
+!!! tip "Remember to add the connections!"
+    Make sure you add in the `data_lake` connection before you try the examples.
 
 #### Directories
 Some directories are mounted which synchronizes files between your computer and the container.

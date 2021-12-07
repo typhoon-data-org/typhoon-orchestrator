@@ -46,6 +46,7 @@ nav:
       - Hello World: 'examples/hello-world.md'
       - MySql to Snowflake: 'examples/mysql-to-snowflake.md'
       - Pandas automation: 'examples/pandas-examples.md'
+      - Favorite Author Extended:  'examples/favorite_author_extended.md'
   - Usage:
     - Dag Context: 'usage/dag-context.md'
     - "!Py & !Multistep": 'usage/py-multistep.md'

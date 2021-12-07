@@ -1,5 +1,13 @@
 # Typhoon Shell
 
+The Interactive Shell is really useful for running tasks and understanding the data structure at each point. Here is a short demo of running the get_author task and seeing the data it returns which can then be explored.
+
+<figure markdown> 
+   ![Shell](https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/shell_example.gif){ width="800" }
+   <figcaption>Inspired by others; instantly familiar.</figcaption>
+</figure>
+
+
 ## First usage & help
 
 To run the interactive Shell use `typhoon shell`. For example:
@@ -7,6 +15,7 @@ To run the interactive Shell use `typhoon shell`. For example:
 ` typhoon shell --dag-name favorite_authors`
 
 **Note** it must be run with the name of the DAG you want to use.
+
 
 ## Key Shell usage:
 
@@ -32,7 +41,9 @@ To run the interactive Shell use `typhoon shell`. For example:
   
 Note: **dag_context** object exists so you can use it to run tasks easily:
   ```tasks.get_author.run(dag_context, None, None, "J.K. Rowling")```
-  
+
+
+
 
   
 

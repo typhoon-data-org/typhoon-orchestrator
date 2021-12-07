@@ -13,7 +13,9 @@
 <p align="center"><b>Elegant YAML DAGS for Data Pipelines</br>Deploy to your existing Airflow.</b></p>
 <br>️
 <p align="center">
-@todo Badges here
+<img style="margin: 10px" src="https://img.shields.io/github/license/typhoon-data-org/typhoon-orchestrator.svg" alt="Linux" height="20" />
+<img style="margin: 10px" src="https://github.com/typhoon-data-org/typhoon-orchestrator/actions/workflows/docker-image.yml/badge.svg" />
+
 </p>
 
 <p align="center">
@@ -82,7 +84,7 @@ Packaged examples:
 **Testable Python** - test functions or full DAGs with PyTest.
 
 </td>
-<td><img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/shell_example.gif" alt="UI Component" width="400px" align="right" style="max-width: 100%;">
+<td><img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/typhoon_cli_testing.gif" alt="UI Component" width="400px" align="right" style="max-width: 100%;">
 </td>
 </tr>
 
@@ -125,10 +127,8 @@ Packaged examples:
     ```
 
 
-<figure markdown> 
-   ![Favorite Authors](img/open_library_example_dag.png){ width="400" }
-   <figcaption>Getting the works of my favorite authors from Open Library API</figcaption>
-</figure>
+![Favorite Authors](docs/img/open_library_example_dag.png)
+*Getting the works of my favorite authors from Open Library API*
 
 
 # Installation
@@ -151,6 +151,16 @@ typhoon status
 ```
 
 This will create a directory named hello_world that serves as an example project. As in git, when we cd into the directory it will detect that it's a Typhoon project and consider that directory the base directory for Typhoon (TYPHOON_HOME).
+
+#### Adding connnections
+
+You can add a default connections as follows in the cli
+
+```bash
+typhoon connection add --conn-id data_lake --conn-env local
+# Check that it was added
+typhoon connection ls -l
+```
 
 ## With Docker and Airflow
 

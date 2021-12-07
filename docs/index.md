@@ -163,6 +163,12 @@ Building the above DAG using `typhoon dag build --all`.
 Airflow UI will then show:  
 <img src="https://user-images.githubusercontent.com/2353804/112546625-f1cad480-8db9-11eb-8dfb-11e2c8d18a48.jpeg" width="300">
 
+@Todo add the airflow of favorite_author
+
+We can extend the above task to give an example with more complexity. The tutorial for this has some more advanced tips. The airflow compiled DAG handles complex DAG structures very nicely:
+
+@Todo add the extended version.
+
 ## Auto-Completion 
 
 <figure markdown> 
@@ -190,13 +196,22 @@ e.g. DB -> S3 -> Snowflake.  They can then use this for any relational DB to exp
 </figure>
 
 
-## Shell & Cli
+## Cli, Testing & Shell
+
+The rich CLI should be instantly familiar to most users. Help is provided as you navigate with `--help` as well as auto-complete with most terminals. 
+
+**Built in tests** allow another level of robustness and automation and are easy and quick to make.   
+
+<figure markdown> 
+   ![Shell](https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/typhoon_cli_testing.gif){ width="800" }
+   <figcaption>YAML DAG Tests</figcaption>
+</figure>
 
 The Interactive Shell is really useful for running tasks and understanding the data structure at each point. Here is a short demo of running the get_author task and seeing the data it returns which can then be explored.
 
 <figure markdown> 
    ![Shell](https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/shell_example.gif){ width="800" }
-   <figcaption>Inspired by others; instantly familiar.</figcaption>
+   <figcaption>Speed up development by exploring tasks interactively.</figcaption>
 </figure>
 
 

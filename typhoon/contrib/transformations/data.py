@@ -36,3 +36,5 @@ def json_array_to_json_records(data: list) -> str:
     result = [json.dumps(x) for x in data]
     return '\n'.join(result)
 
+def json_dumps(batch) -> str:
+    return json.dumps(batch)
