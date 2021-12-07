@@ -305,6 +305,11 @@ def build_dags(remote: Optional[str], dag_name: Optional[str], all_: bool):
             except ModuleNotFoundError:
                 print('ERROR: Airflow is not installed. Try "pip install apache-airflow~=1.10"')
                 sys.exit(-1)
+            try:
+                os.environ['AIRFLOW_HOME']
+            except KeyError:
+                print('Error: AIRFLOW_HOME is not set')
+                sys.exit(-1)
             build_all_dags_airflow(remote=remote)
     else:
         dag_errors = get_dag_errors().get(dag_name)
