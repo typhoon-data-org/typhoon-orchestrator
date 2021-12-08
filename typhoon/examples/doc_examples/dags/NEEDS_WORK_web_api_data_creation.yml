@@ -1,0 +1,31 @@
+name: web_api_data_creation
+schedule_interval: rate(30 seconds)
+
+nodes:
+
+  web_service_data:
+    function: functions.web_api_creation.web_service_generate
+
+  split_files:
+    function: typhoon.flow_control.branch
+
+
+  write_csv:
+    function: typhoon.filesystem.write_data
+    config:
+      hook => APPLY: $HOOK.data_lake
+
+edges:
+
+  recieve_web_data:
+    source: web_service_data
+    adapter:
+      branches => APPLY: $BATCH
+    destination: split_files
+
+  send_to_store:
+    source: split_files
+    adapter:
+      data => APPLY: transformations.data.to_bytes_buffer($BATCH['data'])
+      path => APPLY: f"/{$BATCH['table_name']}.csv"
+    destination: write_csv

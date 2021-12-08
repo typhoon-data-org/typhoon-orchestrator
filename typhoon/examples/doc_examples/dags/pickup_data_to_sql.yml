@@ -1,0 +1,47 @@
+name: pickup_data_to_sql
+schedule_interval: rate(10 minutes)
+
+tasks:
+
+  list_files:
+    function: typhoon.filesystem.list_directory
+    args:
+      hook: !Hook ftp
+      path: '/'
+
+  filter_csv_files:
+    input: list_files
+    function: typhoon.flow_control.filter
+    args:
+      filter_func: !Py "lambda x: x.endswith('.csv')"
+      data: !Py $BATCH
+
+  read_csv_to_df:
+    input: filter_csv_files
+    function: functions.pandas_data_helpers.csv_to_df
+    args:
+      hook: !Py $HOOK.ftp
+      path: !Py $BATCH
+
+  write_df_to_sql:
+    input: read_csv_to_df
+    function: functions.pandas_data_helpers.df_write
+    args:
+      hook: !Py $HOOK.transaction_db
+      df: !Py $BATCH[0]
+      table_name: !Py transformations.path_mapping.to_regex_name($BATCH[1])
+
+
+tests:
+  read_csv_to_df:
+    batch: '/file.csv'
+    expected:
+      path: '/file.csv'
+
+  write_df_to_sql:
+    batch:
+      - !Py "pd.DataFrame({'a': [1,2,3,4], 'b': [6,7,8,9]})"
+      - "data_clients_2021-02-18T03_00_00.csv"
+    expected:
+      df: !Py "pd.DataFrame({'a': [1,2,3,4], 'b': [6,7,8,9]})"
+      table_name: "clients"

@@ -89,12 +89,10 @@ mkdir src
 curl -LfO https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/master/docker-compose-af.yml
 
 docker compose -f docker-compose-af.yml up -d  
-docker exec -it typhoon-af bash   # Then you're in the typhoon home.
- 
-airflow initdb # !! To initiate Airflow DB !!
-typhoon status # To see status of dags & connections
-typhoon dag build --all # Build the example DAGS
-exit # exits docker 
+docker-compose -f docker-compose-af.yml run --rm typhoon-af airflow initdb
+docker-compose -f docker-compose-af.yml run --rm typhoon-af typhoon status
+docker-compose -f docker-compose-af.yml run --rm typhoon-af typhoon connection add --conn-id data_lake --conn-env local
+docker-compose -f docker-compose-af.yml run --rm typhoon-af typhoon dag build --all
 docker restart typhoon-af # Wait while docker restarts
 ```
 

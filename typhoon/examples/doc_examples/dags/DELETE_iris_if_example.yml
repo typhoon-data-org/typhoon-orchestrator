@@ -1,0 +1,45 @@
+name: iris_if_example
+schedule_interval: rate(1 day)
+
+description: >
+
+
+
+tasks:
+  load_csv:
+    function: typhoon.filesystem.read_data
+    args:
+      hook: !Hook data_lake
+      path: /iris.data
+
+  pandas_inline_process_echo:
+    input: load_csv
+    function: typhoon.debug.echo
+    args:
+      data: !MultiStep
+        - !Py typhoon.data.csv_to_dicts($BATCH.data, fieldnames=['a','b','c','d','r'])
+        - !Py typhoon.data.to_dataframe($1)
+        - !Py str($2.columns) + str(len($2))
+
+  pandas_inline_conditional:
+    input: load_csv
+    component: typhoon.if
+    args:
+      data: !MultiStep
+        - !Py typhoon.data.csv_to_dicts($BATCH.data, fieldnames=['a','b','c','d','r'])
+        - !Py typhoon.data.to_dataframe($1)
+      condition: !Py 1==2
+
+  then:
+    input: pandas_inline_conditional.then
+    function: typhoon.debug.echo
+    args:
+      data: !Py str($BATCH.columns) + str(len($BATCH))
+
+
+  else:
+    input: pandas_inline_conditional.else
+    function: typhoon.debug.echo
+    args:
+      data: !Py str($BATCH.columns) + str(len($BATCH))
+

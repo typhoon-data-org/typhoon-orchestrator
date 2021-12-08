@@ -1,0 +1,36 @@
+name: web_data_service
+schedule_interval: rate(1 minutes)
+
+tasks:
+
+  web_service_data:
+    function: functions.web_api_creation.web_service_generate
+
+
+#  iterate_trans:
+#    input: web_service_data
+#    function: typhoon.flow_control.branch
+#    args:
+#      branches: !Py $BATCH
+
+  write_data:
+    input: web_service_data
+    function: typhoon.filesystem.write_data
+    args:
+      hook: !Py $HOOK.ftp
+      data: !Py transformations.data.list_of_dict_to_buffer($BATCH['data'])
+      path: !Py f"/data_{$BATCH['table_name']}_" + str($DAG_CONTEXT.ts).replace(":", "_") + ".csv"
+
+
+tests:
+
+  write_data:
+    batch:
+      data:
+        - [1, 2, 3]
+        - [5, 2, 7]
+      table_name: abc
+    execution_date: 2021-02-03T01:01:01
+    expected:
+      data: !Py str("rowID,0,1,2\n0,1,2,3\n1,5,2,7\n").encode()
+      path: !Py f"/data_abc_" + str('2021-02-03T01:01:01').replace(":", "_")+ ".csv"

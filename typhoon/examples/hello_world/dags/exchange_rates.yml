@@ -1,4 +1,5 @@
-# !Deprecated. API is no longer Open and requires a key
+# !Deprecated. API is no longer open and requires an API key
+# Kept for illustration only
 
 name: exchange_rates
 schedule_interval: rate(1 day)

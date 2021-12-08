@@ -1,0 +1,57 @@
+name: dwh_flow
+schedule_interval: rate(1 hours)
+granularity: hour
+
+tasks:
+  list_tables:
+    function: typhoon.flow_control.branch
+    args:
+      branches:
+        - clients
+        - sales
+
+  echo_my_tables:
+    input: list_tables
+    function: typhoon.debug.echo
+    args:
+      mydata: !Py $BATCH
+
+  extract_tables:
+    input: list_tables
+    function: typhoon.relational.execute_query
+    args:
+      hook: !Hook transaction_db
+      batch_size: 10
+      query_params:
+        interval_start: !Py $DAG_CONTEXT.interval_start
+        interval_end: !Py $DAG_CONTEXT.interval_end
+      metadata:
+        table_name: !Py $BATCH
+      query: !MultiStep
+        - !Py table_name=$BATCH
+        - !Py f"SELECT * FROM {table_name} where creation_timestamp between %(interval_start)s and %(interval_end)s"
+
+  echo_sql_return:
+    input: extract_tables
+    function: typhoon.debug.echo
+    args:
+      mydata: !Py $BATCH
+
+  write_data_S3:
+    input: extract_tables
+    function: typhoon.filesystem.write_data
+    args:
+      hook: !Py $HOOK.data_lake
+      data: !Py transformations.data.list_of_tuples_to_json(list($BATCH.batch), $BATCH.columns)
+      path: !Py f"data_{$BATCH.metadata['table_name']}_batch_num_" + str($BATCH_NUM) + "_" + str($DAG_CONTEXT.interval_end).replace(":", "_") + ".json"
+      metadata: !Py $BATCH.metadata
+
+  copy_to_snowflake_stage:
+    input: write_data_S3
+    function: typhoon.snowflake.copy_into
+    args:
+      hook: !Py $HOOK.snowflake
+      table: !Py $BATCH.metadata['table_name']
+      stage_name: stagetestcorpdatalake
+      s3_path: ''
+

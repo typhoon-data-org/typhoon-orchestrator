@@ -1,0 +1,22 @@
+name: variable_example
+schedule_interval: rate(1 hour)
+
+tasks:
+
+  list_tables:
+    function: typhoon.flow_control.branch
+    args:
+      branches: !Py $VARIABLE.my_table_list
+
+  process_sql:
+    input: list_tables
+    function: typhoon.debug.echo
+    args:
+      data: !MultiStep
+        - !Py $BATCH
+        - !Py $DAG_CONTEXT.interval_start
+        - !Py $DAG_CONTEXT.interval_end
+        - !Py typhoon.templates.render($VARIABLE.sql_template_1, table_name=$1, start_date=$2, end_date=$3)
+
+
+#  !Py f"SELECT * FROM {table_name} where creation_timestamp between %(interval_start)s and %(interval_end)s"

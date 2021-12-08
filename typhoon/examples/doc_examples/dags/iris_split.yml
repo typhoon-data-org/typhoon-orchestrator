@@ -1,0 +1,27 @@
+name: iris_data_processing
+schedule_interval: rate(10 minutes)
+
+tasks:
+  load_csv:
+    function: functions.filesystem.read_data
+    args:
+        hook: !Hook files
+        path: /iris.data
+
+
+  echo:
+    input: load_csv
+    function: functions.debug.echo
+      args:
+        data: !Py $BATCH
+
+
+  load:
+    input: load_csv
+    function: typhoon.filesystem.write_data
+    args:
+      hook: !Hook files
+      data: !Py $BATCH
+      path: !Py f"/out.csv"
+
+

@@ -1,0 +1,25 @@
+name: elastic_query
+schedule_interval: rate(10 minutes)
+
+description: >
+  Retrieving data from ElasticSearch. Data set is the demo one included with ES/Kibana.
+  See the docs; You must add the connection (installing `pip install elasticsearch` also).
+
+tasks:
+
+  search_elastic:
+    function: functions.elastic_functions.search
+    args:
+      hook: !Hook elastic_cluster
+      body: '{
+                "query": {
+                  "match_all": { }
+                }
+              }'
+      index: kibana_sample_data_flights
+
+  echo_result:
+    input: search_elastic
+    function: typhoon.debug.echo
+    args:
+      data: !Py $BATCH
