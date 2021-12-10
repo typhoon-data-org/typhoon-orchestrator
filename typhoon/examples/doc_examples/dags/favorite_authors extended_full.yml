@@ -1,0 +1,101 @@
+name: favorite_authors_extended_full
+schedule_interval: rate(1 day)
+
+description: >
+  A more complex DAG:
+    - Splitting list into batches for individual processing
+    - Custom Functions (e.g. API calls)
+    - Custom Transformations
+    - If Then logic
+    - Filtering JMESPath (JSON filtering / search)
+    - 2 apis, in chain
+
+
+tasks:
+  choose_favorites:
+    function: typhoon.flow_control.branch
+    args:
+      branches:
+        - J. K. Rowling
+        - George R. R. Martin
+        - James Clavell
+
+  get_author:
+    input: choose_favorites
+    function: functions.open_library_api.get_author
+    args:
+      requested_author: !Py $BATCH
+      split_list_into_batches: true
+
+  is_fuzzy_author:
+    input: get_author
+    component: typhoon.ifthen
+    args:
+      condition: !Py |
+        lambda x: transformations.author_cleaning.is_similar_name(
+          x['name'], 
+          x['requested_author'],
+          96
+        )
+      data: !Py $BATCH
+
+  print_match:
+    input: is_fuzzy_author.ifthen
+    function: typhoon.debug.echo
+    args:
+      data: !Py f"ACCEPTED --  {$BATCH['name']}."
+
+  print_not_matched:
+    input: is_fuzzy_author.ifelse
+    function: typhoon.debug.echo
+    args:
+      data: !Py f"DISCARDED -- {$BATCH['name']} is not similar enough."
+
+  select_keys_valid_author_json:
+    input: is_fuzzy_author.ifthen
+    function: typhoon.json.search
+    args:
+      expression: "{key:key, name:name, birth_date: birth_date, work_count: work_count, top_work: top_work, requested_author:requested_author }"
+      data: !Py $BATCH
+
+  write_valid_author_json:
+    input: select_keys_valid_author_json
+    function: typhoon.filesystem.write_data    
+    args:
+      hook: !Hook data_lake
+      data:  !Py transformations.author_cleaning.json_dumps($BATCH)
+      path: !MultiStep 
+        - !Py $BATCH['key']
+        - !Py f'/valid_authors/{$1}.json'
+      create_intermediate_dirs: True
+
+  write_error_path_author_json:
+    input: is_fuzzy_author.ifelse
+    function: typhoon.filesystem.write_data    
+    args:
+      hook: !Hook data_lake
+      data:  !Py transformations.author_cleaning.json_dumps($BATCH)
+      path: !MultiStep 
+        - !Py $BATCH['key']
+        - !Py f'/error_authors/{$1}.json'
+      create_intermediate_dirs: True
+
+  get_works:
+    input: select_keys_valid_author_json
+    function: functions.open_library_api.get_works
+    args:
+      limit: 50
+      author_key: !Py $BATCH['key']
+
+  write_works_json:
+      input: get_works
+      function: typhoon.filesystem.write_data
+      args:
+        hook: !Hook data_lake
+        data:  !MultiStep
+          - !Py $BATCH['entries']
+          - !Py typhoon.data.json_array_to_json_records($1)
+        path: !MultiStep 
+          - !Py $BATCH['links']['author'].replace('/authors/', '')
+          - !Py f'/works/{$1}.json'
+        create_intermediate_dirs: True

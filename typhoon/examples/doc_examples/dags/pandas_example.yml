@@ -1,0 +1,19 @@
+name: pandas_example
+schedule_interval: rate(1 hour)
+
+tasks:
+  load_json:
+    function: typhoon.filesystem.read_data
+    args:
+      hook: !Hook data_lake
+      path: /test_scores.json
+
+
+  pandas_transform:
+    input: load_json
+    function: typhoon.debug.echo
+    args:
+      data: !MultiStep
+        - !Py transformations.data.json_loads_to_dict($BATCH.data)
+        - !Py typhoon.data.to_dataframe($1)
+        - !Py transformations.data.df_add_country_median($2)

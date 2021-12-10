@@ -1,0 +1,38 @@
+name: conditional_process
+schedule_interval: rate(10 minutes)
+
+description: >
+  Example of use of variable to list tables. Also of If-Then logic
+
+tasks:
+
+  list_tables:
+    function: typhoon.flow_control.branch
+    args:
+      branches: !Py $VARIABLE.my_table_list
+
+  choose_preprocessing:
+    input: list_tables
+    component: typhoon.ifthen
+    args:
+      data: !Py $BATCH
+      condition: !Py "lambda table: $DAG_CONTEXT.interval_start.isoweekday() == $VARIABLE.weekday_of_archive"
+      #condition: !Py "lambda name: name.endswith('a')"
+
+  archive_day:
+    input: choose_preprocessing.ifthen
+    function: typhoon.debug.echo
+    args:
+      data: !MultiStep
+        - !Py print('processing archive')
+        - !Py $BATCH
+
+
+  otherday_processing_task:
+    input: choose_preprocessing.ifelse
+    function: typhoon.debug.echo
+    args:
+      data: !MultiStep
+        - !Py print('processing normal day')
+        - !Py $BATCH
+
