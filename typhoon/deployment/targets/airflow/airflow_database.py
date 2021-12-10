@@ -32,7 +32,6 @@ class AirflowDb:
     sql_alchemy_conn: str = None
 
     def __init__(self, sql_alchemy_conn: str):
-        print(f'Opening airflow database {sql_alchemy_conn}')
         self.sql_alchemy_conn = sql_alchemy_conn
 
     def set_connection(
