@@ -173,7 +173,7 @@ class ImportDefinition(NamedTuple):
 
 def extract_imports(tasks: Dict[str, TaskDefinition], task_kind: Literal['functions', 'components'] = 'functions') -> List[ImportDefinition]:
     imports = set()
-    for task_name, task in tasks.items():
+    for task in tasks.values():
         if task_kind == 'functions' and not task.function or task_kind == 'components' and not task.component:
             continue
         if task.function:
@@ -185,7 +185,7 @@ def extract_imports(tasks: Dict[str, TaskDefinition], task_kind: Literal['functi
                 submodule=submodule
             ))
         # Find transformations and append
-        for arg_name, item in task.args.items():
+        for item in task.args.values():
             imports = imports.union(get_transformations_item(item))
 
     return sorted(imports, key=lambda x: x.submodule)

@@ -112,8 +112,9 @@ def make_airflow_tasks(
     # source_id = custom_source_id or (source_airflow_task.task_id if source_airflow_task is not None else None)
     source_id = source_task.task_id if source_task is not None else None
     if isinstance(task, ComponentInterface):
+        component_source_task = source_task
         for source_task in task.component_sources:
-            make_airflow_tasks(dag, source_task, source_airflow_task, custom_source_id, airflow_version, branch=branch, source_task=task)
+            make_airflow_tasks(dag, source_task, source_airflow_task, custom_source_id, airflow_version, branch=branch, source_task=component_source_task)
         return
     elif isinstance(task, TaskInterface) and task.function is flow_control.branch and source_airflow_task is None:
         def dict_with_name(x):
