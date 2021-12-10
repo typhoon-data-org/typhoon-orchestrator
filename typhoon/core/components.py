@@ -19,11 +19,12 @@ def config_arg_name(component_name: str, arg: str) -> str:
 class ComponentArgument(BaseModel):
     type: str = Field(..., description='Type of your argument')
     default: Any = Field(..., description='Default value for your argument')
-    description: Optional[str] = Field(None, description='Documentation fot the argument')
+    description: Optional[str] = Field(None, description='Documentation for the argument')
 
 
 class Component(BaseModel):
-    name: str = Field(..., regex=IDENTIFIER_REGEX, description='Name of your DAG')
+    name: str = Field(..., regex=IDENTIFIER_REGEX, description='Name of your component')
+    description: Optional[str] = Field(None, description='Description of what the component does for documentation purposes')
     args: Dict[str, Union[str, ComponentArgument]]
     tasks: Dict[str, TaskDefinition]
     output: List[str] = ()

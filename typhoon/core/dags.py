@@ -598,6 +598,7 @@ def evaluate_item(custom_locals, item) -> Any:
 
 class DAGDefinitionV2(BaseModel):
     name: str = Field(..., regex=IDENTIFIER_REGEX, description='Name of your DAG')
+    description: Optional[str] = Field(None, description='Description of what the DAG does for documentation purposes')
     schedule_interval: str = Field(
         ...,
         regex='(' + '@hourly|@daily|@weekly|@monthly|@yearly|' +
