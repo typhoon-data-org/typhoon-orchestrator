@@ -60,11 +60,12 @@ class ComponentFile(Templated):
                     
                     component_args = self.parent_component.args_class(dag_context, self.source, batch_num, batch)
                     
-                    if self.source == '{{ task.input }}':
-                        args = {}
-                        {{ task.args | render_args | indent(20, False) }}
-                        return args
-                    assert False, 'Compiler error'
+                    # When multiple inputs are supported add this back
+                    # if self.source == '{{ task.input }}':
+                    args = {}
+                    {{ task.args | render_args | indent(16, False) }}
+                    return args
+                    # assert False, 'Compiler error'
             
             
             {% endfor %}
@@ -113,6 +114,7 @@ class ComponentFile(Templated):
     {% endfor %}
 '''
     component: Component
+    airflow_compilation: bool = False
     _filters = [camel_case, render_dependencies, render_task, is_component_task, render_args]
     _dependencies = None
 

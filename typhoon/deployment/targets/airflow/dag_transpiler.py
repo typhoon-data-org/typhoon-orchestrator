@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typhoon.core.cron_utils import aws_schedule_to_cron
 from typhoon.core.dags import DAGDefinitionV2, TaskDefinition
 from typhoon.core.templated import Templated
-from typhoon.core.transpiler.transpiler_helpers import extract_dependencies, camel_case, render_dependencies, \
+from typhoon.core.transpiler.transpiler_helpers import ImportsTemplate, extract_dependencies, camel_case, extract_imports, render_dependencies, \
     is_component_task, render_args
 
 
@@ -38,6 +38,8 @@ class AirflowDagFile(Templated):
     {% for task_name, task in component_tasks.items() %}
     from typhoon_managed.components.{{ task.component.split('.')[-1] }} import {{ task.component.split('.')[-1] | camel_case }}Component
     {% endfor %}
+
+    {{ render_imports }}
     
     
     {% for task_name, task in component_tasks.items() %}
@@ -57,11 +59,12 @@ class AirflowDagFile(Templated):
             batch_num = self.batch_num
             
             {% if task.input %}
-            if self.source == '{{ task.input }}':
-                args = {}
-                {{ task.args | render_args | indent(12, False) }}
-                return args
-            assert False, 'Compiler error'
+            # When multiple inputs are supported add this back
+            # if self.source == '{{ task.input }}':
+            args = {}
+            {{ task.args | render_args | indent(8, False) }}
+            return args
+            # assert False, 'Compiler error'
             {% else %}
             args = {}
             {{ task.args | render_args | indent(8, False) }}
@@ -135,6 +138,11 @@ class AirflowDagFile(Templated):
             iterator = croniter(cron, datetime.now())
             self.start_date = iterator.get_prev(datetime)
             self.start_date = iterator.get_prev(datetime)
+    
+    @property
+    def render_imports(self) -> str:
+        imports = extract_imports(self.dag.tasks, task_kind='components')
+        return ImportsTemplate(imports).render()
 
     @property
     def cron_expression(self):
