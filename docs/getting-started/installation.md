@@ -91,17 +91,14 @@ curl -LfO https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrato
 docker compose -f docker-compose-af.yml up -d  
 docker-compose -f docker-compose-af.yml run --rm typhoon-af airflow initdb
 docker-compose -f docker-compose-af.yml run --rm typhoon-af typhoon status
-docker-compose -f docker-compose-af.yml run --rm typhoon-af typhoon connection add --conn-id data_lake --conn-env local
+docker-compose -f docker-compose-af.yml run --rm typhoon-af typhoon connection add --conn-id data_lake --conn-env local  # Adding our first connection!
 docker-compose -f docker-compose-af.yml run --rm typhoon-af typhoon dag build --all
 docker restart typhoon-af # Wait while docker restarts
 ```
 
-You should be able to then check `typhoon status` and also the airlfow UI at [http://localhost:8088](http://localhost:8088)
+Then check the airlfow UI at [http://localhost:8088](http://localhost:8088)
 
 This runs a container with only 1 service, `typhoon-af`. This has both Airflow and Typhoon installed on it ready to work with.
-
-!!! tip "Remember to add the connections!"
-    Make sure you add in the `data_lake` connection before you try the examples.
 
 #### Directories
 Some directories are mounted which synchronizes files between your computer and the container.
