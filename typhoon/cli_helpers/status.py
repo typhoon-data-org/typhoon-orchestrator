@@ -66,11 +66,12 @@ def get_undefined_variables_in_metadata_db(remote: Optional[str], var_ids: List[
 
 
 def check_connections_yaml(remote: Optional[str]):
-    if not Path('connections.yml').exists():
+    connections_yaml_path = Settings.typhoon_home / 'connections.yml'
+    if not connections_yaml_path.exists():
         print(colored('• Connections YAML not found. To add connections create', 'red'), colored('connections.yml', 'blue'))
         print(colored('  Skipping connections YAML checks...', 'red'))
         return
-    conn_yml = yaml.safe_load(Path('connections.yml').read_text()) or {}
+    conn_yml = yaml.safe_load(connections_yaml_path.read_text()) or {}
     undefined_connections = get_undefined_connections_in_metadata_db(remote, conn_ids=conn_yml.keys())
     if undefined_connections:
         print(colored('• Found connections in YAML that are not defined in the metadata database', 'yellow'))
