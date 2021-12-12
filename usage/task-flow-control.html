@@ -886,7 +886,7 @@
 
   <span class="nt">is_girl</span><span class="p">:</span>
     <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">names</span>
-    <span class="nt">component</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.if</span>
+    <span class="nt">component</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.ifthen</span>
     <span class="nt">args</span><span class="p">:</span>
       <span class="nt">condition</span><span class="p">:</span> <span class="kt">!Py</span> <span class="s">&quot;lambda</span><span class="nv"> </span><span class="s">name:</span><span class="nv"> </span><span class="s">name.endswith(&#39;a&#39;)&quot;</span>
       <span class="nt">data</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$BATCH</span>
@@ -898,12 +898,12 @@
       <span class="nt">data</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">f&#39;{$BATCH} is a girl&#39;</span>
 
   <span class="nt">print_boy</span><span class="p">:</span>
-    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">is_girl.else</span>
+    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">is_girl.otherwise</span>
     <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">functions.debug.echo</span>
     <span class="nt">args</span><span class="p">:</span>
       <span class="nt">data</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">f&#39;{$BATCH} is a boy&#39;</span>
 </code></pre></div>
-<p>The key parts above are the use of the <code>typhoon.if</code> component and that the tasks are linked using the <code>condition.if</code> and <code>condition.else</code>.</p>
+<p>The key parts above are the use of the <code>typhoon.ifthen</code> component and that the tasks are linked using the <code>condition.then</code> and <code>condition.otherwise</code>.</p>
                 
               
               

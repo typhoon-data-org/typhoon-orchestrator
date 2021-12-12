@@ -842,20 +842,20 @@
 
 
   <span class="nt">print_match</span><span class="p">:</span>
-    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">is_fuzzy_author.ifthen</span>
+    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">is_fuzzy_author.then</span>
     <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.debug.echo</span>
     <span class="nt">args</span><span class="p">:</span>
       <span class="nt">data</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">f&quot;ACCEPTED --  {$BATCH[&#39;name&#39;]}.&quot;</span>
 
   <span class="nt">print_not_matched</span><span class="p">:</span>
-    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">is_fuzzy_author.ifelse</span>
+    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">is_fuzzy_author.otherwise</span>
     <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.debug.echo</span>
     <span class="nt">args</span><span class="p">:</span>
       <span class="nt">data</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">f&quot;DISCARDED -- {$BATCH[&#39;name&#39;]} is not similar enough.&quot;</span>
 
 
   <span class="nt">select_keys_valid_author_json</span><span class="p">:</span>
-    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">is_fuzzy_author.ifthen</span>
+    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">is_fuzzy_author.then</span>
     <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.json.search</span>
     <span class="nt">args</span><span class="p">:</span>
       <span class="nt">expression</span><span class="p">:</span> <span class="s">&quot;{key:key,</span><span class="nv"> </span><span class="s">name:name,</span><span class="nv"> </span><span class="s">birth_date:</span><span class="nv"> </span><span class="s">birth_date,</span><span class="nv"> </span><span class="s">work_count:</span><span class="nv"> </span><span class="s">work_count,</span><span class="nv"> </span><span class="s">top_work:</span><span class="nv"> </span><span class="s">top_work,</span><span class="nv"> </span><span class="s">requested_author:requested_author</span><span class="nv"> </span><span class="s">}&quot;</span>
@@ -874,7 +874,7 @@
 
 
   <span class="nt">write_error_path_author_json</span><span class="p">:</span>
-    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">is_fuzzy_author.ifelse</span>
+    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">is_fuzzy_author.otherwise</span>
     <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.filesystem.write_data</span>    
     <span class="nt">args</span><span class="p">:</span>
       <span class="nt">hook</span><span class="p">:</span> <span class="kt">!Hook</span> <span class="l l-Scalar l-Scalar-Plain">data_lake</span>
@@ -1002,13 +1002,13 @@ We want to apply a lambda function against each of these so we must process each
 
 
   <span class="nt">print_match</span><span class="p">:</span>
-    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">is_fuzzy_author.ifthen</span>
+    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">is_fuzzy_author.then</span>
     <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.debug.echo</span>
     <span class="nt">args</span><span class="p">:</span>
       <span class="nt">data</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">f&quot;ACCEPTED --  {$BATCH[&#39;name&#39;]}.&quot;</span>
 
   <span class="nt">print_not_matched</span><span class="p">:</span>
-    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">is_fuzzy_author.ifelse</span>
+    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">is_fuzzy_author.otherwise</span>
     <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.debug.echo</span>
     <span class="nt">args</span><span class="p">:</span>
       <span class="nt">data</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">f&quot;DISCARDED -- {$BATCH[&#39;name&#39;]} is not similar enough.&quot;</span>
@@ -1016,7 +1016,7 @@ We want to apply a lambda function against each of these so we must process each
 <h2 id="filtering-json-with-jmespath">Filtering JSON with JMESPath</h2>
 <p>A great library that we have included is JMESPath which you can use to reduce and transform JSON data easily.</p>
 <div class="highlight"><pre><span></span><code>  <span class="nt">select_keys_valid_author_json</span><span class="p">:</span>
-    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">is_fuzzy_author.ifthen</span>
+    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">is_fuzzy_author.otherwise</span>
     <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.json.search</span>
     <span class="nt">args</span><span class="p">:</span>
       <span class="nt">expression</span><span class="p">:</span> <span class="s">&quot;{key:key,</span><span class="nv"> </span><span class="s">name:name,</span><span class="nv"> </span><span class="s">birth_date:</span><span class="nv"> </span><span class="s">birth_date,</span><span class="nv"> </span><span class="s">work_count:</span><span class="nv"> </span><span class="s">work_count,</span><span class="nv"> </span><span class="s">top_work:</span><span class="nv"> </span><span class="s">top_work,</span><span class="nv"> </span><span class="s">requested_author:requested_author</span><span class="nv"> </span><span class="s">}&quot;</span>
