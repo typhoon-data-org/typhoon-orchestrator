@@ -191,7 +191,7 @@ This runs a container with only 1 service, `typhoon-af`. This has both Airflow a
 You should be able to then check `typhoon status` and also the airlfow UI at [http://localhost:8088](http://localhost:8088)
 
 <figure markdown> 
-   ![Favorite Authors](dosc/img/airflow_ui_list_after_install.png){ width="400" }
+   ![Favorite Authors](docs/img/airflow_ui_list_after_install.png){ width="400" }
    <figcaption>Typhoon DAGS listed in airflow UI</figcaption>
 </figure>
 
@@ -200,13 +200,13 @@ You should be able to then check `typhoon status` and also the airlfow UI at [ht
 
 
 <figure markdown> 
-   ![Favorite Authors](img/airflow_favorite_author_basic_dag.PNG){ width="400" }
+   ![Favorite Authors](docs/img/airflow_favorite_author_basic_dag.PNG){ width="400" }
    <figcaption>Favorite Authors DAG - as displayed in airflow UI</figcaption>
 </figure>
 
 We can extend the above task to give an example with more complexity. The tutorial for this has some more advanced tips. The airflow compiled DAG handles complex DAG structures very nicely:
 
 <figure markdown> 
-   ![Favorite Authors](img/airflow_favorite_author_extended_dag_graph_1.PNG){ width="400" }
+   ![Favorite Authors](docs/img/airflow_favorite_author_extended_dag_graph_1.PNG){ width="400" }
    <figcaption>Favorite Authors Extended - a complex DAG example</figcaption>
 </figure>
