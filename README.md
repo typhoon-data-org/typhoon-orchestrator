@@ -190,23 +190,16 @@ This runs a container with only 1 service, `typhoon-af`. This has both Airflow a
 
 You should be able to then check `typhoon status` and also the airlfow UI at [http://localhost:8088](http://localhost:8088)
 
-<figure markdown> 
-   ![Favorite Authors](docs/img/airflow_ui_list_after_install.png){ width="400" }
-   <figcaption>Typhoon DAGS listed in airflow UI</figcaption>
-</figure>
-
+![Airflow UI](docs/img/airflow_ui_list_after_install.png#<400>)
+*Typhoon DAGS listed in airflow UI*
 
 **Development hints are [in the docs](https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/installation.html#directories).**
 
-
-<figure markdown> 
-   ![Favorite Authors](docs/img/airflow_favorite_author_basic_dag.PNG){ width="400" }
-   <figcaption>Favorite Authors DAG - as displayed in airflow UI</figcaption>
-</figure>
+![Airflow Favorite Author](docs/img/airflow_favorite_author_basic_dag.PNG){ width=50% }
+*Favorite Authors DAG - as displayed in airflow UI*
 
 We can extend the above task to give an example with more complexity. The tutorial for this has some more advanced tips. The airflow compiled DAG handles complex DAG structures very nicely:
 
-<figure markdown> 
-   ![Favorite Authors](docs/img/airflow_favorite_author_extended_dag_graph_1.PNG){ width="400" }
-   <figcaption>Favorite Authors Extended - a complex DAG example</figcaption>
-</figure>
+![Airflow Favorite Author Extended](docs/img/airflow_favorite_author_extended_dag_graph_1.PNG){ width=50% }
+*Favorite Authors Extended - a complex DAG example*
+
