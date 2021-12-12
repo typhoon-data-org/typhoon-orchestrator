@@ -158,6 +158,8 @@
 
 ## Using with Airflow
 
+First, read our [installation][1] docs to get going with airflow + docker (10 mins).
+
 Building the above DAG using 
 
 ```bash
@@ -167,14 +169,14 @@ docker restart typhoon-af
  
 
 <figure markdown> 
-   ![Favorite Authors](img/airflow_favorite_author_basic_dag.PNG){ width="400" }
+   ![Favorite Authors](img/airflow_favorite_author_basic_dag.PNG){ width="800" }
    <figcaption>Favorite Authors DAG - as displayed in airflow UI</figcaption>
 </figure>
 
 We can extend the above task to give an example with more complexity. The tutorial for this has some more advanced tips. The airflow compiled DAG handles complex DAG structures very nicely:
 
 <figure markdown> 
-   ![Favorite Authors](img/airflow_favorite_author_extended_dag_graph_1.PNG){ width="400" }
+   ![Favorite Authors](img/airflow_favorite_author_extended_dag_graph_1.PNG){ width="800" }
    <figcaption>Favorite Authors Extended - a complex DAG example</figcaption>
 </figure>
 
