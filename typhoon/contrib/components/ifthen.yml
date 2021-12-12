@@ -5,14 +5,14 @@ args:
   data: T
 
 tasks:
-  ifthen:
+  then:
     input: $COMPONENT_INPUT
     function: typhoon.flow_control.filter
     args:
       filter_func: !Py $ARG.condition
       data: !Py $ARG.data
 
-  ifelse:
+  otherwise:
     input: $COMPONENT_INPUT
     function: typhoon.flow_control.filter
     args:
@@ -20,5 +20,5 @@ tasks:
       data: !Py $ARG.data
 
 output:
-  - ifthen
-  - ifelse
+  - then
+  - otherwise

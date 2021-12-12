@@ -20,7 +20,7 @@ tasks:
       #condition: !Py "lambda name: name.endswith('a')"
 
   archive_day:
-    input: choose_preprocessing.ifthen
+    input: choose_preprocessing.then
     function: typhoon.debug.echo
     args:
       data: !MultiStep
@@ -29,7 +29,7 @@ tasks:
 
 
   otherday_processing_task:
-    input: choose_preprocessing.ifelse
+    input: choose_preprocessing.otherwise
     function: typhoon.debug.echo
     args:
       data: !MultiStep

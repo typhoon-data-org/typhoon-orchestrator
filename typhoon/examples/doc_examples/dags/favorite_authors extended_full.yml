@@ -40,19 +40,19 @@ tasks:
       data: !Py $BATCH
 
   print_match:
-    input: is_fuzzy_author.ifthen
+    input: is_fuzzy_author.then
     function: typhoon.debug.echo
     args:
       data: !Py f"ACCEPTED --  {$BATCH['name']}."
 
   print_not_matched:
-    input: is_fuzzy_author.ifelse
+    input: is_fuzzy_author.otherwise
     function: typhoon.debug.echo
     args:
       data: !Py f"DISCARDED -- {$BATCH['name']} is not similar enough."
 
   select_keys_valid_author_json:
-    input: is_fuzzy_author.ifthen
+    input: is_fuzzy_author.then
     function: typhoon.json.search
     args:
       expression: "{key:key, name:name, birth_date: birth_date, work_count: work_count, top_work: top_work, requested_author:requested_author }"
@@ -70,7 +70,7 @@ tasks:
       create_intermediate_dirs: True
 
   write_error_path_author_json:
-    input: is_fuzzy_author.ifelse
+    input: is_fuzzy_author.otherwise
     function: typhoon.filesystem.write_data    
     args:
       hook: !Hook data_lake
