@@ -6,7 +6,7 @@ tasks:
     function: typhoon.shell.run
     asynchronous: false
     args:
-      cwd: /mnt/c/Users/Adam/GitHub/typhoon-orchestrator
+      cwd: /home/user/git_repo_dir
       command: git log --date=format:%Y-%m-%d\ %H:%M:%S --pretty=format:'"%h","%an","%ae","%ce","%ad","%cd","%s"'
 
   load:
