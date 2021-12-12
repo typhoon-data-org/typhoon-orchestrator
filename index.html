@@ -1063,12 +1063,21 @@
 <figcaption>Getting the works of my favorite authors from Open Library API</figcaption>
 </figure>
 <h2 id="using-with-airflow">Using with Airflow</h2>
-<p>Building the above DAG using <code>typhoon dag build --all</code>. </p>
-<p>Airflow UI will then show:<br />
-<img src="https://user-images.githubusercontent.com/2353804/112546625-f1cad480-8db9-11eb-8dfb-11e2c8d18a48.jpeg" width="300"></p>
-<p>@Todo add the airflow of favorite_author</p>
+<p>Building the above DAG using </p>
+<div class="highlight"><pre><span></span><code>docker-compose -f docker-compose-af.yml run --rm typhoon-af typhoon dag build --all
+docker restart typhoon-af
+</code></pre></div>
+<figure>
+<p><img alt="Favorite Authors" src="img/airflow_favorite_author_basic_dag.PNG" width="400" />
+   </p>
+<figcaption>Favorite Authors DAG - as displayed in airflow UI</figcaption>
+</figure>
 <p>We can extend the above task to give an example with more complexity. The tutorial for this has some more advanced tips. The airflow compiled DAG handles complex DAG structures very nicely:</p>
-<p>@Todo add the extended version.</p>
+<figure>
+<p><img alt="Favorite Authors" src="img/airflow_favorite_author_extended_dag_graph_1.PNG" width="400" />
+   </p>
+<figcaption>Favorite Authors Extended - a complex DAG example</figcaption>
+</figure>
 <h2 id="auto-completion">Auto-Completion</h2>
 <figure>
 <p><img alt="Code Completion" src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/auto-complete.gif" width="800" />
