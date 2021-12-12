@@ -1063,18 +1063,19 @@
 <figcaption>Getting the works of my favorite authors from Open Library API</figcaption>
 </figure>
 <h2 id="using-with-airflow">Using with Airflow</h2>
+<p>First, read our <a href="getting-started/installation.html">installation</a> docs to get going with airflow + docker (10 mins).</p>
 <p>Building the above DAG using </p>
 <div class="highlight"><pre><span></span><code>docker-compose -f docker-compose-af.yml run --rm typhoon-af typhoon dag build --all
 docker restart typhoon-af
 </code></pre></div>
 <figure>
-<p><img alt="Favorite Authors" src="img/airflow_favorite_author_basic_dag.PNG" width="400" />
+<p><img alt="Favorite Authors" src="img/airflow_favorite_author_basic_dag.PNG" width="800" />
    </p>
 <figcaption>Favorite Authors DAG - as displayed in airflow UI</figcaption>
 </figure>
 <p>We can extend the above task to give an example with more complexity. The tutorial for this has some more advanced tips. The airflow compiled DAG handles complex DAG structures very nicely:</p>
 <figure>
-<p><img alt="Favorite Authors" src="img/airflow_favorite_author_extended_dag_graph_1.PNG" width="400" />
+<p><img alt="Favorite Authors" src="img/airflow_favorite_author_extended_dag_graph_1.PNG" width="800" />
    </p>
 <figcaption>Favorite Authors Extended - a complex DAG example</figcaption>
 </figure>
