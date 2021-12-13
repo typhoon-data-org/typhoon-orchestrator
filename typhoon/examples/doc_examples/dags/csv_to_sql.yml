@@ -1,4 +1,4 @@
-name: pickup_data_to_sql
+name: csv_to_sql
 schedule_interval: rate(10 minutes)
 
 tasks:

@@ -158,16 +158,27 @@
 
 ## Using with Airflow
 
-Building the above DAG using `typhoon dag build --all`. 
+First, read our [installation][1] docs to get going with airflow + docker (10 mins).
 
-Airflow UI will then show:  
-<img src="https://user-images.githubusercontent.com/2353804/112546625-f1cad480-8db9-11eb-8dfb-11e2c8d18a48.jpeg" width="300">
+Building the above DAG using 
 
-@Todo add the airflow of favorite_author
+```bash
+docker-compose -f docker-compose-af.yml run --rm typhoon-af typhoon dag build --all
+docker restart typhoon-af
+```
+ 
+
+<figure markdown> 
+   ![Favorite Authors](img/airflow_favorite_author_basic_dag.PNG){ width="800" }
+   <figcaption>Favorite Authors DAG - as displayed in airflow UI</figcaption>
+</figure>
 
 We can extend the above task to give an example with more complexity. The tutorial for this has some more advanced tips. The airflow compiled DAG handles complex DAG structures very nicely:
 
-@Todo add the extended version.
+<figure markdown> 
+   ![Favorite Authors](img/airflow_favorite_author_extended_dag_graph_1.PNG){ width="800" }
+   <figcaption>Favorite Authors Extended - a complex DAG example</figcaption>
+</figure>
 
 ## Auto-Completion 
 

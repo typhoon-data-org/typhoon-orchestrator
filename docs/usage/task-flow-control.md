@@ -133,7 +133,7 @@ tasks:
 
   is_girl:
     input: names
-    component: typhoon.if
+    component: typhoon.ifthen
     args:
       condition: !Py "lambda name: name.endswith('a')"
       data: !Py $BATCH
@@ -145,10 +145,10 @@ tasks:
       data: !Py f'{$BATCH} is a girl'
 
   print_boy:
-    input: is_girl.else
+    input: is_girl.otherwise
     function: functions.debug.echo
     args:
       data: !Py f'{$BATCH} is a boy'
 ```
 
-The key parts above are the use of the `typhoon.if` component and that the tasks are linked using the `condition.if` and `condition.else`.
+The key parts above are the use of the `typhoon.ifthen` component and that the tasks are linked using the `condition.then` and `condition.otherwise`.

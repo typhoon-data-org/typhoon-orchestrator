@@ -61,20 +61,20 @@ tasks:
 
 
   print_match:
-    input: is_fuzzy_author.ifthen
+    input: is_fuzzy_author.then
     function: typhoon.debug.echo
     args:
       data: !Py f"ACCEPTED --  {$BATCH['name']}."
 
   print_not_matched:
-    input: is_fuzzy_author.ifelse
+    input: is_fuzzy_author.otherwise
     function: typhoon.debug.echo
     args:
       data: !Py f"DISCARDED -- {$BATCH['name']} is not similar enough."
 
 
   select_keys_valid_author_json:
-    input: is_fuzzy_author.ifthen
+    input: is_fuzzy_author.then
     function: typhoon.json.search
     args:
       expression: "{key:key, name:name, birth_date: birth_date, work_count: work_count, top_work: top_work, requested_author:requested_author }"
@@ -93,7 +93,7 @@ tasks:
 
 
   write_error_path_author_json:
-    input: is_fuzzy_author.ifelse
+    input: is_fuzzy_author.otherwise
     function: typhoon.filesystem.write_data    
     args:
       hook: !Hook data_lake
@@ -244,13 +244,13 @@ In this case the If Then logic is based on the outcome of the is_similar_name tr
 
 
   print_match:
-    input: is_fuzzy_author.ifthen
+    input: is_fuzzy_author.then
     function: typhoon.debug.echo
     args:
       data: !Py f"ACCEPTED --  {$BATCH['name']}."
 
   print_not_matched:
-    input: is_fuzzy_author.ifelse
+    input: is_fuzzy_author.otherwise
     function: typhoon.debug.echo
     args:
       data: !Py f"DISCARDED -- {$BATCH['name']} is not similar enough."
@@ -262,7 +262,7 @@ A great library that we have included is JMESPath which you can use to reduce an
 
 ```yaml
   select_keys_valid_author_json:
-    input: is_fuzzy_author.ifthen
+    input: is_fuzzy_author.otherwise
     function: typhoon.json.search
     args:
       expression: "{key:key, name:name, birth_date: birth_date, work_count: work_count, top_work: top_work, requested_author:requested_author }"
@@ -270,3 +270,4 @@ A great library that we have included is JMESPath which you can use to reduce an
 ```
 
 This expression above reduces the JSON to only the selected fields. You can explore this more on [JMESPath](https://jmespath.org/).
+
