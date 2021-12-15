@@ -112,17 +112,22 @@ class AirflowMetadataStore(MetadataStoreInterface):
             info = db.get_variable(info_var)
             if info is None:
                 raise MetadataObjectNotFound(f'Variable "{variable_id}" is not set')
-            contents = json.loads(info)
+            info = json.loads(info)
             value = db.get_variable(value_var)
-        return Variable(id=contents['id'], type=VariableType(contents['type']), contents=value)
+        return Variable(id=info['id'], type=VariableType(info['type']), contents=value)
 
     def get_variables(self, to_dict: bool = False) -> List[Union[dict, Variable]]:
         result = []
         with set_airflow_db(self.db_path, self.fernet_key) as db:
             for af_var in db.get_variables():
-                if af_var.key.startswith('typhoon#'):
-                    contents = json.loads(af_var.val)
-                    var = Variable(id=contents['id'], type=VariableType(contents['type']), contents=contents['contents'])
+                if af_var.key.startswith('typhoon:info#'):
+                    info = json.loads(af_var.val)
+                    var_id = info['id']
+                    value_var = typhoon_airflow_variable_name_for_value(var_id)
+                    contents = db.get_variable(value_var)
+                    if contents is None:
+                        raise MetadataObjectNotFound(f'Variable "{var_id}" does not have a value set')
+                    var = Variable(id=var_id, type=VariableType(info['type']), contents=contents)
                     if to_dict:
                         var = var.dict_contents()
                     result.append(var)

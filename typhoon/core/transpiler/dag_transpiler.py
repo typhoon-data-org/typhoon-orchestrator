@@ -47,11 +47,13 @@ class DagFile(Templated):
             batch_num = self.batch_num
             
             {% if task.input %}
-            if self.source == '{{ task.input }}':
-                args = {}
-                {{ task.args | render_args | indent(12, False) }}
-                return args
-            assert False, 'Compiler error'
+            # When multiple inputs are supported add this back
+            # if self.source == '{{ task.input }}':
+            args = {}
+            {{ task.args | render_args | indent(8, False) }}
+            {{ task | default_args_not_set | render_args | indent(8, False) }}
+            return args
+            # assert False, f'Compiler error. Unrecognised source {self.source}'
             {% else %}
             args = {}
             {{ task.args | render_args | indent(8, False) }}
