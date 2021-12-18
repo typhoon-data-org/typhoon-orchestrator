@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Tuple, Dict
+from typing import Any, List, Tuple, Dict
 
 from croniter import croniter
 from dataclasses import dataclass
