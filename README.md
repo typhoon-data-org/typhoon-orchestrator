@@ -92,7 +92,7 @@ Packaged examples:
 
 
 # Example YAML DAG
-    ```yaml linenums="1"
+    
       name: favorite_authors
       schedule_interval: rate(1 day)
       
@@ -123,8 +123,6 @@ Packaged examples:
               - !Py $BATCH['docs'][0]['key']
               - !Py f'/authors/{$1}.json'
             create_intermediate_dirs: True
-
-    ```
 
 
 ![Favorite Authors](docs/img/open_library_example_dag.png)
@@ -190,7 +188,7 @@ This runs a container with only 1 service, `typhoon-af`. This has both Airflow a
 
 You should be able to then check `typhoon status` and also the airlfow UI at [http://localhost:8088](http://localhost:8088)
 
-![Airflow UI](docs/img/airflow_ui_list_after_install.png>)
+![Airflow UI](docs/img/airflow_ui_list_after_install.png)
 *Typhoon DAGS listed in airflow UI*
 
 **Development hints are [in the docs](https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/installation.html#directories).**
