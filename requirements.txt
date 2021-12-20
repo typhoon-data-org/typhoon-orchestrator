@@ -1,6 +1,6 @@
 python-dotenv
 pydantic
-click
+click<8.0
 jinja2
 PyYAML
 boto3

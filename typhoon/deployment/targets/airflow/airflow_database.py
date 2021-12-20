@@ -46,27 +46,27 @@ class AirflowDb:
             extra: Optional[Union[str, dict]] = None,
     ):
         assert str(settings.engine.url) == self.sql_alchemy_conn
-        session = settings.Session()
-        new_conn = Connection(conn_id=conn_id, conn_type=conn_type, host=host,
-                              login=login, password=password, schema=schema, port=port)
-        if extra is not None:
-            new_conn.set_extra(extra if isinstance(extra, str) else json.dumps(extra))
+        with settings.Session() as session:
+            new_conn = Connection(conn_id=conn_id, conn_type=conn_type, host=host,
+                                login=login, password=password, schema=schema, port=port)
+            if extra is not None:
+                new_conn.set_extra(extra if isinstance(extra, str) else json.dumps(extra))
 
-        session.add(new_conn)
-        session.commit()
+            session.add(new_conn)
+            session.commit()
 
     def get_connection(self, conn_id: str) -> Connection:
         assert str(settings.engine.url) == self.sql_alchemy_conn
-        session = settings.Session()
-        conn = session.query(Connection).filter(Connection.conn_id == conn_id).first()
-        return conn
+        with settings.Session() as session:
+            conn = session.query(Connection).filter(Connection.conn_id == conn_id).first()
+            return conn
 
     def delete_connection(self, conn_id: str):
         assert str(settings.engine.url) == self.sql_alchemy_conn
-        session = settings.Session()
-        conn = session.query(Connection).filter(Connection.conn_id == conn_id).first()
-        session.delete(conn)
-        session.commit()
+        with settings.Session() as session:
+            conn = session.query(Connection).filter(Connection.conn_id == conn_id).first()
+            session.delete(conn)
+            session.commit()
 
     def set_variable(
             self,
@@ -75,45 +75,45 @@ class AirflowDb:
             is_encrypted: Optional[bool] = None
     ):
         assert str(settings.engine.url) == self.sql_alchemy_conn
-        session = settings.Session()
-        new_var = Variable(key=var_id, _val=value, is_encrypted=is_encrypted)
-        session.add(new_var)
-        session.commit()
+        with settings.Session() as session:
+            new_var = Variable(key=var_id, _val=value, is_encrypted=is_encrypted)
+            session.add(new_var)
+            session.commit()
 
     def get_variable(self, var_id: str) -> Variable:
         assert str(settings.engine.url) == self.sql_alchemy_conn
-        session = settings.Session()
-        not_found = object()
-        var = Variable.get(var_id, default_var=not_found, session=session)
-        return var if var is not not_found else None
+        with settings.Session() as session:
+            not_found = object()
+            var = Variable.get(var_id, default_var=not_found, session=session)
+            return var if var is not not_found else None
 
     def delete_variable(self, var_id: str):
         assert str(settings.engine.url) == self.sql_alchemy_conn
-        session = settings.Session()
-        var = session.query(Variable).filter(Variable.key == var_id).first()
-        session.delete(var)
-        session.commit()
+        with settings.Session() as session:
+            var = session.query(Variable).filter(Variable.key == var_id).first()
+            session.delete(var)
+            session.commit()
 
     def list_connections(self) -> List[str]:
         assert str(settings.engine.url) == self.sql_alchemy_conn
-        session = settings.Session()
-        return [x.conn_id for x in session.query(Connection)]
+        with settings.Session() as session:
+            return [x.conn_id for x in session.query(Connection)]
 
     def get_connections(self) -> List[Connection]:
         assert str(settings.engine.url) == self.sql_alchemy_conn
-        session = settings.Session()
-        return [x for x in session.query(Connection)]
+        with settings.Session() as session:
+            return [x for x in session.query(Connection)]
 
     def get_variables(self) -> List[Variable]:
         assert str(settings.engine.url) == self.sql_alchemy_conn
-        session = settings.Session()
-        return [x for x in session.query(Variable)]
+        with settings.Session() as session:
+            return [x for x in session.query(Variable)]
 
     def get_first_dag_run(self, dag_id) -> Optional[DagRun]:
         assert str(settings.engine.url) == self.sql_alchemy_conn
-        session = settings.Session()
-        dag_run = session.query(DagRun).filter(DagRun.dag_id == dag_id).order_by(asc(DagRun.execution_date)).first()
-        return dag_run
+        with settings.Session() as session:
+            dag_run = session.query(DagRun).filter(DagRun.dag_id == dag_id).order_by(asc(DagRun.execution_date)).first()
+            return dag_run
 
 
 @contextlib.contextmanager
