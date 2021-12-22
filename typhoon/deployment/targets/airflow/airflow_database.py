@@ -46,7 +46,8 @@ class AirflowDb:
             extra: Optional[Union[str, dict]] = None,
     ):
         assert str(settings.engine.url) == self.sql_alchemy_conn
-        with settings.Session() as session:
+        session = settings.Session()
+        try:
             new_conn = Connection(conn_id=conn_id, conn_type=conn_type, host=host,
                                 login=login, password=password, schema=schema, port=port)
             if extra is not None:
@@ -54,19 +55,27 @@ class AirflowDb:
 
             session.add(new_conn)
             session.commit()
+        finally:
+            session.close()
 
     def get_connection(self, conn_id: str) -> Connection:
         assert str(settings.engine.url) == self.sql_alchemy_conn
-        with settings.Session() as session:
+        session = settings.Session()
+        try:
             conn = session.query(Connection).filter(Connection.conn_id == conn_id).first()
             return conn
+        finally:
+            session.close()
 
     def delete_connection(self, conn_id: str):
         assert str(settings.engine.url) == self.sql_alchemy_conn
-        with settings.Session() as session:
+        session = settings.Session()
+        try:
             conn = session.query(Connection).filter(Connection.conn_id == conn_id).first()
             session.delete(conn)
             session.commit()
+        finally:
+            session.close()
 
     def set_variable(
             self,
@@ -75,45 +84,66 @@ class AirflowDb:
             is_encrypted: Optional[bool] = None
     ):
         assert str(settings.engine.url) == self.sql_alchemy_conn
-        with settings.Session() as session:
+        session = settings.Session()
+        try:
             new_var = Variable(key=var_id, _val=value, is_encrypted=is_encrypted)
             session.add(new_var)
             session.commit()
+        finally:
+            session.close()
 
     def get_variable(self, var_id: str) -> Variable:
         assert str(settings.engine.url) == self.sql_alchemy_conn
-        with settings.Session() as session:
+        session = settings.Session()
+        try:
             not_found = object()
             var = Variable.get(var_id, default_var=not_found, session=session)
             return var if var is not not_found else None
+        finally:
+            session.close()
 
     def delete_variable(self, var_id: str):
         assert str(settings.engine.url) == self.sql_alchemy_conn
-        with settings.Session() as session:
+        session = settings.Session()
+        try:
             var = session.query(Variable).filter(Variable.key == var_id).first()
             session.delete(var)
             session.commit()
+        finally:
+            session.close()
 
     def list_connections(self) -> List[str]:
         assert str(settings.engine.url) == self.sql_alchemy_conn
-        with settings.Session() as session:
+        session = settings.Session()
+        try:
             return [x.conn_id for x in session.query(Connection)]
+        finally:
+            session.close()
 
     def get_connections(self) -> List[Connection]:
         assert str(settings.engine.url) == self.sql_alchemy_conn
-        with settings.Session() as session:
+        session = settings.Session()
+        try:
             return [x for x in session.query(Connection)]
+        finally:
+            session.close()
 
     def get_variables(self) -> List[Variable]:
         assert str(settings.engine.url) == self.sql_alchemy_conn
-        with settings.Session() as session:
+        session = settings.Session()
+        try:
             return [x for x in session.query(Variable)]
+        finally:
+            session.close()
 
     def get_first_dag_run(self, dag_id) -> Optional[DagRun]:
         assert str(settings.engine.url) == self.sql_alchemy_conn
-        with settings.Session() as session:
+        session = settings.Session()
+        try:
             dag_run = session.query(DagRun).filter(DagRun.dag_id == dag_id).order_by(asc(DagRun.execution_date)).first()
             return dag_run
+        finally:
+            session.close()
 
 
 @contextlib.contextmanager

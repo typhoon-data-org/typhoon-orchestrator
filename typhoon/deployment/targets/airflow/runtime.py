@@ -45,7 +45,8 @@ def make_typhoon_dag_context(context):
 def run_airflow_task(source: Optional[str], task: TaskInterface, **context):
     dag_context = make_typhoon_dag_context(context)
     if source is not None:
-        with settings.Session() as session:
+        session = settings.Session()
+        try:
             batches = {
                 x.key: x.value for x in
                 session.query(XCom).filter(
@@ -54,6 +55,8 @@ def run_airflow_task(source: Optional[str], task: TaskInterface, **context):
                     XCom.execution_date == dag_context.execution_time,
                 ).order_by(XCom.key)
             }
+        finally:
+            session.close()
         batch_groups = {}
         # They are sorted by XCom key so no need to worry about order
         for key, batch_and_batch_num in batches.items():
