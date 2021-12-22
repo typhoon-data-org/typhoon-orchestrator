@@ -1,0 +1,1134 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.2.3, mkdocs-material-8.1.3">
+    
+    
+      
+        <title>Variables & Templates - TYPHOON</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.edf004c2.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.e6a45f82.min.css">
+        
+      
+    
+    
+    
+      
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+      <link rel="stylesheet" href="https://unpkg.com/mermaid@7.1.2/dist/mermaid.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="typhoon" data-md-color-primary="" data-md-color-accent="">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#variables-templates" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="TYPHOON" class="md-header__button md-logo" aria-label="TYPHOON" data-md-component="logo">
+      
+  <img src="../../img/typhoon_flat_icon_white.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            TYPHOON
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Variables & Templates
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/typhoon-data-org/typhoon-orchestrator" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    typhoon-orchestrator
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-tabs__inner md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="../.." class="md-tabs__link">
+      Overview
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../getting-started/installation/" class="md-tabs__link">
+        Getting Started
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../examples/hello-world/" class="md-tabs__link">
+        Example Walkthroughs
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+    
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../dag-context/" class="md-tabs__link md-tabs__link--active">
+        Usage
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="TYPHOON" class="md-nav__button md-logo" aria-label="TYPHOON" data-md-component="logo">
+      
+  <img src="../../img/typhoon_flat_icon_white.png" alt="logo">
+
+    </a>
+    TYPHOON
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/typhoon-data-org/typhoon-orchestrator" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    typhoon-orchestrator
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2">
+          Getting Started
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Getting Started" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Getting Started
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        Installation
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/hello-world/" class="md-nav__link">
+        Hello World
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/typhoon-cli/" class="md-nav__link">
+        Typhoon Cli
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/creating-a-dag/" class="md-nav__link">
+        Creating your DAG
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/connections/" class="md-nav__link">
+        Adding connections
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/deployment/" class="md-nav__link">
+        Deployment
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/using-components/" class="md-nav__link">
+        Using Components
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/using-component-ui/" class="md-nav__link">
+        Component UI
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/creating-hooks/" class="md-nav__link">
+        New Hooks (connections)
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/typhoon-shell/" class="md-nav__link">
+        Typhoon Shell
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3">
+          Example Walkthroughs
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Example Walkthroughs" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Example Walkthroughs
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/hello-world/" class="md-nav__link">
+        Hello World
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/mysql-to-snowflake/" class="md-nav__link">
+        MySql to Snowflake
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/pandas-examples/" class="md-nav__link">
+        Pandas automation
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/favorite_author_extended/" class="md-nav__link">
+        Favorite Author Extended
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4" type="checkbox" id="__nav_4" checked>
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4">
+          Usage
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Usage" data-md-level="1">
+        <label class="md-nav__title" for="__nav_4">
+          <span class="md-nav__icon md-icon"></span>
+          Usage
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dag-context/" class="md-nav__link">
+        Dag Context
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../py-multistep/" class="md-nav__link">
+        !Py & !Multistep
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../task-flow-control/" class="md-nav__link">
+        Task flow control
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../task-testing/" class="md-nav__link">
+        Task testing
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../functions/" class="md-nav__link">
+        Functions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transformations/" class="md-nav__link">
+        Transformations
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../components/" class="md-nav__link">
+        Components
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hooks/" class="md-nav__link">
+        Hooks
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Variables & Templates
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Variables & Templates
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#types-of-variables" class="md-nav__link">
+    Types of variables
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-usage" class="md-nav__link">
+    Quick usage
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#built-ins" class="md-nav__link">
+    Built-ins
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples-of-setting-custom-a-variable" class="md-nav__link">
+    Examples of setting custom a $VARIABLE
+  </a>
+  
+    <nav class="md-nav" aria-label="Examples of setting custom a $VARIABLE">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#simple-variable" class="md-nav__link">
+    Simple Variable
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#list-of-tables" class="md-nav__link">
+    List of tables
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#list-of-tables-from-a-file" class="md-nav__link">
+    List of tables from a file
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sql-template" class="md-nav__link">
+    SQL Template
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#types-of-variables" class="md-nav__link">
+    Types of variables
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-usage" class="md-nav__link">
+    Quick usage
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#built-ins" class="md-nav__link">
+    Built-ins
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples-of-setting-custom-a-variable" class="md-nav__link">
+    Examples of setting custom a $VARIABLE
+  </a>
+  
+    <nav class="md-nav" aria-label="Examples of setting custom a $VARIABLE">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#simple-variable" class="md-nav__link">
+    Simple Variable
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#list-of-tables" class="md-nav__link">
+    List of tables
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#list-of-tables-from-a-file" class="md-nav__link">
+    List of tables from a file
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sql-template" class="md-nav__link">
+    SQL Template
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+
+<h1 id="variables-templates">Variables &amp; Templates</h1>
+<p>Variables let us define a value outside our DAG. In general it is a good idea not to hard code magic values into our code, and DAGs in Typhoon are no exception. This makes it easier to change or tune the value without requiring us to re-deploy our DAG.</p>
+<p>You can set simple Variables or use the same functionality to create Templates. These are useful for:</p>
+<ul>
+<li>variables for logic control </li>
+<li>boilerplate sql (using jinja or params)</li>
+<li>lists of tables or schemas (e.g. list of tables to run a dag on)</li>
+</ul>
+<div class="admonition info">
+<p class="admonition-title">Similar to Airflow's variables</p>
+</div>
+<p>If you're familiar with Airflow you'll notice that it's the same concept as Airflow variables. As much as possible Typhoon tries to depart from tried and tested solutions only when it makes . Variables and connections are something that for the most part just works in Airflow, so we saw no reason to change it adding more cognitive burden on developers.</p>
+<h2 id="types-of-variables">Types of variables</h2>
+<p>With that said it's worth pointing out the differences. In Typhoon variables have types associated with them. If a variable is of type JSON or YAML it will get loaded into a python object. If you need it to be loaded as a string prefer to choose the TEXT type.</p>
+<ul>
+<li>Options:    ['string', 'jinja', 'number', 'json', 'yaml']</li>
+</ul>
+<h2 id="quick-usage">Quick usage</h2>
+<ul>
+<li>To list, load or add  variables in the Typhoon cli use:
+    <code>typhoon variable --help</code></li>
+<li>The id you assign or file name used is how you reference it in the DAG</li>
+<li>You can reference your variables with <code>!Py $VARIABLE.my_variable</code> or <code>!Var myvariable</code> (syntactic sugar)</li>
+<li>As you develop check for issues regularly using <code>typhoon status</code></li>
+<li>List your variables using <code>typhoon variable ls -l</code></li>
+</ul>
+<h2 id="built-ins">Built-ins</h2>
+<p>Introducing our built in context variables:</p>
+<ul>
+<li>$BATCH:    This is the data package passed to the next node.</li>
+<li>$BATCH_NUM:    This is the iterator number if you are batching (queries for example).</li>
+<li>$HOOK:    This represents your hook - you can use <code>!Hook my_conn</code> as syntax sugar or <code>!Py $HOOK.myconn</code></li>
+<li>$VARIABLE:    This is how you can access saved variables e.g. lists of tables, query templates etc. An example might be <code>!Py $VARIABLE.mysql_read_3.format(table_name=$BATCH)</code></li>
+<li>$DAG_CONTEXT.interval_start &amp; $DAG_CONTEXT.interval_end:     Execution interval for example:<ul>
+<li>$DAG_CONTEXT.interval_start → '2021-05-23 10:00:00'     (inclusive)</li>
+<li>$DAG_CONTEXT.interval_end → '2021-05-23 11:00:00'     (exclusive)</li>
+</ul>
+</li>
+</ul>
+<h2 id="examples-of-setting-custom-a-variable">Examples of setting custom a $VARIABLE</h2>
+<h4 id="simple-variable">Simple Variable</h4>
+<p>In the typhoon cli use:
+<code>typhoon variable add --var-id weekday_of_archive --var-type string --contents '1'</code></p>
+<p>You will get a response of <code>Variable weekday_of_archive added</code>.</p>
+<p>You can reference in a DAG using <code>!Py $DAG_CONTEXT.interval_start.weekday() == $VARIABLE.weekday_of_archive</code>.</p>
+<p>For example can be used to control if a process runs on a certain weekday with the if component. </p>
+<div class="highlight"><pre><span></span><code><span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">conditional_process</span>
+<span class="nt">schedule_interval</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">rate(10 minutes)</span>
+
+<span class="nt">tasks</span><span class="p">:</span>
+
+  <span class="nt">list_tables</span><span class="p">:</span>
+    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.flow_control.branch</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">branches</span><span class="p">:</span> 
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">customers</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">transactions</span>      
+
+  <span class="nt">choose_preprocessing</span><span class="p">:</span>
+    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">list_tables</span>
+    <span class="nt">component</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.if</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">data</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$BATCH</span>
+      <span class="nt">condition</span><span class="p">:</span> <span class="kt">!Py</span> <span class="s">&quot;lambda</span><span class="nv"> </span><span class="s">table:</span><span class="nv"> </span><span class="s">$DAG_CONTEXT.interval_start.weekday()</span><span class="nv"> </span><span class="s">==</span><span class="nv"> </span><span class="s">$VARIABLE.weekday_of_archive&quot;</span>
+
+  <span class="nt">archive_day</span><span class="p">:</span>
+    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">choose_preprocessing.then</span>
+    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.debug.echo</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">data</span><span class="p">:</span> <span class="kt">!MultiStep</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">print(&#39;processing archive&#39;)</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$BATCH</span>
+
+
+  <span class="nt">otherday_processing_task</span><span class="p">:</span>
+    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">choose_preprocessing.else</span>
+    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.debug.echo</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">data</span><span class="p">:</span> <span class="kt">!MultiStep</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">print(&#39;processing normal day&#39;)</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$BATCH</span>
+</code></pre></div>
+<h4 id="list-of-tables">List of tables</h4>
+<p>In the typhoon cli use the following to add a simple list: 
+<div class="highlight"><pre><span></span><code>typhoon variable add --var-id tables_to_land --var-type yaml  --contents <span class="s2">&quot;</span>
+<span class="s2">- clients</span>
+<span class="s2">- sales</span>
+<span class="s2">&quot;</span>
+</code></pre></div></p>
+<div class="admonition info">
+<p class="admonition-title">Adding variables from STDIN</p>
+</div>
+<p>We can add variables from STDIN by leaving out the --contents argument. This will prompt us to give the value for the variable. We can also pipe the value UNIX style. Eg: cat query_file.sql | typhoon variable add --var-id tutorial_insert_query --var-type jinja or typhoon variable add --var-id tutorial_insert_query2 --var-type string &lt; query_file.sql</p>
+<h4 id="list-of-tables-from-a-file">List of tables from a file</h4>
+<p>You can also load a yaml file using:  </p>
+<div class="highlight"><pre><span></span><code>typhoon variable load --file <span class="s2">&quot;my_table_list.yml&quot;</span>
+</code></pre></div>
+<p>You can reference in a DAG as the name of the file 'my_table_list'. You can then iterate over them like this (using them to load each table for example in future steps):</p>
+<p><div class="highlight"><pre><span></span><code><span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">variable_example</span>
+<span class="nt">schedule_interval</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">rate(10 minutes)</span>
+
+<span class="nt">tasks</span><span class="p">:</span>
+
+  <span class="nt">list_tables</span><span class="p">:</span>
+    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.flow_control.branch</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">branches</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$VARIABLE.my_table_list</span>
+
+
+
+
+  <span class="nt">monday_processing_task</span><span class="p">:</span>
+    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">list_tables</span>
+    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.debug.echo</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">data</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$BATCH</span>
+</code></pre></div>
+This will output:</p>
+<div class="highlight"><pre><span></span><code>** data = transactions
+** data = agents
+** data = orders
+</code></pre></div>
+<h4 id="sql-template">SQL Template</h4>
+<p>We load the following jinja SQL template:
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span>  <span class="o">*</span> 
+<span class="k">FROM</span> <span class="err">{{</span><span class="k">table_name</span><span class="err">}}</span>
+<span class="k">WHERE</span> 
+    <span class="n">start_date</span> <span class="o">&gt;=</span> <span class="err">{{</span><span class="n">start_date</span><span class="err">}}</span>
+    <span class="k">AND</span> <span class="n">end_date</span> <span class="o">&lt;</span> <span class="err">{{</span><span class="n">end_date</span><span class="err">}}</span>
+</code></pre></div>
+Using the following to load, check for issues, and list the variables loaded: 
+<div class="highlight"><pre><span></span><code>typhoon variable load --file &quot;sql_template_1.sql&quot;`
+typhoon status
+typhoon variable ls
+</code></pre></div></p>
+<p>Finally we can add this very easily to the DAG:
+<div class="highlight"><pre><span></span><code><span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">variable_example</span>
+<span class="nt">schedule_interval</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">rate(1 hour)</span>
+
+<span class="nt">tasks</span><span class="p">:</span>
+
+  <span class="nt">list_tables</span><span class="p">:</span>
+    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.flow_control.branch</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">branches</span><span class="p">:</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$VARIABLE.my_table_list</span>
+
+  <span class="nt">process_sql</span><span class="p">:</span>
+    <span class="nt">input</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">list_tables</span>
+    <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.debug.echo</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">data</span><span class="p">:</span> <span class="kt">!MultiStep</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$BATCH</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$DAG_CONTEXT.interval_start</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">$DAG_CONTEXT.interval_end</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!Py</span> <span class="l l-Scalar l-Scalar-Plain">typhoon.templates.render($VARIABLE.sql_template_1, table_name=$1, start_date=$2, end_date=$3)</span>
+</code></pre></div></p>
+<p>Running this will echo the following for each table in our tables list. This can create powerful automation easily. 
+<div class="highlight"><pre><span></span><code>** data = SELECT        *
+FROM orders
+WHERE
+        start_date &gt;= 2021-08-28 16:00:00
+        AND end_date &lt; 2021-08-28 17:00:00
+;
+</code></pre></div></p>
+
+              
+            </article>
+          </div>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+        
+        <a href="../hooks/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Hooks" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Hooks
+            </div>
+          </div>
+        </a>
+      
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../../assets/javascripts/workers/search.0bbba5b5.min.js"}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.e1a181d9.min.js"></script>
+      
+        <script src="https://unpkg.com/mermaid@7.1.2/dist/mermaid.min.js"></script>
+      
+    
+  </body>
+</html>
