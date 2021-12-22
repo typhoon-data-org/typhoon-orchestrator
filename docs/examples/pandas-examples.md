@@ -48,6 +48,7 @@ def json_loads_to_dict(data: Union[str, bytes]) -> dict:
 ```
 
 Data set - mock test scores 
+`curl wget https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/master/docs/examples/data/test_scores.json > /tmp/data_lake/test_scores.json`
 
 ## Usage in functions
 

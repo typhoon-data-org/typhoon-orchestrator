@@ -4,9 +4,22 @@ Now we know the basics, lets make something more useful.
 
 For brevity the full connections YAML is included below for you to copy and replace your keys. However, we will be quite thorough to make sure each step is clear.
 
-In this example, I need to take two tables ['clients', 'sales'] from our production MySql (replace with your favourite RDBMS) to Snowflake (replace with your favourite cloud DWH). Sample data for MySQL is included at the bottom.
+In this example, I need to take two tables `['clients', 'sales']` from our production MySql (replace with your favourite RDBMS) to Snowflake (replace with your favourite cloud DWH). Sample data for MySQL is included at the bottom.
 
 We are going to load our data into a VARIANT field in Snowflake as this pattern is *very fault tolerant*.
+
+!!! tip
+    You can run a MySQL instance in docker with:
+
+    ```
+    docker run --name typhoon-example-mysql -e MYSQL_ROOT_PASSWORD=my-secret-pw -e MYSQL_USER=typhoon -e MYSQL_PASSWORD=typhoon -e MYSQL_DATABASE=prod_web_ecom -d -p "3306:3306" mysql
+
+    docker exec typhoon-example-mysql mysql --user typhoon -ptyphoon --database=prod_web_ecom -e "CREATE TABLE clients (name text, age integer)"
+    docker exec typhoon-example-mysql mysql --user typhoon -ptyphoon --database=prod_web_ecom -e "INSERT INTO clients(name, age) VALUES ('Tom', 27), ('Mary', 25)"
+      
+    docker exec typhoon-example-mysql mysql --user typhoon -ptyphoon --database=prod_web_ecom -e "CREATE TABLE sales (item text, amount integer)"
+    docker exec typhoon-example-mysql mysql --user typhoon -ptyphoon --database=prod_web_ecom -e "INSERT INTO sales(item, amount) VALUES ('Phone', 600), ('Camera', 125)"
+    ```
 
 **Overview of what we want to do:**
 
@@ -96,9 +109,7 @@ tasks:
 
 Let's extract these hourly. We will improve this with variables later. 
 
-Let's run `typhoon status`, build it and run it:
-
-`typhoon dag build dwh_flow`
+Let's run `typhoon status` and run it:
 
 `typhoon dag run --dag-name dwh_flow`
 
@@ -166,8 +177,6 @@ Lets add our Mysql hook and run to an echo task:
 
 Because we are developing we might want to select a specific execution date:
 
-`typhoon dag build dwh_flow`
-
 `typhoon status`
 
 `typhoon dag run --dag-name dwh_flow --execution-date 2021-05-20T14:00:00`
@@ -195,7 +204,7 @@ write_data_S3:
 
 Our function `filesystem.write_data` will write to a filesystem. Notice this is the ***same*** connection YAML used in hello_world. All our functions, connections and components are re-usable. Lets start with the local environment to test it to a local filepath. 
 
-`typhoon connection add --conn-id data_lake --conn-env **local**`
+`typhoon connection add --conn-id data_lake --conn-env local`
 
 Running this we should now see the following (see the connection for where this will land):
 
@@ -250,9 +259,9 @@ Note that we can set the example task to debug with in **`dwh_flow.py`**. For ex
 if __name__ == '__main__':
     import os
 
-    **example_event = {
+    example_event = {
         'time': '2021-05-20T14:00:00Z'
-    }**
+    }
     example_event_task = {
         'type': 'task',
         'dag_name': '',
@@ -320,7 +329,7 @@ Our (fake) data exported as JSON in batches of 10 rows
 
 The final step of this section is to switch the connection to our S3 bucket (i.e. production): 
 
-`typhoon connection add --conn-id data_lake --conn-env **prod**`
+`typhoon connection add --conn-id data_lake --conn-env prod`
 
 When we re-run the DAG we will see the results are now landing in S3 (see YAML connections at end of this for hints on getting the connection right). 
 
@@ -370,10 +379,6 @@ CREATE OR REPLACE TABLE sales (
 We need to add our connection (see YAML at the end for the connection):
 
 `typhoon connection add --conn-id snowflake --conn-env prod`
-
-Now we can build our flow for the final time and run it
-
-`typhoon dag build dwh_flow`
 
 `typhoon dag run --dag-name dwh_flow --execution-date 2021-05-20T14:00:00`
 

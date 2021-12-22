@@ -20,7 +20,7 @@ Here is the YAML it was compiled from:
 name: favorite_authors_extended_full
 schedule_interval: rate(1 day)
 
-Description: >
+description: >
   A more complex DAG:
     - Splitting list into batches for individual processing
     - Custom Functions (e.g. API calls)

@@ -1,4 +1,4 @@
-name: commit_data_to_dwh
+name: git_log_scraper
 schedule_interval: rate(1 day)
 
 tasks:

@@ -10,7 +10,7 @@ typhoon dag ls -l
 typhoon dag push test --dag-name example_dag
 ```
 
-Typing ```typhoon``` will show the list of options
+Typing `typhoon` will show the list of options
 
 ```bash
   connection  Manage Typhoon connections
@@ -23,7 +23,8 @@ Typing ```typhoon``` will show the list of options
   variable    Manage Typhoon variables
 ```
 
-You can use ```--help``` at each point, for example ```typhoon connection --help`` will present:
+You can use `--help` at each point, for example `typhoon connection --help` will present:
+
 ```bash 
 Options:
   --help  Show this message and exit.
@@ -37,7 +38,7 @@ Commands:
 
 ## Key cli usage:
 
-- **Starting a new project**:   ```typhoon init new_project```   
+- **Starting a new project**:   `typhoon init new_project`   
     - (in your desired directory path)
 - **Checking status**:    `typhoon status [ENV]` 
     - This tells you information about the status of your project. Run `typhoon status` and it will find a `typhoon.cfg` file in the current directory. It is assumed that the typhoon project root is the directory that contains the typhoon.cfg.

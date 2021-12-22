@@ -102,29 +102,20 @@ data_lake:
 
 Now we have this lets add our missing connections.
 
-We can get help on the client by using `typhoon —-help`
+If we look at the output of `typhoon status` we can see that we are also getting a suggestion on how to add the missing connection, so we can do it and run:
 
-![typhoon --help](img/helloworld_2.png)
-
-And then `typhoon connection -—help` 
-
-![typhoon connectioin --help](img/helloworld_3.png)
-
-Finally, we can use `typhoon connection add --help`
-
-![typhoon connectioin add --help](img/helloworld_4.png)
-
-So now we can see how to add our connections from the `connections.yml`file. Note the **local** environment. 
-
-`typhoon connection add --conn-id data_lake --conn-env local`
-
-`typhoon connection add --conn-id echo --conn-env local`
+```
+typhoon connectioin add --conn-id echo --conn-env local
+typhoon connectioin add --conn-id data_lake --conn-env local
+```
 
 ![typhoon connectioin add --con-id data_lake --conn-env local](img/helloworld_5.png)
 
 Now again `typhoon status`
 
 ![typhoon status](img/helloworld_6.png)
+
+For more help on the Typhoon CLI check [the CLI docs](../getting-started/typhoon-cli).
 
 *A Ok!*
 
@@ -140,15 +131,13 @@ Let's build our hello_world DAG and see some output. As a quick way lets add on 
       mydata: !Py $BATCH
 ```
 
-$BATCH is the data packet as a consistent default reference. 
+`$BATCH` is the data packet that was passed by the input task. This means the input task's function return, or yield. If it yields multiple times, each yield will be a different batch.
 
-It can be any type so depending on your data can be shaped differently. e.g. $BATCH['key], $BATCH[0]  etc.
+It can be any type depending on what the input returns, so your data can be shaped differently. e.g. `$BATCH['key']`, `$BATCH[0]`  etc.
 
-**Lets build it in typhoon-cli!** We can skip the help as you can now navigate the cli help the same way as for connections (*hint:* `typhoon dag --help`)
-
-`typhoon dag build hello_world`
-
-... **and run it** 
+**Lets run it in typhoon-cli!**
+??? hint
+    You can now navigate the cli help with `typhoon dag --help`.
 
 `typhoon dag run --dag-name hello_world`
 
@@ -176,28 +165,31 @@ Now we can see what will be passed to the next node (which in our case is just e
 
 Our next task `write_data` receives each branch (asynchronously - more on this later for performance) from its `input` task. Setting a task as an input creates an edge for the data to flow linking them:
 
-`send_data` `→` `write_data`
+`send_data` → `write_data`
 
-Next you notice we are writing to a filesystem using a standard python function `filesystem.write_data`.  Into this function we are passing 3 arguments, the connection hook, a transformation of the data, and the path (similar to airflow ones - reusable?),  
+Next you notice we are writing to a filesystem using a regular python function `filesystem.write_data`.  Into this function we are passing 3 arguments, the connection hook, a transformation of the data, and the path (similar to airflow ones - reusable?),  
 
 ## Introducing our built in context variables
 
-- $BATCH:    This is the data package passed to the next node.
-- $BATCH_NUM:    This is the iterator number if you are batching (queries for example).
-- $HOOK:    This represents your hook - you can use `!Hook my_conn` as syntax sugar or `!Py $HOOK.myconn`
-- $VARIABLE:    This is how you can access saved variables e.g. lists of tables, query templates etc. An example might be `!Py $VARIABLE.mysql_read_3.format(table_name=$BATCH)`
-- $DAG_CONTEXT.interval_start & $DAG_CONTEXT.interval_end:     Execution interval for example:
+- `$BATCH`:    This is the data package passed to the next node.
+- `$BATCH_NUM`:    This is the iterator number if you are batching (queries for example).
+- `$HOOK`:    This represents your hook - you can use `!Hook my_conn` as syntax sugar or `!Py $HOOK.myconn`
+- `$VARIABLE`:    This is how you can access saved variables e.g. lists of tables, query templates etc. An example might be `!Py $VARIABLE.mysql_read_3.format(table_name=$BATCH)`. You can use `!Var foo` as syntax sugar for `!Py $VARIABLE.foo`.
+- `$DAG_CONTEXT.interval_start` and `$DAG_CONTEXT.interval_end`:     Execution interval for example:
     - $DAG_CONTEXT.interval_start → '2021-05-23 10:00:00'     (inclusive)
     - $DAG_CONTEXT.interval_end → '2021-05-23 11:00:00'     (exclusive)
 
 ## Passing data
 
 - The notation `!Py` indicates that what comes after is evaluated as normal python code.
-- $BATCH is the data packet as a consistent default reference. It can be any type so depending on your data can be shaped differently e.g. $BATCH['key], $BATCH[0]  etc.
 
-In our case remember each branch yields a list of dictionaries with two keys
+In our case remember each branch yields a list of dictionaries with two keys, so each `$BATCH`will be like:
 
-`[{'filename': 'users.txt', 'contents':'['John', 'Amy', 'Adam', 'Jane']},{'filename':...}]`
+```
+{'filename': 'users.txt', 'contents': ['John', 'Amy', 'Adam', 'Jane']}                    # Batch 1
+{'filename': 'animals.txt', 'contents': ['dog', 'cat', 'mouse', 'elephant', 'giraffe'}    # Batch 2
+
+```
 
 The most complex item here is a `!Multistep` process showing how you can do multiple small python transformations in series in a a nice readable way (or you can put it in one line of course):
 
