@@ -1,6 +1,6 @@
 python-dotenv
 pydantic
-click<8.0
+click
 jinja2
 PyYAML
 boto3
@@ -11,7 +11,3 @@ python-dateutil
 fs
 fs-s3fs
 croniter
-streamlit
-graphviz
-requests
-fastapi

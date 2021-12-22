@@ -20,7 +20,7 @@ kafka = ['kafka-python']
 all_requirements = kafka
 dev_requirements = all_requirements + [
     'termcolor', 'watchdog', 'tabulate', 'pygments', 'sqlitedict', 'datadiff', 'ipython', 'jedi==0.17.2', 'streamlit',
-    'fastapi', 'uvicorn',
+    'fastapi', 'uvicorn', 'graphviz', 
 ]
 
 setup(
