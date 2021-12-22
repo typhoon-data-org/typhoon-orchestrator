@@ -27,7 +27,7 @@ tasks:
 
 tests:
   read_csv_to_df:
-    batch: '/file.csv'
+    batch: SimpleNamespace(path='/file.csv')
     expected:
       path: '/file.csv'
 
