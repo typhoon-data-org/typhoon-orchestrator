@@ -15,7 +15,6 @@ def csv_to_df(hook: FileSystemHookInterface, path: Union[Path, str], sep=',', sk
     :return:
     """
     import pandas as pd
-    print('adam', path)
     with hook as conn:
         print(f'Reading from {path}')
         df = pd.read_csv(conn.root_path + str(path), skiprows=skiprows, sep=sep)
