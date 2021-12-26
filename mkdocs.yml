@@ -64,7 +64,8 @@ markdown_extensions:
   - admonition
   - codehilite
   - extra
-  - pymdownx.tabbed
+  - pymdownx.tabbed:
+      alternate_style: true
   - pymdownx.details
   - pymdownx.superfences:
       custom_fences:
@@ -74,4 +75,3 @@ markdown_extensions:
   - pymdownx.emoji:
       emoji_index: !!python/name:materialx.emoji.twemoji
       emoji_generator: !!python/name:materialx.emoji.to_svg
-
