@@ -1041,7 +1041,9 @@ typhoon connectioin add --conn-id data_lake --conn-env local
 <p><code>$BATCH</code> is the data packet that was passed by the input task. This means the input task's function return, or yield. If it yields multiple times, each yield will be a different batch.</p>
 <p>It can be any type depending on what the input returns, so your data can be shaped differently. e.g. <code>$BATCH['key']</code>, <code>$BATCH[0]</code>  etc.</p>
 <p><strong>Lets run it in typhoon-cli!</strong></p>
-<details class="hint"><summary>Hint</summary><p>You can now navigate the cli help with <code>typhoon dag --help</code>.</p>
+<details class="hint">
+<summary>Hint</summary>
+<p>You can now navigate the cli help with <code>typhoon dag --help</code>.</p>
 </details>
 <p><code>typhoon dag run --dag-name hello_world</code></p>
 <p><img alt="typhoon dag run --dag-name hello_world" src="../img/helloworld_7.png" /></p>
