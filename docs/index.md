@@ -1,3 +1,8 @@
+---
+hide:
+  - navigation
+---
+
 <div class="header_sidebyside"><img src="img/typhoon_logo_large_tagline.png" width="250px" align="left"></div>
 
 <div class="header_sidebyside"><b>Elegant YAML DAGS for Data Pipelines</br>Deploy to your existing Airflow.</b></div>
