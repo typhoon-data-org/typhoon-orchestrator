@@ -1,3 +1,4 @@
+import requests
 from typing import Tuple
 
 from typhoon.connections import ConnectionParams
@@ -9,6 +10,17 @@ class BasicAuthHook(HookInterface):
 
     def __init__(self, conn_params: ConnectionParams):
         self.conn_params = conn_params
+        self.session = None
+
+    def __enter__(self):
+        self.session = requests.Session()
+        self.session.auth = self.basic_auth_params
+
+        return self.session
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+         self.conn_paramsn = None
+         self.session.close()
 
     def url(self, path: str):
         return f'{self.conn_params.extra["base_url"].rstrip("/")}/{path.lstrip("/")}'

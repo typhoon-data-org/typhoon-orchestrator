@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Union, Optional
 
 from typing import TYPE_CHECKING
+from typing_extensions import Literal
 
 from pydantic import BaseSettings, Field
 from typhoon import local_config
@@ -47,7 +48,7 @@ class TyphoonSettings:
     project_name: str
     metadata_db_url_: str
     metadata_suffix: str
-    deploy_target: str
+    deploy_target: Literal['typhoon', 'airflow']
     fernet_key: str
 
     def __init__(self, _env_file: str = None):
