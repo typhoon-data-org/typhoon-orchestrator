@@ -19,7 +19,6 @@ class BasicAuthHook(HookInterface):
         return self.session
     
     def __exit__(self, exc_type, exc_val, exc_tb):
-         self.conn_paramsn = None
          self.session.close()
 
     def url(self, path: str):
