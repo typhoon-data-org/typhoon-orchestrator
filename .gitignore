@@ -183,3 +183,4 @@ tags
 
 /.env
 .vscode/launch.json
+.local/
