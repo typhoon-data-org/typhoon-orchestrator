@@ -28,6 +28,8 @@ class AirflowMetadataStore(MetadataStoreInterface):
     Stores all connections and variables in Airflow's database so they can be accessed from it.
     Also creates an SQLite metadata store to keep track of DAG deployments
     """
+    name = 'airflow'
+
     def __init__(self, db_path: str):
         self.db_path = db_path
         self.fernet_key = Settings.fernet_key

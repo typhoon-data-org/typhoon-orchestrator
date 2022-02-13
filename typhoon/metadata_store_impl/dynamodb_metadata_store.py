@@ -11,6 +11,8 @@ from typhoon.variables import Variable
 
 
 class DynamodbMetadataStore(MetadataStoreInterface):
+    name = 'dynamodb'
+
     def __init__(self, host: str, region: str, aws_profile: Optional[str] = None):
         self.host = host
         self.region = region

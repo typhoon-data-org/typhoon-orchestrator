@@ -621,6 +621,7 @@ class DAGDefinitionV2(BaseModel):
     tests: Optional[Dict[str, TestCase]]
     airflow_default_args: Optional[dict] = Field(
         None, description='Arguments passed to generated Airflow DAG. Ignored if deploy target is not airflow.')
+    requirements: List[str] = Field(default_factory=lambda: [], description="Requirements needed for DAG")
 
     def guess_granularity(self) -> Granularity:
         cron = aws_schedule_to_cron(self.schedule_interval)

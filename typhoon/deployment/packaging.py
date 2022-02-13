@@ -15,9 +15,10 @@ import pkg_resources
 from typhoon.core.components import Component
 from typhoon.core.dags import DagDeployment, DAGDefinitionV2
 from typhoon.core.glue import transpile_dag_and_store, load_dag_definitions, load_components
-from typhoon.core.settings import Settings
+from typhoon.core.settings import Settings, TyphoonSettingsFile
 from typhoon.core.transpiler.component_transpiler import ComponentFile
-from typhoon.deployment.deploy import deploy_dag_requirements, copy_local_typhoon, copy_user_defined_code
+from typhoon.deployment.deploy import deploy_dag_requirements, copy_user_defined_code
+from typhoon.remotes import Remotes
 
 
 def package_dag(
@@ -155,9 +156,6 @@ def build_dag(dag: DAGDefinitionV2, dag_file: Path, deployment_date: datetime, r
     dag_folder = Settings.out_directory / dag['name']
     transpile_dag_and_store(dag, dag_folder, debug_mode=remote is None)
     deploy_dag_requirements(dag, typhoon_version_is_local(), Settings.typhoon_version)
-    if typhoon_version_is_local():
-        print('Typhoon package is in editable mode. Copying to lambda package...')
-        copy_local_typhoon(dag, local_typhoon_path())
     if not remote:
         print('Setting up user defined code as symlink for debugging...')
     copy_user_defined_code(dag, symlink=remote is None)
@@ -169,6 +167,18 @@ def build_dag(dag: DAGDefinitionV2, dag_file: Path, deployment_date: datetime, r
                 dag_code=dag_file.read_text(),
             )
         )
+    else:
+        settings_file_text = generate_settings_file(remote)
+        (dag_folder/'typhoon.cfg').write_text(settings_file_text)
+
+
+def generate_settings_file(remote: str):
+    metadata_db_url = Remotes.metadata_db_url(remote)
+    metadata_suffix = Settings.metadata_suffix
+    return f"""\
+TYPHOON_METADATA_DB_URL="{metadata_db_url}"
+METADATA_SUFFIX={metadata_suffix}\
+"""
 
 
 def dist_is_editable(dist) -> bool:

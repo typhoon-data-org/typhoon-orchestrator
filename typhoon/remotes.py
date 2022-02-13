@@ -46,7 +46,7 @@ class _Remotes:
         config[remote]['aws-profile'] = aws_profile
         config[remote]['metadata-db-url'] = metadata_db_url
         config[remote]['use-name-as-suffix'] = str(use_name_as_suffix).lower()  # HACK: Because configparser can only set strings
-        config[remote]['fernet-key'] = airflow_fernet_key
+        config[remote]['fernet-key'] = fernet_key
         with open(self.remotes_config_path, 'w') as f:
             config.write(f)
 

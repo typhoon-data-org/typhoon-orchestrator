@@ -65,15 +65,6 @@ class DagFile(Templated):
     {% endfor %}
     def {{ dag.name }}_main(event, context):
         setup_logging()
-        # if event.get('type'):     # TODO: Async execution
-
-        # Main execution
-        dag_context = DagContext.from_cron_and_event_time(
-            schedule_interval='{{ dag.schedule_interval }}',
-            event_time=event['time'],
-            granularity='day',
-        )
-        
         sync_broker = SequentialBroker()
         async_broker = SequentialBroker()
         
@@ -102,10 +93,24 @@ class DagFile(Templated):
         {{ dependencies | render_dependencies | indent(4, False) }}
         {% endif %}
         
-        # Sources
-        {% for source in dag.sources.keys() %}
-        {{ source }}_task.run(dag_context, None, -1, None)
-        {% endfor %}
+        if event.get('type'):
+        # This lambda got invoked by a previous task in the DAG
+            payload = get_payload_from_event(event)
+            dag_context = DagContext.parse_obj(payload['dag_context'])
+            task = globals()[f'{payload["task_name"]}_task']
+            task.run(dag_context, source=batch_num['source'], batch_num=payload['batch_num'], batch=payload['batch'])
+        else:
+            # Main execution
+            dag_context = DagContext.from_cron_and_event_time(
+                schedule_interval='{{ dag.schedule_interval }}',
+                event_time=event['time'],
+                granularity='day',
+            )
+        
+            # Sources
+            {% for source in dag.sources.keys() %}
+            {{ source }}_task.run(dag_context, None, -1, None)
+            {% endfor %}
     
     
     if __name__ == '__main__':

@@ -2,7 +2,7 @@ import os
 import re
 from enum import Enum
 from pathlib import Path
-from typing import Union, Optional
+from typing import Optional
 
 from typing import TYPE_CHECKING
 from typing_extensions import Literal

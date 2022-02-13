@@ -37,9 +37,10 @@ from typhoon.connections import Connection
 from typhoon.contrib.hooks.hook_factory import get_hook
 from typhoon.core import DagContext
 from typhoon.core.dags import ArgEvaluationError, load_module_from_path
-from typhoon.core.glue import get_dag_errors, load_dag_definition
+from typhoon.core.glue import get_dag_errors, load_dag_definition, load_dag_definitions
 from typhoon.core.settings import Settings
 from typhoon.deployment.packaging import build_all_dags, local_typhoon_path
+from typhoon.deployment.targets.aws import TERRAFORM_FOLDER_PATH
 from typhoon.handler import run_dag
 from typhoon.introspection.introspect_extensions import get_typhoon_extensions, get_typhoon_extensions_info, \
     get_hooks_info
@@ -68,7 +69,8 @@ def set_settings_from_remote(remote: str):
                   file=sys.stderr)
             sys.exit(-1)
         Settings.metadata_db_url = Remotes.metadata_db_url(remote)
-        Settings.fernet_key = Remotes.fernet_key(remote)
+        if Settings.metadata_store(Remotes.aws_profile(remote)).name == 'airflow':
+            Settings.fernet_key = Remotes.fernet_key(remote)
         if Remotes.use_name_as_suffix(remote):
             Settings.metadata_suffix = remote
 
@@ -251,7 +253,8 @@ def cli_dags():
 @cli_dags.command(name='ls')
 @click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
 @click.option('-l', '--long', is_flag=True, default=False)
-def list_dags(remote: Optional[str], long: bool):
+@click.option('--json-output', is_flag=True, default=False)
+def list_dags(remote: Optional[str], long: bool, json_output):
     set_settings_from_remote(remote)
     metadata_store = Settings.metadata_store(Remotes.aws_profile(remote))
     if long:
@@ -271,11 +274,27 @@ def list_dags(remote: Optional[str], long: bool):
                 ]
                 print(colored(tabulate(table_body, header, 'plain'), 'red'), file=sys.stderr)
     else:
-        for dag_name in sorted(set(x.dag_name for x in metadata_store.get_dag_deployments())):
-            print(dag_name)
-        if not remote:
-            for dag_name, _ in get_dag_errors().items():
-                print(colored(dag_name, 'red'), file=sys.stderr)
+        dag_names = sorted(set(x.dag_name for x in metadata_store.get_dag_deployments()))
+        if json_output:
+            print(json.dumps(dag_names))
+        else:
+            for dag_name in dag_names:
+                print(dag_name)
+            if not remote:
+                for dag_name, _ in get_dag_errors().items():
+                    print(colored(dag_name, 'red'), file=sys.stderr)
+
+
+@cli_dags.command(name='info')
+@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
+@click.option('--json-output', is_flag=True, default=False)
+def dags_info(remote: Optional[str], json_output):
+    set_settings_from_remote(remote)
+    if not json_output:
+        raise NotImplementedError()
+    dags = load_dag_definitions(ignore_errors=True)
+    info = {x.name: {'schedule_interval': x.schedule_interval} for x, _ in dags}
+    print(json.dumps(info))
 
 
 @cli_dags.command(name='build')
@@ -878,6 +897,40 @@ Example usage:
 #             if loaded_dag.get('active', True):
 #                 dag_deployment = DagDeployment(loaded_dag['name'], deployment_date=datetime.utcnow(), dag_code=dag_code)
 #                 config.metadata_store.set_dag_deployment(dag_deployment)
+
+@cli.command()
+@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
+@click.option('-f', '--force', is_flag=True, default=False, help="Force overwrite")
+def generate_terraform(remote: str, force: bool):
+    """Generate terraform files"""
+    terraform_dest_folder = (Settings.typhoon_home/'terraform')
+    if not force and terraform_dest_folder.exists:
+        print('Cannot generate terraform files because the folder exists already')
+        print('Run with -f/--force to force overwrite')
+        exit(1)
+
+    set_settings_from_remote(remote)
+    main_tf_file = TERRAFORM_FOLDER_PATH/'main.tf'
+
+    metadata_store = Settings.metadata_store(Remotes.aws_profile(remote))
+    metadata_store_tf_file = TERRAFORM_FOLDER_PATH/f'metadata_stores/{metadata_store.name}.tf'
+
+    env_name = remote or 'local'
+    tfvars_template = jinja2.Template((TERRAFORM_FOLDER_PATH/'env.tfvars.j2').read_text())
+    rendered_tfvars = tfvars_template.render(dict(
+        env=env_name,
+        runtime='python{}.{}'.format(*sys.version_info),
+        connections_table=Settings.connections_table_name,
+        variables_table=Settings.variables_table_name,
+        dag_deployments_table=Settings.dag_deployments_table_name,
+        metadata_db_url=Remotes.metadata_db_url(remote),
+        metadata_suffix=Settings.metadata_suffix,
+    ))
+
+    terraform_dest_folder.mkdir(exist_ok=True)
+    shutil.copy(str(main_tf_file), str(terraform_dest_folder))
+    shutil.copy(str(metadata_store_tf_file), str(terraform_dest_folder))
+    (terraform_dest_folder/f'{env_name}.tfvars').write_text(rendered_tfvars)
 
 if __name__ == '__main__':
     cli()

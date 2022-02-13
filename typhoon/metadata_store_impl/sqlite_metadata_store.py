@@ -9,6 +9,8 @@ from typhoon.variables import Variable
 
 
 class SQLiteMetadataStore(MetadataStoreInterface):
+    name = 'sqlite'
+
     def __init__(self, db_path: str, no_conns_and_vars=False):
         from sqlitedict import SqliteDict
 

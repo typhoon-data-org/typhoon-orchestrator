@@ -11,6 +11,8 @@ class MetadataObjectNotFound(Exception):
 
 
 class MetadataStoreInterface(ABC):
+    name: str
+
     """All implementations of the metadata store must override these functions"""
     @abstractmethod
     def close(self):
