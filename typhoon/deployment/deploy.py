@@ -32,7 +32,7 @@ def deploy_dag_requirements(dag: dict, local_typhoon: bool, typhoon_version: str
         from typhoon.deployment.packaging import local_typhoon_path
         typhoon_requirement = f'{local_typhoon_path()}'.rstrip('typhoon')
     else:
-        typhoon_requirement = 'typhoon' if typhoon_version == 'latest' else f'typhoon={typhoon_version}'
+        typhoon_requirement = 'typhoon-orchestrator' if typhoon_version == 'latest' else f'typhoon-orchestrator={typhoon_version}'
     requirements.append(typhoon_requirement)
     if requirements:
         write_to_out(directory=dag['name'], filename='requirements.txt', data='\n'.join(requirements))

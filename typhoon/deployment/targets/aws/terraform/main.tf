@@ -17,11 +17,12 @@ variable "runtime" { default = "python3.6" }
 variable "deployment_bucket" { type = string }
 variable "metadata_db_url" { type = string }
 variable "metadata_suffix" { type = string }
+variable "project_name" { type = string }
 
 resource "aws_lambda_function" "dag" {
   for_each = var.dag_info
-  role             = "${aws_iam_role.lambda_exec_role.arn}"
-  handler          = "${each.key}_main"
+  role             = "${aws_iam_role.lambda_exec_role[each.key].arn}"
+  handler          = "${each.key}.${each.key}_main"
   runtime          = "${var.runtime}"
   s3_bucket = "${var.deployment_bucket}"
   s3_key = "typhoon_dag_builds/${each.key}.zip"
@@ -30,12 +31,15 @@ resource "aws_lambda_function" "dag" {
     variables = {
       "TYPHOON_METADATA_DB_URL" = var.metadata_db_url,
       "TYPHOON_METADATA_SUFFIX" = var.metadata_suffix
+      "TYPHOON_PROJECT_NAME" = var.project_name
+      "TYPHOON_HOME" = "/var/task"
     }
   }
 }
 
 resource "aws_iam_role" "lambda_exec_role" {
-  name        = "lambda_exec"
+  for_each = var.dag_info
+  name        = "lambda_exec_${each.key}"
   path        = "/"
   description = "Allows Lambda Function to call AWS services on your behalf."
 
@@ -53,6 +57,30 @@ resource "aws_iam_role" "lambda_exec_role" {
   ]
 }
 EOF
+}
+
+resource "aws_iam_policy" "invoke_dag" {
+  for_each = var.dag_info
+  name        = "invoke_dag_${each.key}"
+  description = "Policy for a lambda DAG to invoke itself"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        "Sid": "AllowInvokeDAGFunction${each.key}",
+        "Effect": "Allow",
+        "Action": "lambda:InvokeFunction",
+        "Resource": aws_lambda_function.dag[each.key].arn 
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "attach_invoke_dag" {
+  for_each = var.dag_info
+  role       = aws_iam_role.lambda_exec_role[each.key].name
+  policy_arn = aws_iam_policy.invoke_dag[each.key].arn
 }
 
 resource "aws_cloudwatch_event_rule" "dag_trigger" {

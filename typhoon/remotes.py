@@ -33,6 +33,9 @@ class _Remotes:
     def use_name_as_suffix(self, remote: str) -> bool:
         return self.remotes_config[remote].getboolean('use-name-as-suffix')
 
+    def s3_bucket(self, remote: str) -> str:
+        return self.remotes_config[remote]['s3-bucket']
+
     def add_remote(
             self,
             remote: str,
@@ -40,6 +43,7 @@ class _Remotes:
             metadata_db_url: str,
             use_name_as_suffix: bool,
             fernet_key: str = None,
+            s3_bucket: str = None,
     ):
         config = self.remotes_config
         config[remote] = {}
@@ -47,6 +51,7 @@ class _Remotes:
         config[remote]['metadata-db-url'] = metadata_db_url
         config[remote]['use-name-as-suffix'] = str(use_name_as_suffix).lower()  # HACK: Because configparser can only set strings
         config[remote]['fernet-key'] = fernet_key
+        config[remote]['s3-bucket'] = s3_bucket
         with open(self.remotes_config_path, 'w') as f:
             config.write(f)
 

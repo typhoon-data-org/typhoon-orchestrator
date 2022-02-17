@@ -43,3 +43,66 @@ resource "aws_dynamodb_table" "dag_deployments" {
     type = "S"
   }
 }
+
+resource "aws_iam_policy" "read_dynamodb_tables" {
+  for_each = var.dag_info
+  name        = "access_typhoon_tables_${each.key}"
+  description = "Policy for a lambda DAG to invoke itself"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        "Sid": "AccessTyphoonConnections${each.key}",
+        "Effect": "Allow",
+        "Action": [
+            "dynamodb:BatchGet*",
+            "dynamodb:DescribeTable",
+            "dynamodb:Get*",
+            "dynamodb:Query",
+            "dynamodb:Scan",
+            "dynamodb:BatchWrite*",
+            "dynamodb:Update*",
+            "dynamodb:PutItem"
+        ],
+        "Resource": aws_dynamodb_table.connections.arn
+      },
+      {
+        "Sid": "AccessTyphoonVariables${each.key}",
+        "Effect": "Allow",
+        "Action": [
+            "dynamodb:BatchGet*",
+            "dynamodb:DescribeTable",
+            "dynamodb:Get*",
+            "dynamodb:Query",
+            "dynamodb:Scan",
+            "dynamodb:BatchWrite*",
+            "dynamodb:Update*",
+            "dynamodb:PutItem"
+        ],
+        "Resource": aws_dynamodb_table.variables.arn
+      },
+      {
+        "Sid": "AccessTyphoonDagDeployments${each.key}",
+        "Effect": "Allow",
+        "Action": [
+            "dynamodb:BatchGet*",
+            "dynamodb:DescribeTable",
+            "dynamodb:Get*",
+            "dynamodb:Query",
+            "dynamodb:Scan",
+            "dynamodb:BatchWrite*",
+            "dynamodb:Update*",
+            "dynamodb:PutItem"
+        ],
+        "Resource": aws_dynamodb_table.dag_deployments.arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "attach_read_tables" {
+  for_each = var.dag_info
+  role       = aws_iam_role.lambda_exec_role[each.key].name
+  policy_arn = aws_iam_policy.read_dynamodb_tables[each.key].arn
+}

@@ -114,14 +114,12 @@ def get_current_venv():
 
 def build_all_dags(remote: Optional[str], matching: Optional[str] = None) -> List[Path]:
     from typhoon.deployment.deploy import clean_out
-    from typhoon.deployment.sam import deploy_sam_template
 
     clean_out()
 
     print('Build all DAGs...')
     deployment_date = datetime.now()
     dags = load_dag_definitions(ignore_errors=True)
-    deploy_sam_template([dag for dag, _ in dags], remote=remote)
     dag_files = []
     for dag, dag_file in dags:
         if not matching or re.match(matching, dag.name):

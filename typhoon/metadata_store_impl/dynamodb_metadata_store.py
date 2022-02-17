@@ -1,3 +1,4 @@
+import json
 from typing import Optional, Union, List
 
 from typhoon.aws import dynamodb_helper
@@ -183,8 +184,10 @@ class DynamodbMetadataStore(MetadataStoreInterface):
         return [DagDeployment.parse_obj(x).dict() if to_dict else DagDeployment.parse_obj(x) for x in dag_deployments_raw]
 
     def set_dag_deployment(self, dag_deployment: DagDeployment):
+        item = json.loads(dag_deployment.json())
+        item['deployment_hash'] = dag_deployment.deployment_hash
         dynamodb_helper.dynamodb_put_item(
             ddb_client=self.client,
             table_name=Settings.dag_deployments_table_name,
-            item=dag_deployment.dict(),
+            item=item,
         )

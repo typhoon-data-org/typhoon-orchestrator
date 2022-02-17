@@ -27,6 +27,7 @@ from tabulate import tabulate
 from termcolor import colored
 
 from api.main import run_api
+from typhoon.deployment.packaging import typhoon_version_is_local
 from typhoon import connections
 from typhoon.cli_helpers.cli_completion import get_remote_names, get_dag_names, get_conn_envs, get_conn_ids, \
     get_var_types, get_deploy_targets, PROJECT_TEMPLATES, get_task_names
@@ -348,6 +349,103 @@ def build_dags(remote: Optional[str], dag_name: Optional[str], all_: bool):
             build_all_dags_airflow(remote=None, matching=dag_name)
 
 
+@cli_dags.command(name='push')
+@click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
+@click.option('--dag-name', autocompletion=get_dag_names, required=False, default=None)
+@click.option('--all', 'all_', is_flag=True, default=False, help='Build all DAGs (mutually exclusive with DAG_NAME)')
+@click.option('--code', is_flag=True, default=False, help='Update lambda code but not dependency layer')
+def push_dags(remote: Optional[str], dag_name: Optional[str], all_: bool, code: bool):
+    """Build code for dags in $TYPHOON_HOME/out/"""
+    set_settings_from_remote(remote)
+    if dag_name and all_:
+        raise click.UsageError(f'Illegal usage: DAG_NAME is mutually exclusive with --all')
+    elif dag_name is None and not all_:
+        raise click.UsageError(f'Illegal usage: Need either DAG_NAME or --all')
+    if all_:
+        dag_errors = get_dag_errors()
+        if dag_errors:
+            print(f'Found errors in the following DAGs:')
+            for dag_name in dag_errors.keys():
+                print(f'  - {dag_name}\trun typhoon dag build {dag_name}')
+            sys.exit(-1)
+        raise NotImplementedError()
+    else:
+        if Settings.deploy_target == 'typhoon':
+            build_all_dags(remote=remote, matching=dag_name)
+            dag_out_path = Settings.out_directory/dag_name
+            builds_path = Settings.out_directory/'builds'
+            if builds_path.exists():
+                shutil.rmtree(str(builds_path), ignore_errors=True)
+            builds_path.mkdir()
+            (builds_path/dag_name).mkdir()
+            shutil.make_archive(str(builds_path/dag_name/'lambda'), 'zip', root_dir=str(dag_out_path))
+
+            print('Updating lambda code...')
+            import boto3
+            session = boto3.session.Session(profile_name=Remotes.aws_profile(remote))
+            s3r = session.resource('s3')
+            s3_key_lambda_zip = f'typhoon_dag_builds/{dag_name}/lambda.zip'
+            s3r.Object(Remotes.s3_bucket(remote), s3_key_lambda_zip).put(
+                Body=(builds_path/f'{dag_name}/lambda.zip').open('rb')
+            )
+            lambdac = session.client('lambda')
+            try:
+                lambdac.response = lambdac.get_function(
+                    FunctionName=f'{dag_name}_{remote}',
+                )
+            except lambdac.exceptions.ResourceNotFoundException:
+                print(f'Lambda for {dag_name} does not exist yet. Create it with terraform and push again')
+                exit(0)
+            lambdac.update_function_code(
+                FunctionName=f'{dag_name}_{remote}',
+                S3Bucket=Remotes.s3_bucket(remote),
+                S3Key=s3_key_lambda_zip,
+            )
+
+            if not code:
+                print('Building lambda dependencies...')
+                if typhoon_version_is_local():
+                    p = local_typhoon_path().rstrip('typhoon')
+                    local_typhoon_volume = ['-v', f'{p}:{p}']
+                else:
+                    local_typhoon_volume = []
+                docker_pip_command = [
+                    'docker', 'run', '--rm', '-v', f'{dag_out_path}:/var/task',
+                    *local_typhoon_volume,
+                    'lambci/lambda:build-python{}.{}'.format(*sys.version_info),
+                    'pip', 'install', '-r', 'requirements.txt', '--target', './layer/python/',
+                ]
+                docker_pip_command = ' '.join(docker_pip_command)
+                print(docker_pip_command)
+                subprocess.run(args=docker_pip_command, cwd=str(dag_out_path), shell=True)
+                shutil.make_archive(str(builds_path/dag_name/'layer'), 'zip', root_dir=str(dag_out_path/'layer'))
+                s3_key_layer_zip = f'typhoon_dag_builds/{dag_name}/layer.zip'
+                s3r.Object(Remotes.s3_bucket(remote), s3_key_layer_zip).put(
+                    Body=(builds_path/f'{dag_name}/layer.zip').open('rb')
+                )
+
+                print('Publishing dependencies as layer...')
+                layer_name = f'{dag_name}_dependencies'
+                response = lambdac.publish_layer_version(
+                    LayerName=layer_name,
+                    Description='Dependencies needed for DAG',
+                    Content={
+                        'S3Bucket': Remotes.s3_bucket(remote),
+                        'S3Key': str(s3_key_layer_zip),
+                    },
+                    CompatibleRuntimes=[
+                        'python{}.{}'.format(*sys.version_info)
+                    ]
+                )
+                lambdac.update_function_configuration(
+                    FunctionName=f'{dag_name}_{remote}',
+                    Layers=[response['LayerVersionArn']],
+                )
+        else:
+            raise NotImplementedError()
+
+
+
 @cli_dags.command(name='watch')
 @click.argument('dag_name', autocompletion=get_dag_names, required=False, default=None)
 @click.option('--all', 'all_', is_flag=True, default=False, help='Build all DAGs (mutually exclusive with DAG_NAME)')
@@ -394,8 +492,22 @@ def cli_run_dag(remote: Optional[str], dag_name: str, execution_date: Optional[d
         build_all_dags(remote=None, matching=dag_name)
         run_local_dag(dag_name, execution_date)
     else:
-        # TODO: Run lambda function
-        pass
+        import boto3
+        import base64
+
+        payload_dict = {
+            'time': datetime.now().isoformat()
+        }
+        payload = json.dumps(payload_dict).encode()
+
+
+        response = boto3.client('lambda').invoke(
+            FunctionName=f'{dag_name}_{remote}',
+            InvocationType='RequestResponse',
+            LogType='Tail',
+            Payload=payload,
+        )
+        print(base64.b64decode(response['LogResult']).decode())
 
 
 @cli_dags.command(name='definition')
@@ -925,6 +1037,8 @@ def generate_terraform(remote: str, force: bool):
         dag_deployments_table=Settings.dag_deployments_table_name,
         metadata_db_url=Remotes.metadata_db_url(remote),
         metadata_suffix=Settings.metadata_suffix,
+        s3_bucket=Remotes.s3_bucket(remote),
+        project_name=Settings.project_name,
     ))
 
     terraform_dest_folder.mkdir(exist_ok=True)

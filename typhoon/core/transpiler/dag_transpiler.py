@@ -18,6 +18,10 @@ class DagFile(Templated):
     from typhoon.core.settings import Settings
     from typhoon.core import setup_logging, DagContext
     from typhoon.core.runtime import SequentialBroker, ComponentArgs
+    from typhoon.deployment.targets.aws.runtime import get_payload_from_event
+    {% if not debug_mode %}
+    from typhoon.deployment.targets.aws.runtime import LambdaBroker
+    {% endif %}
     from typhoon.contrib.hooks.hook_factory import get_hook
     {% if non_component_tasks %}
     
@@ -63,10 +67,14 @@ class DagFile(Templated):
     
     
     {% endfor %}
-    def {{ dag.name }}_main(event, context):
+    def {{ dag.name }}_main(event, context=None):
         setup_logging()
-        sync_broker = SequentialBroker()
-        async_broker = SequentialBroker()
+        sync_broker = SequentialBroker(dag_id='dag.name')
+        {% if debug_mode %}
+        async_broker = SequentialBroker(dag_id='dag.name')
+        {% else %}
+        async_broker = LambdaBroker(dag_id='dag.name')
+        {% endif %}
         
         # Initialize tasks
         {% for task_name, task in dag.tasks.items() %}
@@ -93,13 +101,19 @@ class DagFile(Templated):
         {{ dependencies | render_dependencies | indent(4, False) }}
         {% endif %}
         
-        if event.get('type'):
-        # This lambda got invoked by a previous task in the DAG
+        if event.get('type') == 'task':
+            # This lambda got invoked by a previous task in the DAG
+            if event.get('invoke_lambda_synchronously'):
+                os.environ['INVOKE_LAMBDA_SYNCHRONOUSLY'] = 'true'
             payload = get_payload_from_event(event)
             dag_context = DagContext.parse_obj(payload['dag_context'])
-            task = globals()[f'{payload["task_name"]}_task']
-            task.run(dag_context, source=batch_num['source'], batch_num=payload['batch_num'], batch=payload['batch'])
+            task = locals()[f'{payload["task_name"]}_task']
+            task.run(dag_context, source=payload['source_id'], batch_num=payload['batch_num'], batch=payload['batch'])
         else:
+            if event.get('type') == 'manual':
+                import os
+                os.environ['INVOKE_LAMBDA_SYNCHRONOUSLY'] = 'true'
+            
             # Main execution
             dag_context = DagContext.from_cron_and_event_time(
                 schedule_interval='{{ dag.schedule_interval }}',
@@ -113,6 +127,7 @@ class DagFile(Templated):
             {% endfor %}
     
     
+    {% if debug_mode %}
     if __name__ == '__main__':
         example_event = {
             'time': '2019-02-05T00:00:00Z'
@@ -134,6 +149,7 @@ class DagFile(Templated):
         }
     
         {{ dag.name }}_main(example_event, None)
+    {% endif %}
     '''
     dag: DAGDefinitionV2
     debug_mode: bool = False

@@ -1,3 +1,5 @@
+import base64
+import json
 import os
 from dataclasses import dataclass
 from typing import Any
@@ -27,32 +29,38 @@ class LambdaBroker(BrokerInterface):
             print('You are trying to invoke a lambda function locally. Make sure to set the env variable AWS_LAMBDA_FUNCTION_NAME')
             sys.exit(1)
 
+        invoke_lambda_synchronously = os.environ.get('INVOKE_LAMBDA_SYNCHRONOUSLY', '').lower() == 'true'
         payload_dict = {
             'type': 'task',
             'dag_id': self.dag_id,
             'source_id': source_id,
-            'task_name': destination,
+            'task_name': destination.task_id,
             'trigger': 'dag',
             'attempt': 1,
             'batch_num': batch_num,
             'batch': batch,
             'batch_group_id': batch_group_id,
             'dag_context': dag_context.dict(),
+            'invoke_lambda_synchronously': invoke_lambda_synchronously,
         }
         payload = jsonpickle.encode(payload_dict).encode()
 
 
-        if os.environ.get('INVOKE_LAMBDA_SYNCHRONOUSLY', '').lower() == 'true':
+        if invoke_lambda_synchronously:
             response = boto3.client('lambda').invoke(
                 FunctionName=lambda_function_name,
                 InvocationType='RequestResponse',
                 LogType='Tail',
                 Payload=payload,
             )
-            print(response['LogResult'])
+            print(base64.b64decode(response['LogResult']).decode())
         else:
             boto3.client('lambda').invoke(
                 FunctionName=lambda_function_name,
                 InvocationType='Event',
                 Payload=payload,
             )
+
+
+def get_payload_from_event(event):
+    return jsonpickle.decode(json.dumps(event))
