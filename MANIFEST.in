@@ -1,3 +1,4 @@
 recursive-include typhoon/examples *
 recursive-include typhoon/deployment/templates *
 recursive-include typhoon/contrib/components *
+recursive-include typhoon/deployment/targets/aws/terraform *
