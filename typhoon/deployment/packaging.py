@@ -11,6 +11,7 @@ from shutil import copytree, copy, make_archive, move, rmtree
 from typing import Optional, List
 
 import pkg_resources
+from typhoon.aws.exceptions import TyphoonResourceNotFoundError
 
 from typhoon.core.components import Component
 from typhoon.core.dags import DagDeployment, DAGDefinitionV2
@@ -157,7 +158,7 @@ def build_dag(dag: DAGDefinitionV2, dag_file: Path, deployment_date: datetime, r
     if not remote:
         print('Setting up user defined code as symlink for debugging...')
     copy_user_defined_code(dag, symlink=remote is None)
-    if remote is None:
+    try:
         Settings.metadata_store(aws_profile=None).set_dag_deployment(
             DagDeployment(
                 dag_name=dag['name'],
@@ -165,9 +166,8 @@ def build_dag(dag: DAGDefinitionV2, dag_file: Path, deployment_date: datetime, r
                 dag_code=dag_file.read_text(),
             )
         )
-    else:
-        settings_file_text = generate_settings_file(remote)
-        (dag_folder/'typhoon.cfg').write_text(settings_file_text)
+    except TyphoonResourceNotFoundError:
+        print(f'WARNING: DynamoDB  table {Settings.dag_deployments_table_name} does not exist. Skipping deployment metadata...')
 
 
 def generate_settings_file(remote: str):

@@ -19,6 +19,10 @@ def get(hook: BasicAuthHook, path: str, metadata: dict = None) -> GetResponse:
 
 
 def get_raw(url: str, metadata: dict = None) -> GetResponse:
+    """Perform HTTP GET request on URL and return a named tuple with the following structure:
+- `response`: requests.Response type from calling requests.get
+- `metadata`: If you passed a metadata dictionary it will return it, otherwise it's an empty dict
+    """
     yield GetResponse(
         response=requests.get(url),
         metadata=metadata or {},

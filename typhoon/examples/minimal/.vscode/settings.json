@@ -1,0 +1,32 @@
+{
+  "yaml.customTags": [
+    "!Py",
+    "!Hook",
+    "!Var",
+    "!MultiStep sequence"
+  ],
+  "yaml.schemas": {
+    "./dag_schema.json": [
+      "/dags/*.yml"
+    ],
+    "./component_schema.json": [
+      "/components/*.yml"
+    ]
+  },
+  "emeraldwalk.runonsave": {
+    "commands": [
+      {
+        "match": "functions/.*py$",
+        "cmd": "./generate_schemas.sh ${workspaceFolder}"
+      },
+      {
+        "match": "transformation/.*py$",
+        "cmd": "./generate_schemas.sh ${workspaceFolder}"
+      },
+      {
+        "match": "connections.yml",
+        "cmd": "./generate_schemas.sh ${workspaceFolder}"
+      }
+    ]
+  }
+}

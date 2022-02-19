@@ -4,6 +4,9 @@ from typing import Optional, Dict, Tuple, Any
 
 import boto3
 import jsonpickle
+from typhoon.core.settings import Settings
+
+from typhoon.variables import Variable, VariableType
 
 # Define sentinels
 SKIP_BATCH = object()
@@ -71,3 +74,11 @@ def get_func_task_name(func):
     Format the task function name via inspection.
     """
     return func.__name__
+
+
+def get_variable(variable_id: str) -> Variable:
+    env_var_value = os.environ.get(f'TYPHOON_VARIABLE_{variable_id}')
+    if env_var_value:
+        return Variable(variable_id, VariableType.STRING, env_var_value)
+    else:
+        return Settings.metadata_store().get_variable(variable_id)

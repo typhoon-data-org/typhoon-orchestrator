@@ -24,8 +24,8 @@ class _Remotes:
     def aws_profile(self, remote: Optional[str]) -> str:
         return self.remotes_config[remote]['aws-profile'] if remote else None
 
-    def metadata_db_url(self, remote: str) -> str:
-        return self.remotes_config[remote]['metadata-db-url']
+    def metadata_db_url(self, remote: str) -> Optional[str]:
+        return self.remotes_config[remote].get('metadata-db-url', '')
 
     def fernet_key(self, remote: str) -> str:
         return self.remotes_config[remote]['fernet-key']

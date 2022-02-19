@@ -1,4 +1,5 @@
 terraform {
+  experiments = [module_variable_optional_attrs]
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -12,29 +13,51 @@ provider "aws" {
 }
 
 variable "env" { type = string }
-variable "dag_info" { type = map }
+variable "dag_info" {
+  type = map(object({
+    schedule_interval = string
+    environment = optional(map(string))
+  }))
+}
 variable "runtime" { default = "python3.6" }
 variable "deployment_bucket" { type = string }
-variable "metadata_db_url" { type = string }
-variable "metadata_suffix" { type = string }
+variable "metadata_db_url" {
+  type = string
+  default = ""
+}
+variable "metadata_suffix" {
+  type = string
+  default = ""
+}
 variable "project_name" { type = string }
 
 resource "aws_lambda_function" "dag" {
   for_each = var.dag_info
+  function_name    = "${each.key}_${var.env}"
   role             = "${aws_iam_role.lambda_exec_role[each.key].arn}"
   handler          = "${each.key}.${each.key}_main"
   runtime          = "${var.runtime}"
   s3_bucket = "${var.deployment_bucket}"
-  s3_key = "typhoon_dag_builds/${each.key}.zip"
-  function_name    = "${each.key}_${var.env}"
+  s3_key = "typhoon_dag_builds/${each.key}/lambda.zip"
+  layers = [aws_lambda_layer_version.dag_dependencies_layer[each.key].arn]
+  timeout = 30
   environment {
-    variables = {
+    variables = merge({
       "TYPHOON_METADATA_DB_URL" = var.metadata_db_url,
       "TYPHOON_METADATA_SUFFIX" = var.metadata_suffix
       "TYPHOON_PROJECT_NAME" = var.project_name
       "TYPHOON_HOME" = "/var/task"
-    }
+    }, each.value["environment"])
   }
+}
+
+resource "aws_lambda_layer_version" "dag_dependencies_layer" {
+  for_each = var.dag_info
+  s3_bucket = "${var.deployment_bucket}"
+  s3_key = "typhoon_dag_builds/${each.key}/layer.zip"
+  layer_name = "${each.key}_dependencies"
+
+  compatible_runtimes = [var.runtime]
 }
 
 resource "aws_iam_role" "lambda_exec_role" {
@@ -68,7 +91,6 @@ resource "aws_iam_policy" "invoke_dag" {
     Version = "2012-10-17"
     Statement = [
       {
-        "Sid": "AllowInvokeDAGFunction${each.key}",
         "Effect": "Allow",
         "Action": "lambda:InvokeFunction",
         "Resource": aws_lambda_function.dag[each.key].arn 

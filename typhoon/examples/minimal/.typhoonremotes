@@ -1,0 +1,3 @@
+[test]
+aws-profile=my-profile
+s3-bucket=dag-deployment-bucket

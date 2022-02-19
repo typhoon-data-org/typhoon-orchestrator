@@ -14,9 +14,10 @@ from typhoon.core.transpiler.transpiler_helpers import extract_dependencies, cam
 class DagFile(Templated):
     template = '''
     # DAG name: {{ dag.name }}
+    import os
     from typing import Any
     from typhoon.core.settings import Settings
-    from typhoon.core import setup_logging, DagContext
+    from typhoon.core import setup_logging, DagContext, get_variable
     from typhoon.core.runtime import SequentialBroker, ComponentArgs
     from typhoon.deployment.targets.aws.runtime import get_payload_from_event
     {% if not debug_mode %}
@@ -111,7 +112,6 @@ class DagFile(Templated):
             task.run(dag_context, source=payload['source_id'], batch_num=payload['batch_num'], batch=payload['batch'])
         else:
             if event.get('type') == 'manual':
-                import os
                 os.environ['INVOKE_LAMBDA_SYNCHRONOUSLY'] = 'true'
             
             # Main execution

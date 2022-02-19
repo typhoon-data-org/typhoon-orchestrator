@@ -49,7 +49,7 @@ class TasksFile(Templated):
     from typhoon.core.settings import Settings
     from typhoon.contrib.hooks.hook_factory import get_hook
     from typhoon.core.runtime import TaskInterface, BrokerInterface, ComponentInterface
-    from typhoon.core import DagContext
+    from typhoon.core import DagContext, get_variable
     
     {{ render_imports }}
     {% for task_id, task in tasks.items() if task.function is not none %}

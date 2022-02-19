@@ -33,7 +33,10 @@ def is_hook(t: Type) -> bool:
 
 @lru_cache(1)
 def get_connection_names() -> List[str]:
-    connection_definitions = yaml.safe_load((Settings.typhoon_home/'connections.yml').read_text())
+    connections_file = Settings.typhoon_home/'connections.yml'
+    if not connections_file.exists():
+        return []
+    connection_definitions = yaml.safe_load(connections_file.read_text())
     return list(connection_definitions.keys())
 
 

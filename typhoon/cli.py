@@ -110,9 +110,14 @@ def init(project_name: str, deploy_target: str, template: str):
             cfg_path = (dest / 'typhoon.cfg')
             dag_schema_path = (dest / 'dag_schema.json')
             component_schema_path = (dest / 'component_schema.json')
-
+        
         cfg_path.write_text(EXAMPLE_CONFIG.format(project_name=project_name, deploy_target=deploy_target))
         Settings.typhoon_home = dest
+        Settings.project_name = project_name
+
+        if template in ['hello_world', 'minimal']:
+            generate_terraform_files(minimal=(template == 'minimal'))
+
         dag_schema, component_schema = generate_json_schemas()
         dag_json_schema = json.dumps(dag_schema, indent=2)
         dag_schema_path.write_text(dag_json_schema)
@@ -289,13 +294,14 @@ def list_dags(remote: Optional[str], long: bool, json_output):
 @cli_dags.command(name='info')
 @click.argument('remote', autocompletion=get_remote_names, required=False, default=None)
 @click.option('--json-output', is_flag=True, default=False)
-def dags_info(remote: Optional[str], json_output):
+@click.option('--indent', type=click.INT, required=False, default=None)
+def dags_info(remote: Optional[str], json_output, indent):
     set_settings_from_remote(remote)
     if not json_output:
         raise NotImplementedError()
     dags = load_dag_definitions(ignore_errors=True)
     info = {x.name: {'schedule_interval': x.schedule_interval} for x, _ in dags}
-    print(json.dumps(info))
+    print(json.dumps(info, indent=indent))
 
 
 @cli_dags.command(name='build')
@@ -343,10 +349,10 @@ def build_dags(remote: Optional[str], dag_name: Optional[str], all_: bool):
             print(tabulate(table_body, header, 'plain'), file=sys.stderr)
             sys.exit(-1)
         if Settings.deploy_target == 'typhoon':
-            build_all_dags(remote=None, matching=dag_name)
+            build_all_dags(remote=remote, matching=dag_name)
         else:
             from typhoon.deployment.targets.airflow.airflow_build import build_all_dags_airflow
-            build_all_dags_airflow(remote=None, matching=dag_name)
+            build_all_dags_airflow(remote=remote, matching=dag_name)
 
 
 @cli_dags.command(name='push')
@@ -354,7 +360,8 @@ def build_dags(remote: Optional[str], dag_name: Optional[str], all_: bool):
 @click.option('--dag-name', autocompletion=get_dag_names, required=False, default=None)
 @click.option('--all', 'all_', is_flag=True, default=False, help='Build all DAGs (mutually exclusive with DAG_NAME)')
 @click.option('--code', is_flag=True, default=False, help='Update lambda code but not dependency layer')
-def push_dags(remote: Optional[str], dag_name: Optional[str], all_: bool, code: bool):
+@click.option('--build-deps-locally', is_flag=True, default=False, help='Build dependencies without docker. Not recommended.')
+def push_dags(remote: Optional[str], dag_name: Optional[str], all_: bool, code: bool, build_deps_locally: bool):
     """Build code for dags in $TYPHOON_HOME/out/"""
     set_settings_from_remote(remote)
     if dag_name and all_:
@@ -390,17 +397,13 @@ def push_dags(remote: Optional[str], dag_name: Optional[str], all_: bool, code: 
             )
             lambdac = session.client('lambda')
             try:
-                lambdac.response = lambdac.get_function(
+                lambdac.update_function_code(
                     FunctionName=f'{dag_name}_{remote}',
+                    S3Bucket=Remotes.s3_bucket(remote),
+                    S3Key=s3_key_lambda_zip,
                 )
             except lambdac.exceptions.ResourceNotFoundException:
-                print(f'Lambda for {dag_name} does not exist yet. Create it with terraform and push again')
-                exit(0)
-            lambdac.update_function_code(
-                FunctionName=f'{dag_name}_{remote}',
-                S3Bucket=Remotes.s3_bucket(remote),
-                S3Key=s3_key_lambda_zip,
-            )
+                print(f'Lambda for {dag_name} does not exist yet. Create it with terraform after this command')
 
             if not code:
                 print('Building lambda dependencies...')
@@ -409,15 +412,20 @@ def push_dags(remote: Optional[str], dag_name: Optional[str], all_: bool, code: 
                     local_typhoon_volume = ['-v', f'{p}:{p}']
                 else:
                     local_typhoon_volume = []
-                docker_pip_command = [
-                    'docker', 'run', '--rm', '-v', f'{dag_out_path}:/var/task',
-                    *local_typhoon_volume,
-                    'lambci/lambda:build-python{}.{}'.format(*sys.version_info),
-                    'pip', 'install', '-r', 'requirements.txt', '--target', './layer/python/',
-                ]
-                docker_pip_command = ' '.join(docker_pip_command)
-                print(docker_pip_command)
-                subprocess.run(args=docker_pip_command, cwd=str(dag_out_path), shell=True)
+                if build_deps_locally:
+                    pip_command = f'{sys.executable} -m pip install -r requirements.txt --target .layer/python/'
+                    print(pip_command)
+                    subprocess.run(args=pip_command, cwd=str(dag_out_path), shell=True)
+                else:
+                    docker_pip_command = [
+                        'docker', 'run', '--rm', '-v', f'{dag_out_path}:/var/task',
+                        *local_typhoon_volume,
+                        'lambci/lambda:build-python{}.{}'.format(*sys.version_info),
+                        'pip', 'install', '-r', 'requirements.txt', '--target', './layer/python/',
+                    ]
+                    docker_pip_command = ' '.join(docker_pip_command)
+                    print(docker_pip_command)
+                    subprocess.run(args=docker_pip_command, cwd=str(dag_out_path), shell=True)
                 shutil.make_archive(str(builds_path/dag_name/'layer'), 'zip', root_dir=str(dag_out_path/'layer'))
                 s3_key_layer_zip = f'typhoon_dag_builds/{dag_name}/layer.zip'
                 s3r.Object(Remotes.s3_bucket(remote), s3_key_layer_zip).put(
@@ -437,10 +445,13 @@ def push_dags(remote: Optional[str], dag_name: Optional[str], all_: bool, code: 
                         'python{}.{}'.format(*sys.version_info)
                     ]
                 )
-                lambdac.update_function_configuration(
-                    FunctionName=f'{dag_name}_{remote}',
-                    Layers=[response['LayerVersionArn']],
-                )
+                try:
+                    lambdac.update_function_configuration(
+                        FunctionName=f'{dag_name}_{remote}',
+                        Layers=[response['LayerVersionArn']],
+                    )
+                except lambdac.exceptions.ResourceNotFoundException:
+                    print(f'Lambda for {dag_name} does not exist yet. Create it with terraform after this command')
         else:
             raise NotImplementedError()
 
@@ -496,6 +507,7 @@ def cli_run_dag(remote: Optional[str], dag_name: str, execution_date: Optional[d
         import base64
 
         payload_dict = {
+            'type': 'manual',
             'time': datetime.now().isoformat()
         }
         payload = json.dumps(payload_dict).encode()
@@ -1015,35 +1027,39 @@ Example usage:
 @click.option('-f', '--force', is_flag=True, default=False, help="Force overwrite")
 def generate_terraform(remote: str, force: bool):
     """Generate terraform files"""
+    set_settings_from_remote(remote)
+    generate_terraform_files(remote)
+
+
+def generate_terraform_files(remote: Optional[str] = None, force: bool = False, minimal: bool = False):
     terraform_dest_folder = (Settings.typhoon_home/'terraform')
-    if not force and terraform_dest_folder.exists:
-        print('Cannot generate terraform files because the folder exists already')
+    if not force and terraform_dest_folder.exists():
+        print(f'Cannot generate terraform files because the folder exists already {terraform_dest_folder}')
         print('Run with -f/--force to force overwrite')
         exit(1)
 
-    set_settings_from_remote(remote)
     main_tf_file = TERRAFORM_FOLDER_PATH/'main.tf'
 
-    metadata_store = Settings.metadata_store(Remotes.aws_profile(remote))
-    metadata_store_tf_file = TERRAFORM_FOLDER_PATH/f'metadata_stores/{metadata_store.name}.tf'
-
-    env_name = remote or 'local'
+    env_name = remote or 'test'
     tfvars_template = jinja2.Template((TERRAFORM_FOLDER_PATH/'env.tfvars.j2').read_text())
     rendered_tfvars = tfvars_template.render(dict(
         env=env_name,
         runtime='python{}.{}'.format(*sys.version_info),
-        connections_table=Settings.connections_table_name,
-        variables_table=Settings.variables_table_name,
-        dag_deployments_table=Settings.dag_deployments_table_name,
-        metadata_db_url=Remotes.metadata_db_url(remote),
-        metadata_suffix=Settings.metadata_suffix,
-        s3_bucket=Remotes.s3_bucket(remote),
+        connections_table=None if minimal else Settings.connections_table_name,
+        variables_table=None if minimal else Settings.variables_table_name,
+        dag_deployments_table=None if minimal else Settings.dag_deployments_table_name,
+        metadata_db_url=None if minimal else Remotes.metadata_db_url(remote),
+        metadata_suffix=None if minimal else Settings.metadata_suffix,
+        s3_bucket=Remotes.s3_bucket(remote) if remote else '',
         project_name=Settings.project_name,
     ))
 
     terraform_dest_folder.mkdir(exist_ok=True)
     shutil.copy(str(main_tf_file), str(terraform_dest_folder))
-    shutil.copy(str(metadata_store_tf_file), str(terraform_dest_folder))
+    if not minimal:
+        metadata_store = Settings.metadata_store(Remotes.aws_profile(remote))
+        metadata_store_tf_file = TERRAFORM_FOLDER_PATH/f'metadata_stores/{metadata_store.name}.tf'
+        shutil.copy(str(metadata_store_tf_file), str(terraform_dest_folder))
     (terraform_dest_folder/f'{env_name}.tfvars').write_text(rendered_tfvars)
 
 if __name__ == '__main__':

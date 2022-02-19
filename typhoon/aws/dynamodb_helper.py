@@ -115,9 +115,12 @@ def create_dynamodb_table(
 def dynamodb_put_item(ddb_client, table_name: str, item: dict):
     serializer = TypeSerializer()
     serialized_item = serializer.serialize(item)['M']
-    ddb_client.put_item(
-        TableName=table_name,
-        Item=serialized_item)
+    try:
+        ddb_client.put_item(
+            TableName=table_name,
+            Item=serialized_item)
+    except ddb_client.exceptions.ResourceNotFoundException:
+        raise TyphoonResourceNotFoundError(f'Table {table_name} does not exist in DynamoDB')
 
 
 def dynamodb_get_item(ddb_client, table_name: str, key_name: str, key_value: str):
