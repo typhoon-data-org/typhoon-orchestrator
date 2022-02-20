@@ -1,9 +1,20 @@
 import re
 from datetime import timedelta, datetime
-from typing import Union, Dict
+from typing import Optional, Union, Dict
 
 from croniter import croniter
 from dateutil.parser import parse
+
+
+CRON_REGEX = (
+    r'^((?:[1-5]?\d|\*|,|-|/)(?:/\d+)?)\s+' +
+    r'((?:1\d|2[0-3]|\d|\*|,\-\/)(?:/\d+)?)\s+' +
+    r'((?:[1-2]\d|3[01]|\d|\*|,\-\/)(?:/\d+)?)' +
+    r'\s+((?:1[0-2]|[1-9]|(?:JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)|\*|,\-\/)(?:/\d+)?)\s+' +
+    r'((?:[0-6]|(?:MON|TUE|WED|THU|FRI|SAT|SUN)|\*|,|-|/)(?:/\d+)?)$'
+)
+
+RATE_REGEX = r'rate\s*\(\s*(\d+)\s+(minute|minutes|hour|hours|day|days|week|weeks|month|months)\s*\)'
 
 cron_presets: Dict[str, str] = {
     '@hourly': '0 * * * *',
@@ -27,7 +38,7 @@ cron_templates = {
 def aws_schedule_to_cron(schedule: str) -> str:
     if schedule in cron_presets.keys():
         return cron_presets[schedule]
-    match = re.match(r'rate\s*\(\s*(\d+)\s+(minute|minutes|hour|hours|day|days|week|weeks|month|months)\s*\)', schedule)
+    match = re.match(RATE_REGEX, schedule)
     if match:
         n, freq = match.groups()
         freq = freq + 's' if not freq.endswith('s') else freq
@@ -53,6 +64,33 @@ def interval_start_from_schedule_and_interval_end(schedule: str, interval_end: U
     iterator = croniter(cron, start_time=interval_end)
     return iterator.get_prev(datetime)
 
+
+def dag_schedule_to_aws_cron(schedule: str) -> Optional[str]:
+    if schedule in cron_presets.keys():
+        return dag_schedule_to_aws_cron(cron_presets[schedule])
+    
+    match = re.match(RATE_REGEX, schedule)
+    if match:
+        n, freq = match.groups()
+        freq = freq + 's' if not freq.endswith('s') else freq
+        return dag_schedule_to_aws_cron(cron_templates[freq].format(n=n))
+    
+    matches = re.match(CRON_REGEX, schedule)
+    if not matches:
+        return None
+    minute, hour, day_of_month, month, day_of_week = matches.groups()
+    try:
+        day_of_week = int(day_of_week) + 1
+    except ValueError:
+        pass
+    if (
+        day_of_month == '*' and day_of_week == '*' or
+        day_of_month != '*' and day_of_week == '*'
+    ):
+        day_of_week = '?'
+    elif day_of_month == '*' and day_of_week != '*':
+        day_of_month = '?'
+    return f'cron({minute} {hour} {day_of_month} {month} {day_of_week} *)'
 
 if __name__ == '__main__':
     print(aws_schedule_to_cron('rate ( 5 months )'))

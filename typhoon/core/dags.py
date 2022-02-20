@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from dateutil.parser import parse
 from pydantic import BaseModel, validator, Field, root_validator
 
-from typhoon.core.cron_utils import aws_schedule_to_cron
+from typhoon.core.cron_utils import CRON_REGEX, aws_schedule_to_cron
 from typhoon.core.settings import Settings
 from typhoon.introspection.introspect_extensions import get_typhoon_extensions_info
 
@@ -602,8 +602,8 @@ class DAGDefinitionV2(BaseModel):
     schedule_interval: str = Field(
         ...,
         regex='(' + '@hourly|@daily|@weekly|@monthly|@yearly|' +
-              r'((\*|\?|\d+((\/|\-){0,1}(\d+))*)\s*){5,6}' + '|' +
-              r'cron\s*\(\s*(?:[0-5]?\d(?:/[0-5]?\d)?|\*|,|-|/)\s+(?:[1-2]?\d(?:/[1-2]?\d)?|\*|,|-|/)\s+(?:[1-3]?\d|\*|\?|,|-|/|L|W)\s+(?:1?\d|(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)|\*|,|-|/)\s+(?:[1-7]|(SUN|MON|TUE|WED|THU|FRI|SAT)|\*|\?|,|-|L|#)\s+(?:\d{4}|\*|,|-|/)\s*\)' + '|' +
+              CRON_REGEX + '|' +
+            #   r'cron\s*\(\s*(?:[0-5]?\d(?:/[0-5]?\d)?|\*|,|-|/)\s+(?:[1-2]?\d(?:/[1-2]?\d)?|\*|,|-|/)\s+(?:[1-3]?\d|\*|\?|,|-|/|L|W)\s+(?:1?\d|(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)|\*|,|-|/)\s+(?:[1-7]|(SUN|MON|TUE|WED|THU|FRI|SAT)|\*|\?|,|-|L|#)\s+(?:\d{4}|\*|,|-|/)\s*\)' + '|' +
               r'rate\(\s*1\s+minute\s*\)' + '|' +
               r'rate\(\s*\d+\s+minutes\s*\)' + '|' +
               r'rate\(\s*1\s+hour\s*\)' + '|' +

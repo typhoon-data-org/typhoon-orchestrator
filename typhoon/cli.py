@@ -27,6 +27,7 @@ from tabulate import tabulate
 from termcolor import colored
 
 from api.main import run_api
+from typhoon.core.cron_utils import dag_schedule_to_aws_cron
 from typhoon.deployment.packaging import typhoon_version_is_local
 from typhoon import connections
 from typhoon.cli_helpers.cli_completion import get_remote_names, get_dag_names, get_conn_envs, get_conn_ids, \
@@ -300,7 +301,7 @@ def dags_info(remote: Optional[str], json_output, indent):
     if not json_output:
         raise NotImplementedError()
     dags = load_dag_definitions(ignore_errors=True)
-    info = {x.name: {'schedule_interval': x.schedule_interval} for x, _ in dags}
+    info = {x.name: {'schedule_interval': dag_schedule_to_aws_cron(x.schedule_interval)} for x, _ in dags}
     print(json.dumps(info, indent=indent))
 
 
