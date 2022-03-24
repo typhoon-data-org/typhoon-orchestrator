@@ -5,7 +5,10 @@ from dataclasses import dataclass
 from typing import Any
 
 import boto3
-from importlib_metadata import sys
+try:
+    from importlib.metadata import sys
+except ImportError:  # Python < 3.10 (backport)
+    from importlib_metadata import sys
 import jsonpickle
 from typhoon.core import DagContext
 from typhoon.core.runtime import BrokerInterface, TaskInterface
@@ -14,6 +17,9 @@ from typhoon.core.runtime import BrokerInterface, TaskInterface
 @dataclass
 class LambdaBroker(BrokerInterface):
     dag_id: str
+
+    def __init__(self, dag_id: str):
+        self.dag_id = dag_id
 
     def send(
             self,

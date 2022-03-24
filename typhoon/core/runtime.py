@@ -7,6 +7,8 @@ from typing_extensions import Protocol, runtime_checkable
 
 
 class BrokerInterface(Protocol):
+    dag_id: str
+
     def send(
             self,
             dag_context: DagContext,
@@ -22,7 +24,8 @@ class BrokerInterface(Protocol):
 class DebugBroker(BrokerInterface):
     batches: Dict[str, Dict[int, Any]]
 
-    def __init__(self):
+    def __init__(self, dag_id: str):
+        self.dag_id = dag_id
         self.batches = {}
 
     def send(
@@ -41,6 +44,9 @@ class DebugBroker(BrokerInterface):
 
 
 class SequentialBroker(BrokerInterface):
+    def __init__(self, dag_id: str):
+        self.dag_id = dag_id
+
     def send(
             self,
             dag_context: DagContext,

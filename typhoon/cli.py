@@ -416,7 +416,9 @@ def push_dags(remote: Optional[str], dag_name: Optional[str], all_: bool, code: 
                 if build_deps_locally:
                     pip_command = f'{sys.executable} -m pip install -r requirements.txt --target .layer/python/'
                     print(pip_command)
-                    subprocess.run(args=pip_command, cwd=str(dag_out_path), shell=True)
+                    p = subprocess.run(args=pip_command, cwd=str(dag_out_path), shell=True)
+                    print(colored(f'ERROR: Pip install command exited with return code {p.returncode}', 'red'))
+                    sys.exit(1)
                 else:
                     docker_pip_command = [
                         'docker', 'run', '--rm', '-v', f'{dag_out_path}:/var/task',
@@ -426,13 +428,19 @@ def push_dags(remote: Optional[str], dag_name: Optional[str], all_: bool, code: 
                     ]
                     docker_pip_command = ' '.join(docker_pip_command)
                     print(docker_pip_command)
-                    subprocess.run(args=docker_pip_command, cwd=str(dag_out_path), shell=True)
+                    p = subprocess.run(args=docker_pip_command, cwd=str(dag_out_path), shell=True)
+                    if p.returncode != 0:
+                        print(colored(f'ERROR: Docker command exited with return code {p.returncode}', 'red'))
+                        print(colored('Check that docker is installed and running on your machine', 'red'))
+                        print(colored('Alternatively run this command with --build-deps-locally to skip docker, but resulting binaries may be incompatible with the lambda runtime.', 'red'))
+                        sys.exit(1)
                 shutil.make_archive(str(builds_path/dag_name/'layer'), 'zip', root_dir=str(dag_out_path/'layer'))
                 s3_key_layer_zip = f'typhoon_dag_builds/{dag_name}/layer.zip'
                 s3r.Object(Remotes.s3_bucket(remote), s3_key_layer_zip).put(
                     Body=(builds_path/f'{dag_name}/layer.zip').open('rb')
                 )
 
+                sys.exit(0)
                 print('Publishing dependencies as layer...')
                 layer_name = f'{dag_name}_dependencies'
                 response = lambdac.publish_layer_version(
@@ -452,7 +460,7 @@ def push_dags(remote: Optional[str], dag_name: Optional[str], all_: bool, code: 
                         Layers=[response['LayerVersionArn']],
                     )
                 except lambdac.exceptions.ResourceNotFoundException:
-                    print(f'Lambda for {dag_name} does not exist yet. Create it with terraform after this command')
+                    print(colored(f'WARNING: Lambda for {dag_name} does not exist yet. Create it with terraform after this command', 'yellow'))
         else:
             raise NotImplementedError()
 
