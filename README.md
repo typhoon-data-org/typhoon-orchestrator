@@ -11,7 +11,7 @@
 <img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/typhoon_logo_large_tagline.png" >
 </p>
 <br>
-<p align="center"><b>Elegant YAML DAGS for Data Pipelines</br>Deploy to your existing Airflow.</b></p>
+<p align="center"><b>Create tasks in modern Python</br>Elegant YAML DAGS for Data Pipelines</br>Deploy to AWS Lambda or to your existing Airflow.</b></p>
 <br>️
 <p align="center">
 <img style="margin: 10px" src="https://img.shields.io/github/license/typhoon-data-org/typhoon-orchestrator.svg" alt="Linux" height="20" />
@@ -30,7 +30,19 @@
 
 <hr>
 
-# Why Typhoon (+ Airflow)?
+# Why Typhoon?
+
+Our vision is a new generation of cloud native, asynchronous orchestrators that can handle highly dynamic workflows with ease. We crafted Typhoon from the ground up to work towards this vision. It's designed to feel familiar while still making very different design decisions where it matters. 
+
+# Why Typhoon + AWS Lambda?
+
+A Serverless orchestrator has the potential to be infinitely scalable and extremely cost efficient at the same time. We think AWS Lambda is ideal for this:
+
+- CloudWatch Events can trigger a Lambda on a schedule, so we get scheduling for free! A scheduler is the most complex piece of an orchestrator. We can do away with it completely and still be sure that our DAGs will always run on time.
+- Lambda is cheap. You get 1 million invocations for free every month.
+- Workflows can be paralellized by running tasks in parallel on different instances of the Lambda. Typhoon DAGs use batching to take full advantage of this.
+
+# Why Typhoon + Airflow?
 
 Airflow is great!
 
