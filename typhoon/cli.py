@@ -440,7 +440,6 @@ def push_dags(remote: Optional[str], dag_name: Optional[str], all_: bool, code: 
                     Body=(builds_path/f'{dag_name}/layer.zip').open('rb')
                 )
 
-                sys.exit(0)
                 print('Publishing dependencies as layer...')
                 layer_name = f'{dag_name}_dependencies'
                 response = lambdac.publish_layer_version(
