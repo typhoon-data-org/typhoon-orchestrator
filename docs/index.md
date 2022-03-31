@@ -5,13 +5,15 @@ hide:
 
 <div class="header_sidebyside"><img src="img/typhoon_logo_large_tagline.png" width="250px" align="left"></div>
 
-<div class="header_sidebyside"><b>Elegant YAML DAGS for Data Pipelines</br>Deploy to your existing Airflow.</b></div>
+<div class="header_sidebyside"><b>Elegant YAML DAGS for Data Pipelines</br>Deploy to Airflow or AWS Lambda.</b></div>
 
 # 
 
 === "Why Typhoon"
 
     *Write Airflow DAGS faster* :rocket:
+
+    **Write Serverless AWS Lambda  DAGS faster** :rocket: :rocket:
 
     Make creating reliable data pipelines easy for the whole team :raised_hands:
 

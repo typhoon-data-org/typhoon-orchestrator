@@ -90,6 +90,19 @@ Packaged examples:
 <tr>
 <td width="50%">
 
+**Pure python** - easily extend with pure python.
+
+Extensible and hackable. Python as a 1st class citizen. 
+
+**Testable Python:**  Test functions with PyTest as normal.
+
+</td>
+<td><img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/typhoon_pure_python_functions.gif" alt="UI Component" width="400px" align="right" style="max-width: 100%;">
+</td>
+</tr>
+<tr>
+<td width="50%">
+
 **Rich CLI & Shell**: Inspired by others; instantly familiar.
 
 **Testable Tasks** - automate DAG task tests.
