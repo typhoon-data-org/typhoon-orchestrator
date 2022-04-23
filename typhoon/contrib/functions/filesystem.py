@@ -5,8 +5,9 @@ from typing import Iterable, NamedTuple, Union, List, Optional
 from fs.copy import copy_fs
 from fs.info import Info
 from typing_extensions import Literal
+from typhoon.connections import ConnectionParams
 
-from typhoon.contrib.hooks.filesystem_hooks import FileSystemHookInterface
+from typhoon.contrib.hooks.filesystem_hooks import FileSystemHookInterface, LocalStorageHook
 
 
 class ReadDataResponse(NamedTuple):
@@ -20,8 +21,8 @@ class WriteDataResponse(NamedTuple):
 
 
 def read_data(hook: FileSystemHookInterface, path: Union[Path, str]) -> ReadDataResponse:
-    """
-    Reads the data from a file given its relative path and returns a named tuple with the shape (data: bytes, path: str)
+    """Reads the data from a file given its relative path and returns a named tuple with the shape (data: bytes, path: str)
+
     :param hook: FileSystem Hook
     :param path: File path relative to base directory
     """
@@ -37,9 +38,10 @@ def write_data(
         create_intermediate_dirs: bool = False,
         metadata: Optional[dict] = None,
         return_path_format: Literal['relative', 'absolute', 'url'] = 'relative',
+        append: bool = False,
 ) -> Iterable[str]:
-    """
-    Write the given data to the path specified.
+    """Write the given data to the path specified.
+
     :param metadata: optional dict
     :param data: Bytes buffer
     :param hook: A FileSystemHookInterface hook instance
@@ -57,7 +59,10 @@ def write_data(
             print('Creating intermediate directories')
             conn.makedirs(str(Path(path).parent), recreate=True)
         print(f'Writing to {path}')
-        conn.writebytes(path, data)
+        if append:
+            conn.appendbytes(path, data)
+        else:
+            conn.writebytes(path, data)
         if return_path_format == 'relative':
             return_path = path
         elif return_path_format == 'absolute':
@@ -69,15 +74,50 @@ def write_data(
     yield WriteDataResponse(metadata=metadata, path=return_path)
 
 
-def list_directory(hook: FileSystemHookInterface, path: Union[Path, str] = '/') -> Iterable[str]:
-    """
-    List all the files in a given directory relative to base path
+def write_data_raw(
+        data: Union[str, bytes, BytesIO],
+        path: Union[Path, str],
+        create_intermediate_dirs: bool = False,
+        metadata: Optional[dict] = None,
+) -> Iterable[str]:
+    """Write data directly to the local filesystem"""
+    hook = LocalStorageHook(ConnectionParams(conn_type='local_storage', extra={'base_path': '/'}))
+    return write_data(
+        data=data,
+        hook=hook,
+        path=path,
+        create_intermediate_dirs=create_intermediate_dirs,
+        metadata=metadata,
+        return_path_format='absolute',
+    )
+
+
+def list_directory(
+    hook: FileSystemHookInterface,
+    path: Union[Path, str] = '/',
+    return_path_format: Literal['relative', 'absolute', 'url'] = 'relative',
+    to_list: bool = False,
+) -> Iterable[str]:
+    """List all the files in a given directory relative to base path
     :param hook: FileSystem Hook
     :param path: Directory relative path
     """
+    def format_path(path):
+        if return_path_format == 'relative':
+            return path
+        elif return_path_format == 'absolute':
+            return conn.open(path).name.decode()
+        elif return_path_format == 'url':
+            return conn.geturl(path)
+        else:
+            raise ValueError(f'return_path_format should be "relative", "absolute" or "url". Found "{return_path_format}"')
     with hook as conn:
         print(f'Listing directory {path}')
-        yield from [str(Path(path) / f) for f in conn.listdir(str(path))]
+        paths = (format_path(str(Path(path) / f)) for f in conn.listdir(str(path)))
+        if to_list:
+            return list(paths)
+        else:
+            yield from paths
 
 
 def copy(source_hook: FileSystemHookInterface, source_path: str, destination_hook: FileSystemHookInterface, destination_path: str):
