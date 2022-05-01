@@ -67,7 +67,7 @@ Simplicity and re-usability; a toolkit designed to be loved by Data Engineers :h
 
 
 </td>
-<td><img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/auto-complete.gif" alt="UI Component" width="400px" align="right" style="max-width: 100%;">
+<td><img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/main/docs/img/auto-complete.gif" alt="UI Component" width="400px" align="right" style="max-width: 100%;">
 </td>
 </tr>
 <tr>
@@ -84,7 +84,20 @@ Packaged examples:
 **UI**: Share pre-built components (data pipelines) with your team :raised_hands:
 
 </td>
-<td><img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/component_ui.gif" alt="UI Component" width="400px" align="right" style="max-width: 100%;">
+<td><img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/main/docs/img/component_ui.gif" alt="UI Component" width="400px" align="right" style="max-width: 100%;">
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Pure python** - easily extend with pure python.
+
+Extensible and hackable. Python as a 1st class citizen. 
+
+**Testable Python:**  Test functions with PyTest as normal.
+
+</td>
+<td><img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/main/docs/img/typhoon_pure_python_functions.gif" alt="UI Component" width="400px" align="right" style="max-width: 100%;">
 </td>
 </tr>
 <tr>
@@ -97,7 +110,7 @@ Packaged examples:
 **Testable Python** - test functions or full DAGs with PyTest.
 
 </td>
-<td><img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/typhoon_cli_testing.gif" alt="UI Component" width="400px" align="right" style="max-width: 100%;">
+<td><img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/main/docs/img/typhoon_cli_testing.gif" alt="UI Component" width="400px" align="right" style="max-width: 100%;">
 </td>
 </tr>
 
