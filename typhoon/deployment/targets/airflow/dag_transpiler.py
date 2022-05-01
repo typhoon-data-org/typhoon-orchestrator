@@ -76,7 +76,7 @@ class AirflowDagFile(Templated):
     
     
     {% endfor %}
-    sync_broker = SequentialBroker()
+    sync_broker = SequentialBroker(dag_id='{{ dag.name }}')
     async_broker = AirflowBroker(dag_id='{{ dag.name }}')
     
     # Initialize typhoon tasks
