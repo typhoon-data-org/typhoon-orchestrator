@@ -2,9 +2,9 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ master , test_docker_image_1 ]
+    branches: [ master , docker_wsl_fix ]
   pull_request:
-    branches: [ master , test_docker_image_1 ]
+    branches: [ master , docker_wsl_fix ]
 
 
 jobs:
