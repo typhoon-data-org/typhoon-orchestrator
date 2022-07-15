@@ -14,7 +14,7 @@ RUN set -ex && apt-get update -yqq \
 WORKDIR /
 COPY . /
 RUN pip install -e ./[dev]
-RUN mkdir $TYPHOON_BASE && chown -R airflow: ${TYPHOON_BASE} && mkdir /tmp/data_lake && chown -R airflow: /tmp/data_lake
+RUN mkdir $TYPHOON_BASE && chown -R airflow: ${TYPHOON_BASE} && mkdir /tmp/data_lake && chown -R airflow: /tmp/data_lake && chown -R airflow:${AIRFLOW_HOME}
 
 USER airflow
 WORKDIR $TYPHOON_BASE
