@@ -1,8 +1,7 @@
 <br>️
-<br>️
-<img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/f1520188bd639f9a63cf59cdc89d587096d0de4e/docs/img/typhoon_logo_large_tagline_extended.png" >
-<br>️
-<br>
+<p align="center">
+    <img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/f1520188bd639f9a63cf59cdc89d587096d0de4e/docs/img/typhoon_logo_large_tagline_extended.png" >
+</p>
 <p align="center">
 <br>
  <a href="https://discord.gg/XxV5MAF8Xt">Discord :sunglasses:</a> |
