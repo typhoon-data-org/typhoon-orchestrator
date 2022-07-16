@@ -93,36 +93,31 @@ tasks:
 *Getting the works of my favorite authors from Open Library API*
 
 
-# Installation
+# ⚡ Installation
 
-See [documentation](https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/installation.html) for detailed guidance on installation and walkthroughs. 
+See [documentation](https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/installation.html) for more extensive installation instructions and walkthroughs.
 
 ## with pip (typhoon standalone)
 
 Install typhoon: 
 ```bash
 pip install typhoon-orchestrator[dev]
-```
-Optionally, install and activate virtualenv.
 
-Then: 
-```bash 
+# Create a project
 typhoon init hello_world
+
+# Try the Cli
 cd hello_world
 typhoon status
-```
 
-This will create a directory named hello_world that serves as an example project. As in git, when we cd into the directory it will detect that it's a Typhoon project and consider that directory the base directory for Typhoon (TYPHOON_HOME).
-
-#### Adding connnections
-
-You can add a default connections as follows in the cli
-
-```bash
+# Add your connection
 typhoon connection add --conn-id data_lake --conn-env local
-# Check that it was added
 typhoon connection ls -l
 ```
+**Docs**
+- [Detailed docker installation instructions](https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/installation.html#directories).
+- [Hello world](https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/installation.html#directories).
+
 
 ## With Docker and Airflow
 
@@ -152,16 +147,16 @@ This runs a container with only 1 service, `typhoon-af`. This has both Airflow a
 
 You should be able to then check `typhoon status` and also the airlfow UI at [http://localhost:8088](http://localhost:8088)
 
+**Docs**
+- [Detailed docker installation instructions](https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/installation.html#directories).
+- [Development hints](https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/installation.html#directories).
+
+<br>
 ![Airflow UI](docs/img/airflow_ui_list_after_install.png)
 *Typhoon DAGS listed in airflow UI*
 
-**Development hints are [in the docs](https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/installation.html#directories).**
+
 
 ![Airflow Favorite Author](docs/img/airflow_favorite_author_basic_dag.PNG)
 *Favorite Authors DAG - as displayed in airflow UI*
-
-We can extend the above task to give an example with more complexity. The tutorial for this has some more advanced tips. The airflow compiled DAG handles complex DAG structures very nicely:
-
-![Airflow Favorite Author Extended](docs/img/airflow_favorite_author_extended_dag_graph_1.PNG)
-*Favorite Authors Extended - a complex DAG example*
 
