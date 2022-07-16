@@ -1,8 +1,10 @@
+<br>
 <br>️
 <p align="center">
     <img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/f1520188bd639f9a63cf59cdc89d587096d0de4e/docs/img/typhoon_logo_large_tagline_extended.png" >
 </p>
 <p align="center">
+<br>
 <br>
  <a href="https://discord.gg/XxV5MAF8Xt">Discord :sunglasses:</a> |
  <a href="https://typhoon.talkyard.net/">Forum :wave:</a> |
@@ -19,6 +21,10 @@
 # Why Typhoon?
 
 Our vision is a new generation of cloud native, asynchronous orchestrators that can handle highly dynamic workflows with ease. We crafted Typhoon from the ground up to work towards this vision. It's designed to feel familiar while still making very different design decisions where it matters. 
+
+<p align="center">
+<img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/docker_wsl_fix/docs/img/readme_montage.gif" alt="Typhoon overview montage" >
+</p>
 
 ## Typhoon + AWS Lambda
 
@@ -114,9 +120,7 @@ typhoon status
 typhoon connection add --conn-id data_lake --conn-env local
 typhoon connection ls -l
 ```
-**Docs**
-- [Detailed docker installation instructions](https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/installation.html#directories).
-- [Hello world](https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/installation.html#directories).
+**Docs**:  [Detailed local installation instructions](https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/installation.html#directories).  |  [Hello world](https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/installation.html#directories).
 
 
 ## With Docker and Airflow
@@ -147,9 +151,7 @@ This runs a container with only 1 service, `typhoon-af`. This has both Airflow a
 
 You should be able to then check `typhoon status` and also the airlfow UI at [http://localhost:8088](http://localhost:8088)
 
-**Docs**
-- [Detailed docker installation instructions](https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/installation.html#directories).
-- [Development hints](https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/installation.html#directories).
+**Docs**:  [Detailed docker installation instructions](https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/installation.html#directories).  |  [Development hints](https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/installation.html#directories).
 
 <br>
 ![Airflow UI](docs/img/airflow_ui_list_after_install.png)
