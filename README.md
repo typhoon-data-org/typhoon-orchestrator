@@ -7,34 +7,20 @@
  <a href="https://typhoon-data-org.github.io/typhoon-orchestrator/index.html">Documentation :notebook: </a>
 <br>️
 <br>
-<br>️
-<img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/feature/docs_gitpages/docs/img/typhoon_logo_large_tagline.png" >
-</p>
-<br>
-<p align="center"><b>Create tasks in modern Python</br>Elegant YAML DAGS for Data Pipelines</br>Deploy to AWS Lambda or to your existing Airflow.</b></p>
-<br>️
+<img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/f1520188bd639f9a63cf59cdc89d587096d0de4e/docs/img/typhoon_logo_large_tagline_extended.png" >
+
 <p align="center">
 <img style="margin: 10px" src="https://img.shields.io/github/license/typhoon-data-org/typhoon-orchestrator.svg" alt="Linux" height="20" />
 <img style="margin: 10px" src="https://github.com/typhoon-data-org/typhoon-orchestrator/actions/workflows/docker-image.yml/badge.svg" />
-
 </p>
 
-<p align="center">
-<br> 
-<a href="https://github.com/typhoon-data-org/typhoon-orchestrator/">Why Typhoon?</a> |  
- <a href="https://github.com/typhoon-data-org/typhoon-orchestrator/">Key Features</a> |
- <a href="https://github.com/typhoon-data-org/typhoon-orchestrator/">Example YAML</a> |
- <a href="https://github.com/typhoon-data-org/typhoon-orchestrator/">Installation</a>
-<br>️
 
-
-<hr>
 
 # Why Typhoon?
 
 Our vision is a new generation of cloud native, asynchronous orchestrators that can handle highly dynamic workflows with ease. We crafted Typhoon from the ground up to work towards this vision. It's designed to feel familiar while still making very different design decisions where it matters. 
 
-# Why Typhoon + AWS Lambda?
+## Typhoon + AWS Lambda
 
 A Serverless orchestrator has the potential to be infinitely scalable and extremely cost efficient at the same time. We think AWS Lambda is ideal for this:
 
@@ -42,9 +28,11 @@ A Serverless orchestrator has the potential to be infinitely scalable and extrem
 - Lambda is cheap. You get 1 million invocations for free every month.
 - Workflows can be paralellized by running tasks in parallel on different instances of the Lambda. Typhoon DAGs use batching to take full advantage of this.
 
-# Why Typhoon + Airflow?
+## Typhoon + Airflow
 
-Airflow is great!
+Airflow is great! 
+
+It's also the industry standard and will be around for a while. However, we think it can be improved, without even migrating your existing production code.  
 
 ***Typhoon lets you write Airflow DAGS faster*** :rocket::
   
@@ -52,70 +40,18 @@ Airflow is great!
 
 Simplicity and re-usability; a toolkit designed to be loved by Data Engineers :heart:
 
-# Key features
-<table style="border: none" cellspacing="0" cellpadding="0">
-<tr>
-<td width="50%">
+### Key features
 
-**Elegant** -  YAML; low-code and easy to learn.
-
-**Code-completion** - Fast to compose. (VS Code recommended).
-
-**Data sharing** -  data flows between tasks making it super intuitive.
-
-**Composability** -  Functions and connections combine like Lego.
-
-
-</td>
-<td><img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/main/docs/img/auto-complete.gif" alt="UI Component" width="400px" align="right" style="max-width: 100%;">
-</td>
-</tr>
-<tr>
-<td width="50%">
-
-**Components** - reduce complex tasks to 1 re-usable tasks
-
-Packaged examples:
-- Glob & Compress  
-- FileSystem to DB
-- DB to FileSystem
-- DB to Snowlfake
-
-**UI**: Share pre-built components (data pipelines) with your team :raised_hands:
-
-</td>
-<td><img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/main/docs/img/component_ui.gif" alt="UI Component" width="400px" align="right" style="max-width: 100%;">
-</td>
-</tr>
-<tr>
-<td width="50%">
-
-**Pure python** - easily extend with pure python.
-
-Extensible and hackable. Python as a 1st class citizen. 
-
-**Testable Python:**  Test functions with PyTest as normal.
-
-</td>
-<td><img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/main/docs/img/typhoon_pure_python_functions.gif" alt="UI Component" width="400px" align="right" style="max-width: 100%;">
-</td>
-</tr>
-<tr>
-<td width="50%">
-
-**Rich CLI & Shell**: Inspired by others; instantly familiar.
-
-**Testable Tasks** - automate DAG task tests.
-
-**Testable Python** - test functions or full DAGs with PyTest.
-
-</td>
-<td><img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/main/docs/img/typhoon_cli_testing.gif" alt="UI Component" width="400px" align="right" style="max-width: 100%;">
-</td>
-</tr>
-
-</table>
-
+- **Pure python** - Easily extend with pure python. Frameworkless, with no dependencies.
+- **Testable Python** - Write tests for your tasks in PyTest. Automate DAG testing. 
+- **Composability** - Functions and connections combine like Lego. Very easy to extend.
+- **Data sharing** - data flows between tasks making it intuitive to build tasks.
+- **Elegant: YAML** - low-code and easy to learn.
+- **Code-completion** - Fast to compose. (VS Code recommended).
+- **Components** - reduce complex tasks (e.g. CSV → S3 → Snowflake) to 1 re-usable task.
+- **Components UI** -  Share your pre-built automation with your team. teams. :raised_hands:
+- **Rich Cli & Shell** - Inspired by other great command line interfaces and instantly familiar. Intelligent bash/zsh completion.
+- **Flexible deployment** - Deploy to Airflow. Large reduction in effort, without breaking existing production.
 
 # Example YAML DAG
     
