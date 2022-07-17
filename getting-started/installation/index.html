@@ -360,33 +360,6 @@
     with pip
   </a>
   
-    <nav class="md-nav" aria-label="with pip">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#creating-your-new-project" class="md-nav__link">
-    Creating your new project
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#checking-typhoon-status" class="md-nav__link">
-    Checking 'typhoon status'
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#adding-connnections" class="md-nav__link">
-    Adding connnections
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
         <li class="md-nav__item">
@@ -396,6 +369,13 @@
   
     <nav class="md-nav" aria-label="With Docker and Airflow">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#checking-airflow-ui" class="md-nav__link">
+    Checking Airflow UI
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#directories" class="md-nav__link">
@@ -838,33 +818,6 @@
     with pip
   </a>
   
-    <nav class="md-nav" aria-label="with pip">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#creating-your-new-project" class="md-nav__link">
-    Creating your new project
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#checking-typhoon-status" class="md-nav__link">
-    Checking 'typhoon status'
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#adding-connnections" class="md-nav__link">
-    Adding connnections
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
         <li class="md-nav__item">
@@ -874,6 +827,13 @@
   
     <nav class="md-nav" aria-label="With Docker and Airflow">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#checking-airflow-ui" class="md-nav__link">
+    Checking Airflow UI
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#directories" class="md-nav__link">
@@ -927,22 +887,32 @@
 <div class="highlight"><pre><span></span><code>python3 -m venv typhoon_venv
 <span class="nb">source</span> ./typhoon_venv/bin/activate
 </code></pre></div></p>
-<p>Install typhoon: 
 <div class="highlight"><pre><span></span><code>pip install typhoon-orchestrator<span class="o">[</span>dev<span class="o">]</span>
-</code></pre></div></p>
-<h4 id="creating-your-new-project">Creating your new project</h4>
-<p>Inside your terminal navigate to where you want to create your new project directory. Then run:</p>
-<div class="highlight"><pre><span></span><code>typhoon init hello_world
+
+<span class="c1"># Create a project</span>
+typhoon init hello_world
+
+<span class="c1"># Try the Cli</span>
 <span class="nb">cd</span> hello_world
+typhoon status
 </code></pre></div>
-<p>This will create a directory named hello_world that serves as an example project. As in git, when we cd into the directory it will detect that it's a Typhoon project and consider that directory the base directory for Typhoon (TYPHOON_HOME).</p>
-<h4 id="checking-typhoon-status">Checking 'typhoon status'</h4>
-<div class="highlight"><pre><span></span><code>typhoon status
-</code></pre></div>
-<p>Result:</p>
-<p><img src="../img/Screenshot%202021-07-17%20192117.png"></p>
-<p>We can see that it's detecting the project home as well as a SQLite metadata database that just got created. It's also warning us that our DAG uses a connection that is not defined in the metadata database and suggesting us a fix.</p>
-<p>We will see in the next section 'Connections' how to add these. </p>
+<p>Let's try our first steps adding a few connections. 
+<div class="highlight"><pre><span></span><code><span class="c1"># Add your connection</span>
+typhoon connection add --conn-id data_lake --conn-env <span class="nb">local</span>
+typhoon connection ls -l
+
+<span class="c1"># add the echo one too for completeness</span>
+typhoon connection add --conn-id <span class="nb">echo</span> --conn-env <span class="nb">local</span>
+typhoon connection ls -l
+
+<span class="c1">#final check of status to show it&#39;s successfully been added.</span>
+typhoon status
+</code></pre></div></p>
+<figure>
+<p><img alt="Component UI" src="../../img/Screenshot%202021-07-17%20192117.png" width="800" />
+   </p>
+<figcaption>`typhoon status` before you add your connections. It shows how to add them.</figcaption>
+</figure>
 <div class="admonition tip">
 <p class="admonition-title">Bash/ZSH/Fish auto-complete</p>
 <ul>
@@ -951,20 +921,10 @@
 <li>fish eval "$(_TYPHOON_COMPLETE=source_fish typhoon)"</li>
 </ul>
 </div>
-<h4 id="adding-connnections">Adding connnections</h4>
-<p>You can add the two default connections as follows in the cli</p>
-<div class="highlight"><pre><span></span><code>typhoon connection add --conn-id data_lake --conn-env <span class="nb">local</span>
-<span class="c1"># Check that it was added</span>
-typhoon connection ls -l
-
-<span class="c1"># add the echo one too for completeness</span>
-typhoon connection add --conn-id <span class="nb">echo</span> --conn-env <span class="nb">local</span>
-</code></pre></div>
-<p>Re-run <code>typhoon status</code> to see they are successfully added.  </p>
 <h2 id="with-docker-and-airflow">With Docker and Airflow</h2>
 <p>To deploy Typhoon with Airflow you need: </p>
 <ul>
-<li>Docker / Docker Desktop (You must use WSL2 on Windows) </li>
+<li>Docker / Docker Desktop (You must use WSL2 or GitBash on Windows) </li>
 <li>Download the <a href="/docker-compose-af.yml">docker-compose.yaml</a>  (or use curl below)</li>
 <li>Create a directory for your TYPHOON_PROJECTS_HOME</li>
 </ul>
@@ -972,16 +932,26 @@ typhoon connection add --conn-id <span class="nb">echo</span> --conn-env <span c
 <div class="highlight"><pre><span></span><code><span class="nv">TYPHOON_PROJECTS_HOME</span><span class="o">=</span><span class="s2">&quot;/tmp/typhoon_projects&quot;</span> <span class="c1"># Or any other path you prefer</span>
 mkdir -p <span class="nv">$TYPHOON_PROJECTS_HOME</span>/typhoon_airflow_test
 <span class="nb">cd</span> <span class="nv">$TYPHOON_PROJECTS_HOME</span>/typhoon_airflow_test
-mkdir src
-curl -LfO https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/master/docker-compose-af.yml
 
-docker compose -f docker-compose-af.yml up -d  
-docker-compose -f docker-compose-af.yml run --rm typhoon-af airflow initdb
+<span class="c1"># For Windows WSL2 Users - for other env. its optional </span>
+sudo chown -R <span class="nv">$USER</span>: <span class="nv">$TYPHOON_PROJECTS_HOME</span>/typhoon_airflow_test
+mkdir airflow
+mkdir data_lake
+mkdir src
+
+curl -LfO https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/master/docker-compose-af.yml
+</code></pre></div></p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>On Windows <strong>WSL</strong> please run each docker-compose run <strong>one by one</strong>. They are quick.</p>
+</div>
+<div class="highlight"><pre><span></span><code>docker-compose -f docker-compose-af.yml run --rm typhoon-af airflow initdb
 docker-compose -f docker-compose-af.yml run --rm typhoon-af typhoon status
 docker-compose -f docker-compose-af.yml run --rm typhoon-af typhoon connection add --conn-id data_lake --conn-env <span class="nb">local</span>  <span class="c1"># Adding our first connection!</span>
 docker-compose -f docker-compose-af.yml run --rm typhoon-af typhoon dag build --all
-docker restart typhoon-af <span class="c1"># Wait while docker restarts</span>
-</code></pre></div></p>
+docker compose -f docker-compose-af.yml up -d
+</code></pre></div>
+<h4 id="checking-airflow-ui">Checking Airflow UI</h4>
 <p>Then check the airlfow UI at <a href="http://localhost:8088">http://localhost:8088</a></p>
 <p>This runs a container with only 1 service, <code>typhoon-af</code>. This has both Airflow and Typhoon installed on it ready to work with.</p>
 <h4 id="directories">Directories</h4>
