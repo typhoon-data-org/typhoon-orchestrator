@@ -19,9 +19,3 @@ USER airflow
 WORKDIR $TYPHOON_BASE
 RUN typhoon init $PROJECT_NAME --deploy-target airflow && cd $PROJECT_NAME
 WORKDIR $TYPHOON_HOME
-
-USER root
-RUN chown -R airflow: ${AIRFLOW_HOME}
-
-USER airflow
-WORKDIR $TYPHOON_HOME
