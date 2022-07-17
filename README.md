@@ -128,7 +128,7 @@ typhoon connection ls -l
 
 To deploy Typhoon with Airflow you need: 
 
-- Docker / Docker Desktop (You must use WSL2 on Windows) 
+- Docker / Docker Desktop (You must use WSL2 or Gitbash on Windows) 
 - Download the [docker-compose.yaml][1]  (or use curl below)
 - Create a directory for your TYPHOON_PROJECTS_HOME
 
@@ -137,15 +137,25 @@ The following sets up your project directory and gets the docker-compose.yml:
 TYPHOON_PROJECTS_HOME="/tmp/typhoon_projects" # Or any other path you prefer
 mkdir -p $TYPHOON_PROJECTS_HOME/typhoon_airflow_test
 cd $TYPHOON_PROJECTS_HOME/typhoon_airflow_test
-mkdir src
-curl -LfO https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/master/docker-compose-af.yml
 
-docker compose -f docker-compose-af.yml up -d  
+# For Windows WSL2 Users - for other env. its optional 
+sudo chown -R $USER: $TYPHOON_PROJECTS_HOME/typhoon_airflow_test
+mkdir airflow
+mkdir data_lake
+mkdir src
+
+curl -LfO https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/master/docker-compose-af.yml
+```
+
+!!! Important
+    On Windows **WSL** please run each docker-compose run **one by one**. They are quick.
+
+```bash
 docker-compose -f docker-compose-af.yml run --rm typhoon-af airflow initdb
 docker-compose -f docker-compose-af.yml run --rm typhoon-af typhoon status
 docker-compose -f docker-compose-af.yml run --rm typhoon-af typhoon connection add --conn-id data_lake --conn-env local  # Adding our first connection!
 docker-compose -f docker-compose-af.yml run --rm typhoon-af typhoon dag build --all
-docker restart typhoon-af # Wait while docker restarts
+docker compose -f docker-compose-af.yml up -d
 ```
 
 This runs a container with only 1 service, `typhoon-af`. This has both Airflow and Typhoon installed on it ready to work with.
