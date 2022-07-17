@@ -117,7 +117,7 @@ def init(project_name: str, deploy_target: str, template: str):
         Settings.project_name = project_name
 
         if template in ['hello_world', 'minimal']:
-            generate_terraform_files(minimal=(template == 'minimal'))
+            generate_terraform_files(minimal=(template == 'minimal'), remote=None)
 
         dag_schema, component_schema = generate_json_schemas()
         dag_json_schema = json.dumps(dag_schema, indent=2)
