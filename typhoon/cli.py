@@ -64,7 +64,7 @@ ascii_art_logo = r"""
 """
 
 
-def set_settings_from_remote(remote: str):
+def set_settings_from_remote(remote: Optional[str]):
     if remote:
         if remote not in Remotes.remotes_config.keys():
             print(f'Remote {remote} is not defined in .typhoonremotes. Found : {list(Remotes.remotes_config.keys())}',
@@ -116,7 +116,7 @@ def init(project_name: str, deploy_target: str, template: str):
         Settings.typhoon_home = dest
         Settings.project_name = project_name
 
-        if template in ['hello_world', 'minimal']:
+        if template in ['minimal']:
             generate_terraform_files(minimal=(template == 'minimal'))
 
         dag_schema, component_schema = generate_json_schemas()
