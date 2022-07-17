@@ -13,9 +13,12 @@ RUN set -ex && apt-get update -yqq \
         libpq-dev
 WORKDIR /
 RUN pip install typhoon-orchestrator[dev]
-RUN mkdir $TYPHOON_BASE && chown -R airflow: ${TYPHOON_BASE} && mkdir /tmp/data_lake && chown -R airflow: /tmp/data_lake && chown -R airflow: ${AIRFLOW_HOME}
+RUN mkdir $TYPHOON_BASE && chown -R airflow: ${TYPHOON_BASE} && mkdir /tmp/data_lake && chown -R airflow: /tmp/data_lake
 
 USER airflow
 WORKDIR $TYPHOON_BASE
 RUN typhoon init $PROJECT_NAME --deploy-target airflow && cd $PROJECT_NAME
 WORKDIR $TYPHOON_HOME
+
+USER root
+RUN chown -R airflow: ${AIRFLOW_HOME}
