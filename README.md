@@ -6,11 +6,11 @@
 <p align="center">
 <br>
 <br>
- <a href="https://typhoon-data-org.github.io/website/">Website :loudspeaker:</a> |
- <a href="https://discord.gg/XxV5MAF8Xt">Discord :sunglasses:</a> |
- <a href="https://typhoon.talkyard.net/">Forum :wave:</a> |
- <a href="https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/installation.html#with-pip">Installation :floppy_disk:</a> |
- <a href="https://typhoon-data-org.github.io/typhoon-orchestrator/index.html">Documentation :notebook: </a>
+ <a target="_blank" href="https://typhoon-data-org.github.io/website/">Website :loudspeaker:</a> |
+ <a target="_blank" href="https://discord.gg/XxV5MAF8Xt">Discord :sunglasses:</a> |
+ <a target="_blank" href="https://typhoon.talkyard.net/">Forum :wave:</a> |
+ <a target="_blank" href="https://typhoon-data-org.github.io/typhoon-orchestrator/getting-started/installation/">Installation :floppy_disk:</a> |
+ <a target="_blank" href="https://typhoon-data-org.github.io/typhoon-orchestrator/index.html">Documentation :notebook: </a>
 
 <p align="center">
 <img style="margin: 10px" src="https://img.shields.io/github/license/typhoon-data-org/typhoon-orchestrator.svg" alt="Linux" height="20" />
