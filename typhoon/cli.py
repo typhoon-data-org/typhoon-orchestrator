@@ -64,7 +64,7 @@ ascii_art_logo = r"""
 """
 
 
-def set_settings_from_remote(remote: str):
+def set_settings_from_remote(remote: Optional[str]):
     if remote:
         if remote not in Remotes.remotes_config.keys():
             print(f'Remote {remote} is not defined in .typhoonremotes. Found : {list(Remotes.remotes_config.keys())}',
