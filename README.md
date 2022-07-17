@@ -23,7 +23,7 @@
 Our vision is a new generation of cloud native, asynchronous orchestrators that can handle highly dynamic workflows with ease. We crafted Typhoon from the ground up to work towards this vision. It's designed to feel familiar while still making very different design decisions where it matters. 
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/docker_wsl_fix/docs/img/readme_montage.gif" alt="Typhoon overview montage" >
+<img src="https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/main/docs/img/readme_montage.gif" alt="Typhoon overview montage" >
 </p>
 
 ## Typhoon + AWS Lambda
