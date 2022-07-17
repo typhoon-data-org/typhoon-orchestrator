@@ -12,6 +12,13 @@ services:
       - "./data_lake:/tmp/data_lake"
       - "./airflow:/usr/local/airflow"
 
+  chown_airflow:
+    image: typhoondata/typhoon-orchestrator_airflow1.10:latest
+    depends_on:
+      - typhoon-af
+    restart: "no"
+    entrypoint: [ "bash", "chown -R airflow: /usr/local/airflow"]      
+
 volumes:
   typhoon_vol:
     driver: local
