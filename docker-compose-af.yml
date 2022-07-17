@@ -10,7 +10,7 @@ services:
     volumes:
       - "typhoon_vol:/opt/typhoon/typhoon_project"
       - "./data_lake:/tmp/data_lake"
-      - "./airflow:/usr/local/airflow"
+      - "./airflow:/usr/local/airflow"   
 
 volumes:
   typhoon_vol:
