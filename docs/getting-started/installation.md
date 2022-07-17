@@ -20,36 +20,36 @@ python3 -m venv typhoon_venv
 source ./typhoon_venv/bin/activate
 ```
 
-Install typhoon: 
 ```bash
 pip install typhoon-orchestrator[dev]
-```
 
-#### Creating your new project
-
-Inside your terminal navigate to where you want to create your new project directory. Then run:
-
-```bash 
+# Create a project
 typhoon init hello_world
+
+# Try the Cli
 cd hello_world
-```
-
-This will create a directory named hello_world that serves as an example project. As in git, when we cd into the directory it will detect that it's a Typhoon project and consider that directory the base directory for Typhoon (TYPHOON_HOME).
-
-#### Checking 'typhoon status'
-
-
-```bash
 typhoon status
 ```
 
-Result:
+Let's try our first steps adding a few connections. 
+```bash
+# Add your connection
+typhoon connection add --conn-id data_lake --conn-env local
+typhoon connection ls -l
 
-<img src="../img/Screenshot%202021-07-17%20192117.png">
+# add the echo one too for completeness
+typhoon connection add --conn-id echo --conn-env local
+typhoon connection ls -l
 
-We can see that it's detecting the project home as well as a SQLite metadata database that just got created. It's also warning us that our DAG uses a connection that is not defined in the metadata database and suggesting us a fix.
+#final check of status to show it's successfully been added.
+typhoon status
+```
 
-We will see in the next section 'Connections' how to add these. 
+<figure markdown> 
+   ![Component UI](../img/Screenshot 2021-07-17 192117.png){ width="800" }
+   <figcaption>`typhoon status` before you add your connections. It shows how to add them.</figcaption>
+</figure>
+
 
 !!! tip "Bash/ZSH/Fish auto-complete" 
     - bash eval "$(_TYPHOON_COMPLETE=source_bash typhoon)"
@@ -57,26 +57,12 @@ We will see in the next section 'Connections' how to add these.
     - fish eval "$(_TYPHOON_COMPLETE=source_fish typhoon)"
 
 
-#### Adding connnections
-
-You can add the two default connections as follows in the cli
-
-```bash
-typhoon connection add --conn-id data_lake --conn-env local
-# Check that it was added
-typhoon connection ls -l
-
-# add the echo one too for completeness
-typhoon connection add --conn-id echo --conn-env local
-```
-
-Re-run `typhoon status` to see they are successfully added.  
 
 ## With Docker and Airflow
 
 To deploy Typhoon with Airflow you need: 
 
-- Docker / Docker Desktop (You must use WSL2 on Windows) 
+- Docker / Docker Desktop (You must use WSL2 or GitBash on Windows) 
 - Download the [docker-compose.yaml][1]  (or use curl below)
 - Create a directory for your TYPHOON_PROJECTS_HOME
 
@@ -85,16 +71,28 @@ The following sets up your project directory and gets the docker-compose.yml:
 TYPHOON_PROJECTS_HOME="/tmp/typhoon_projects" # Or any other path you prefer
 mkdir -p $TYPHOON_PROJECTS_HOME/typhoon_airflow_test
 cd $TYPHOON_PROJECTS_HOME/typhoon_airflow_test
-mkdir src
-curl -LfO https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/master/docker-compose-af.yml
 
-docker compose -f docker-compose-af.yml up -d  
+# For Windows WSL2 Users - for other env. its optional 
+sudo chown -R $USER: $TYPHOON_PROJECTS_HOME/typhoon_airflow_test
+mkdir airflow
+mkdir data_lake
+mkdir src
+
+curl -LfO https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/master/docker-compose-af.yml
+```
+
+!!! Important
+    On Windows **WSL** please run each docker-compose run **one by one**. They are quick.
+
+```bash
 docker-compose -f docker-compose-af.yml run --rm typhoon-af airflow initdb
 docker-compose -f docker-compose-af.yml run --rm typhoon-af typhoon status
 docker-compose -f docker-compose-af.yml run --rm typhoon-af typhoon connection add --conn-id data_lake --conn-env local  # Adding our first connection!
 docker-compose -f docker-compose-af.yml run --rm typhoon-af typhoon dag build --all
-docker restart typhoon-af # Wait while docker restarts
+docker compose -f docker-compose-af.yml up -d
 ```
+
+#### Checking Airflow UI
 
 Then check the airlfow UI at [http://localhost:8088](http://localhost:8088)
 
