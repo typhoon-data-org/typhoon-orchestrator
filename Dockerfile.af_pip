@@ -22,3 +22,6 @@ WORKDIR $TYPHOON_HOME
 
 USER root
 RUN chown -R airflow: ${AIRFLOW_HOME}
+
+USER airflow
+WORKDIR $TYPHOON_HOME
