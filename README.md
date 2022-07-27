@@ -128,7 +128,7 @@ typhoon connection ls -l
 
 To deploy Typhoon with Airflow you need: 
 
-- Docker / Docker Desktop (You must use WSL2 or Gitbash on Windows) 
+- Docker / Docker Desktop (For now, ***you must use Gitbash on Windows***. Currently, there is an open issue on [WSL2](https://github.com/typhoon-data-org/typhoon-orchestrator/issues/11).) 
 - Download the [docker-compose.yaml][1]  (or use curl below)
 - Create a directory for your TYPHOON_PROJECTS_HOME
 
@@ -148,7 +148,7 @@ curl -LfO https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrato
 ```
 
 !!! Important
-    On Windows **WSL** please run each docker-compose run **one by one**. They are quick.
+    On Windows **Gitbash** please run each docker-compose run **one by one**. They are quick.
 
 ```bash
 docker-compose -f docker-compose-af.yml run --rm typhoon-af airflow initdb
