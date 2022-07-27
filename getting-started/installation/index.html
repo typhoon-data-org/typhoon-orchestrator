@@ -924,7 +924,7 @@ typhoon status
 <h2 id="with-docker-and-airflow">With Docker and Airflow</h2>
 <p>To deploy Typhoon with Airflow you need: </p>
 <ul>
-<li>Docker / Docker Desktop (You must use WSL2 or GitBash on Windows) </li>
+<li>Docker / Docker Desktop (For now, <strong><em>you must use Gitbash on Windows</em></strong>. Currently, there is an open issue on <a href="https://github.com/typhoon-data-org/typhoon-orchestrator/issues/11">WSL2</a>.)</li>
 <li>Download the <a href="/docker-compose-af.yml">docker-compose.yaml</a>  (or use curl below)</li>
 <li>Create a directory for your TYPHOON_PROJECTS_HOME</li>
 </ul>
@@ -943,7 +943,7 @@ curl -LfO https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrato
 </code></pre></div></p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p>On Windows <strong>WSL</strong> please run each docker-compose run <strong>one by one</strong>. They are quick.</p>
+<p>On Windows <strong>Gitbash</strong> please run each docker-compose run <strong>one by one</strong>. They are quick.</p>
 </div>
 <div class="highlight"><pre><span></span><code>docker-compose -f docker-compose-af.yml run --rm typhoon-af airflow initdb
 docker-compose -f docker-compose-af.yml run --rm typhoon-af typhoon status
