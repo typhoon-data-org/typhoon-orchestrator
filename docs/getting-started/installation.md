@@ -92,6 +92,16 @@ docker-compose -f docker-compose-af.yml run --rm typhoon-af typhoon dag build --
 docker compose -f docker-compose-af.yml up -d
 ```
 
+#### Airflow FERNET_KEY
+
+To make it easy to get started there is a default FERNET_KEY in the docker compose script. You can regenerate using the following:  
+
+```bash
+docker-compose -f docker-compose-af.yml run --rm typhoon-af python -c "from cryptography.fernet import Fernet; FERNET_KEY = Fernet.generate_key().decode(); print('FERNET_KEY:  ', FERNET_KEY)"
+```
+
+Then replace the key in the docker-compose-af.yml.
+
 #### Checking Airflow UI
 
 Then check the airlfow UI at [http://localhost:8088](http://localhost:8088)
@@ -107,7 +117,7 @@ Some directories are mounted which synchronizes files between your computer and 
 - ./src/dags - Where you develop your Typhoon YAML DAGs
 
 #### Development hints
-So you should develop your dags in ./src/dags using your local editor (not within the container - the files sync).  
+You should develop your dags in ./src/dags using your local editor (not within the container - the files sync).  
 
 You then access the docker container `tyhpoon-af` to use typhoon 
 
