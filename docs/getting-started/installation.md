@@ -147,6 +147,6 @@ If they successfully compile they will appear in ./airflow_dags, and also in the
     typhoon dag build --all
     ```
 
-[1]:/docker-compose-af.yml
+[1]:https://raw.githubusercontent.com/typhoon-data-org/typhoon-orchestrator/main/docker-compose-af.yml
 [2]:../examples/hello-world.md
 [3]:/docker-compose-37-no-airflow.yml
