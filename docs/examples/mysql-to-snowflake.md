@@ -436,15 +436,12 @@ transaction_db:
     extra:
       database: /tmp/web_trans_local.db
   prod:
-    conn_type: sqlalchemy
+    conn_type: mysql
     login: your-login-name
     password: your-password
     host: localhost
     port: 3306
-    schema: prod_web_ecom
     extra:
-      dialect: mysql
-      driver: mysqldb
       database: prod_web_ecom
 
 snowflake:
