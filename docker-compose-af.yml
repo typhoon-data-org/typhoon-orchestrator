@@ -3,14 +3,16 @@ services:
   typhoon-af:
     container_name: typhoon-af
     image: typhoondata/typhoon-orchestrator_airflow1.10:latest
+    # For security regenerate and update the FERNET_KEY below
+    # docker-compose -f docker-compose-af.yml run --rm typhoon-af python -c "from cryptography.fernet import Fernet; FERNET_KEY = Fernet.generate_key().decode(); print('FERNET_KEY:  ', FERNET_KEY)"
     environment:
-      - FERNET_KEY=
+      - FERNET_KEY=P7lRkcVfZDU5yRAyhTjA289lv2ShmSi7COdHRhza-m8=
     ports:
       - "8088:8080"
     volumes:
       - "typhoon_vol:/opt/typhoon/typhoon_project"
       - "./data_lake:/tmp/data_lake"
-      - "./airflow:/usr/local/airflow"
+      - "./airflow:/usr/local/airflow"   
 
 volumes:
   typhoon_vol:

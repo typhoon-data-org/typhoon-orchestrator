@@ -22,7 +22,7 @@ from datadiff.tools import assert_equal
 from pygments.formatters.terminal256 import Terminal256Formatter
 from pygments.lexers.data import YamlLexer
 from pygments.lexers.python import PythonLexer
-from streamlit import bootstrap
+from streamlit.web import bootstrap
 from tabulate import tabulate
 from termcolor import colored
 
